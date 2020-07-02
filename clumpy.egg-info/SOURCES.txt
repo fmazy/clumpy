@@ -1,0 +1,7 @@
+README.md
+setup.py
+clumpy/__init__.py
+clumpy.egg-info/PKG-INFO
+clumpy.egg-info/SOURCES.txt
+clumpy.egg-info/dependency_links.txt
+clumpy.egg-info/top_level.txt
