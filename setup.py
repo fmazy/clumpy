@@ -5,7 +5,7 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
     name="clumpy",
-    version="0.0.1",
+    version="0.1.0",
     author="François-Rémi Mazy",
     author_email="francois-remi.mazy@inria.fr",
     description="Land Use and Cover Change Models in python",

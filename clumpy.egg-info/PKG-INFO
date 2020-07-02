@@ -1,6 +1,6 @@
 Metadata-Version: 2.1
 Name: clumpy
-Version: 0.0.1
+Version: 0.1.0
 Summary: Land Use and Cover Change Models in python
 Home-page: https://gitlab.inria.fr/fmazy/clumpy
 Author: François-Rémi Mazy
@@ -13,6 +13,9 @@ Description: # Clumpy
         
         upload on testpypi
         `python3 -m twine upload --repository testpypi dist/*`
+        
+        help about pypi packages
+        https://packaging.python.org/tutorials/packaging-projects/
         
 Platform: UNKNOWN
 Classifier: Programming Language :: Python :: 3
