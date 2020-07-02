@@ -7,12 +7,28 @@ import numpy as np
 from matplotlib import pyplot as plt
 from optbinning import MulticlassOptimalBinning
     
-def binning(case:definition.Case, params):
+def binning(case:definition.Case, params='optbinning'):
     """
     Binning according to a case and parameters.
 
 
     see `numpy documentation <https://docs.scipy.org/doc/numpy/reference/generated/numpy.histogram_bin_edges.html#numpy.histogram_bin_edges>`_ -- Default value : ``'auto'``.
+    
+    Parameters
+    ==========
+    case : definition.Case
+        the studied case
+    
+    params : dict
+        the binning parameters for each feature. It is a dictionary which associates for each couples (initial state, feature name) a method and other options if needed. See the example below.   
+    
+    Example
+    =======
+    The binning parameters can be defined as following::
+        
+        binning_parameters = {(3, 'dem'):{'method':'optbinning'},
+                          (3, 'slope'):{'method':'optbinning'},
+                          (3,'distance_to_2'):{'method':'numpy', 'bins':20}}
     
     """
     case.alpha = pd.DataFrame(columns=['vi', 'Zk_name', 'alpha'])

@@ -96,6 +96,7 @@
 </ul>
 <p class="caption"><span class="caption-text">Definition</span></p>
 <ul>
+<li class="toctree-l1"><a class="reference internal" href="../definition/layer.html">Layer</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../definition/case.html">Case</a></li>
 </ul>
 <p class="caption"><span class="caption-text">Discretization</span></p>
@@ -203,9 +204,24 @@
 <h1>Discretization<a class="headerlink" href="#discretization" title="Permalink to this headline">¶</a></h1>
 <dl class="function">
 <dt id="clumpy.discretization.binning">
-<code class="sig-prename descclassname">clumpy.discretization.</code><code class="sig-name descname">binning</code><span class="sig-paren">(</span><em class="sig-param">case: clumpy.definition._case.Case</em>, <em class="sig-param">params</em><span class="sig-paren">)</span><a class="headerlink" href="#clumpy.discretization.binning" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">clumpy.discretization.</code><code class="sig-name descname">binning</code><span class="sig-paren">(</span><em class="sig-param">case: clumpy.definition._case.Case</em>, <em class="sig-param">params='optbinning'</em><span class="sig-paren">)</span><a class="headerlink" href="#clumpy.discretization.binning" title="Permalink to this definition">¶</a></dt>
 <dd><p>Binning according to a case and parameters.</p>
 <p>see <a class="reference external" href="https://docs.scipy.org/doc/numpy/reference/generated/numpy.histogram_bin_edges.html#numpy.histogram_bin_edges">numpy documentation</a> – Default value : <code class="docutils literal notranslate"><span class="pre">'auto'</span></code>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>case</strong> (<a class="reference internal" href="../definition/case.html#clumpy.definition.Case" title="clumpy.definition.Case"><em>definition.Case</em></a>) – the studied case</p></li>
+<li><p><strong>params</strong> (<em>dict</em>) – the binning parameters for each feature. It is a dictionary which associates for each couples (initial state, feature name) a method and other options if needed. See the example below.</p></li>
+</ul>
+</dd>
+</dl>
+<p class="rubric">Example</p>
+<p>The binning parameters can be defined as following:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">binning_parameters</span> <span class="o">=</span> <span class="p">{(</span><span class="mi">3</span><span class="p">,</span> <span class="s1">&#39;dem&#39;</span><span class="p">):{</span><span class="s1">&#39;method&#39;</span><span class="p">:</span><span class="s1">&#39;optbinning&#39;</span><span class="p">},</span>
+                  <span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="s1">&#39;slope&#39;</span><span class="p">):{</span><span class="s1">&#39;method&#39;</span><span class="p">:</span><span class="s1">&#39;optbinning&#39;</span><span class="p">},</span>
+                  <span class="p">(</span><span class="mi">3</span><span class="p">,</span><span class="s1">&#39;distance_to_2&#39;</span><span class="p">):{</span><span class="s1">&#39;method&#39;</span><span class="p">:</span><span class="s1">&#39;numpy&#39;</span><span class="p">,</span> <span class="s1">&#39;bins&#39;</span><span class="p">:</span><span class="mi">20</span><span class="p">}}</span>
+</pre></div>
+</div>
 </dd></dl>
 
 <dl class="function">

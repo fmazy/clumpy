@@ -20,6 +20,7 @@ Clumpy is a land use and cover change (LUCC) modeler in development written in P
     :maxdepth: 1
     :caption: Definition
 
+    definition/layer
     definition/case
 
 .. toctree::

@@ -18,7 +18,7 @@ import numpy as np
 import math
 from . import _layer
 
-class Transition(object):
+class _Transition(object):
     """
     Base object of a case, such as for a calibration or an allocation stage.
     
@@ -40,7 +40,7 @@ class Transition(object):
         :returns: a :class:`.Transition_vi` object.
         """
         if vi not in self.Ti.keys():
-            self.Ti[vi] = Transition_vi(vi, self)
+            self.Ti[vi] = _Transition_vi(vi, self)
         return(self.Ti[vi])
     
     def addTif(self, vi, vf):
@@ -82,7 +82,7 @@ class Transition(object):
         return(txt)
 
             
-class Transition_vi(object):
+class _Transition_vi(object):
     """
     Transition with :math:`v_i` fixed.
     
@@ -120,7 +120,7 @@ class Transition_vi(object):
         if vf in self.Tif.keys():
             print("WARNING: this Tif does already exist !")
         else:
-            self.Tif[vf] = Transition_vi_vf(vf, self)
+            self.Tif[vf] = _Transition_vi_vf(vf, self)
         return(self.Tif[vf])
     
     # def getNewK(self):
@@ -143,7 +143,7 @@ class Transition_vi(object):
         txt = txt[:-1]
         return(txt)
         
-class Transition_vi_vf(object):
+class _Transition_vi_vf(object):
     """
     Transition with :math:`v_i` and :math:`v_f` fixed.
     

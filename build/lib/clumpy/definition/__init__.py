@@ -3,7 +3,6 @@ Texte intro au dossier definition
 """
 
 from ._layer import LandUseCoverLayer, FeatureLayer, DistanceToVFeatureLayer, TransitionProbabilityLayers
-from . import transition
-from . import explanatory_variable
-# from . import data
+from . import _transition
+from . import _feature
 from ._case import Case

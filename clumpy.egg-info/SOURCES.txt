@@ -25,10 +25,9 @@ clumpy/calibration/naive_bayes.py
 clumpy/calibration/patches.py
 clumpy/definition/__init__.py
 clumpy/definition/_case.py
+clumpy/definition/_feature.py
 clumpy/definition/_layer.py
-clumpy/definition/data.py
-clumpy/definition/explanatory_variable.py
-clumpy/definition/transition.py
+clumpy/definition/_transition.py
 clumpy/discretization/__init__.py
 clumpy/discretization/_discretization.py
 clumpy/validation/__init__.py

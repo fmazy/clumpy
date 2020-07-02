@@ -8,3 +8,6 @@ upload on testpypi
 
 help about pypi packages
 https://packaging.python.org/tutorials/packaging-projects/
+
+install package locally
+python setup.py install

@@ -17,6 +17,9 @@ Description: # Clumpy
         help about pypi packages
         https://packaging.python.org/tutorials/packaging-projects/
         
+        install package locally
+        python setup.py install
+        
 Platform: UNKNOWN
 Classifier: Programming Language :: Python :: 3
 Classifier: License :: OSI Approved :: MIT License

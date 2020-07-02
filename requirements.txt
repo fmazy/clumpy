@@ -1,0 +1,16 @@
+###### Requirements ######`
+numpy
+pandas
+matplotlib
+scipy
+time
+tqdm
+multiprocessing
+sklearn
+re
+os
+copy
+PIL
+optbinning >= 0.6.1
+
+

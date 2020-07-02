@@ -13,8 +13,6 @@ import matplotlib as mpl
 import re
 from copy import deepcopy
 
-from . import explanatory_variable
-
 
 class _Layer:
     """
@@ -111,7 +109,7 @@ class LandUseCoverLayer(_Layer):
     """
     Defines a Land Use Cover (LUC) layer. This layer can then used for the calibration stage or the allocation stage::
     
-        luc1998 = dm.definition.layer.LayerLUC(name='LUC-1998',scale=15,time=0)
+        luc1998 = clumpy.definition.layer.LayerLUC(name='LUC-1998',scale=15,time=0)
     
     :param name: the map name
     :type name: string, optional
@@ -233,7 +231,7 @@ class FeatureLayer(_Layer):
     """
     Defines an Explanatory Variable (EV) layer. This layer can then used for the calibration stage or the allocation stage::
     
-        elevation = dm.definition.layer.LayerEV(name='elevation',time=0,scale=15)    
+        elevation = clumpy.definition.layer.LayerEV(name='elevation',time=0,scale=15)    
     
     :param name: the map name
     :type name: string, optional
@@ -281,15 +279,38 @@ class FeatureLayer(_Layer):
 
 
 class DistanceToVFeatureLayer(FeatureLayer):
-    def __init__(self, id_v, layer_LUC):
-        super().__init__(name="distance_to_v_" + str(id_v), scale=layer_LUC.scale)
-        self.id_v = id_v
+    """
+    Defines a distance to a state as a layer. This layer can then used for the calibration stage or the allocation stage::
+    
+        distance_to_2 = clumpy.definition.layer.LayerEV(name='elevation',time=0,scale=15)    
+    
+    However, it is recommended to prefer the case's method clumpy.definition.Case.add_distance_to_v_as_feature.
+    
+    Parameters
+    ----------
+    v : int
+        The state to compute the distance from.
+    
+    layer_LUC : LandUseCoverLayer
+        The land use cover used to compute the distance.
+        
+    name : string (default=``None``)
+        The layer name. If none, name is defined as ``'distance_to_v_'+str(v)``.
+    """
+    
+    def __init__(self, v, layer_LUC, name=None):
+        
+        if type(name)==type(None):
+            name = 'distance_to_v_'+str(v)
+        
+        super().__init__(name=name, scale=layer_LUC.scale)
+        self.v = v
         self.layer_LUC = layer_LUC
         self.update(layer_LUC=self.layer_LUC)
         layer_LUC.distance2v.append(self)
 
     def update(self, layer_LUC):
-        v_matrix = (layer_LUC.data == self.id_v).astype(int)
+        v_matrix = (layer_LUC.data == self.v).astype(int)
         self.data = ndimage.distance_transform_edt(1 - v_matrix) * layer_LUC.scale
 
 

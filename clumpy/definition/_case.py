@@ -44,7 +44,7 @@ class Case():
         self.map_i = map_i
         self.map_f = map_f
         
-        self.transitions = definition.transition.Transition()
+        self.transitions = definition._transition._Transition()
         for vi_vf in list_vi_vf:
             self.transitions.addTif(vi=vi_vf[0], vf=vi_vf[1])
 
@@ -146,7 +146,7 @@ class Case():
         
         # finally, we create for each vi the corresponding Z                
         for vi in list_vi:
-            self.transitions.Ti[vi].Z[name] = definition.explanatory_variable.Zk(name = name,
+            self.transitions.Ti[vi].Z[name] = definition._feature._Zk(name = name,
                                                             kind = kind,
                                                             Ti = self.transitions.Ti[vi])
             

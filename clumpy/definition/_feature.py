@@ -10,7 +10,7 @@ from matplotlib import pyplot as plt
 #internal libraries
 from . import _layer
 
-class Zk(object):
+class _Zk(object):
     """
     Explanatory variable object used for a fixed initial state :math:`v_i` whose data is based on :class:`.LayerEV`. This object is then used for the calibration and the allocation.
     
@@ -72,7 +72,7 @@ class Zk(object):
         txt += "[min, max]: "+str(self.min)+", "+str(self.max)
         return(txt)
         
-def addZkAsDistanceToV(Ti, v, k=None, dyn=True):
+def _addZkAsDistanceToV(Ti, v, k=None, dyn=True):
     """
     Add an explanatory variable for an initial state ``Ti`` as a distance from :math:`v_i` to a fixed state :math:`v`. The new function is then appended to the ``Ti.Z`` list::
         
@@ -111,7 +111,7 @@ def addZkAsDistanceToV(Ti, v, k=None, dyn=True):
         print("ERROR: this EV key is already used")
         return("ERROR")
     
-    Ti.Z[k] = Zk(k = k,
+    Ti.Z[k] = _Zk(k = k,
                  kind="distance2v",
                  layer_EV = dist,
                  Ti=Ti,
@@ -121,7 +121,7 @@ def addZkAsDistanceToV(Ti, v, k=None, dyn=True):
     print("\t done")
     return(Ti.Z[k])
     
-def addZkFromLayer(Ti, layer_EV, k, discrete=False):
+def _addZkFromLayer(Ti, layer_EV, k, discrete=False):
     """
     Add an explanatory variable for an initial state ``Ti`` based on a layer. The new function is then appended to the ``Ti.Z`` list::
         
@@ -146,7 +146,7 @@ def addZkFromLayer(Ti, layer_EV, k, discrete=False):
         print("ERROR: this EV key is already used")
         return("ERROR")
     
-    Ti.Z[k] = Zk(k = k,
+    Ti.Z[k] = _Zk(k = k,
              kind="static_EF_fromMap",
              layer_EV = layer_EV,
              Ti=Ti,
