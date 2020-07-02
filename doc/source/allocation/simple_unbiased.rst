@@ -1,7 +1,7 @@
 Simple Unbiased Allocation Method
 =================================
 
-.. autoclass:: demeter.allocation.SimpleUnbiased
+.. autoclass:: clumpy.allocation.SimpleUnbiased
    :members:
    :inherited-members:
    :show-inheritance:

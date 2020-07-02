@@ -1,7 +1,7 @@
 Naive Bayes Calibration Method
 ==============================
 
-.. autoclass:: demeter.calibration.NaiveBayes
+.. autoclass:: clumpy.calibration.NaiveBayes
    :members:
    :inherited-members:
    :show-inheritance:

@@ -1,7 +1,7 @@
 Case
 ====
 
-.. autoclass:: demeter.definition.Case
+.. autoclass:: clumpy.definition.Case
     :members:
     :inherited-members:
     :show-inheritance:

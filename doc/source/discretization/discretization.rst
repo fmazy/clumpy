@@ -1,6 +1,6 @@
 Discretization
 ==============
 
-.. autofunction:: demeter.discretization.binning
+.. autofunction:: clumpy.discretization.binning
 
-.. autofunction:: demeter.discretization.discretize
+.. autofunction:: clumpy.discretization.discretize

@@ -13,8 +13,6 @@ clumpy/allocation/_dinamica.py
 clumpy/allocation/_generalized_von_neumann.py
 clumpy/allocation/_patcher.py
 clumpy/allocation/_simple_unbiased.py
-clumpy/allocation/old.build.py
-clumpy/allocation/old.postproduction.py
 clumpy/allocation/scenario.py
 clumpy/calibration/__init__.py
 clumpy/calibration/_calibration.py

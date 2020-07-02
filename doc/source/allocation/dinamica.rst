@@ -1,7 +1,7 @@
 Dinamica Allocation Method
 ==========================
 
-.. autoclass:: demeter.allocation.Dinamica
+.. autoclass:: clumpy.allocation.Dinamica
    :members:
    :inherited-members:
    :show-inheritance:

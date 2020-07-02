@@ -1,7 +1,7 @@
 Generalized Von Neumann Allocation Method
 =========================================
 
-.. autoclass:: demeter.allocation.GeneralizedVonNeumann
+.. autoclass:: clumpy.allocation.GeneralizedVonNeumann
    :members:
    :inherited-members:
    :show-inheritance:
