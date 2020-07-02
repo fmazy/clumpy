@@ -1,0 +1,374 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Dinamica Allocation Method &mdash; clumpy 0.1.0 documentation</title>
+  
+
+  
+  
+    <link rel="shortcut icon" href="../_static/logo.ico"/>
+  
+  
+  
+
+  
+  <script type="text/javascript" src="../_static/js/modernizr.min.js"></script>
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+        <script type="text/javascript" src="../_static/jquery.js"></script>
+        <script type="text/javascript" src="../_static/underscore.js"></script>
+        <script type="text/javascript" src="../_static/doctools.js"></script>
+        <script type="text/javascript" src="../_static/language_data.js"></script>
+        <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+        <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+        <script type="text/x-mathjax-config">MathJax.Hub.Config({"tex2jax": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true, "ignoreClass": "document", "processClass": "math|output_area"}})</script>
+    
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
+
+    
+
+  
+  <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="prev" title="Generalized Von Neumann Allocation Method" href="generalized_von_neumann.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../index.html" class="icon icon-home"> clumpy
+          
+
+          
+            
+            <img src="../_static/logo.png" class="logo" alt="Logo"/>
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Getting started</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../tutorials.html">Tutorials</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../release_notes.html">Release Notes</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Definition</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../definition/case.html">Case</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Discretization</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../discretization/discretization.html">Discretization</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Calibration</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../calibration/naive_bayes.html">Naive Bayes Calibration Method</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Allocation</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="simple_unbiased.html">Simple Unbiased Allocation Method</a></li>
+<li class="toctree-l1"><a class="reference internal" href="generalized_von_neumann.html">Generalized Von Neumann Allocation Method</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Dinamica Allocation Method</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">clumpy</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../index.html">Docs</a> &raquo;</li>
+        
+      <li>Dinamica Allocation Method</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="../_sources/allocation/dinamica.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  
+<style>
+/* CSS overrides for sphinx_rtd_theme */
+
+/* 24px margin */
+.nbinput.nblast.container,
+.nboutput.nblast.container {
+    margin-bottom: 19px;  /* padding has already 5px */
+}
+
+/* ... except between code cells! */
+.nblast.container + .nbinput.container {
+    margin-top: -19px;
+}
+
+.admonition > p:before {
+    margin-right: 4px;  /* make room for the exclamation icon */
+}
+
+/* Fix math alignment, see https://github.com/rtfd/sphinx_rtd_theme/pull/686 */
+.math {
+    text-align: unset;
+}
+</style>
+<div class="section" id="dinamica-allocation-method">
+<h1>Dinamica Allocation Method<a class="headerlink" href="#dinamica-allocation-method" title="Permalink to this headline">¶</a></h1>
+<dl class="class">
+<dt id="clumpy.allocation.Dinamica">
+<em class="property">class </em><code class="sig-prename descclassname">clumpy.allocation.</code><code class="sig-name descname">Dinamica</code><span class="sig-paren">(</span><em class="sig-param">params=None</em><span class="sig-paren">)</span><a class="headerlink" href="#clumpy.allocation.Dinamica" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">clumpy.allocation._allocation._Allocation</span></code></p>
+<p>Dinamica Allocation Method</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>params</strong> (<em>dict</em><em> (</em><em>default=None</em><em>)</em>) – the parameters dictionary</p>
+</dd>
+</dl>
+<dl class="method">
+<dt id="clumpy.allocation.Dinamica.allocate">
+<code class="sig-name descname">allocate</code><span class="sig-paren">(</span><em class="sig-param">calibration: clumpy.calibration._calibration._Calibration</em>, <em class="sig-param">case: clumpy.definition._case.Case</em>, <em class="sig-param">P_vf__vi=None</em>, <em class="sig-param">F=10</em>, <em class="sig-param">replace=True</em><span class="sig-paren">)</span><a class="headerlink" href="#clumpy.allocation.Dinamica.allocate" title="Permalink to this definition">¶</a></dt>
+<dd><p>Allocation</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>calibration</strong> (<em>_Calibration</em>) – Calibration object.</p></li>
+<li><p><strong>case</strong> (<a class="reference internal" href="../definition/case.html#clumpy.definition.Case" title="clumpy.definition.Case"><em>definition.Case</em></a>) – Starting case which have to be discretized.</p></li>
+<li><p><strong>P_vf__vi</strong> (<em>Pandas DataFrame</em><em> (</em><em>default=None</em><em>)</em>) – The transition matrix. If <code class="docutils literal notranslate"><span class="pre">None</span></code>, the fitted <code class="docutils literal notranslate"><span class="pre">self.P_vf__vi</span></code> is used.</p></li>
+<li><p><strong>F</strong> (<em>float</em><em> (</em><em>default=10</em><em>)</em>) – Pruning factor.</p></li>
+<li><p><strong>replace</strong> (<em>bool</em><em> (</em><em>default=True</em><em>)</em>) – Replace rejected pixels in the pool (source of allocation bias).</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>map_f</strong> – The allocated land use map</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>definition.layer.LayerLUC</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="clumpy.allocation.Dinamica.allocate_monopixel_patches">
+<code class="sig-name descname">allocate_monopixel_patches</code><span class="sig-paren">(</span><em class="sig-param">calibration: clumpy.calibration._calibration._Calibration</em>, <em class="sig-param">case: clumpy.definition._case.Case</em>, <em class="sig-param">P_vf__vi=None</em>, <em class="sig-param">probability_maps=None</em>, <em class="sig-param">F=10</em>, <em class="sig-param">replace=True</em>, <em class="sig-param">k=500</em>, <em class="sig-param">sound=2</em><span class="sig-paren">)</span><a class="headerlink" href="#clumpy.allocation.Dinamica.allocate_monopixel_patches" title="Permalink to this definition">¶</a></dt>
+<dd><p>Fast allocation for monopixel patches</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>calibration</strong> (<em>_Calibration</em>) – Calibration object.</p></li>
+<li><p><strong>case</strong> (<a class="reference internal" href="../definition/case.html#clumpy.definition.Case" title="clumpy.definition.Case"><em>definition.Case</em></a>) – Starting case which have to be discretized.</p></li>
+<li><p><strong>P_vf__vi</strong> (<em>Pandas DataFrame</em><em> (</em><em>default=None</em><em>)</em>) – The transition matrix. If <code class="docutils literal notranslate"><span class="pre">None</span></code>, the fitted <code class="docutils literal notranslate"><span class="pre">self.P_vf__vi</span></code> is used.</p></li>
+<li><p><strong>F</strong> (<em>float</em><em> (</em><em>default=10</em><em>)</em>) – Pruning factor.</p></li>
+<li><p><strong>replace</strong> (<em>bool</em><em> (</em><em>default=True</em><em>)</em>) – Replace rejected pixels in the pool (source of allocation bias).</p></li>
+<li><p><strong>k</strong> (<em>float</em><em> (</em><em>default=1</em><em>)</em>) – factor of selected pixels.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>map_f</strong> – The allocated land use map</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>definition.layer.LayerLUC</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="clumpy.allocation.Dinamica.fast_allocate">
+<code class="sig-name descname">fast_allocate</code><span class="sig-paren">(</span><em class="sig-param">calibration: clumpy.calibration._calibration._Calibration</em>, <em class="sig-param">case: clumpy.definition._case.Case</em>, <em class="sig-param">P_vf__vi=None</em>, <em class="sig-param">F=10</em>, <em class="sig-param">replace=True</em>, <em class="sig-param">k=1</em><span class="sig-paren">)</span><a class="headerlink" href="#clumpy.allocation.Dinamica.fast_allocate" title="Permalink to this definition">¶</a></dt>
+<dd><p>Fast allocation</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>calibration</strong> (<em>_Calibration</em>) – Calibration object.</p></li>
+<li><p><strong>case</strong> (<a class="reference internal" href="../definition/case.html#clumpy.definition.Case" title="clumpy.definition.Case"><em>definition.Case</em></a>) – Starting case which have to be discretized.</p></li>
+<li><p><strong>P_vf__vi</strong> (<em>Pandas DataFrame</em><em> (</em><em>default=None</em><em>)</em>) – The transition matrix. If <code class="docutils literal notranslate"><span class="pre">None</span></code>, the fitted <code class="docutils literal notranslate"><span class="pre">self.P_vf__vi</span></code> is used.</p></li>
+<li><p><strong>F</strong> (<em>float</em><em> (</em><em>default=10</em><em>)</em>) – Pruning factor.</p></li>
+<li><p><strong>replace</strong> (<em>bool</em><em> (</em><em>default=True</em><em>)</em>) – Replace rejected pixels in the pool (source of allocation bias).</p></li>
+<li><p><strong>k</strong> (<em>float</em><em> (</em><em>default=1</em><em>)</em>) – factor of selected pixels.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>map_f</strong> – The allocated land use map</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>definition.layer.LayerLUC</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="clumpy.allocation.Dinamica.test">
+<code class="sig-name descname">test</code><span class="sig-paren">(</span><em class="sig-param">calibration</em>, <em class="sig-param">case</em>, <em class="sig-param">monopixel_patches=True</em>, <em class="sig-param">P_vf__vi=None</em>, <em class="sig-param">probability_maps=None</em>, <em class="sig-param">alpha=0.95</em>, <em class="sig-param">epsilon=0.01</em>, <em class="sig-param">gamma=0.8</em>, <em class="sig-param">cores=1</em>, <em class="sig-param">update='none'</em><span class="sig-paren">)</span><a class="headerlink" href="#clumpy.allocation.Dinamica.test" title="Permalink to this definition">¶</a></dt>
+<dd><p>Tests the allocation according to the calibration. Given the law of large numbers, if one repeats the allocation a certain amount of times, one should find the calibration by simple frequency analysis.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>calibration</strong> (<em>_Calibration</em>) – Calibration object.</p></li>
+<li><p><strong>case</strong> (<a class="reference internal" href="../definition/case.html#clumpy.definition.Case" title="clumpy.definition.Case"><em>definition.Case</em></a>) – Starting case which have to be discretized.</p></li>
+<li><p><strong>monopixel_patches</strong> (<em>Boolean</em><em> (</em><em>default=True</em><em>)</em>) – If <code class="docutils literal notranslate"><span class="pre">True</span></code>, allocates only mono-pixel patches without any other considerations. If <code class="docutils literal notranslate"><span class="pre">False</span></code>, multipixel patches will be designed. The model should therefore have been detailed with allocation parameters. This kind of multipixel patches test requires of curse a significant computation time whereas the monopixel one.</p></li>
+<li><p><strong>P_vf__vi</strong> (<em>Pandas DataFrame</em><em> (</em><em>default=None</em><em>)</em>) – The transition matrix. If <code class="docutils literal notranslate"><span class="pre">None</span></code>, the fitted <code class="docutils literal notranslate"><span class="pre">self.P_vf__vi</span></code> is used.</p></li>
+<li><p><strong>probability_maps</strong> (<em>calibration.transition_probability_maps</em><em> (</em><em>default=None</em><em>)</em>) – The transition probabilities maps. If <code class="docutils literal notranslate"><span class="pre">None</span></code>, it is computed according to the given case.</p></li>
+<li><p><strong>alpha</strong> (<em>Float</em><em> (</em><em>default=0.95</em><em>)</em>) – Signifiance level of the test which gives a threshold value for p. The more <code class="docutils literal notranslate"><span class="pre">alpha</span></code> closed to <code class="docutils literal notranslate"><span class="pre">1</span></code>, the more the test is significant.</p></li>
+<li><p><strong>epsilon</strong> (<em>Float</em><em> (</em><em>default=0.01</em><em>)</em>) – The probability inference precision in case of an unbiased model.</p></li>
+<li><p><strong>gamma</strong> (<em>Float</em><em> (</em><em>defualt=0.8</em><em>)</em>) – The features combinaisons selection according to <span class="math notranslate nohighlight">\(\sum_z P(z|v_i,v_f)\)</span>. It is deeply recommended to have <code class="docutils literal notranslate"><span class="pre">gamma&lt;1</span></code>.</p></li>
+<li><p><strong>cores</strong> (<em>Int</em><em> (</em><em>default=1</em><em>)</em>) – Number of cores used for parallel computations.</p></li>
+<li><p><strong>update</strong> (<em>{'none'</em><em>, </em><em>'transition'</em><em>, </em><em>'ghost'</em><em>, </em><em>'both'}</em><em>, </em><em>(</em><em>default='none'</em><em>)</em>) – <p>The <span class="math notranslate nohighlight">\(P(z|vi,vf)\)</span> update policy. Used only in case of multipixel patches.</p>
+<dl class="simple">
+<dt>none</dt><dd><p>no update</p>
+</dd>
+<dt>transition</dt><dd><p>only when a transition is achieved.</p>
+</dd>
+<dt>ghost</dt><dd><p>only when the ghost tolerance is reached.</p>
+</dd>
+<dt>both</dt><dd><p>for both transition and ghost modes.</p>
+</dd>
+</dl>
+</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p></p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>The observed allocations frequencies according to the features.</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+      
+        <a href="generalized_von_neumann.html" class="btn btn-neutral float-left" title="Generalized Von Neumann Allocation Method" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2020, François-Rémi Mazy
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>
