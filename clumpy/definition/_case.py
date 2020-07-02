@@ -6,12 +6,12 @@ Created on Wed Jun  3 09:35:47 2020
 @author: frem
 """
 
-from .. import definition
-
 import numpy as np
 import pandas as pd
 from scipy import ndimage
 
+from . import _transition
+from . import _feature
 
 class Case():
     """
@@ -36,7 +36,7 @@ class Case():
     J : Pandas DataFrame
         The studied pixels through defined layers.
     
-    transitions : [Transition]
+    transitions : [_Transition]
         The transitions definitions
     
     """
@@ -44,7 +44,7 @@ class Case():
         self.map_i = map_i
         self.map_f = map_f
         
-        self.transitions = definition._transition._Transition()
+        self.transitions = _transition._Transition()
         for vi_vf in list_vi_vf:
             self.transitions.addTif(vi=vi_vf[0], vf=vi_vf[1])
 
@@ -146,7 +146,7 @@ class Case():
         
         # finally, we create for each vi the corresponding Z                
         for vi in list_vi:
-            self.transitions.Ti[vi].Z[name] = definition._feature._Zk(name = name,
+            self.transitions.Ti[vi].Z[name] = _feature._Zk(name = name,
                                                             kind = kind,
                                                             Ti = self.transitions.Ti[vi])
             
@@ -155,7 +155,7 @@ class Case():
         add an explanatory variable from a layer
         
         :param list_Tif: list of Tif
-        :type list_Tif: [Transition_vi_vf]
+        :type list_Tif: [_Transition_vi_vf]
         :param layer_EV: explanatory variable layer object
         :type layer_EV: LayerEV
         :param name: name -- default: None, ie takes the name of the EV layer

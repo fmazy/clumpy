@@ -3,8 +3,8 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
    
-clumpy : a Land Use and Cover Change Models Python package
-==========================================================
+clumpy : Comprehensive Land Use Models in Python
+================================================
 
 Clumpy is a land use and cover change (LUCC) modeler in development written in Python3. Only basic parameters are for now avaiable through python script usage. A GUI is considered as a plugin of Qgis which uses this present library.
 

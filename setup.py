@@ -8,7 +8,7 @@ setuptools.setup(
     version="0.1.0",
     author="François-Rémi Mazy",
     author_email="francois-remi.mazy@inria.fr",
-    description="Land Use and Cover Change Models in python",
+    description="Comprehensive Land Use Models in python",
     long_description=long_description,
     long_description_content_type="text/markdown",
     url="https://gitlab.inria.fr/fmazy/clumpy",

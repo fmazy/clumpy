@@ -1,31 +1,19 @@
-"""
-The transition module of demeter.
-
-Here is a typical example of transitions definitions::
-    
-    T = dm.definition.transition.Transition(LUCf1, LUCf2)
-    T1 = T.addTi(vi=1)
-    T12 = T.addTif(vi=1, vf=2)
-    T13 = T.addTif(vi=1, vf=3)
-    
-    T2 = T.addTi(vi=2)
-    T21 = T.addTif(vi=2, vf=1)
-    T24 = T.addTif(vi=2, vf=4)
-"""
-
 import pandas as pd
 import numpy as np
 import math
-from . import _layer
+# from . import _layer
+
 
 class _Transition(object):
     """
     Base object of a case, such as for a calibration or an allocation stage.
     
-    :param map_i: initial LUC.
-    :type map_i: :class:`.layer.LayerLUC`
-    :param map_f: final LUC -- only required for the calibration stage.
-    :type map_f: :class:`.layer.LayerLUC`, optional       
+    Parameters
+    ==========
+    map_i : LandUseCoverLayer
+        initial LUC layer
+    map_f : LandUseCoverLayer (default=``None``)
+        final LUC layer, only required for the calibration stage     
     """
     def __init__(self):
         self.Ti = {}
@@ -37,7 +25,7 @@ class _Transition(object):
         :param vi: initial state
         :type vi: int
         
-        :returns: a :class:`.Transition_vi` object.
+        :returns: a :class:`._Transition_vi` object.
         """
         if vi not in self.Ti.keys():
             self.Ti[vi] = _Transition_vi(vi, self)
@@ -89,7 +77,7 @@ class _Transition_vi(object):
     :param vi: initial state
     :type vi: int
     :param transition: transition object
-    :type transition: :class:.`Transition`
+    :type transition: :class:.`_Transition`
     """
     def __init__(self, vi, transition):
         self.vi = int(vi)
@@ -150,7 +138,7 @@ class _Transition_vi_vf(object):
     :param vf: final state
     :type vf: int
     :param Ti: transition with :math:`v_i` fixed object
-    :type Ti: :class:`.Transition_vi`
+    :type Ti: :class:`._Transition_vi`
     """
     def __init__(self, vf, Ti):
         self.vi = Ti.vi

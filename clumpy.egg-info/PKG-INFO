@@ -1,12 +1,14 @@
 Metadata-Version: 2.1
 Name: clumpy
 Version: 0.1.0
-Summary: Land Use and Cover Change Models in python
+Summary: Comprehensive Land Use Models in python
 Home-page: https://gitlab.inria.fr/fmazy/clumpy
 Author: François-Rémi Mazy
 Author-email: francois-remi.mazy@inria.fr
 License: UNKNOWN
 Description: # Clumpy
+        
+        Comprehensive Land Use Models in Python
         
         build the package :
         `python3 setup.py sdist bdist_wheel`
