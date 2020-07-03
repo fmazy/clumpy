@@ -5,10 +5,6 @@ Scenario
 import numpy as np
 import pandas as pd
 
-from ..definition import transition
-
-from .. import tools
-
 def compute_multiple_step_transition_matrix(P_vf__vi, nb_steps):
     
     max_v = int(np.max([P_vf__vi.v.i.max(),np.max(P_vf__vi['P_vf__vi'].columns.to_list())]))

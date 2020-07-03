@@ -8,7 +8,7 @@ from matplotlib import pyplot as plt
 #import pandas as pd
 
 #internal libraries
-from . import _layer
+from ._layer import DistanceToVFeatureLayer
 
 class _Zk(object):
     """
@@ -79,7 +79,7 @@ def _addZkAsDistanceToV(Ti, v, k=None, dyn=True):
         dm.definition.explanatory_variable.addZkAsDistanceToV(T1, 2, "dist from 1 to 2")
     
     :param Ti: transition object with :math:`v_i` fixed
-    :type Ti: :class:`.transition.Transition_vi`
+    :type Ti: _transition._Transition_vi
     :param v: targeted state
     :type v: int
     :param k: explanatory variable key -- Default : `None`, i.e. the name `distance_vix_to_vx` is used
@@ -99,7 +99,7 @@ def _addZkAsDistanceToV(Ti, v, k=None, dyn=True):
             dist = d
     if dist == None:
         print("distance does not exist. Computing...")
-        dist = _layer.DistanceToVFeatureLayer(id_v=v, layer_LUC=Ti.T.map_i)
+        dist = DistanceToVFeatureLayer(id_v=v, layer_LUC=Ti.T.map_i)
         
     print("adding Zk")
     
@@ -128,7 +128,7 @@ def _addZkFromLayer(Ti, layer_EV, k, discrete=False):
         dm.definition.explanatory_variable.addZkFromLayer(T1, dem, "elevation")
     
     :param Ti: transition object with :math:`v_i` fixed
-    :type Ti: :class:`.transition.Transition_vi`
+    :type Ti: _transition._Transition_vi
     :param layer_EV: Layer to use as an explanatory variable
     :type layer_EV: :class:`.layer.LayerEV`
     :param k: explanatory variable key

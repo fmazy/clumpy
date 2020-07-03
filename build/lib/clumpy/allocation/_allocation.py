@@ -210,7 +210,7 @@ class _Allocation():
             If ``True``, allocates only mono-pixel patches without any other considerations. If ``False``, multipixel patches will be designed. The model should therefore have been detailed with allocation parameters. This kind of multipixel patches test requires of curse a significant computation time whereas the monopixel one.
         P_vf__vi : Pandas DataFrame (default=None)
             The transition matrix. If ``None``, the fitted ``self.P_vf__vi`` is used.
-        probability_maps : calibration.transition_probability_maps (default=None)
+        probability_maps : definition.TransitionProbabilityLayers (default=None)
             The transition probabilities maps. If ``None``, it is computed according to the given case.
         alpha : Float (default=0.95)
             Signifiance level of the test which gives a threshold value for p. The more ``alpha`` closed to ``1``, the more the test is significant.
@@ -237,7 +237,8 @@ class _Allocation():
 
         Returns
         -------
-        The observed allocations frequencies according to the features.
+        J : pandas DataFrame
+            The observed allocations frequencies according to the features.
 
         """
         

@@ -1,5 +1,6 @@
 from ._calibration import _Calibration
-from .. import definition
+from ..definition._case import Case
+from ..definition._layer import TransitionProbabilityLayers
 
 import pandas as pd
 import numpy as np
@@ -12,17 +13,18 @@ class NaiveBayes(_Calibration):
     # def __init__(self):
         # super().__init__()
         
-    def fit(self, case:definition.Case):
+    def fit(self, case:Case):
         """
         fit model with a discretized case
 
         Parameters
         ----------
-        case : definition.Case
+        case : Case
             The case which have to be discretized.
 
         Notes
         -----
+        
         New attributes are availables :
             
             ``self.P_zk__vi``
@@ -36,17 +38,21 @@ class NaiveBayes(_Calibration):
         self._compute_P_zk__vi_vf(case)
         self._compute_P_vf__vi(case)
         
-    def transition_probability_maps(self, case:definition.Case, P_vf__vi = None):
+    def transition_probability_maps(self, case:Case, P_vf__vi = None):
         """
         Infer transition probability maps 
 
         Parameters
         ----------
-        case : definition.Case
+        case : Case
             The case which have to be discretized..
         P_vf__vi : Pandas DataFrame (default=None)
             The transition matrix. If ``None``, the fitted ``self.P_vf__vi`` is used.
-
+        
+        Returns
+        -------
+        maps : TransitionProbabilityLayers
+            The transition probability maps
         """
         if type(P_vf__vi) == type(None):
             P_vf__vi = self.P_vf__vi
@@ -60,7 +66,7 @@ class NaiveBayes(_Calibration):
         
         return(maps)
         
-    def _compute_P_zk__vi(self, case:definition.Case):
+    def _compute_P_zk__vi(self, case:Case):
         self.P_zk__vi = pd.DataFrame(columns=['vi','Zk_name','q','P_zk__vi'])
         
         for Ti in case.transitions.Ti.values():
@@ -91,7 +97,7 @@ class NaiveBayes(_Calibration):
                 # self.P_zk__vi concatenation
                 self.P_zk__vi = pd.concat([self.P_zk__vi, df_sub], ignore_index=True)
                 
-    def _compute_P_zk__vi_vf(self, case:definition.Case):        
+    def _compute_P_zk__vi_vf(self, case:Case):        
         self.P_zk__vi_vf = pd.DataFrame(columns=['vi','vf','Zk_name','q','P_zk__vi_vf'])
         
         for Ti in case.transitions.Ti.values():
@@ -125,7 +131,7 @@ class NaiveBayes(_Calibration):
                     # self.P_zk__vi_vf concatenation
                     self.P_zk__vi_vf = pd.concat([self.P_zk__vi_vf, df_sub], ignore_index=True)
     
-    def _compute_naive_P_z__vi(self, case:definition.Case):
+    def _compute_naive_P_z__vi(self, case:Case):
         J = case.discrete_J.copy()
         
         if ('v','f') in J.columns:
@@ -159,7 +165,7 @@ class NaiveBayes(_Calibration):
         
         return(P_z__vi)
     
-    def _compute_naive_P_z__vi_vf(self, case:definition.Case):
+    def _compute_naive_P_z__vi_vf(self, case:Case):
         J = case.discrete_J.copy()
         
         if ('v','f') in J.columns:
@@ -311,7 +317,7 @@ def _build_probability_maps(case, P, P_name = 'P_vf__vi_z'):
         else:
             print('check P_vf__vi_z ok')
     
-    probability_maps = definition.TransitionProbabilityLayers()
+    probability_maps = TransitionProbabilityLayers()
     
     J_with_P = case.discrete_J.reset_index().merge(right=P,
                                      how='left').set_index('index')

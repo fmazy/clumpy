@@ -6,7 +6,6 @@ from PIL import Image  # it seems to be a bit limitation of this library
 # from libtiff import TIFF # this one seems to be extended. see https://stackoverflow.com/questions/7569553/working-with-tiffs-import-export-in-python-using-numpy
 import numpy as np
 from scipy import ndimage
-import pandas as pd
 import os
 from matplotlib import pyplot as plt
 import matplotlib as mpl
@@ -194,6 +193,22 @@ class LandUseCoverLayer(_Layer):
         return (txt)
     
     def display(self, values, colors, names, center, window):
+        """
+        Display the land use cover layer through python console with matplotlib.
+
+        Parameters
+        ----------
+        values : [int]
+            List of displayed states.
+        colors : [str]
+            List of colors in HTML format.
+        names : [str]
+            List of state names.
+        center : (int,int)
+            Center position as a tuple.
+        window : (int,int)
+            Window dimensions as a tuple.
+        """
         colors = colors[:-1] + [colors[-2]] + [colors[-1]]
         bounds = np.array(values+[values[-1]+1])-0.5
         
@@ -315,19 +330,62 @@ class DistanceToVFeatureLayer(FeatureLayer):
 
 
 class TransitionProbabilityLayers():
+    """
+    Defines a set of :math:`P(vf|vi,z)` layers.
+    
+    Notes
+    -----
+        The set of layers is defined as a dictionary ``self.layers`` whose keys are :math:`(v_i,v_f)`.
+    """
     
     def __init__(self):
         self.layers = {}
     
     def add_layer(self, vi, vf, data=None, path=None):
+        """
+        Add a layer to the set.        
+
+        Parameters
+        ----------
+        vi : int
+            initial state.
+        vf : int
+            final state.
+        data : numpy array (default=None)
+            The :math:`P(vf|vi,z)` data layer. If None, ``path`` is expected.
+        path : string (default=None)
+            The path to :math:`P(vf|vi,z)` tiff file. If None, ``data`` is expected.
+
+        """
         self.layers[(vi, vf)] = _TransitionProbabilityLayer(vi, vf, data, path)
     
     def copy(self):
+        """
+        Make a copy.
+
+        Returns
+        -------
+        c : TransitionProbabilityLayers
+            A copy of the current object.
+
+        """
         return(deepcopy(self))
         
-    def export_all(self, path):
+    def export_all(self, path:str):
+        """
+        Export all layers as tif files through a zip archive file.
+
+        Parameters
+        ----------
+        path : str
+            Output zip file path. Required new folders are created without error raising.
+            
+        Notes
+        -----
+        All layer files inside the zip archive file are named as following : ``'P_vf' + str(vf) + '__vi' + str(vi) + '_z.tif'``.
+        """
         files_names = []
-        folder_name = os.path.dirname(path)
+        # folder_name = os.path.dirname(path)
         
         for layer in self.layers.values():
             files_names.append(layer.name+'.tif')
@@ -343,9 +401,27 @@ class TransitionProbabilityLayers():
             command += ' '+file_name
         os.system(command)
         
+        # create folder if not exists
+        folder_name = os.path.dirname(path)
+        if not os.path.exists(folder_name) and folder_name!= '':
+            os.makedirs(folder_name)
+        
         os.system('mv .temp_P_vf__vi_z.zip '+path)
         
-    def import_all(self, path):
+    def import_all(self, path:str):
+        """
+        Import all layers from a zip archive file.
+
+        Parameters
+        ----------
+        path : str
+            The zip file to import.
+            
+        Notes
+        -----
+        All layer files inside the zip archive file are expected to be named as following : ``'P_vf' + str(vf) + '__vi' + str(vi) + '_z.tif'``.
+
+        """
         os.system('unzip '+path+' -d '+path+'.out')
         
         files = os.listdir(path+'.out/')
@@ -380,7 +456,7 @@ class _TransitionProbabilityLayer(_Layer):
         if type(data) == np.ndarray:
             self.data = data
 
-        if path != None:
+        if type(path) != type(None):
             self.import_tiff(path)
 
     def import_tiff(self, path):

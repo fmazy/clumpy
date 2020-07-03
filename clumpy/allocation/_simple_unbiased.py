@@ -7,7 +7,6 @@ import numpy as np
 import pandas as pd
 import time
 
-
 class SimpleUnbiased(_Allocation):
     """Simple Unbiased Allocation Method
     
@@ -35,19 +34,19 @@ class SimpleUnbiased(_Allocation):
         P_vf__vi : Pandas DataFrame (default=None)
             The transition matrix. If ``None``, the fitted ``self.P_vf__vi`` is used.
             
-        probability_maps : calibration.transition_probability_maps (default=None)
+        probability_maps : definition.TransitionProbabilityLayers (default=None)
             The transition probabilities maps. If ``None``, it is computed according to the given case.
 
         Returns
         -------
-        map_f : definition.layer.LayerLUC
+        map_f : definition.LandUseCoverLayer
             The allocated land use map
             
         Notes
         -----
         New attributes are availables :`
             
-            ``self.execution_time``
+            ``self.execution_time`` One microseconds precision for Linux and Mac OS and 16 milliseconds precision for Windows.
             
             ``self.tested_pixels``
         """
@@ -115,7 +114,7 @@ class SimpleUnbiased(_Allocation):
         P_vf__vi : Pandas DataFrame (default=None)
             The transition matrix. If ``None``, the fitted ``self.P_vf__vi`` is used.
             
-        probability_maps : calibration.transition_probability_maps (default=None)
+        probability_maps : definition.TransitionProbabilityLayers (default=None)
             The transition probabilities maps. If ``None``, it is computed according to the given case.
         
         update : {'none', 'transition', 'ghost', 'both'}, (default='none')
@@ -135,7 +134,7 @@ class SimpleUnbiased(_Allocation):
         
         Returns
         -------
-        map_f : definition.layer.LayerLUC
+        map_f : definition.LandUseCoverLayer
             The allocated land use map
 
         Notes
@@ -144,8 +143,7 @@ class SimpleUnbiased(_Allocation):
             
             ``self.ghost_allocation``
             
-            ``self.execution_time``
-                One microseconds precision for Linux and Mac OS and 16 milliseconds precision for Windows
+            ``self.execution_time`` One microseconds precision for Linux and Mac OS and 16 milliseconds precision for Windows.
             
             ``self.tested_pixels``
             

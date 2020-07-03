@@ -21,7 +21,6 @@ clumpy/calibration/_knn.py
 clumpy/calibration/_naive_bayes.py
 clumpy/calibration/discretization.py
 clumpy/calibration/feature_selection.py
-clumpy/calibration/naive_bayes.py
 clumpy/calibration/patches.py
 clumpy/definition/__init__.py
 clumpy/definition/_case.py

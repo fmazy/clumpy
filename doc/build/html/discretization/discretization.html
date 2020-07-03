@@ -28,6 +28,8 @@
         <script type="text/javascript" src="../_static/doctools.js"></script>
         <script type="text/javascript" src="../_static/language_data.js"></script>
         <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+        <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+        <script type="text/x-mathjax-config">MathJax.Hub.Config({"tex2jax": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true, "ignoreClass": "document", "processClass": "math|output_area"}})</script>
     
     <script type="text/javascript" src="../_static/js/theme.js"></script>
 
@@ -213,6 +215,14 @@
 </ul>
 </dd>
 </dl>
+<p class="rubric">Notes</p>
+<p>A new attribute is then available :</p>
+<blockquote>
+<div><dl class="simple">
+<dt><code class="docutils literal notranslate"><span class="pre">case.alpha</span></code></dt><dd><p>The returned bins for each transition and each feature.</p>
+</dd>
+</dl>
+</div></blockquote>
 <p class="rubric">Example</p>
 <p>The binning parameters can be defined as following:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">binning_parameters</span> <span class="o">=</span> <span class="p">{(</span><span class="mi">3</span><span class="p">,</span> <span class="s1">&#39;dem&#39;</span><span class="p">):{</span><span class="s1">&#39;method&#39;</span><span class="p">:</span><span class="s1">&#39;optbinning&#39;</span><span class="p">},</span>
@@ -234,6 +244,14 @@
 </ul>
 </dd>
 </dl>
+<p class="rubric">Notes</p>
+<p>A new attribute is then available :</p>
+<blockquote>
+<div><dl class="simple">
+<dt><code class="docutils literal notranslate"><span class="pre">case.discrete_J</span></code></dt><dd><p>The discretized features according to each studied pixels.</p>
+</dd>
+</dl>
+</div></blockquote>
 </dd></dl>
 
 </div>

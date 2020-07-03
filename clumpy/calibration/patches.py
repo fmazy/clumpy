@@ -12,7 +12,7 @@ from matplotlib import pyplot as plt
 #from scipy import signal, sparse
 from skimage import measure # for patch perimeters
 
-from ..definition import transition
+from ..definition import _transition
 from .. import tools as dmtools
 from .. import definition
 
@@ -243,79 +243,6 @@ def plot_surfaces_histogram(surfaces_histogram, vi, vf, isl_exp, color=None, lin
             linewidth=linewidth,
             label=label)
 
-# def analyze(Tif:transition.Transition_vi_vf, export_path_folder=None):
-#     # d'abord, on supprime les données correspondantes
-#     Tif.Ti.T.patches = Tif.Ti.T.patches.loc[~((Tif.Ti.T.patches.vi == Tif.Ti.vi) &
-#                                                 (Tif.Ti.T.patches.vf == Tif.vf))]        
-      
-#     df_J_vi_vf = Tif.Ti.J_vi.loc[Tif.Ti.J_vi.vf == Tif.vf].copy()
-#     M_shape = np.shape(Tif.Ti.T.map_i.data)
-    
-#     M = np.zeros(M_shape)
-    
-#     M.flat[df_J_vi_vf.index.values] = 1
-    
-#     lw_vi_vf, num_vi_vf = ndimage.measurements.label(M) # création des îlots
-#     id_patch, S = np.unique(lw_vi_vf, return_counts=True)
-                    
-#     # c'est quoi l'idée ?
-#     # pour chaque tache dans patches, on va regarder si c'est une ile.
-#     # pour ça, on va comparer avec les iles de J_vf (lw_vf)
-#     # ainsi, si les pixels concernés sont égaux dans lw_vi_vf et lw_vf, c'est bien une nouvelle ile
-    
-#     patches = np.zeros((id_patch.size,3))
-#     patches[:,0] = id_patch
-#     patches[:,1] = S
-    
-#     M_vf = np.zeros(M_shape)
-#     M_vf.flat[Tif.Ti.T.map_f.data.flat == Tif.vf] = 1
-#     lw_vf, num_vf = ndimage.measurements.label(M_vf)
-    
-#     df_J_vi_vf["id_patch"] = lw_vi_vf.flat[df_J_vi_vf.index.values]
-    
-#     df_J_vf = pd.DataFrame(np.argwhere(Tif.Ti.T.map_f.data.flat == Tif.vf).transpose()[0], columns=['j'])
-#     df_J_vf["id_patch"] = lw_vf.flat[df_J_vf.index.values]
-                       
-#     for n_vi_vf in tqdm(range(1,num_vi_vf+1)): # on retire l'élément 0 qui correspond au vide entre les ilots
-#         # on récupère les pixels correspondant à l'ile d'indice n_vi_vf
-#         j_n_vi_vf = df_J_vi_vf.loc[df_J_vi_vf.id_patch==n_vi_vf].index.values
-#         # ça correspond à quel indice dans lw_vf ?
-#         n_vf = lw_vf.flat[j_n_vi_vf[0]]
-#         # maintenant on récupère les indices correspondants
-#         j_n_vf = df_J_vf.loc[df_J_vf.id_patch==n_vf].index.values
-#         # on les compare par leur taille:
-#         if j_n_vi_vf.size == j_n_vf.size:
-#             # c'est une ile !
-#             patches[n_vi_vf,2] = 1
-            
-#     df_patches = pd.DataFrame(patches[1:,1:3], columns=['S','isl_exp']) # on récupère à partir de l'indice 1 car 0 c'est entre les îles !
-#     df_patches['vi'] = Tif.Ti.vi
-#     df_patches['vf'] = Tif.vf
-    
-#     # on remplace les 1 de isl_exp par 'isl'
-#     df_patches.loc[df_patches.isl_exp == 1, 'isl_exp'] = 'isl'
-#     df_patches.loc[df_patches.isl_exp == 0, 'isl_exp'] = 'exp'
-    
-#     Tif.Ti.T.patches = pd.concat([Tif.Ti.T.patches, df_patches], ignore_index=True)
-    
-    
-    
-#     if export_path_folder != None:
-        
-#         df_patches = pd.DataFrame(patches[1:,0:3], columns=['id_patch','S','island'])
-        
-#         df_J_vi_vf = df_J_vi_vf.merge(right= df_patches, how='left', on='id_patch')
-                
-#         shape = M_shape
-#         index = df_J_vi_vf.index.values
-#         values = df_J_vi_vf.island.values
-        
-#         M = dmtools.generateBigNp(shape, index, values, default_value=-1)
-        
-#         print("exporting tif file in "+export_path_folder+"...")
-#         img = Image.fromarray(M)
-#         img.save(export_path_folder)
-        
 def analyseDelta(Tif):
     df_J_vi_vf = Tif.Ti.J_vi.loc[Tif.Ti.J_vi.vf == Tif.vf].copy()
     map_vi_vf = dmtools.generateBigNp(np.shape(Tif.Ti.T.map_i.data),
@@ -406,13 +333,8 @@ def analyseDelta2(Tif):
         
     return(delta)
         
-
-# def analyzeAllTif(T:transition.Transition):               
-#     for Ti in T.Ti.values():
-#         for Tif in Ti.Tif.values():
-#             analyze(Tif)
             
-def histogram(Tif:transition.Transition_vi_vf, isl_exp):    
+def histogram(Tif:_transition._Transition_vi_vf, isl_exp):    
     # d'abord, on supprime les entrées correspondantes dans le dataframe
     Tif.Ti.T.patchesHist = Tif.Ti.T.patchesHist.loc[~((Tif.Ti.T.patchesHist.vi == Tif.Ti.vi) &
                                                         (Tif.Ti.T.patchesHist.vf == Tif.vf) &
@@ -434,18 +356,18 @@ def histogram(Tif:transition.Transition_vi_vf, isl_exp):
     
     Tif.Ti.T.patchesHist = pd.concat([Tif.Ti.T.patchesHist, df_patches], ignore_index=True)
     
-def histogramAllTif(T:transition.Transition):        
+def histogramAllTif(T:_transition._Transition):        
     for Ti in T.Ti.values():
         for Tif in Ti.Tif.values():
             for isl_exp in ['isl', 'exp']:
                 histogram(Tif, isl_exp=isl_exp)
                         
-def setOffHistogramAsNormal(Tif:transition.Transition_vi_vf, islands_or_expansions:str):
+def setOffHistogramAsNormal(Tif:_transition._Transition_vi_vf, islands_or_expansions:str):
     """
     Set off the normal distribution of patches.
     
     :param Tif: :math:`T_{v_i,v_f}`
-    :type Tif: .definition.transition.Transition_vi_vf
+    :type Tif: ._transition._Transition_vi_vf
     :param islands_or_expansions: island or expansion type -- ``"islands"`` or ``"expansions"``.
     :type islands_or_expansions: string
     """
@@ -454,7 +376,7 @@ def setOffHistogramAsNormal(Tif:transition.Transition_vi_vf, islands_or_expansio
     elif islands_or_expansions== 'expansions':
         Tif.patches_expansions_normal_distribution = None
                 
-def display(Tif:transition.Transition_vi_vf, isl_exp, density=True, hectare=True):       
+def display(Tif:_transition._Transition_vi_vf, isl_exp, density=True, hectare=True):       
     patchesHist = Tif.Ti.T.patchesHist.loc[(Tif.Ti.T.patchesHist.vi == Tif.Ti.vi) &
                                             (Tif.Ti.T.patchesHist.vf == Tif.vf) &
                                             (Tif.Ti.T.patchesHist.isl_exp == isl_exp)]

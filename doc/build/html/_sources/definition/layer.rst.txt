@@ -16,4 +16,7 @@ Layer
     :inherited-members:
     :show-inheritance:
 
-
+.. autoclass:: clumpy.definition.TransitionProbabilityLayers
+    :members:
+    :inherited-members:
+    :show-inheritance:

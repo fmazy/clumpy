@@ -28,6 +28,8 @@
         <script type="text/javascript" src="../_static/doctools.js"></script>
         <script type="text/javascript" src="../_static/language_data.js"></script>
         <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+        <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+        <script type="text/x-mathjax-config">MathJax.Hub.Config({"tex2jax": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true, "ignoreClass": "document", "processClass": "math|output_area"}})</script>
     
     <script type="text/javascript" src="../_static/js/theme.js"></script>
 
@@ -218,6 +220,23 @@
 </dd>
 </dl>
 <dl class="method">
+<dt id="clumpy.definition.LandUseCoverLayer.display">
+<code class="sig-name descname">display</code><span class="sig-paren">(</span><em class="sig-param">values</em>, <em class="sig-param">colors</em>, <em class="sig-param">names</em>, <em class="sig-param">center</em>, <em class="sig-param">window</em><span class="sig-paren">)</span><a class="headerlink" href="#clumpy.definition.LandUseCoverLayer.display" title="Permalink to this definition">¶</a></dt>
+<dd><p>Display the land use cover layer through python console with matplotlib.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>values</strong> (<em>[</em><em>int</em><em>]</em>) – List of displayed states.</p></li>
+<li><p><strong>colors</strong> (<em>[</em><em>str</em><em>]</em>) – List of colors in HTML format.</p></li>
+<li><p><strong>names</strong> (<em>[</em><em>str</em><em>]</em>) – List of state names.</p></li>
+<li><p><strong>center</strong> (<em>(</em><em>int</em><em>,</em><em>int</em><em>)</em>) – Center position as a tuple.</p></li>
+<li><p><strong>window</strong> (<em>(</em><em>int</em><em>,</em><em>int</em><em>)</em>) – Window dimensions as a tuple.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
 <dt id="clumpy.definition.LandUseCoverLayer.export_asc">
 <code class="sig-name descname">export_asc</code><span class="sig-paren">(</span><em class="sig-param">path</em><span class="sig-paren">)</span><a class="headerlink" href="#clumpy.definition.LandUseCoverLayer.export_asc" title="Permalink to this definition">¶</a></dt>
 <dd><p>Export the layer data as an <code class="docutils literal notranslate"><span class="pre">asc</span></code> file in order to use it through CLUES and CLUMondo.</p>
@@ -374,6 +393,71 @@
 <dd class="field-odd"><p><strong>path</strong> (<em>str</em>) – path to the file</p>
 </dd>
 </dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="clumpy.definition.TransitionProbabilityLayers">
+<em class="property">class </em><code class="sig-prename descclassname">clumpy.definition.</code><code class="sig-name descname">TransitionProbabilityLayers</code><a class="headerlink" href="#clumpy.definition.TransitionProbabilityLayers" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Defines a set of <span class="math notranslate nohighlight">\(P(vf|vi,z)\)</span> layers.</p>
+<p class="rubric">Notes</p>
+<p>The set of layers is defined as a dictionary <code class="docutils literal notranslate"><span class="pre">self.layers</span></code> whose keys are <span class="math notranslate nohighlight">\((v_i,v_f)\)</span>.</p>
+<dl class="method">
+<dt id="clumpy.definition.TransitionProbabilityLayers.add_layer">
+<code class="sig-name descname">add_layer</code><span class="sig-paren">(</span><em class="sig-param">vi</em>, <em class="sig-param">vf</em>, <em class="sig-param">data=None</em>, <em class="sig-param">path=None</em><span class="sig-paren">)</span><a class="headerlink" href="#clumpy.definition.TransitionProbabilityLayers.add_layer" title="Permalink to this definition">¶</a></dt>
+<dd><p>Add a layer to the set.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>vi</strong> (<em>int</em>) – initial state.</p></li>
+<li><p><strong>vf</strong> (<em>int</em>) – final state.</p></li>
+<li><p><strong>data</strong> (<em>numpy array</em><em> (</em><em>default=None</em><em>)</em>) – The <span class="math notranslate nohighlight">\(P(vf|vi,z)\)</span> data layer. If None, <code class="docutils literal notranslate"><span class="pre">path</span></code> is expected.</p></li>
+<li><p><strong>path</strong> (<em>string</em><em> (</em><em>default=None</em><em>)</em>) – The path to <span class="math notranslate nohighlight">\(P(vf|vi,z)\)</span> tiff file. If None, <code class="docutils literal notranslate"><span class="pre">data</span></code> is expected.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="clumpy.definition.TransitionProbabilityLayers.copy">
+<code class="sig-name descname">copy</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#clumpy.definition.TransitionProbabilityLayers.copy" title="Permalink to this definition">¶</a></dt>
+<dd><p>Make a copy.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p><strong>c</strong> – A copy of the current object.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><a class="reference internal" href="#clumpy.definition.TransitionProbabilityLayers" title="clumpy.definition.TransitionProbabilityLayers">TransitionProbabilityLayers</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="clumpy.definition.TransitionProbabilityLayers.export_all">
+<code class="sig-name descname">export_all</code><span class="sig-paren">(</span><em class="sig-param">path: str</em><span class="sig-paren">)</span><a class="headerlink" href="#clumpy.definition.TransitionProbabilityLayers.export_all" title="Permalink to this definition">¶</a></dt>
+<dd><p>Export all layers as tif files through a zip archive file.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>path</strong> (<em>str</em>) – Output zip file path. Required new folders are created without error raising.</p>
+</dd>
+</dl>
+<p class="rubric">Notes</p>
+<p>All layer files inside the zip archive file are named as following : <code class="docutils literal notranslate"><span class="pre">'P_vf'</span> <span class="pre">+</span> <span class="pre">str(vf)</span> <span class="pre">+</span> <span class="pre">'__vi'</span> <span class="pre">+</span> <span class="pre">str(vi)</span> <span class="pre">+</span> <span class="pre">'_z.tif'</span></code>.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="clumpy.definition.TransitionProbabilityLayers.import_all">
+<code class="sig-name descname">import_all</code><span class="sig-paren">(</span><em class="sig-param">path: str</em><span class="sig-paren">)</span><a class="headerlink" href="#clumpy.definition.TransitionProbabilityLayers.import_all" title="Permalink to this definition">¶</a></dt>
+<dd><p>Import all layers from a zip archive file.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>path</strong> (<em>str</em>) – The zip file to import.</p>
+</dd>
+</dl>
+<p class="rubric">Notes</p>
+<p>All layer files inside the zip archive file are expected to be named as following : <code class="docutils literal notranslate"><span class="pre">'P_vf'</span> <span class="pre">+</span> <span class="pre">str(vf)</span> <span class="pre">+</span> <span class="pre">'__vi'</span> <span class="pre">+</span> <span class="pre">str(vi)</span> <span class="pre">+</span> <span class="pre">'_z.tif'</span></code>.</p>
 </dd></dl>
 
 </dd></dl>

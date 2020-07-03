@@ -33,7 +33,7 @@ class GeneralizedVonNeumann(_Allocation):
 
         Returns
         -------
-        map_f : definition.layer.LayerLUC
+        map_f : definition.LandUseCoverLayer
             The allocated land use map
             
         Notes
@@ -122,7 +122,7 @@ class GeneralizedVonNeumann(_Allocation):
         
         Returns
         -------
-        map_f : definition.layer.LayerLUC
+        map_f : definition.LandUseCoverLayer
             The allocated land use map
             
         Notes

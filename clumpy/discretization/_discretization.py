@@ -15,15 +15,23 @@ def binning(case:definition.Case, params='optbinning'):
     see `numpy documentation <https://docs.scipy.org/doc/numpy/reference/generated/numpy.histogram_bin_edges.html#numpy.histogram_bin_edges>`_ -- Default value : ``'auto'``.
     
     Parameters
-    ==========
+    ----------
     case : definition.Case
         the studied case
     
     params : dict
         the binning parameters for each feature. It is a dictionary which associates for each couples (initial state, feature name) a method and other options if needed. See the example below.   
     
+    Notes
+    -----
+    
+    A new attribute is then available :
+        
+        ``case.alpha``
+            The returned bins for each transition and each feature.
+    
     Example
-    =======
+    -------
     The binning parameters can be defined as following::
         
         binning_parameters = {(3, 'dem'):{'method':'optbinning'},
@@ -57,6 +65,14 @@ def discretize(case:definition.Case, alpha=None):
         The case to discretize according to alpha
     alpha : Pandas DataFrame (default=None)
         The binning DataFrame. If ``None``, the self binning DataFrame computed by `binning` is used.
+        
+    Notes
+    -----
+    A new attribute is then available :
+        
+        ``case.discrete_J``
+            The discretized features according to each studied pixels.
+    
     """
     
     if type(alpha) == type(None):

@@ -1,9 +1,3 @@
-import pandas as pd
-import numpy as np
-import math
-# from . import _layer
-
-
 class _Transition(object):
     """
     Base object of a case, such as for a calibration or an allocation stage.

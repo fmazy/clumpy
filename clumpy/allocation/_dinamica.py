@@ -32,6 +32,8 @@ class Dinamica(_Allocation):
             Starting case which have to be discretized.
         P_vf__vi : Pandas DataFrame (default=None)
             The transition matrix. If ``None``, the fitted ``self.P_vf__vi`` is used.
+        probability_maps : definition.TransitionProbabilityLayers (default=None)
+            The transition probabilities maps. If ``None``, it is computed according to the given case.
         F : float (default=10)
             Pruning factor.
         replace : bool (default=True)
@@ -40,7 +42,7 @@ class Dinamica(_Allocation):
             factor of selected pixels.
         Returns
         -------
-        map_f : definition.layer.LayerLUC
+        map_f : definition.LandUseCoverLayer
             The allocated land use map
         """
         map_f_data = case.map_i.data.copy()
@@ -205,7 +207,7 @@ class Dinamica(_Allocation):
             factor of selected pixels.
         Returns
         -------
-        map_f : definition.layer.LayerLUC
+        map_f : definition.LandUseCoverLayer
             The allocated land use map
         """
         
@@ -217,14 +219,14 @@ class Dinamica(_Allocation):
         probability_maps = calibration.transition_probability_maps(case, P_vf__vi)
         
         
-        map_f = definition.layer.LayerLUC(name="luc_neutral",
+        map_f = definition.LayerLUC(name="luc_neutral",
                                    time=None,
                                    scale=case.map_i.scale)
         map_f.import_numpy(data=map_f_data)
                 
         for vi in P_vf__vi.v.i.values.astype(int):
             
-            J = definition.data.create_J(case.map_i)
+            J = create_J(case.map_i)
             
             J = J.loc[J.v.i==vi]
             
@@ -357,7 +359,7 @@ class Dinamica(_Allocation):
                                     J.P_vf__vi_z /= J.P_vf__vi_z.sum(axis=1).max()
                             print(str(vi)+'->'+str(vf)+' : done')
                                     
-        map_f = definition.layer.LayerLUC(name="luc_simple",
+        map_f = definition.LayerLUC(name="luc_simple",
                                    time=None,
                                    scale=case.map_i.scale)
         map_f.import_numpy(data=map_f_data)
@@ -382,7 +384,7 @@ class Dinamica(_Allocation):
             Replace rejected pixels in the pool (source of allocation bias).
         Returns
         -------
-        map_f : definition.layer.LayerLUC
+        map_f : definition.LandUseCoverLayer
             The allocated land use map
         """
         map_f_data = case.map_i.data.copy()
@@ -393,14 +395,14 @@ class Dinamica(_Allocation):
         
         probability_maps = calibration.transition_probability_maps(case, P_vf__vi)
         
-        map_f = definition.layer.LayerLUC(name="luc_neutral",
+        map_f = definition.LayerLUC(name="luc_neutral",
                                    time=None,
                                    scale=case.map_i.scale)
         map_f.import_numpy(data=map_f_data)
             
         for vi in P_vf__vi.v.i.values.astype(int):
             
-            J = definition.data.create_J(case.map_i)
+            J = create_J(case.map_i)
             
             J = J.loc[J.v.i==vi]
         
@@ -474,10 +476,19 @@ class Dinamica(_Allocation):
                 else:
                     break
                 
-        map_f = definition.layer.LayerLUC(name="luc_simple",
+        map_f = definition.LayerLUC(name="luc_simple",
                                    time=None,
                                    scale=case.map_i.scale)
         map_f.import_numpy(data=map_f_data)
             
         
         return(map_f)
+    
+def create_J(layer_LUC_i, layer_LUC_f=None):    
+    # all pixels with vi value
+    cols = [('v', 'i')]
+    cols = pd.MultiIndex.from_tuples(cols)
+    
+    J = pd.DataFrame(layer_LUC_i.data.flat, columns=cols)
+            
+    return(J)
