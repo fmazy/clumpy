@@ -7,7 +7,7 @@ import numpy as np
 from matplotlib import pyplot as plt
 from optbinning import MulticlassOptimalBinning
     
-def binning(case:definition.Case, params='optbinning'):
+def binning(case:definition.Case, params):
     """
     Binning according to a case and parameters.
 

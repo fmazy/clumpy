@@ -8,6 +8,9 @@ build the package :
 upload on testpypi
 `python3 -m twine upload --repository testpypi dist/*`
 
+upload on pypi
+`twine upload dist/*`
+
 help about pypi packages
 https://packaging.python.org/tutorials/packaging-projects/
 

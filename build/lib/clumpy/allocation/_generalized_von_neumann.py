@@ -18,19 +18,35 @@ class GeneralizedVonNeumann(_Allocation):
     def __init__(self, params = None):
         super().__init__(params)
     
-    def allocate_monopixel_patches(self, calibration:_Calibration, case:definition.Case, P_vf__vi=None):
+    def allocate_monopixel_patches(self,
+                                   case:definition.Case,
+                                   calibration=None,
+                                   P_vf__vi=None,
+                                   probability_maps = None,
+                                   sound=2,
+                                   dict_args={}):
         """
         Simple allocation of monopixels patches whithout scenario control.
 
         Parameters
         ----------
-        calibration : _Calibration
-            Calibration object.
         case : definition.Case
             Starting case which have to be discretized.
+            
+        calibration : _Calibration (default=None)
+            Calibration object. If ``None``, the probability maps is expected.
+            
         P_vf__vi : Pandas DataFrame (default=None)
             The transition matrix. If ``None``, the fitted ``self.P_vf__vi`` is used.
-
+            
+        probability_maps : definition.TransitionProbabilityLayers (default=None)
+            The transition probabilities maps. If ``None``, it is computed according to the given case. It overwrites the calibration and ``P_vf__vi``.
+        
+        sound : int (default=2)
+            Text output level. ``0`` means silent mode.
+            
+        dict_args : dict (default=``{}``)
+            The above optional arguments in a dictionary. Overwrites if already passed. 
         Returns
         -------
         map_f : definition.LandUseCoverLayer
@@ -44,12 +60,21 @@ class GeneralizedVonNeumann(_Allocation):
             
             ``self.tested_pixels``
         """
+        np.random.seed() # needed to seed in case of multiprocessing
+        
+        P_vf__vi=dict_args.get('P_vf__vi', P_vf__vi)
+        probability_maps=dict_args.get('probability_maps', probability_maps)
+        sound=dict_args.get('sound', sound)
+        
         start_time = time.time()
         
-        if type(P_vf__vi) == type(None):
-            P_vf__vi = calibration.P_vf__vi
-        
-        probability_maps = calibration.transition_probability_maps(case, P_vf__vi)
+        if type(probability_maps) == type(None):
+            if type(P_vf__vi) == type(None):
+                P_vf__vi = calibration.P_vf__vi
+            
+            probability_maps = calibration.transition_probability_maps(case, P_vf__vi)
+        else:
+            probability_maps = probability_maps.copy()
         
         self.execution_time['transition_probability_maps']=time.time()-start_time
         start_time = time.time()
@@ -77,30 +102,41 @@ class GeneralizedVonNeumann(_Allocation):
         map_f = definition.LandUseCoverLayer(name="luc_simple",
                                    time=None,
                                    scale=case.map_i.scale)
-        map_f.import_numpy(data=map_f_data)
+        map_f.import_numpy(data=map_f_data, sound=sound)
         
-        print('FINISHED')
-        print('========')
-        print('execution times')
-        print(self.execution_time)
-        
-        N_vi_vf = J_pivotcells.groupby([('v','i'), ('v','f')]).size().reset_index(name=('N_vi_vf', ''))
-        print(N_vi_vf)
+        if sound>1:
+            print('FINISHED')
+            print('========')
+            print('execution times')
+            print(self.execution_time)
+            
+            N_vi_vf = J_pivotcells.groupby([('v','i'), ('v','f')]).size().reset_index(name=('N_vi_vf', ''))
+            print(N_vi_vf)
         
         return(map_f)
         
-    def allocate(self, calibration:_Calibration, case:definition.Case, P_vf__vi=None, update='none', ghost_tolerance=1):
+    def allocate(self,
+                 case:definition.Case,
+                 calibration=None,
+                 P_vf__vi=None,
+                 probability_maps=None,
+                 update='none',
+                 sound=2,
+                 dict_args={}):
         """
         Parameters
         ----------
-        calibration : _Calibration
-            Calibration object.
-        
         case : definition.Case
             Starting case which have to be discretized.
-        
+            
+        calibration : _Calibration (default=None)
+            Calibration object. If ``None``, the probability maps is expected.
+            
         P_vf__vi : Pandas DataFrame (default=None)
             The transition matrix. If ``None``, the fitted ``self.P_vf__vi`` is used.
+            
+        probability_maps : definition.TransitionProbabilityLayers (default=None)
+            The transition probabilities maps. If ``None``, it is computed according to the given case. It overwrites the calibration and ``P_vf__vi``.
         
         update : {'none', 'transition', 'ghost', 'both'}, (default='none')
             The P(z|vi,vf) update policy.
@@ -117,8 +153,11 @@ class GeneralizedVonNeumann(_Allocation):
             both
                 for both transition and ghost modes.
         
-        ghost_tolerance : float (default=1)
-            The ratio of ghost allocation which implies the transition probabilities update (``update`` have to be in {'ghost', 'both'}).
+        sound : int (default=2)
+            Text output level. ``0`` means silent mode.
+            
+        dict_args : dict (default=``{}``)
+            The above optional arguments in a dictionary. Overwrites if already passed. 
         
         Returns
         -------
@@ -142,12 +181,25 @@ class GeneralizedVonNeumann(_Allocation):
             
             ``self.N_vi_vf_target``
         """
+        np.random.seed() # needed to seed in case of multiprocessing
+        
+        P_vf__vi=dict_args.get('P_vf__vi', P_vf__vi)
+        probability_maps=dict_args.get('probability_maps', probability_maps)
+        update=dict_args.get('update', update)
+        sound=dict_args.get('sound', sound)
+        
+        if calibration == None:
+            calibration = _Calibration()
+        
         start_time = time.time()
         
-        if type(P_vf__vi) == type(None):
-            P_vf__vi = calibration.P_vf__vi
-        
-        probability_maps = calibration.transition_probability_maps(case, P_vf__vi)
+        if type(probability_maps) == type(None):
+            if type(P_vf__vi) == type(None):
+                P_vf__vi = calibration.P_vf__vi
+            
+            probability_maps = calibration.transition_probability_maps(case, P_vf__vi)
+        else:
+            probability_maps = probability_maps.copy()
         
         self.execution_time['transition_probability_maps']=time.time()-start_time
         start_time = time.time()
@@ -158,7 +210,8 @@ class GeneralizedVonNeumann(_Allocation):
                 
         N_vi_vf = self._compute_N_vi_vf(list(probability_maps.layers.keys()), J, P_vf__vi)
         N_vi_vf_target = N_vi_vf.copy()
-        print(N_vi_vf)
+        if sound >1:
+            print(N_vi_vf)
         
         # build the P_z__vi map 
         calibration.compute_P_z__vi(case)
@@ -224,7 +277,8 @@ class GeneralizedVonNeumann(_Allocation):
             update_P_z__vi_trigger = False
             
             if N_vi_vf[(vi,vf)] <= 0:
-                print('The transition ('+str(vi)+','+str(vf)+') is achieved.')
+                if sound>1:
+                    print('The transition ('+str(vi)+','+str(vf)+') is achieved.')
                 if update in ['transition', 'both']:
                     update_P_z__vi_trigger = True
                 else:
@@ -237,14 +291,16 @@ class GeneralizedVonNeumann(_Allocation):
                     idx = 0
                 
             if update in ['ghost', 'both']:
-                if ghost_allocation[(vi,vf)] > N_vi_vf_target[(vi,vf)]*ghost_tolerance:
-                    print('ghost threshold reached for ('+str(vi)+','+str(vf)+')')
+                if ghost_allocation[(vi,vf)] > N_vi_vf_target[(vi,vf)]*self.params[(vi,vf)]['patches_parameters']['isl']['ghost_tolerance']:
+                    if sound>1:
+                        print('ghost threshold reached for ('+str(vi)+','+str(vf)+')')
                     update_P_z__vi_trigger = True
                     ghost_allocation[(vi,vf)] = 0
             
             # on met à jour les probabilités
             if update_P_z__vi_trigger:
-                print('P_z__vi update...')
+                if sound>1:
+                    print('P_z__vi update...')
                 # on met à jour J_initial en retirant les pixels qui ont transités
                 J[('v','f')] = map_f_data.flat[J.index.values]
                 J.drop(J.loc[J.v.i != J.v.f].index.values, axis=0, inplace=True)
@@ -267,7 +323,8 @@ class GeneralizedVonNeumann(_Allocation):
                 J_pivotcells = self._sample(J, probability_maps, draw_patches_parameters=True, random_sample=True)
                 # le compteur idx est réinitialisé
                 idx = -1
-                print('done')
+                if sound>1:
+                    print('done')
         
         self.execution_time['allocation']=time.time()-start_time - np.sum(self.execution_time['sampling']) - np.sum(self.execution_time['patches_parameters_initialization'])
         
@@ -277,10 +334,10 @@ class GeneralizedVonNeumann(_Allocation):
         map_f = definition.LandUseCoverLayer(name="luc_simple",
                                    time=None,
                                    scale=case.map_i.scale)
-        map_f.import_numpy(data=map_f_data)
-        
-        print('FINISHED')
-        print('========')
+        map_f.import_numpy(data=map_f_data, sound=sound)
+        if sound>1:
+            print('FINISHED')
+            print('========')
         
         # some informations are saved
         self.N_vi_vf = N_vi_vf
@@ -297,13 +354,13 @@ class GeneralizedVonNeumann(_Allocation):
                                            (N_vi_vf_target[vi_vf]-N_vi_vf[vi_vf])/N_vi_vf_target[vi_vf],
                                            total_ghost_allocation[vi_vf],
                                            total_ghost_allocation[vi_vf]/(N_vi_vf_target[vi_vf]-N_vi_vf[vi_vf])]
-            
-        print(infos)
+        if sound>1:
+            print(infos)
         
         self.infos = infos
-        
-        print('execution times')
-        print(self.execution_time)
+        if sound>1:
+            print('execution times')
+            print(self.execution_time)
         
         return(map_f)
     

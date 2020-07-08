@@ -309,13 +309,15 @@ def _compute_P_vf__vi_z_with_bayes(P_vf__vi, P_z__vi, P_z__vi_vf, keep_P=False):
     
     return(P_vf__vi_z)
 
-def _build_probability_maps(case, P, P_name = 'P_vf__vi_z'):
+def _build_probability_maps(case, P, P_name = 'P_vf__vi_z', sound=1):
     # check P_vf__vi_z integrity :
     if P_name == 'P_vf__vi_z':
         if P.P_vf__vi_z.sum(axis=1).max() > 1:
-            print('warning, max(sum_z(P_vf__vi_z))=',P.P_vf__vi_z.sum(axis=1).max())
+            if sound >0:
+                print('warning, max(sum_z(P_vf__vi_z))=',P.P_vf__vi_z.sum(axis=1).max())
         else:
-            print('check P_vf__vi_z ok')
+            if sound > 1:
+                print('check P_vf__vi_z ok')
     
     probability_maps = TransitionProbabilityLayers()
     

@@ -138,7 +138,8 @@ class LandUseCoverLayer(_Layer):
         if sound >0:
             print("importing tiff file '" + path + "'")
         self.path = path
-
+        
+        Image.MAX_IMAGE_PIXELS = None # no image size limit
         img = Image.open(path)  # image loading
         img.load()
         dtype = "int32"  # "float" for EF
@@ -237,7 +238,7 @@ class LandUseCoverLayer(_Layer):
         plt.yticks([], [])
         plt.xticks([], [])
         cb = plt.colorbar()
-        cb.set_ticks([1,2,3])
+        cb.set_ticks(values)
         cb.set_ticklabels(names)
         cb.set_label('$v_f$', fontsize=14)
 

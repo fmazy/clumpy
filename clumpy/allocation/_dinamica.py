@@ -1,4 +1,4 @@
-from ._allocation import _Allocation
+from ._allocation import _Allocation, compute_P_vf__vi_from_transition_probability_maps
 from ..calibration._calibration import _Calibration
 from .. import definition
 from ._patcher import _weighted_neighbors
@@ -20,24 +20,31 @@ class Dinamica(_Allocation):
     def __init__(self, params = None):
         super().__init__(params)
         
-    def allocate_monopixel_patches(self, calibration:_Calibration, case:definition.Case, P_vf__vi=None, probability_maps=None, F=10, replace=True, k=500, sound=2):
+    def allocate_monopixel_patches(self,
+                                   case:definition.Case,
+                                   probability_maps=None,
+                                   F=10,
+                                   replace=True,
+                                   k=500,
+                                   sound=2,
+                                   dict_args={}):
         """
         Fast allocation for monopixel patches
 
         Parameters
         ----------
-        calibration : _Calibration
-            Calibration object.
         case : definition.Case
             Starting case which have to be discretized.
-        P_vf__vi : Pandas DataFrame (default=None)
-            The transition matrix. If ``None``, the fitted ``self.P_vf__vi`` is used.
+            
         probability_maps : definition.TransitionProbabilityLayers (default=None)
-            The transition probabilities maps. If ``None``, it is computed according to the given case.
+            The transition probabilities maps. If ``None``, it is computed according to the given case. It overwrites the calibration and ``P_vf__vi``.
+            
         F : float (default=10)
             Pruning factor.
+            
         replace : bool (default=True)
             Replace rejected pixels in the pool (source of allocation bias).
+            
         k : float (default=1)
             factor of selected pixels.
         Returns
@@ -45,16 +52,23 @@ class Dinamica(_Allocation):
         map_f : definition.LandUseCoverLayer
             The allocated land use map
         """
+        
+        np.random.seed() # needed to seed in case of multiprocessing
+        
+        probability_maps=dict_args.get('probability_maps', probability_maps)
+        F=dict_args.get('F', F)
+        replace=dict_args.get('replace', replace)
+        k=dict_args.get('k', k)
+        sound=dict_args.get('sound', sound)
+        
         map_f_data = case.map_i.data.copy()
         
+        try:
+            probability_maps = probability_maps.copy()
+        except:
+            raise TypeError('unexpected probability_maps')
         
-        if type(P_vf__vi) == type(None):
-            P_vf__vi = calibration.P_vf__vi
-        
-        P_vf__vi = P_vf__vi.fillna(0)
-        
-        if type(probability_maps) == type(None):            
-            probability_maps = calibration.transition_probability_maps(case, P_vf__vi)
+        P_vf__vi = compute_P_vf__vi_from_transition_probability_maps(case, probability_maps)
                 
         map_f = definition.LandUseCoverLayer(name="luc_neutral",
                                    time=None,
@@ -187,42 +201,80 @@ class Dinamica(_Allocation):
         
         return(map_f)
     
-    def fast_allocate(self, calibration:_Calibration, case:definition.Case, P_vf__vi=None, F=10, replace=True, k=1):
+    def allocate(self,
+                 case:definition.Case,
+                 calibration=None,
+                 P_vf__vi=None,
+                 probability_maps=None,
+                 F=10,
+                 replace=True,
+                 k=500,
+                 sound=2,
+                 dict_args={}):
         """
-        Fast allocation
+        Fast allocation like Dinamica. To reproduce exactly Dinamica behavior, use allocate_as_dinamica which is slower.
 
         Parameters
         ----------
-        calibration : _Calibration
-            Calibration object.
         case : definition.Case
             Starting case which have to be discretized.
+            
+        calibration : _Calibration (default=None)
+            Calibration object. If ``None``, the probability maps is expected.
+            
         P_vf__vi : Pandas DataFrame (default=None)
             The transition matrix. If ``None``, the fitted ``self.P_vf__vi`` is used.
+            
+        probability_maps : definition.TransitionProbabilityLayers (default=None)
+            The transition probabilities maps. If ``None``, it is computed according to the given case. It overwrites the calibration and ``P_vf__vi``.
+            
         F : float (default=10)
             Pruning factor.
+            
         replace : bool (default=True)
             Replace rejected pixels in the pool (source of allocation bias).
+            
         k : float (default=1)
             factor of selected pixels.
+            
+        sound : int (default=2)
+            Text output level. ``0`` means silent mode.
+            
+        dict_args : dict (default=``{}``)
+            The above optional arguments in a dictionary. Overwrites if already passed. 
         Returns
         -------
         map_f : definition.LandUseCoverLayer
             The allocated land use map
         """
         
+        np.random.seed() # needed to seed in case of multiprocessing
+        
+        P_vf__vi=dict_args.get('P_vf__vi', P_vf__vi)
+        probability_maps=dict_args.get('probability_maps', probability_maps)
+        F=dict_args.get('F', F)
+        replace=dict_args.get('replace', replace)
+        k=dict_args.get('k', k)
+        sound=dict_args.get('sound', sound)
+        
         map_f_data = case.map_i.data.copy()
         
         if type(P_vf__vi) == type(None):
             P_vf__vi = calibration.P_vf__vi
         
-        probability_maps = calibration.transition_probability_maps(case, P_vf__vi)
+        if type(probability_maps) == type(None):
+            if type(P_vf__vi) == type(None):
+                P_vf__vi = calibration.P_vf__vi
+            
+            probability_maps = calibration.transition_probability_maps(case, P_vf__vi)
+        
+        probability_maps = probability_maps.copy()
         
         
-        map_f = definition.LayerLUC(name="luc_neutral",
+        map_f = definition.LandUseCoverLayer(name="luc_neutral",
                                    time=None,
                                    scale=case.map_i.scale)
-        map_f.import_numpy(data=map_f_data)
+        map_f.import_numpy(data=map_f_data, sound=sound)
                 
         for vi in P_vf__vi.v.i.values.astype(int):
             
@@ -267,15 +319,17 @@ class Dinamica(_Allocation):
             
             J['available'] = 1
             
-            print(J.index.size)
+            if sound > 1:
+                print(J.index.size)
             
             while len(N_vi_vf) > 0:
                 if J.loc[J.available==1].index.size == 0:
                     # on réarme ceux qui ont raté le premier test
-                    print('not enought pixels. new draw')
+                    if sound > 1:
+                        print('not enought pixels. new draw')
                     J.loc[J.available==-1, 'available'] = 1
-                    
-                print(J.loc[J.available==1].index.size, N_vi_vf)
+                if sound > 1:
+                    print(J.loc[J.available==1].index.size, N_vi_vf)
                 
                 n = k*np.array(list(N_vi_vf.values())).sum()
                 if n > J.loc[J.available==1].index.size:
@@ -301,8 +355,8 @@ class Dinamica(_Allocation):
                     # J = J.loc[np.invert(J.index.isin(j.loc[j.x>=j.P_vf__vi_z.sum(axis=1)].J_index.values))].copy()
                     
                     j_selected.drop('x', axis=1, level=0, inplace=True)
-                    
-                print('#j_selected', j_selected.index.size)
+                if sound > 1:    
+                    print('#j_selected', j_selected.index.size)
                     
                 if j_selected.index.size > 0:                
                     
@@ -322,8 +376,12 @@ class Dinamica(_Allocation):
                         vi = row_j.v.i.values[0]
                         vf = row_j.v.f.values[0]
                         S_patch = row_j.S_patch.values[0]
-                        eccentricity_mean = self.params[(vi,vf)]['patches_parameters']['isl']['eccentricity']['mean']
-                        eccentricity_std = self.params[(vi,vf)]['patches_parameters']['isl']['eccentricity']['std']
+                        if type(self.params[(vi,vf)]['patches_parameters']['isl']['eccentricity']) == type(None):
+                            eccentricity_mean = None
+                            eccentricity_std = None
+                        else:
+                            eccentricity_mean = self.params[(vi,vf)]['patches_parameters']['isl']['eccentricity']['mean']
+                            eccentricity_std = self.params[(vi,vf)]['patches_parameters']['isl']['eccentricity']['std']
                         neighbors_structure = self.params[(vi,vf)]['patches_parameters']['isl']['neighbors_structure']
                         avoid_aggregation = self.params[(vi,vf)]['patches_parameters']['isl']['avoid_aggregation']
                         nb_of_neighbors_to_fill = self.params[(vi,vf)]['patches_parameters']['isl']['nb_of_neighbors_to_fill']
@@ -357,18 +415,20 @@ class Dinamica(_Allocation):
                             keep_allocate = False
                             if not replace:
                                     J.P_vf__vi_z /= J.P_vf__vi_z.sum(axis=1).max()
-                            print(str(vi)+'->'+str(vf)+' : done')
+                            if sound > 1:
+                                print(str(vi)+'->'+str(vf)+' : done')
                                     
-        map_f = definition.LayerLUC(name="luc_simple",
+        map_f = definition.LandUseCoverLayer(name="luc_simple",
                                    time=None,
-                                   scale=case.map_i.scale)
-        map_f.import_numpy(data=map_f_data)
+                                   scale=case.map_i.scale,
+                                   sound=sound)
+        map_f.import_numpy(data=map_f_data, sound=sound)
         
         return(map_f)
     
-    def allocate(self, calibration:_Calibration, case:definition.Case, P_vf__vi=None, F=10, replace=True):
+    def allocate_as_dinamica(self, calibration:_Calibration, case:definition.Case, P_vf__vi=None, F=10, replace=True):
         """
-        Allocation
+        Allocation as Dinamica. To have an equivalent faster process, please use allocate.
 
         Parameters
         ----------
@@ -387,6 +447,7 @@ class Dinamica(_Allocation):
         map_f : definition.LandUseCoverLayer
             The allocated land use map
         """
+        
         map_f_data = case.map_i.data.copy()
         
         
@@ -395,7 +456,7 @@ class Dinamica(_Allocation):
         
         probability_maps = calibration.transition_probability_maps(case, P_vf__vi)
         
-        map_f = definition.LayerLUC(name="luc_neutral",
+        map_f = definition.LandUseCoverLayer(name="luc_neutral",
                                    time=None,
                                    scale=case.map_i.scale)
         map_f.import_numpy(data=map_f_data)
@@ -476,7 +537,7 @@ class Dinamica(_Allocation):
                 else:
                     break
                 
-        map_f = definition.LayerLUC(name="luc_simple",
+        map_f = definition.LandUseCoverLayer(name="luc_simple",
                                    time=None,
                                    scale=case.map_i.scale)
         map_f.import_numpy(data=map_f_data)

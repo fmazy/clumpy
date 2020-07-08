@@ -1,4 +1,4 @@
-from ._allocation import _Allocation
+from ._allocation import _Allocation, compute_P_vf__vi_from_transition_probability_maps
 from ..calibration._calibration import _Calibration
 from .. import definition
 from ._patcher import _weighted_neighbors
@@ -19,23 +19,28 @@ class SimpleUnbiased(_Allocation):
     def __init__(self, params = None):
         super().__init__(params)
         
-    def allocate_monopixel_patches(self, calibration:_Calibration, case:definition.Case, P_vf__vi=None, probability_maps=None, sound=2):
+    def allocate_monopixel_patches(self,
+                                   case:definition.Case,
+                                   probability_maps=None,
+                                   sound=2,
+                                   dict_args={}):
         """
         Simple allocation of monopixels patches whithout scenario control.
 
         Parameters
         ----------
-        calibration : _Calibration
-            Calibration object.
             
         case : definition.Case
             Starting case which have to be discretized.
             
-        P_vf__vi : Pandas DataFrame (default=None)
-            The transition matrix. If ``None``, the fitted ``self.P_vf__vi`` is used.
-            
         probability_maps : definition.TransitionProbabilityLayers (default=None)
-            The transition probabilities maps. If ``None``, it is computed according to the given case.
+            The transition probabilities maps.
+            
+        sound : int (default=2)
+            Text output level. ``0`` means silent mode.
+            
+        dict_args : dict (default=``{}``)
+            The above optional arguments in a dictionary. Overwrites if already passed. 
 
         Returns
         -------
@@ -52,24 +57,22 @@ class SimpleUnbiased(_Allocation):
         """
         np.random.seed() # needed to seed in case of multiprocessing
         
+        probability_maps=dict_args.get('probability_maps', probability_maps)
+        sound=dict_args.get('sound', sound)
+        
         start_time = time.time()
-        
-        if type(probability_maps) == type(None):
-            if type(P_vf__vi) == type(None):
-                P_vf__vi = calibration.P_vf__vi
-            
-            probability_maps = calibration.transition_probability_maps(case, P_vf__vi)
-        
-        self.execution_time['transition_probability_maps']=time.time()-start_time
-        start_time = time.time()
-        
         J = case.discrete_J.copy()
+            
         map_f_data = case.map_i.data.copy()
         
         self.execution_time['pixels_initialization']=time.time()-start_time
         start_time = time.time()
         
-        self._add_P_vf__vi_z_to_J(J, probability_maps, inplace=True)
+        try:
+            self._add_P_vf__vi_z_to_J(J, probability_maps, inplace=True)
+        except:
+            raise TypeError('unexpected probability_maps')
+            
         # GART
         self.tested_pixels = [J.index.size]
         self._generalized_acceptation_rejection_test(J, inplace=True, accepted_only=True)
@@ -101,21 +104,20 @@ class SimpleUnbiased(_Allocation):
         
         return(map_f)
         
-    def allocate(self, calibration:_Calibration, case:definition.Case, P_vf__vi=None, probability_maps=None, update='none', sound=2):
+    def allocate(self,
+                 case:definition.Case,
+                 probability_maps=None,
+                 update='none',
+                 sound=2,
+                 dict_args={}):
         """
         Parameters
         ----------
-        calibration : _Calibration
-            Calibration object.
-        
         case : definition.Case
             Starting case which have to be discretized.
-        
-        P_vf__vi : Pandas DataFrame (default=None)
-            The transition matrix. If ``None``, the fitted ``self.P_vf__vi`` is used.
             
         probability_maps : definition.TransitionProbabilityLayers (default=None)
-            The transition probabilities maps. If ``None``, it is computed according to the given case.
+            The transition probabilities maps. If ``None``, it is computed according to the given case. It overwrites the calibration and ``P_vf__vi``.
         
         update : {'none', 'transition', 'ghost', 'both'}, (default='none')
             The P(z|vi,vf) update policy.
@@ -131,6 +133,12 @@ class SimpleUnbiased(_Allocation):
                 
             both
                 for both transition and ghost modes.
+                
+        sound : int (default=2)
+            Text output level. ``0`` means silent mode.
+            
+        dict_args : dict (default=``{}``)
+            The above optional arguments in a dictionary. Overwrites if already passed. 
         
         Returns
         -------
@@ -156,18 +164,21 @@ class SimpleUnbiased(_Allocation):
         
         np.random.seed() # needed to seed in case of multiprocessing
         
+        probability_maps=dict_args.get('probability_maps', probability_maps)
+        update=dict_args.get('update', update)
+        sound=dict_args.get('sound', sound)
+        
+        try:
+            probability_maps = probability_maps.copy()
+        except:
+            raise TypeError('unexpected probability_maps')
+        
         self.execution_time = {}
                 
         start_time = time.time()
-        if type(probability_maps) == type(None):
-            if type(P_vf__vi) == type(None):
-                P_vf__vi = calibration.P_vf__vi
-            
-            probability_maps = calibration.transition_probability_maps(case, P_vf__vi)
+        P_vf__vi = compute_P_vf__vi_from_transition_probability_maps(case, probability_maps)
         
-        probability_maps = probability_maps.copy()
-        
-        self.execution_time['transition_probability_maps']=time.time()-start_time
+        self.execution_time['transition_matrix']=time.time()-start_time
         start_time = time.time()
         
         J = case.discrete_J.copy()
@@ -180,6 +191,7 @@ class SimpleUnbiased(_Allocation):
             print(N_vi_vf)
             
         # build the P_z__vi map 
+        calibration = _Calibration()
         calibration.compute_P_z__vi(case)
         M_P_z__vi = calibration.build_P_z__vi_map(case)
         

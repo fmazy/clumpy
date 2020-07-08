@@ -70,6 +70,8 @@ class Case():
         if self.map_f != None:
             self._add_vf()
             
+        # self.discrete_J = self.J.copy() # if their is no discretization made, it exists !
+            
     def _add_vf(self):       
         self.J['v', 'f'] = self.map_f.data.flat[self.J.index.values]
         

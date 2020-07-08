@@ -12,7 +12,8 @@ import scipy # for signal -> convolution, linalg -> matrix operations
 import multiprocessing as mp
 # import pandas as pd
 
-from .. import definition
+# from ..definition.data import create_J
+from ..calibration._calibration import _Calibration
 
 
 class _Allocation():
@@ -112,20 +113,20 @@ class _Allocation():
         if not inplace:
             return(J)
         
-    def _create_J_restricted_to_vi_with_transitions(self, map_i, probability_maps):
-        # get all vi
-        vi_list = []
-        for k in probability_maps.layers.keys():
-            if k[0] not in vi_list:
-                vi_list.append(k[0])
+    # def _create_J_restricted_to_vi_with_transitions(self, map_i, probability_maps):
+    #     # get all vi
+    #     vi_list = []
+    #     for k in probability_maps.layers.keys():
+    #         if k[0] not in vi_list:
+    #             vi_list.append(k[0])
             
-        # all pixels
-        J = definition.data.create_J(map_i)
+    #     # all pixels
+    #     J = create_J(map_i)
         
-        # restrict to vi with transitions
-        J = J.loc[J.v.i.isin(vi_list)].copy()
+    #     # restrict to vi with transitions
+    #     J = J.loc[J.v.i.isin(vi_list)].copy()
         
-        return(J)
+    #     return(J)
 
     def _get_maps_f_vi_vf_neighbors(self, list_vi_vf, map_f_data, neighbors_structure='rook'):
         """
@@ -196,22 +197,20 @@ class _Allocation():
         
         return(J_with_vf_dist_constraint)
         
-    def test(self, calibration, case, monopixel_patches = True, P_vf__vi=None, probability_maps=None, alpha=0.95, epsilon=0.01, gamma=0.8, cores=1, update='none'):
+    def test(self,
+             monopixel_patches = True,
+             alpha=0.95,
+             epsilon=0.01,
+             gamma=0.8,
+             cores=1,
+             **kwargs):
         """
         Tests the allocation according to the calibration. Given the law of large numbers, if one repeats the allocation a certain amount of times, one should find the calibration by simple frequency analysis.
 
         Parameters
         ----------
-        calibration : _Calibration
-            Calibration object.
-        case : definition.Case
-            Starting case which have to be discretized.
         monopixel_patches : Boolean (default=True)
             If ``True``, allocates only mono-pixel patches without any other considerations. If ``False``, multipixel patches will be designed. The model should therefore have been detailed with allocation parameters. This kind of multipixel patches test requires of curse a significant computation time whereas the monopixel one.
-        P_vf__vi : Pandas DataFrame (default=None)
-            The transition matrix. If ``None``, the fitted ``self.P_vf__vi`` is used.
-        probability_maps : definition.TransitionProbabilityLayers (default=None)
-            The transition probabilities maps. If ``None``, it is computed according to the given case.
         alpha : Float (default=0.95)
             Signifiance level of the test which gives a threshold value for p. The more ``alpha`` closed to ``1``, the more the test is significant.
         epsilon : Float (default=0.01)
@@ -220,53 +219,45 @@ class _Allocation():
             The features combinaisons selection according to :math:`\sum_z P(z|v_i,v_f)`. It is deeply recommended to have ``gamma<1``.
         cores : Int (default=1)
             Number of cores used for parallel computations.
-        update : {'none', 'transition', 'ghost', 'both'}, (default='none')
-            The :math:`P(z|vi,vf)` update policy. Used only in case of multipixel patches.
-            
-            none
-                no update
-                
-            transition
-                only when a transition is achieved.
-                
-            ghost
-                only when the ghost tolerance is reached.
-                
-            both
-                for both transition and ghost modes.
-
+        \**kwargs : ?
+            remaining parameters used by ``self.allocate`` or ``self.allocate_monopixel_patches`` methods.
         Returns
         -------
         J : pandas DataFrame
             The observed allocations frequencies according to the features.
 
-        """
+        """       
+        
+        case=kwargs.get('case', None)
+        probability_maps=kwargs.get('probability_maps', None)
+        
+        calibration = _Calibration()
         
         # restrict J to vi and z columns
+        # il faut tester ici si il y a une colonne z dans discrete_J !
         J = case.discrete_J.copy()[[('v', 'i')]+case.discrete_J[['z']].columns.to_list()].fillna(0)
         N_vi_z = J.groupby([('v', 'i')]+J[['z']].columns.to_list()).size().reset_index(name=('N_vi_z', ''))
         J.drop_duplicates(inplace=True)
         J = J.reset_index().merge(N_vi_z, how='left').set_index('index')
                 
         # get probability maps
-        if type(probability_maps) == type(None):
-            if type(P_vf__vi) == type(None):
-                P_vf__vi = calibration.P_vf__vi
-            
-            probability_maps = calibration.transition_probability_maps(case, P_vf__vi)
+        
+        
+        
         
         # add probabilities to J
         self._add_P_vf__vi_z_to_J(J, probability_maps, inplace=True)
                 
         p_alpha = abs(stats.norm.interval(alpha)[0])
         
-        
-        
         P_z__vi = calibration.compute_P_z__vi(case, output='return')
         
         J = J.reset_index()
         J = J.merge(P_z__vi, how='left')
+        
+        P_vf__vi = compute_P_vf__vi_from_transition_probability_maps(case, probability_maps)
         J = J.merge(P_vf__vi, how='left')
+
         J = J.set_index('index')
         
         for vf in J.P_vf__vi_z.columns.to_list():
@@ -285,7 +276,7 @@ class _Allocation():
         J.drop(['P_z__vi_vf', 'P_vf__vi', 'P_z__vi'], level=0, axis=1, inplace=True)
         
         
-        
+        print(J.N.max().max())
         N = int(J.N.max().max())
         
         J.drop('N', level=0, axis=1, inplace=True)
@@ -303,18 +294,15 @@ class _Allocation():
             pool = mp.Pool(cores)
             sub_N_vi_vf_z = []
             sub_N = int(N/cores)+1
-            sub_N_vi_vf_z = pool.starmap(self._call_allocation_N_times, [(calibration, case, sub_N, monopixel_patches, P_vf__vi, probability_maps, update, cols, i) for i in range(cores)])
+            sub_N_vi_vf_z = pool.starmap(self._call_allocation_N_times, [(case, sub_N, monopixel_patches, cols, i, kwargs) for i in range(cores)])
             pool.close()
         else:
-            self._call_allocation_N_times(calibration,
-                                          case,
+            self._call_allocation_N_times(case,
                                           N,
                                           monopixel_patches,
-                                          P_vf__vi,
-                                          probability_maps,
-                                          update,
                                           cols,
-                                          0)
+                                          0,
+                                          kwargs)
         
                 
         for i in range(cores-1):
@@ -340,7 +328,7 @@ class _Allocation():
         
         return(J)
 
-    def _call_allocation_N_times(self, calibration, case, N, monopixel_patches, P_vf__vi, probability_maps, update, cols, core):
+    def _call_allocation_N_times(self, case, N, monopixel_patches, cols, core, dict_args):
         J_simu = pd.DataFrame(columns=cols)
         
         if core ==0:
@@ -350,18 +338,13 @@ class _Allocation():
         
         for i in items:
             if monopixel_patches:
-                map_f = self.allocate_monopixel_patches(calibration = calibration,
-                                                        case = case,
-                                                        P_vf__vi = P_vf__vi,
-                                                        probability_maps=probability_maps,
+                map_f = self.allocate_monopixel_patches(case = case,
+                                                        dict_args=dict_args,
                                                         sound=0)
             else:
-                map_f = self.allocate(calibration = calibration,
-                                        case = case,
-                                        P_vf__vi = P_vf__vi,
-                                        probability_maps=probability_maps,
-                                        update=update,
-                                        sound=0)
+                map_f = self.allocate(case = case,
+                                      dict_args = dict_args,
+                                      sound=0)
             
             J_f = case.discrete_J.copy()[['v','z']].fillna(0)
             J_f[('v','f')] = map_f.data.flat[J_f.index.values]
@@ -380,4 +363,43 @@ class _Allocation():
         
         return(J_simu)
 
+def compute_P_vf__vi_from_transition_probability_maps(case, probability_maps):
+    """
+    returns P_vf__vi based on transition parobability maps and a given case.
 
+    Parameters
+    ----------
+    case : Case
+        case.
+    probability_maps : definition.TransitionProbabilityLayers
+        transition probability layers.
+
+    Returns
+    -------
+    P_vf__vi : pandas DataFrame
+        Transition matrix as a pandas DataFrame
+
+    """
+    
+    # how many unique vf ? and vi ?
+    list_vf = []
+    list_vi = []
+    for vi_vf in probability_maps.layers.keys():
+        if vi_vf[0] not in list_vi:
+            list_vi.append(vi_vf[0])
+        if vi_vf[1] not in list_vf:
+            list_vf.append(vi_vf[1])
+    
+    cols = [('v', 'i')] + [('P_vf__vi',vf) for vf in list_vf]
+    cols = pd.MultiIndex.from_tuples(cols)
+    P_vf__vi = pd.DataFrame(columns=cols)
+    
+    P_vf__vi[('v','i')] = list_vi
+    
+    for vi_vf, transition_probability_layer in probability_maps.layers.items():
+        vi = vi_vf[0]
+        vf = vi_vf[1]
+        
+        P_vf__vi.loc[P_vf__vi.v.i==vi, ('P_vf__vi',vf)] = transition_probability_layer.data.sum()/case.J.index.size
+
+    return(P_vf__vi)
