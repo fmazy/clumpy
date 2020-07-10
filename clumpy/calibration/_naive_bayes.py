@@ -47,7 +47,7 @@ class NaiveBayes(_Calibration):
         case : Case
             The case which have to be discretized..
         P_vf__vi : Pandas DataFrame (default=None)
-            The transition matrix. If ``None``, the fitted ``self.P_vf__vi`` is used.
+            The transition matrix. If ``None``, the c is used.
         
         Returns
         -------
@@ -55,12 +55,17 @@ class NaiveBayes(_Calibration):
             The transition probability maps
         """
         if type(P_vf__vi) == type(None):
+            self._compute_P_vf__vi(case)
             P_vf__vi = self.P_vf__vi
         
         P_z__vi = self._compute_naive_P_z__vi(case)
-        P_z__vi_vf = self._compute_naive_P_z__vi_vf(case)
+        P_z__vi_vf = self._compute_naive_P_z__vi_vf(case).fillna(0)
         
-        P_vf__vi_z = _compute_P_vf__vi_z_with_bayes(P_vf__vi, P_z__vi, P_z__vi_vf)
+        P_vf__vi_z = _compute_P_vf__vi_z_with_bayes(P_vf__vi, P_z__vi, P_z__vi_vf).fillna(0)
+        
+        # return(P_vf__vi_z)
+        
+        print(P_vf__vi_z)
         
         maps = _build_probability_maps(case, P_vf__vi_z)
         
@@ -302,7 +307,8 @@ def _compute_P_vf__vi_z_with_bayes(P_vf__vi, P_z__vi, P_z__vi_vf, keep_P=False):
     P_vf__vi_z = P_vf__vi_z.merge(P_vf__vi.astype(float), how='left', on=col_vi)
         
     for vf in P_z__vi_vf.P_z__vi_vf.columns.to_list():
-        P_vf__vi_z[('P_vf__vi_z', vf)] = P_vf__vi_z[('P_vf__vi', vf)] * P_vf__vi_z[('P_z__vi_vf', vf)] / P_vf__vi_z[('P_z__vi', '')]
+        idx = P_vf__vi_z.loc[P_vf__vi_z.P_z__vi > 0].index.values
+        P_vf__vi_z.loc[idx, ('P_vf__vi_z', vf)] = P_vf__vi_z.loc[idx, ('P_vf__vi', vf)] * P_vf__vi_z.loc[idx, ('P_z__vi_vf', vf)] / P_vf__vi_z.loc[idx, ('P_z__vi', '')]
     
     if not keep_P:
         P_vf__vi_z.drop(['P_vf__vi','P_z__vi_vf', 'P_z__vi'], axis=1, level=0, inplace=True)

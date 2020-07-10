@@ -389,6 +389,8 @@ def compute_P_vf__vi_from_transition_probability_maps(case, probability_maps):
             list_vi.append(vi_vf[0])
         if vi_vf[1] not in list_vf:
             list_vf.append(vi_vf[1])
+            
+    print(list_vf)
     
     cols = [('v', 'i')] + [('P_vf__vi',vf) for vf in list_vf]
     cols = pd.MultiIndex.from_tuples(cols)
