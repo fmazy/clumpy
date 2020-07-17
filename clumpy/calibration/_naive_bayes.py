@@ -47,7 +47,7 @@ class NaiveBayes(_Calibration):
         case : Case
             The case which have to be discretized..
         P_vf__vi : Pandas DataFrame (default=None)
-            The transition matrix. If ``None``, the c is used.
+            The transition matrix. If ``None``, the self computed one is used.
         
         Returns
         -------
@@ -58,14 +58,14 @@ class NaiveBayes(_Calibration):
             self._compute_P_vf__vi(case)
             P_vf__vi = self.P_vf__vi
         
-        P_z__vi = self._compute_naive_P_z__vi(case)
+        P_z__vi = self._compute_naive_P_z__vi(case).fillna(0)
         P_z__vi_vf = self._compute_naive_P_z__vi_vf(case).fillna(0)
         
         P_vf__vi_z = _compute_P_vf__vi_z_with_bayes(P_vf__vi, P_z__vi, P_z__vi_vf).fillna(0)
         
         # return(P_vf__vi_z)
         
-        print(P_vf__vi_z)
+        # print(P_vf__vi_z)
         
         maps = _build_probability_maps(case, P_vf__vi_z)
         
@@ -330,10 +330,14 @@ def _build_probability_maps(case, P, P_name = 'P_vf__vi_z', sound=1):
     J_with_P = case.discrete_J.reset_index().merge(right=P,
                                      how='left').set_index('index')
     
+    # return(J_with_P)
+    
+    # print(J_with_P)
     for Ti in case.transitions.Ti.values():
+        idx_vi = J_with_P.loc[J_with_P.v.i==Ti.vi].index.values
         for Tif in Ti.Tif.values():
             probability_map_data = np.zeros(case.map_i.data.shape)
-            probability_map_data.flat[J_with_P.index.values] = J_with_P[(P_name, Tif.vf)].values
+            probability_map_data.flat[idx_vi] = J_with_P.loc[idx_vi, (P_name, Tif.vf)].values
             
             probability_maps.add_layer(Ti.vi, Tif.vf, probability_map_data)
         

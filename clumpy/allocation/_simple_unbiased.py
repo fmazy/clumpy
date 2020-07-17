@@ -52,6 +52,8 @@ class SimpleUnbiased(_Allocation):
         New attributes are availables :`
             
             ``self.execution_time`` One microseconds precision for Linux and Mac OS and 16 milliseconds precision for Windows.
+        
+            ``self.detailed_execution_time`` One microseconds precision for Linux and Mac OS and 16 milliseconds precision for Windows.
             
             ``self.tested_pixels``
         """
@@ -60,12 +62,13 @@ class SimpleUnbiased(_Allocation):
         probability_maps=dict_args.get('probability_maps', probability_maps)
         sound=dict_args.get('sound', sound)
         
+        global_start_time = time.time()
         start_time = time.time()
         J = case.discrete_J.copy()
             
         map_f_data = case.map_i.data.copy()
         
-        self.execution_time['pixels_initialization']=time.time()-start_time
+        self.detailed_execution_time['pixels_initialization']=time.time()-start_time
         start_time = time.time()
         
         try:
@@ -77,15 +80,17 @@ class SimpleUnbiased(_Allocation):
         self.tested_pixels = [J.index.size]
         self._generalized_acceptation_rejection_test(J, inplace=True, accepted_only=True)
         
-        self.execution_time['sampling']=[time.time()-start_time]
+        self.detailed_execution_time['sampling']=[time.time()-start_time]
         start_time = time.time()
                 
         # allocation
         map_f_data.flat[J.index.values] = J.v.f.values
         
-        self.execution_time['pixels_initialization']=time.time()-start_time
+        self.detailed_execution_time['pixels_initialization']=time.time()-start_time
 
-        self.execution_time['patches_parameters_initialization']=[0]
+        self.detailed_execution_time['patches_parameters_initialization']=[0]
+        
+        self.execution_time = time.time() - global_start_time
         
         # post processing
         map_f = definition.LandUseCoverLayer(name="luc_simple",
@@ -97,7 +102,7 @@ class SimpleUnbiased(_Allocation):
             print('FINISHED')
             print('========')
             print('execution times')
-            print(self.execution_time)
+            print(self.detailed_execution_time)
         
             N_vi_vf = J.groupby([('v','i'), ('v','f')]).size().reset_index(name=('N_vi_vf', ''))
             print(N_vi_vf)
@@ -153,6 +158,8 @@ class SimpleUnbiased(_Allocation):
             
             ``self.execution_time`` One microseconds precision for Linux and Mac OS and 16 milliseconds precision for Windows.
             
+            ``self.detailed_execution_time`` One microseconds precision for Linux and Mac OS and 16 milliseconds precision for Windows.
+            
             ``self.tested_pixels``
             
             ``self.infos``
@@ -173,14 +180,14 @@ class SimpleUnbiased(_Allocation):
         except:
             raise TypeError('unexpected probability_maps')
         
-        self.execution_time = {}
-                
+        self.detailed_execution_time = {}
+        global_start_time = time.time()
         start_time = time.time()
         P_vf__vi = compute_P_vf__vi_from_transition_probability_maps(case, probability_maps)
         
         print(P_vf__vi)
         
-        self.execution_time['transition_matrix']=time.time()-start_time
+        self.detailed_execution_time['transition_matrix']=time.time()-start_time
         start_time = time.time()
         
         J = case.discrete_J.copy()
@@ -197,12 +204,12 @@ class SimpleUnbiased(_Allocation):
         calibration.compute_P_z__vi(case)
         M_P_z__vi = calibration.build_P_z__vi_map(case)
         
-        self.execution_time['pixels_initialization']=time.time()-start_time
+        self.detailed_execution_time['pixels_initialization']=time.time()-start_time
         start_time = time.time()
         
         # select pivot-cells
-        self.execution_time['sampling'] = []
-        self.execution_time['patches_parameters_initialization'] = []
+        self.detailed_execution_time['sampling'] = []
+        self.detailed_execution_time['patches_parameters_initialization'] = []
         
         self.tested_pixels = []
         
@@ -309,7 +316,11 @@ class SimpleUnbiased(_Allocation):
                 # le compteur idx est réinitialisé
                 idx = -1
         
-        self.execution_time['allocation']=time.time()-start_time - np.sum(self.execution_time['sampling']) - np.sum(self.execution_time['patches_parameters_initialization'])
+        self.detailed_execution_time['allocation']=time.time()-start_time - np.sum(self.detailed_execution_time['sampling']) - np.sum(self.detailed_execution_time['patches_parameters_initialization'])
+        
+        self.execution_time = time.time()-global_start_time
+        
+        
                 
         map_f = definition.LandUseCoverLayer(name="luc_simple",
                                    time=None,
@@ -348,7 +359,7 @@ class SimpleUnbiased(_Allocation):
         
         if sound > 0:
             print('execution times')
-            print(self.execution_time)
+            print(self.detailed_execution_time)
         
         return(map_f)
     
@@ -399,7 +410,7 @@ class SimpleUnbiased(_Allocation):
             
             ``self.ghost_allocation``
             
-            ``self.execution_time`` One microseconds precision for Linux and Mac OS and 16 milliseconds precision for Windows.
+            ``self.detailed_execution_time`` One microseconds precision for Linux and Mac OS and 16 milliseconds precision for Windows.
             
             ``self.tested_pixels``
             
@@ -421,12 +432,12 @@ class SimpleUnbiased(_Allocation):
         except:
             raise TypeError('unexpected probability_maps')
         
-        self.execution_time = {}
+        self.detailed_execution_time = {}
                 
         start_time = time.time()
         P_vf__vi = compute_P_vf__vi_from_transition_probability_maps(case, probability_maps)
         
-        self.execution_time['transition_matrix']=time.time()-start_time
+        self.detailed_execution_time['transition_matrix']=time.time()-start_time
         start_time = time.time()
         
         J = case.discrete_J.copy()
@@ -443,12 +454,12 @@ class SimpleUnbiased(_Allocation):
         calibration.compute_P_z__vi(case)
         M_P_z__vi = calibration.build_P_z__vi_map(case)
         
-        self.execution_time['pixels_initialization']=time.time()-start_time
+        self.detailed_execution_time['pixels_initialization']=time.time()-start_time
         start_time = time.time()
         
         # select pivot-cells
-        self.execution_time['sampling'] = []
-        self.execution_time['patches_parameters_initialization'] = []
+        self.detailed_execution_time['sampling'] = []
+        self.detailed_execution_time['patches_parameters_initialization'] = []
         
         self.tested_pixels = []
         
@@ -555,7 +566,7 @@ class SimpleUnbiased(_Allocation):
                 # le compteur idx est réinitialisé
                 idx = -1
         
-        self.execution_time['allocation']=time.time()-start_time - np.sum(self.execution_time['sampling']) - np.sum(self.execution_time['patches_parameters_initialization'])
+        self.detailed_execution_time['allocation']=time.time()-start_time - np.sum(self.detailed_execution_time['sampling']) - np.sum(self.detailed_execution_time['patches_parameters_initialization'])
                 
         map_f = definition.LandUseCoverLayer(name="luc_simple",
                                    time=None,
@@ -594,7 +605,7 @@ class SimpleUnbiased(_Allocation):
         
         if sound > 0:
             print('execution times')
-            print(self.execution_time)
+            print(self.detailed_execution_time)
         
         return(map_f)
     
@@ -611,14 +622,14 @@ class SimpleUnbiased(_Allocation):
         # sample all accepted kernels
         J = J.sample(frac=1, replace=False)
         
-        self.execution_time['sampling'].append(time.time()-start_time)
+        self.detailed_execution_time['sampling'].append(time.time()-start_time)
         start_time = time.time()
         
         # patch surface
         if not self._draw_patches_parameters(J, list(probability_maps.layers.keys())):
             return(False)
         
-        self.execution_time['patches_parameters_initialization'].append(time.time()-start_time)
+        self.detailed_execution_time['patches_parameters_initialization'].append(time.time()-start_time)
                         
         J.reset_index(inplace=True)
         J.rename({'index':'j'}, level=0, axis=1, inplace=True)

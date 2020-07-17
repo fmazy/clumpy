@@ -296,21 +296,23 @@ class _Allocation():
             sub_N = int(N/cores)+1
             sub_N_vi_vf_z = pool.starmap(self._call_allocation_N_times, [(case, sub_N, monopixel_patches, cols, i, kwargs) for i in range(cores)])
             pool.close()
+            
+            for i in range(cores-1):
+                sub_N_vi_vf_z[0] = sub_N_vi_vf_z[0].merge(sub_N_vi_vf_z[i+1], how='outer', on=[('v', 'i'), ('v','f')]+J[['z']].columns.to_list(), suffixes=('','_toadd'))
+                sub_N_vi_vf_z[0].total_N_vi_vf_z = sub_N_vi_vf_z[0].total_N_vi_vf_z.add(sub_N_vi_vf_z[0].total_N_vi_vf_z_toadd, fill_value=0)
+                sub_N_vi_vf_z[0].drop('total_N_vi_vf_z_toadd', level=0, axis=1, inplace=True)
+        
+            N_vi_vf_z = sub_N_vi_vf_z[0]
+            
         else:
-            self._call_allocation_N_times(case,
+            N_vi_vf_z = self._call_allocation_N_times(case,
                                           N,
                                           monopixel_patches,
                                           cols,
                                           0,
                                           kwargs)
-        
-                
-        for i in range(cores-1):
-            sub_N_vi_vf_z[0] = sub_N_vi_vf_z[0].merge(sub_N_vi_vf_z[i+1], how='outer', on=[('v', 'i'), ('v','f')]+J[['z']].columns.to_list(), suffixes=('','_toadd'))
-            sub_N_vi_vf_z[0].total_N_vi_vf_z = sub_N_vi_vf_z[0].total_N_vi_vf_z.add(sub_N_vi_vf_z[0].total_N_vi_vf_z_toadd, fill_value=0)
-            sub_N_vi_vf_z[0].drop('total_N_vi_vf_z_toadd', level=0, axis=1, inplace=True)
-        
-        N_vi_vf_z = sub_N_vi_vf_z[0]
+                    
+
         
         N_vi_vf_z = N_vi_vf_z.merge(N_vi_z, how='left')
         N_vi_vf_z.total_N_vi_vf_z = N_vi_vf_z.total_N_vi_vf_z.div(N_vi_vf_z.N_vi_z*N, fill_value=0)
@@ -390,7 +392,7 @@ def compute_P_vf__vi_from_transition_probability_maps(case, probability_maps):
         if vi_vf[1] not in list_vf:
             list_vf.append(vi_vf[1])
             
-    print(list_vf)
+    # print(list_vf)
     
     cols = [('v', 'i')] + [('P_vf__vi',vf) for vf in list_vf]
     cols = pd.MultiIndex.from_tuples(cols)
@@ -404,4 +406,8 @@ def compute_P_vf__vi_from_transition_probability_maps(case, probability_maps):
         
         P_vf__vi.loc[P_vf__vi.v.i==vi, ('P_vf__vi',vf)] = transition_probability_layer.data.sum()/case.J.index.size
 
-    return(P_vf__vi)
+    # adding no transition probabilities for closure condition
+    for vi in list_vi:
+        P_vf__vi.loc[P_vf__vi.v.i==vi, ('P_vf__vi',vi)] = 1 - P_vf__vi.loc[P_vf__vi.v.i==vi].P_vf__vi.sum(axis=1)
+
+    return(P_vf__vi.fillna(0))

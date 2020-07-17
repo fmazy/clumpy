@@ -156,22 +156,3 @@ def discretize_all(J, T, alpha, inplace=False):
         return(J_hat)
 
 
-def alphaDinamicaExport(T, alpha, file_path):
-    columns = ['From*', 'To*', 'Variable*', 'Range_Lower_Limit*', 'Weight']
-    dinamica_ranges = pd.DataFrame(columns=columns)
-    
-    for Ti in T.Ti.values():
-        for Tif in Ti.Tif.values():
-            for Zk in Ti.Z.values():
-                df = pd.DataFrame(columns=columns)
-                df['Range_Lower_Limit*'] = alpha.loc[(alpha.vi==Ti.vi) &
-                                                     (alpha.Zk_name == Zk.name)].alpha.values
-                df['From*'] = Ti.vi
-                df['To*'] = Tif.vf
-                df['Variable*'] = Zk.name
-                df['Weight'] = 0
-                
-                dinamica_ranges = pd.concat([dinamica_ranges, df])
-                
-    
-    dinamica_ranges.to_csv(file_path, index=False)  

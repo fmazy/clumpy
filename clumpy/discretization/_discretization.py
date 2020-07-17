@@ -3,6 +3,7 @@
 from .. import definition
 
 import pandas as pd
+import os
 import numpy as np
 from matplotlib import pyplot as plt
 from optbinning import MulticlassOptimalBinning
@@ -65,7 +66,7 @@ def discretize(case:definition.Case, alpha=None):
         The case to discretize according to alpha
     alpha : Pandas DataFrame (default=None)
         The binning DataFrame. If ``None``, the self binning DataFrame computed by `binning` is used.
-        
+    
     Notes
     -----
     A new attribute is then available :
@@ -91,6 +92,9 @@ def discretize(case:definition.Case, alpha=None):
                                   (alpha.Zk_name == feature_name), 'alpha'].values.astype(float)
         case.discrete_J.loc[case.discrete_J.v.i == vi, ('z', feature_name)] = np.digitize(case.discrete_J.loc[case.discrete_J.v.i == vi, ('z', feature_name)],
                                                                        bins=alpha_Zk)
+        
+    # fill na with 0
+    case.discrete_J.fillna(value=0, inplace=True)
     
 def _compute_bins_with_numpy(J, Zk, bins, sound=0, plot=0):
     data = J.loc[J.v.i == Zk.Ti.vi, ('z', Zk.name)]
@@ -132,3 +136,38 @@ def _compute_bins_with_optbinning(J, Zk, sound=0, plot=0):
     alpha = np.array([x.min()] + list(optb.splits) + [x.max()*1.001])
     
     return(alpha)
+
+def export_bins_as_dinamica(case, path):
+    """
+    Export bins as a Dinamica like file.
+
+    Parameters
+    ----------
+    case : definition.Case
+        The case to discretize according to alpha
+    path : str
+        Output file path.
+
+    """
+    columns = ['From*', 'To*', 'Variable*', 'Range_Lower_Limit*', 'Weight']
+    dinamica_ranges = pd.DataFrame(columns=columns)
+    
+    for Ti in case.transitions.Ti.values():
+        for Tif in Ti.Tif.values():
+            for Zk in Ti.Z.values():
+                df = pd.DataFrame(columns=columns)
+                df['Range_Lower_Limit*'] = case.alpha.loc[(case.alpha.vi==Ti.vi) &
+                                                     (case.alpha.Zk_name == Zk.name)].alpha.values
+                df['From*'] = Ti.vi
+                df['To*'] = Tif.vf
+                df['Variable*'] = Zk.name
+                df['Weight'] = 0
+                
+                dinamica_ranges = pd.concat([dinamica_ranges, df])
+    
+    # create folder if not exists
+    folder_name = os.path.dirname(path)
+    if not os.path.exists(folder_name) and folder_name!= '':
+        os.makedirs(folder_name)
+    
+    dinamica_ranges.to_csv(path, index=False)  

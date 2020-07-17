@@ -20,27 +20,19 @@ class GeneralizedVonNeumann(_Allocation):
     
     def allocate_monopixel_patches(self,
                                    case:definition.Case,
-                                   calibration=None,
-                                   P_vf__vi=None,
                                    probability_maps = None,
                                    sound=2,
                                    dict_args={}):
         """
-        Simple allocation of monopixels patches whithout scenario control.
+        Allocate monopixel patches
 
         Parameters
         ----------
         case : definition.Case
             Starting case which have to be discretized.
             
-        calibration : _Calibration (default=None)
-            Calibration object. If ``None``, the probability maps is expected.
-            
-        P_vf__vi : Pandas DataFrame (default=None)
-            The transition matrix. If ``None``, the fitted ``self.P_vf__vi`` is used.
-            
         probability_maps : definition.TransitionProbabilityLayers (default=None)
-            The transition probabilities maps. If ``None``, it is computed according to the given case. It overwrites the calibration and ``P_vf__vi``.
+            The transition probabilities maps. If ``None``, it is computed according to the given case. It overwrites the calibration and ``P_vf__vi``. Warning, the probability maps have to corresponds to combinations.
         
         sound : int (default=2)
             Text output level. ``0`` means silent mode.
@@ -62,26 +54,13 @@ class GeneralizedVonNeumann(_Allocation):
         """
         np.random.seed() # needed to seed in case of multiprocessing
         
-        P_vf__vi=dict_args.get('P_vf__vi', P_vf__vi)
         probability_maps=dict_args.get('probability_maps', probability_maps)
         sound=dict_args.get('sound', sound)
         
         start_time = time.time()
         
-        if type(probability_maps) == type(None):
-            if type(P_vf__vi) == type(None):
-                P_vf__vi = calibration.P_vf__vi
-            
-            probability_maps = calibration.transition_probability_maps(case, P_vf__vi)
-        else:
-            probability_maps = probability_maps.copy()
-        
-        self.execution_time['transition_probability_maps']=time.time()-start_time
-        start_time = time.time()
-        
-        map_f_data = case.map_i.data.copy()
         J = case.discrete_J.copy()
-        J.fillna(0, inplace=True) # the sampling function does not accept any NaN features
+        map_f_data = case.map_i.data.copy()
         
         self.execution_time['pixels_initialization']=time.time()-start_time
         
@@ -365,7 +344,6 @@ class GeneralizedVonNeumann(_Allocation):
         return(map_f)
     
     def _sample(self, J, probability_maps, draw_patches_parameters=False, random_sample=False):
-        print('\t sample...')
         start_time = time.time()
         J = J.copy()
         
@@ -420,7 +398,5 @@ class GeneralizedVonNeumann(_Allocation):
             self.execution_time['patches_parameters_initialization'].append(time.time()-start_time)
             
         J_pivotcells.reset_index(drop=True, inplace=True)
-        
-        print('\t done')
         
         return(J_pivotcells)
