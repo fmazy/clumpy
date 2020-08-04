@@ -68,6 +68,8 @@ class SimpleUnbiased(_Allocation):
             
         map_f_data = case.map_i.data.copy()
         
+        self.detailed_execution_time = {}
+        
         self.detailed_execution_time['pixels_initialization']=time.time()-start_time
         start_time = time.time()
         

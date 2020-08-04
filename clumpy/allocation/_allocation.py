@@ -203,6 +203,7 @@ class _Allocation():
              epsilon=0.01,
              gamma=0.8,
              cores=1,
+             return_patches=False,
              **kwargs):
         """
         Tests the allocation according to the calibration. Given the law of large numbers, if one repeats the allocation a certain amount of times, one should find the calibration by simple frequency analysis.

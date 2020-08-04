@@ -44,6 +44,8 @@ class Case():
         self.map_i = map_i
         self.map_f = map_f
         
+        self.list_vi_vf = list_vi_vf
+        
         self.transitions = _Transition()
         for vi_vf in list_vi_vf:
             self.transitions.addTif(vi=vi_vf[0], vf=vi_vf[1])
