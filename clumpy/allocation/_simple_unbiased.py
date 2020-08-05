@@ -187,7 +187,7 @@ class SimpleUnbiased(_Allocation):
         start_time = time.time()
         P_vf__vi = compute_P_vf__vi_from_transition_probability_maps(case, probability_maps)
         
-        print(P_vf__vi)
+        # print(P_vf__vi)
         
         self.detailed_execution_time['transition_matrix']=time.time()-start_time
         start_time = time.time()
