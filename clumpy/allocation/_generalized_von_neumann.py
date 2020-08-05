@@ -1,4 +1,4 @@
-from ._allocation import _Allocation
+from ._allocation import _Allocation, compute_P_vf__vi_from_transition_probability_maps
 from ..calibration._calibration import _Calibration
 from .. import definition
 from ._patcher import _weighted_neighbors
@@ -57,14 +57,17 @@ class GeneralizedVonNeumann(_Allocation):
         probability_maps=dict_args.get('probability_maps', probability_maps)
         sound=dict_args.get('sound', sound)
         
+        self.detailed_execution_time = {}
+        global_start_time = time.time()
         start_time = time.time()
         
         J = case.discrete_J.copy()
         map_f_data = case.map_i.data.copy()
         
-        self.execution_time['pixels_initialization']=time.time()-start_time
+        self.detailed_execution_time['pixels_initialization']=time.time()-start_time
         
         # get pivot cells
+        self.detailed_execution_time['sampling'] = []
         J_pivotcells = self._sample(J, probability_maps, draw_patches_parameters=False, random_sample=False)
         
         J_pivotcells.set_index('j', inplace=True)
@@ -73,10 +76,10 @@ class GeneralizedVonNeumann(_Allocation):
         start_time = time.time()
         map_f_data.flat[J_pivotcells.index.values] = J_pivotcells.v.f.values
         
-        self.execution_time['allocation']=time.time()-start_time
+        self.detailed_execution_time['allocation']=time.time()-start_time
 
-        self.execution_time['patches_parameters_initialization']=[0]
-        
+        self.detailed_execution_time['patches_parameters_initialization']=[0]
+        self.execution_time = time.time() - global_start_time
         # post processing
         map_f = definition.LandUseCoverLayer(name="luc_simple",
                                    time=None,
@@ -107,13 +110,7 @@ class GeneralizedVonNeumann(_Allocation):
         ----------
         case : definition.Case
             Starting case which have to be discretized.
-            
-        calibration : _Calibration (default=None)
-            Calibration object. If ``None``, the probability maps is expected.
-            
-        P_vf__vi : Pandas DataFrame (default=None)
-            The transition matrix. If ``None``, the fitted ``self.P_vf__vi`` is used.
-            
+                        
         probability_maps : definition.TransitionProbabilityLayers (default=None)
             The transition probabilities maps. If ``None``, it is computed according to the given case. It overwrites the calibration and ``P_vf__vi``.
         
@@ -162,46 +159,45 @@ class GeneralizedVonNeumann(_Allocation):
         """
         np.random.seed() # needed to seed in case of multiprocessing
         
-        P_vf__vi=dict_args.get('P_vf__vi', P_vf__vi)
         probability_maps=dict_args.get('probability_maps', probability_maps)
         update=dict_args.get('update', update)
         sound=dict_args.get('sound', sound)
         
-        if calibration == None:
-            calibration = _Calibration()
-        
-        start_time = time.time()
-        
-        if type(probability_maps) == type(None):
-            if type(P_vf__vi) == type(None):
-                P_vf__vi = calibration.P_vf__vi
-            
-            probability_maps = calibration.transition_probability_maps(case, P_vf__vi)
-        else:
+        try:
             probability_maps = probability_maps.copy()
+        except:
+            raise TypeError('unexpected probability_maps')
         
-        self.execution_time['transition_probability_maps']=time.time()-start_time
+        self.detailed_execution_time = {}
+                
         start_time = time.time()
+        global_start_time = time.time()
+        
+        P_vf__vi = compute_P_vf__vi_from_transition_probability_maps(case, probability_maps)
+        
+        self.detailed_execution_time['transition_matrix']=time.time()-start_time
+        start_time = time.time()
+        
+        J = case.discrete_J.copy()
         
         map_f_data = case.map_i.data.copy()
-        J = case.discrete_J.copy()
-        J.fillna(0, inplace=True) # the sampling function does not accept any NaN features
-                
+        
         N_vi_vf = self._compute_N_vi_vf(list(probability_maps.layers.keys()), J, P_vf__vi)
         N_vi_vf_target = N_vi_vf.copy()
-        if sound >1:
+        if sound > 0:
             print(N_vi_vf)
-        
+            
         # build the P_z__vi map 
+        calibration = _Calibration()
         calibration.compute_P_z__vi(case)
         M_P_z__vi = calibration.build_P_z__vi_map(case)
         
-        self.execution_time['pixels_initialization']=time.time()-start_time
+        self.detailed_execution_time['pixels_initialization']=time.time()-start_time
         start_time = time.time()
         
         # get pivot cells
-        self.execution_time['sampling'] = []
-        self.execution_time['patches_parameters_initialization'] = []
+        self.detailed_execution_time['sampling'] = []
+        self.detailed_execution_time['patches_parameters_initialization'] = []
         self.tested_pixels = []
         
         J_pivotcells = self._sample(J, probability_maps, draw_patches_parameters=True, random_sample=True)
@@ -305,7 +301,8 @@ class GeneralizedVonNeumann(_Allocation):
                 if sound>1:
                     print('done')
         
-        self.execution_time['allocation']=time.time()-start_time - np.sum(self.execution_time['sampling']) - np.sum(self.execution_time['patches_parameters_initialization'])
+        self.detailed_execution_time['allocation']=time.time()-start_time - np.sum(self.detailed_execution_time['sampling']) - np.sum(self.detailed_execution_time['patches_parameters_initialization'])
+        self.execution_time = time.time()-global_start_time
         
         
         
@@ -338,7 +335,7 @@ class GeneralizedVonNeumann(_Allocation):
         
         self.infos = infos
         if sound>1:
-            print('execution times')
+            print('execution time')
             print(self.execution_time)
         
         return(map_f)
@@ -386,7 +383,7 @@ class GeneralizedVonNeumann(_Allocation):
         if random_sample:
             J_pivotcells = J_pivotcells.sample(frac=1, replace=False)
         
-        self.execution_time['sampling'].append(time.time()-start_time)
+        self.detailed_execution_time['sampling'].append(time.time()-start_time)
         start_time = time.time()
         
         # patch surface
@@ -395,7 +392,7 @@ class GeneralizedVonNeumann(_Allocation):
                 print('draw patch parameters error')
                 return(False)
             
-            self.execution_time['patches_parameters_initialization'].append(time.time()-start_time)
+            self.detailed_execution_time['patches_parameters_initialization'].append(time.time()-start_time)
             
         J_pivotcells.reset_index(drop=True, inplace=True)
         

@@ -20,4 +20,4 @@ python setup.py install
 ## to do
 
 - expansion de taches
-- 
+- passage des algorithmes d'allocation en générique : le sampling est l'affaire de la méthode mais le reste est commun...

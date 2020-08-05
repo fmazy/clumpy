@@ -63,6 +63,8 @@ class Dinamica(_Allocation):
         
         map_f_data = case.map_i.data.copy()
         
+        self.tested_pixels = 0
+        
         try:
             probability_maps = probability_maps.copy()
         except:
@@ -159,7 +161,8 @@ class Dinamica(_Allocation):
                     
                     # on change P(vf|vi,z) pour être sûr que ça transite
                     j_selected.P_vf__vi_z /= j_selected.P_vf__vi_z.sum(axis=1).values[:,None]
-                                
+                    
+                    self.tested_pixels += j_selected.index.size
                     self._generalized_acceptation_rejection_test(j_selected, inplace=True, accepted_only=False)            
                     
                     # on applique le changement mono pixel
@@ -203,8 +206,6 @@ class Dinamica(_Allocation):
     
     def allocate(self,
                  case:definition.Case,
-                 calibration=None,
-                 P_vf__vi=None,
                  probability_maps=None,
                  F=10,
                  replace=True,
@@ -250,7 +251,6 @@ class Dinamica(_Allocation):
         
         np.random.seed() # needed to seed in case of multiprocessing
         
-        P_vf__vi=dict_args.get('P_vf__vi', P_vf__vi)
         probability_maps=dict_args.get('probability_maps', probability_maps)
         F=dict_args.get('F', F)
         replace=dict_args.get('replace', replace)
@@ -259,26 +259,23 @@ class Dinamica(_Allocation):
         
         map_f_data = case.map_i.data.copy()
         
-        if type(P_vf__vi) == type(None):
-            P_vf__vi = calibration.P_vf__vi
+        self.tested_pixels = 0
         
-        if type(probability_maps) == type(None):
-            if type(P_vf__vi) == type(None):
-                P_vf__vi = calibration.P_vf__vi
-            
-            probability_maps = calibration.transition_probability_maps(case, P_vf__vi)
-        
-        probability_maps = probability_maps.copy()
-        
-        
+        try:
+            probability_maps = probability_maps.copy()
+        except:
+            raise TypeError('unexpected probability_maps')
+                
         map_f = definition.LandUseCoverLayer(name="luc_neutral",
                                    time=None,
                                    scale=case.map_i.scale)
         map_f.import_numpy(data=map_f_data, sound=sound)
-                
+        
+        P_vf__vi = compute_P_vf__vi_from_transition_probability_maps(case, probability_maps)
+        
         for vi in P_vf__vi.v.i.values.astype(int):
             
-            J = create_J(case.map_i)
+            J = case.discrete_J.copy()
             
             J = J.loc[J.v.i==vi]
             
@@ -362,7 +359,8 @@ class Dinamica(_Allocation):
                     
                     # on change P(vf|vi,z) pour être sûr que ça transite
                     j_selected.P_vf__vi_z /= j_selected.P_vf__vi_z.sum(axis=1).values[:,None]
-                                
+                    
+                    self.tested_pixels += j_selected.index.size
                     self._generalized_acceptation_rejection_test(j_selected, inplace=True, accepted_only=False)            
                     
                     list_vi = [(vi, vf) for vf in N_vi_vf.keys()]
