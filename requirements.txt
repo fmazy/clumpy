@@ -1,4 +1,3 @@
-###### Requirements ######`
 numpy
 pandas
 matplotlib
