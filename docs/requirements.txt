@@ -4,6 +4,6 @@ matplotlib
 scipy
 tqdm
 sklearn
-PIL
+Pillow
 optbinning >= 0.6.1
 
