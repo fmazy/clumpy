@@ -4,7 +4,6 @@ matplotlib
 scipy
 tqdm
 sklearn
-copy
 PIL
 optbinning >= 0.6.1
 
