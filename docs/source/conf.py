@@ -12,7 +12,7 @@
 #
 import os
 import sys
-# import mock
+import mock
 sys.path.insert(0, os.path.abspath('../..'))
 sys.setrecursionlimit(1500)
 
@@ -30,36 +30,36 @@ release = '0.1.0'
 
 master_doc = 'index'
 
-autodoc_mock_imports = ['numpy',
-                        'pandas',
-                        'matplotlib',
-                        'scipy',
-                        'time',
-                        'tqdm',
-                        'multiprocessing',
-                        'sklearn',
-                        're',
-                        'os',
-                        'copy',
-                        'PIL',
-                        'optbinning']
+# autodoc_mock_imports = ['numpy',
+#                         'pandas',
+#                         'matplotlib',
+#                         'scipy',
+#                         'time',
+#                         'tqdm',
+#                         'multiprocessing',
+#                         'sklearn',
+#                         're',
+#                         'os',
+#                         'copy',
+#                         'PIL',
+#                         'optbinning']
 
-# MOCK_MODULES = ['numpy',
-#                 'pandas',
-#                 'matplotlib',
-#                 'scipy',
-#                 'time',
-#                 'tqdm',
-#                 'multiprocessing',
-#                 'sklearn',
-#                 're',
-#                 'os',
-#                 'copy',
-#                 'PIL',
-#                 'optbinning']
+MOCK_MODULES = ['numpy',
+                'pandas',
+                'matplotlib',
+                'scipy',
+                'time',
+                'tqdm',
+                'multiprocessing',
+                'sklearn',
+                're',
+                'os',
+                'copy',
+                'PIL',
+                'optbinning']
 
-# for mod_name in MOCK_MODULES:
-#     sys.modules[mod_name] = mock.Mock()
+for mod_name in MOCK_MODULES:
+    sys.modules[mod_name] = mock.Mock()
 
 # Add any Sphinx extension module names here, as strings. They can be
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
