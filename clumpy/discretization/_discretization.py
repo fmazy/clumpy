@@ -7,7 +7,22 @@ import os
 import numpy as np
 from matplotlib import pyplot as plt
 from optbinning import MulticlassOptimalBinning
+
+class Binarizer():
+    def fit(self, J, params):
+        
+        self.alpha = {}
     
+        for (vi, feature_name), param in params.items():        
+            X = J.loc[J.v.i==vi, ('z',feature_name)].values
+            y = J.loc[J.v.i==vi, ('v', 'f')].values
+            
+            if param['method'] == 'numpy':
+                alpha_sub.alpha = _compute_bins_with_numpy(case.J, Zk, param['bins'])
+                
+            elif param['method'] == 'optbinning':
+                self.alpha[(vi, feature_name)] = _compute_bins_with_optbinning(X, y)
+
 def binning(case:definition.Case, params):
     """
     Binning according to a case and parameters.
@@ -108,17 +123,14 @@ def _compute_bins_with_numpy(J, Zk, bins, sound=0, plot=0):
     
     return(alpha)
 
-def _compute_bins_with_optbinning(J, Zk, sound=0, plot=0):
-    optb = MulticlassOptimalBinning(name=Zk.name, solver="cp")
-    x = J.loc[J.v.i == Zk.Ti.vi, ('z', Zk.name)].values
-    y = J.loc[J.v.i == Zk.Ti.vi, ('v', 'f')].values
+def _compute_bins_with_optbinning(X, y, sound=0, plot=0):
+    optb = MulticlassOptimalBinning(name='Zk', solver="cp")
     
-    optb.fit(x, y)
+    optb.fit(X, y)
     
     if optb.status != 'OPTIMAL':
         sound = 2
     if sound >= 1 or plot==1:
-        print(Zk.Ti.vi, Zk.name)
         print(optb.status)
         binning_table = optb.binning_table
         
@@ -133,7 +145,7 @@ def _compute_bins_with_optbinning(J, Zk, sound=0, plot=0):
             binning_table.build()
             binning_table.analysis()
     
-    alpha = np.array([x.min()] + list(optb.splits) + [x.max()*1.001])
+    alpha = np.array([X.min()] + list(optb.splits) + [X.max()*1.0001])
     
     return(alpha)
 

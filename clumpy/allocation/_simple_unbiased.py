@@ -18,7 +18,103 @@ class SimpleUnbiased(_Allocation):
     
     def __init__(self, params = None):
         super().__init__(params)
+    
+    def allocate_monopixel_patches2(self,
+                                   map_i,
+                                   J_proba,
+                                   sound=2,
+                                   dict_args={}):
+        """
+        Simple allocation of monopixels patches whithout scenario control.
+
+        Parameters
+        ----------
+            
+        case : definition.Case
+            Starting case which have to be discretized.
+            
+        probability_maps : definition.TransitionProbabilityLayers (default=None)
+            The transition probabilities maps.
+            
+        sound : int (default=2)
+            Text output level. ``0`` means silent mode.
+            
+        dict_args : dict (default=``{}``)
+            The above optional arguments in a dictionary. Overwrites if already passed. 
+
+        Returns
+        -------
+        map_f : definition.LandUseCoverLayer
+            The allocated land use map
+            
+        Notes
+        -----
+        New attributes are availables :`
+            
+            ``self.execution_time`` One microseconds precision for Linux and Mac OS and 16 milliseconds precision for Windows.
         
+            ``self.detailed_execution_time`` One microseconds precision for Linux and Mac OS and 16 milliseconds precision for Windows.
+            
+            ``self.tested_pixels``
+        """
+        np.random.seed() # needed to seed in case of multiprocessing
+        
+        map_i=dict_args.get('probability_maps', map_i)
+        J_proba=dict_args.get('probability_maps', J_proba)
+        sound=dict_args.get('sound', sound)
+        
+        global_start_time = time.time()
+        start_time = time.time()
+                    
+        map_f_data = map_i.data.copy()
+        
+        self.detailed_execution_time = {}
+        
+        self.detailed_execution_time['pixels_initialization']=time.time()-start_time
+        start_time = time.time()
+        
+        J = J_proba.copy()
+        
+        J[('v','i')] = map_i.data.flat[J.index.values]
+        
+        # GART
+        self.tested_pixels = [J.index.size]
+        self._generalized_acceptation_rejection_test(J, inplace=True, accepted_only=True)
+        
+        self.detailed_execution_time['sampling']=[time.time()-start_time]
+        start_time = time.time()
+                
+        # allocation
+        map_f_data.flat[J.index.values] = J.v.f.values
+        
+        self.detailed_execution_time['pixels_initialization']=time.time()-start_time
+
+        self.detailed_execution_time['patches_parameters_initialization']=[0]
+        
+        self.execution_time = time.time() - global_start_time
+        
+        # post processing
+        map_f = definition.LandUseCoverLayer(name="luc_simple",
+                                               time=None,
+                                               scale=map_i.scale)
+        map_f.import_numpy(data=map_f_data, sound=sound)
+        
+        if sound>0:
+            print('FINISHED')
+            print('========')
+            print('execution times')
+            print(self.detailed_execution_time)
+            
+            
+            
+            N_vi_vf = J.groupby([('v','i'), ('v','f')]).size().reset_index(name=('N_vi_vf', ''))
+            N_vi = J_proba.groupby([('v','i')]).size().reset_index(name=('N_vi', ''))
+            N_vi_vf = N_vi_vf.merge(N_vi)
+            N_vi_vf['P_vf__vi'] = N_vi_vf.N_vi_vf / N_vi_vf.N_vi
+            print(N_vi_vf)
+        
+        return(map_f)
+    
     def allocate_monopixel_patches(self,
                                    case:definition.Case,
                                    probability_maps=None,

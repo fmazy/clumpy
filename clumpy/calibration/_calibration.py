@@ -1,13 +1,23 @@
 import pandas as pd
 
 from .. import definition
-from . import discretization
 
 import numpy as np
 
 class _Calibration():
     # def __init__(self):
         # self.a = None
+    
+    def _compute_P_vf__vi_from_P_vf__vi_z(self, J):
+        P_vf__vi = pd.DataFrame(columns=pd.MultiIndex.from_tuples([('v','i')]))
+    
+        P_vf__vi[('v','i')] = np.sort(J.v.i.unique()) 
+        
+        for vi in np.sort(J.v.i.unique()):
+            for vf in J.P_vf__vi_z.columns.to_list():
+                P_vf__vi.loc[P_vf__vi.v.i==vi, ('P_vf__vi', vf)] = J.loc[J.v.i==vi, ('P_vf__vi_z', vf)].sum() / J.loc[J.v.i==vi].index.size
+                
+        return(P_vf__vi)
 
     def _compute_P_vf__vi(self, case:definition.Case, name='P_vf__vi'):       
         P_vf__vi = pd.DataFrame(columns=pd.MultiIndex.from_tuples([('v','i')]))
@@ -107,17 +117,20 @@ class _Calibration():
         
         N_z_vi_vf = N_z_vi_vf.merge(N_z_vi, how='left')
         
-        list_vf = N_z_vi_vf.v.f.unique()
+        list_vf = np.sort(N_z_vi_vf.v.f.unique())
         for vf in list_vf:
             N_z_vi_vfx = N_z_vi_vf.loc[N_z_vi_vf.v.f == vf].copy()
-            N_z_vi_vfx[('P_vf__vi_z',vf)] = N_z_vi_vfx.loc[N_z_vi_vfx.v.f==vf].N_z_vi_vf.all_vf / N_z_vi_vfx.loc[N_z_vi_vfx.v.f==vf].N_z_vi
+            N_z_vi_vfx[(name,vf)] = N_z_vi_vfx.loc[N_z_vi_vfx.v.f==vf].N_z_vi_vf.all_vf / N_z_vi_vfx.loc[N_z_vi_vfx.v.f==vf].N_z_vi
             
-            N_z_vi = N_z_vi.merge(N_z_vi_vfx[col_vi+cols_z+[('P_vf__vi_z',vf)]], how='left')
+            N_z_vi = N_z_vi.merge(N_z_vi_vfx[col_vi+cols_z+[(name,vf)]], how='left')
         
         if not keep_N:
             N_z_vi.drop(['N_z_vi'], axis=1, level=0, inplace=True)
         
         N_z_vi.fillna(0, inplace=True)
+        
+        for c in N_z_vi[['z']].columns.to_list():
+            N_z_vi.loc[N_z_vi[c] == -1, c] = np.nan
         
         if output=='self':
             self.P_vf__vi_z = N_z_vi
@@ -149,4 +162,15 @@ class _Calibration():
         Y =  P_vf__vi_z[cols_P]
         
         return(X,Y)
+    
+    # def transition_probability_maps():
+        
+    
+def _clean_X(X):
+    # check if a X column is full of nan:
+    columns_sumed_na = np.isnan(X).sum(axis=0)
+    for idx, c in enumerate(columns_sumed_na):
+        if c == X.shape[0]:
+            X = np.delete(X, idx, 1) # delete the column
+    return(X)
         

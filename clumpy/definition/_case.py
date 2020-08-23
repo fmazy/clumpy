@@ -6,10 +6,9 @@ Created on Wed Jun  3 09:35:47 2020
 @author: frem
 """
 
-import numpy as np
+# import numpy as np
 import pandas as pd
 from scipy import ndimage
-from sklearn.preprocessing import StandardScaler as SklearnStandardScaler
 
 from ._transition import _Transition
 from ._feature import _Zk
@@ -64,29 +63,32 @@ class Case():
         cols = [('v', 'i')]
         cols = pd.MultiIndex.from_tuples(cols)
         
-        self.J = pd.DataFrame(self.map_i.data.flat, columns=cols)
+        self._J = pd.DataFrame(self.map_i.data.flat, columns=cols)
         
         # restrict to pixels with vi in Ti
-        self.J = self.J.loc[self.J.v.i.isin(self.transitions.Ti.keys())]
+        self._J = self._J.loc[self._J.v.i.isin(self.transitions.Ti.keys())]
         
         # complete with vf values
         if self.map_f != None:
             self._add_vf()
             
-        # self.discrete_J = self.J.copy() # if their is no discretization made, it exists !
-            
+        # self.discrete_J = self._J.copy() # if their is no discretization made, it exists !
+    
+    def get_J(self):
+        return(self._J.copy())
+    
     def _add_vf(self):       
-        self.J['v', 'f'] = self.map_f.data.flat[self.J.index.values]
+        self._J['v', 'f'] = self.map_f.data.flat[self._J.index.values]
         
     def _restrict_vf_to_studied_ones(self):            
-        N_vi_vf = self.J.groupby([('v','i'), ('v','f')]).size().reset_index(name=('N_vi_vf',''))
+        N_vi_vf = self._J.groupby([('v','i'), ('v','f')]).size().reset_index(name=('N_vi_vf',''))
         # print(N_vi_vf)
         for index, row in N_vi_vf.iterrows():
             vi = row[('v','i')]
             vf = row[('v','f')]
             
             if vf not in self.transitions.Ti[vi].Tif.keys():
-                self.J.loc[(self.J.v.i==vi) & (self.J.v.f==vf), ('v','f')] = vi       
+                self._J.loc[(self._J.v.i==vi) & (self._J.v.f==vf), ('v','f')] = vi       
             
     def add_distance_to_v_as_feature(self, list_vi, v, name=None, scale=1):
         """
@@ -139,15 +141,15 @@ class Case():
             
         # if vi states asked represent all vi transitions, takes all indexes
         if list_vi == vi_T:
-            self.J['z', name] = data.flat[self.J.index.values]
+            self._J['z', name] = data.flat[self._J.index.values]
             
         else: # else, just add necessary                
             # then, for each vi
             for vi in list_vi:
-                j = self.J.loc[self.J.v.i == vi].index.values
-                self.J.loc[j, ('z', name)] = data.flat[j]
+                j = self._J.loc[self._J.v.i == vi].index.values
+                self._J.loc[j, ('z', name)] = data.flat[j]
         
-        self.J.sort_index(axis=1, inplace=True)
+        self._J.sort_index(axis=1, inplace=True)
         
         # finally, we create for each vi the corresponding Z                
         for vi in list_vi:
@@ -172,22 +174,22 @@ class Case():
             
         self.add_numpy_as_feature(list_vi, layer_EV.data, name)
         
-    def standard_scale(self):
-        """
-        Standardize features by removing the mean and scaling to unit variance for each initial states.
+    # def standard_scale(self):
+    #     """
+    #     Standardize features by removing the mean and scaling to unit variance for each initial states.
         
-        Notes
-        -----
-            New attributes are then available :
+    #     Notes
+    #     -----
+    #         New attributes are then available :
         
-                ``self.J_standard``
-                    The standardized features.
-        """
-        scaler = SklearnStandardScaler()  # doctest: +SKIP
-        # Don't cheat - fit only on training data
-        scaler.fit(X_train)  # doctest: +SKIP
-        X_train = scaler.transform(X_train)  # doctest: +SKIP
-        # apply same transformation to test data
-        X_test = scaler.transform(X_test)  # doctest: +SKIP
+    #             ``self._J_standard``
+    #                 The standardized features.
+    #     """
+    #     scaler = SklearnStandardScaler()  # doctest: +SKIP
+    #     # Don't cheat - fit only on training data
+    #     scaler.fit(X_train)  # doctest: +SKIP
+    #     X_train = scaler.transform(X_train)  # doctest: +SKIP
+    #     # apply same transformation to test data
+    #     X_test = scaler.transform(X_test)  # doctest: +SKIP
         
         
