@@ -119,7 +119,7 @@ def chi2_features_independence(J, vi):
         df_O_ij = J.groupby(by=[('z',couple[0]), ('z', couple[1])]).size().reset_index(name='O_ij')
         size= (df_O_ij[('z',couple[0])].max(), df_O_ij[('z',couple[1])].max())
         
-        O_ij = np.zeros(size)
+        O_ij = np.zeros((int(size[0]),int(size[1])))
         O_ij[df_O_ij[('z',couple[0])].values-1, df_O_ij[('z',couple[1])]-1] = df_O_ij.O_ij.values
         
         # print(O_ij)

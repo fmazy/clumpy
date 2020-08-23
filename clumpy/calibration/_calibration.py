@@ -66,34 +66,87 @@ class _Calibration():
         return(M)
     
     def compute_P_vf__vi_z(self, case:definition.Case=None, J=None, name='P_vf__vi_z', keep_N=False, output='self'):
-        
+        """
+        Computes transition probabilities directly from entries as simple statistic probabilities.
+
+        Parameters
+        ----------
+        case : definition.Case (default=``None``)
+            The case from witch pixels states and corresponding features are used (``case.discrete_J``). If ``None``, ``J`` is expected.
+        J : pandas dataframe (default=``None``)
+            The pixels states and corresponding features to use. Expected if ``case=None``.
+        name : string (default=``P_vf__vi_z``)
+            The output transition probability column name.
+        keep_N : boolean (default=``False``)
+            If ``True``, the number of concerned pixels is kept for each combination.
+        output : {'self', 'return'}, (default=``self``)
+            The way to return the result.
+            
+                self
+                    The result is saved as an attribute in ``case.P_vf__vi_z``.
+                
+                return
+                    The result is returned.
+
+        Returns
+        -------
+        A pandas dataframe which can be returned or saved as an attribute according to ``output``.
+
+        """
         if type(J)==type(None):
-            J = case.discrete_J
+            J = case.discrete_J.copy()
         
         col_vi = [('v', 'i')]
         col_vf = [('v','f')]
         cols_z = J[['z']].columns.to_list()
         
         J = J.fillna(-1)
+                
+        N_z_vi_vf = J.groupby(col_vi+col_vf+cols_z).size().reset_index(name=('N_z_vi_vf','all_vf'))
+        N_z_vi = J.groupby(col_vi+cols_z).size().reset_index(name=('N_z_vi',''))
         
-        P_vf__vi_z = J.groupby(col_vi+col_vf+cols_z).size().reset_index(name=('N_z_vi_vf',''))
-        N_vi_z = J.groupby(col_vi+cols_z).size().reset_index(name=('N_z_vi',''))
+        N_z_vi_vf = N_z_vi_vf.merge(N_z_vi, how='left')
         
-        P_vf__vi_z = P_vf__vi_z.loc[P_vf__vi_z.v.i != P_vf__vi_z.v.f]
-        
-        P_vf__vi_z = P_vf__vi_z.merge(N_vi_z, how='left')
-        
-        list_vf = P_vf__vi_z.v.f.unique()
-        
+        list_vf = N_z_vi_vf.v.f.unique()
         for vf in list_vf:
-            P_vf__vi_z[(name,vf)] = P_vf__vi_z.loc[P_vf__vi_z.v.f==vf].N_z_vi_vf / P_vf__vi_z.loc[P_vf__vi_z.v.f==vf].N_z_vi
+            N_z_vi_vfx = N_z_vi_vf.loc[N_z_vi_vf.v.f == vf].copy()
+            N_z_vi_vfx[('P_vf__vi_z',vf)] = N_z_vi_vfx.loc[N_z_vi_vfx.v.f==vf].N_z_vi_vf.all_vf / N_z_vi_vfx.loc[N_z_vi_vfx.v.f==vf].N_z_vi
+            
+            N_z_vi = N_z_vi.merge(N_z_vi_vfx[col_vi+cols_z+[('P_vf__vi_z',vf)]], how='left')
         
         if not keep_N:
-            P_vf__vi_z.drop(['N_z_vi_vf', 'N_z_vi'], axis=1, level=0, inplace=True)
+            N_z_vi.drop(['N_z_vi'], axis=1, level=0, inplace=True)
+        
+        N_z_vi.fillna(0, inplace=True)
         
         if output=='self':
-            self.P_vf__vi_z = P_vf__vi_z
+            self.P_vf__vi_z = N_z_vi
         elif output=='return':
-            return(P_vf__vi_z)
+            return(N_z_vi)
+
+    def get_features_and_targets(self, P_vf__vi_z=None):
+        """
+        Get features and targets of a transition probabilities dataframe.
+
+        Parameters
+        ----------
+        P_vf__vi_z : pandas dataframe (default=``None``)
+            Transition probabilities. If ``None``, ``self.P_vf__vi_z`` is used.
         
+        Returns
+        -------
+        ``X`` the initial state and the features and ``Y`` the targets, i.e. the transitions probabilities
+        """
+        
+        if type(P_vf__vi_z)==type(None):
+            P_vf__vi_z = self.P_vf__vi_z.copy()
+        
+        col_vi = [('v', 'i')]
+        cols_z = P_vf__vi_z[['z']].columns.to_list()
+        cols_P = P_vf__vi_z[['P_vf__vi_z']].columns.to_list()
+        
+        X = P_vf__vi_z[col_vi+cols_z]
+        Y =  P_vf__vi_z[cols_P]
+        
+        return(X,Y)
         

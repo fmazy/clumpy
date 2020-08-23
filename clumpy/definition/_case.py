@@ -9,6 +9,7 @@ Created on Wed Jun  3 09:35:47 2020
 import numpy as np
 import pandas as pd
 from scipy import ndimage
+from sklearn.preprocessing import StandardScaler as SklearnStandardScaler
 
 from ._transition import _Transition
 from ._feature import _Zk
@@ -170,3 +171,23 @@ class Case():
             name = layer_EV.name
             
         self.add_numpy_as_feature(list_vi, layer_EV.data, name)
+        
+    def standard_scale(self):
+        """
+        Standardize features by removing the mean and scaling to unit variance for each initial states.
+        
+        Notes
+        -----
+            New attributes are then available :
+        
+                ``self.J_standard``
+                    The standardized features.
+        """
+        scaler = SklearnStandardScaler()  # doctest: +SKIP
+        # Don't cheat - fit only on training data
+        scaler.fit(X_train)  # doctest: +SKIP
+        X_train = scaler.transform(X_train)  # doctest: +SKIP
+        # apply same transformation to test data
+        X_test = scaler.transform(X_test)  # doctest: +SKIP
+        
+        

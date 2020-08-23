@@ -5,6 +5,8 @@ Created on Thu May 28 10:05:07 2020
 
 @author: frem
 """
+from ._calibration import _Calibration
+from ..definition._case import Case
 
 
 import sklearn.svm
@@ -12,6 +14,37 @@ import sklearn.neighbors
 import pandas as pd
 
 #from ..allocation import build
+
+class KNeighborsClassifier(_Calibration):
+    """
+    K Nearest Neighbors calibration
+    """
+    
+    def __init__(self, case:Case):
+        self.params = params
+    
+    def fit(self, J):
+        """
+        fit model with a discretized case
+
+        Parameters
+        ----------
+        case : Case
+            The case which have to be discretized.
+
+        Notes
+        -----
+        
+        New attributes are availables :
+            
+            ``self.P_zk__vi``
+            
+            ``self.P_zk__vi_vf``
+            
+            ``self.P_vf__vi``
+
+        """
+        
 
 class KNeighborsRegressor():
     def __init__(self, params):
