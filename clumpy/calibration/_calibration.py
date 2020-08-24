@@ -19,10 +19,10 @@ class _Calibration():
                 
         return(P_vf__vi)
 
-    def _compute_P_vf__vi(self, case:definition.Case, name='P_vf__vi'):       
+    def _compute_P_vf__vi(self, J, name='P_vf__vi'):       
         P_vf__vi = pd.DataFrame(columns=pd.MultiIndex.from_tuples([('v','i')]))
         
-        df = case.J.groupby([('v','i'), ('v','f')]).size().reset_index(name=('N_vi_vf',''))
+        df = J.groupby([('v','i'), ('v','f')]).size().reset_index(name=('N_vi_vf',''))
         
         for vi in df.v.i.unique():
             df.loc[df.v.i==vi, ('P_vf__vi','')] = df.loc[df.v.i==vi, 'N_vi_vf']/ df.loc[df.v.i==vi, 'N_vi_vf'].sum()
@@ -30,9 +30,8 @@ class _Calibration():
             P_vf__vi.loc[P_vf__vi.index.size, ('v','i')] = vi
             for vf in df.loc[df.v.i==vi].v.f.unique():
                 P_vf__vi.loc[P_vf__vi.v.i==vi,('P_vf__vi', vf)] = df.loc[(df.v.i==vi) & (df.v.f==vf)].P_vf__vi.values[0]
-                
-        self.P_vf__vi = P_vf__vi
-        self.P_vf__vi.fillna(0, inplace=True)
+        
+        return(P_vf__vi.fillna(0))
         
     def compute_P_z__vi(self, case:definition.Case=None, name='P_z__vi', J=None, keep_N=False, output='self'):
         

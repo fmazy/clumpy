@@ -21,7 +21,7 @@ class Binarizer():
             #     alpha_sub.alpha = _compute_bins_with_numpy(case.J, Zk, param['bins'])
                 
             if fit_param['method'] == 'optbinning':
-                self.alpha[(vi, feature_name)] = _compute_bins_with_optbinning(X, y, sound=sound, plot=plot)
+                self.alpha[(vi, feature_name)] = _compute_bins_with_optbinning(X, y, name=feature_name, sound=sound, plot=plot)
                 
             elif fit_param['method'] == 'numpy':
                 if 'bins' not in fit_param.keys():
@@ -78,8 +78,8 @@ class Binarizer():
         
         return(J)
 
-def _compute_bins_with_optbinning(X, y, sound=0, plot=False):
-    optb = MulticlassOptimalBinning(name='Zk', solver="cp")
+def _compute_bins_with_optbinning(X, y, name='name', sound=0, plot=False):
+    optb = MulticlassOptimalBinning(name=name, solver="cp")
     
     optb.fit(X, y)
     
