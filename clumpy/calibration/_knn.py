@@ -103,6 +103,22 @@ class KNeighborsRegressor(_Calibration):
         J_proba.set_index('j', inplace=True)
         
         return(J_proba)
+    
+    def score(self, J, y):
+        
+        J = J.copy()
+        J.reset_index(inplace=True)
+        
+        s = []
+        for vi in J.v.i.unique():
+            idx = J.loc[J.v.i == vi].index.values
+            
+            X = J.loc[idx, 'z'].values
+            X = _clean_X(X) # remove NaN columns
+            
+            s.append(self.k_beighbors_classifiers[vi].score(X, y[idx,:]))
+        
+        return(s)
 
 # class KNeighborsRegressor():
 #     def __init__(self, params):
