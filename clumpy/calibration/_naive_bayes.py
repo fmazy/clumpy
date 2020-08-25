@@ -35,6 +35,7 @@ class NaiveBayes(_Calibration):
             ``self.P_vf__vi``
 
         """
+        
         self._compute_P_zk__vi(J)
         self._compute_P_zk__vi_vf(J)
         self.P_vf__vi = self._compute_P_vf__vi(J)
@@ -49,24 +50,43 @@ class NaiveBayes(_Calibration):
         
         P_z__vi = self._compute_naive_P_z__vi(J)
         P_z__vi_vf = self._compute_naive_P_z__vi_vf(J)
+        print(P_z__vi_vf)
         P_vf__vi_z = _compute_P_vf__vi_z_with_bayes(self.P_vf__vi, P_z__vi, P_z__vi_vf)
+        print(P_vf__vi_z)
+        J = J.reset_index(drop=False).merge(P_vf__vi_z, how='left').set_index('index')
         
-        return(J.merge(P_vf__vi_z, how='left'))
+        for vi in J.v.i.unique():
+            J.loc[J.v.i == vi, ('P_vf__vi_z', vi)] = 1 - J.loc[J.v.i == vi].P_vf__vi_z.sum(axis=1)
+        
+        J = J.reindex(sorted(J.columns), axis=1)
+        
+        return(J)
     
     def score(self, J, y):
         
         J = J.copy()
-        J.reset_index(inplace=True)
         
         J_predict = self.predict(J)
+        J_predict.reset_index(inplace=True, drop=True)
         
         s = []
         for vi in J_predict.v.i.unique():
-            idx = J_predict.loc[J.v.i == vi].index.values
+            idx = J_predict.loc[J_predict.v.i == vi].index.values
             
             P_vf__vi_z = J_predict.loc[idx, 'P_vf__vi_z'].values
             
-            s.append(sklearn.metrics.r2_score(y[idx], P_vf__vi_z))
+            # focus on different final state
+            list_vf = J_predict.P_vf__vi_z.columns.to_list()
+            idx_vi = list_vf.index(vi)
+            idx_vf = list(np.arange(len(list_vf)))
+            idx_vf.remove(idx_vi)
+            
+            y_true = y[idx,:]
+            y_true = y_true[:, idx_vf]
+            
+            y_predict = P_vf__vi_z[:,idx_vf]
+            
+            s.append(sklearn.metrics.r2_score(y_true, y_predict))
         
         return(s)
         

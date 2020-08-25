@@ -38,11 +38,15 @@ class KNeighborsRegressor(_Calibration):
         """
         
         self.k_beighbors_classifiers = {}
-        self.list_vf = J.P_vf__vi_z.columns.to_list()
+        self.list_vf = list(np.sort(J.P_vf__vi_z.columns.to_list()))
         
         for vi in J.v.i.unique():
             X = J.loc[J.v.i==vi, 'z'].values
-            y = J.loc[J.v.i==vi, 'P_vf__vi_z'].values
+            
+            
+            list_vf_without_vi = self.list_vf.copy()
+            list_vf_without_vi.remove(vi)
+            y = J.loc[J.v.i==vi, [('P_vf__vi_z', vf) for vf in list_vf_without_vi]].values
             
             X = _clean_X(X) # remove NaN columns
             
@@ -53,11 +57,20 @@ class KNeighborsRegressor(_Calibration):
             self.k_beighbors_classifiers[vi].fit(X, y)
     
     def predict(self, J):
+        # index_init = J.index.values
+        # J = J.sort_values(('v','i'))
+        
+        J = J[[('v','i')]+J[['z']].columns.to_list()].copy()
+        J.reset_index(drop=False, inplace=True)
         J_proba = pd.DataFrame()
         
         for vi in J.v.i.unique():
             print('vi',vi)
-            cols = [('v','i')] + J[['z']].columns.to_list() + [('P_vf__vi_z', vf) for vf in np.sort(self.list_vf)]
+            
+            list_vf_without_vi = self.list_vf.copy()
+            list_vf_without_vi.remove(vi)
+            
+            cols = [('v','i')] + J[['z']].columns.to_list() + [('P_vf__vi_z', vf) for vf in list_vf_without_vi]
             cols = pd.MultiIndex.from_tuples(cols)
             J_proba_vi = pd.DataFrame(columns=cols)
             
@@ -69,40 +82,17 @@ class KNeighborsRegressor(_Calibration):
             
             J_proba_vi['P_vf__vi_z'] = self.k_beighbors_classifiers[vi].predict(X)
             J_proba_vi[('v','i')] = vi
-            J_proba = pd.concat([J_proba, J_proba_vi])
+            
+            J_proba_vi[('P_vf__vi_z', vi)] = 1 - J_proba_vi.P_vf__vi_z.sum(axis=1)
+            
+            J = J.merge(J_proba_vi, how='left')
         
-        return(J_proba)
+        J.set_index('index', inplace=True)
+
+        J = J.reindex(sorted(J.columns), axis=1)
+
+        return(J)
     
-    def kneighbors(self, vi, x, n):
-        kneighbors = pd.DataFrame()
-        
-        return(self.k_beighbors_classifiers[vi].kneighbors(x, n))
-            
-    
-    def predict_proba(self, J):
-        
-        J_proba = pd.DataFrame()
-        
-        for vi in J.v.i.unique():
-            print('vi',vi)
-            cols = [('P_vf__vi_z', vf) for vf in np.sort(self.list_vf_according_to_vi[vi])]+[('j','')]
-            cols = pd.MultiIndex.from_tuples(cols)
-            J_proba_vi = pd.DataFrame(columns=cols)
-            
-            X = J.loc[J.v.i==vi, 'z'].values
-            X = _clean_X(X) # remove NaN columns
-            
-            # print(self.k_beighbors_classifiers[vi].predict_proba(X).shape)
-            # print(J_proba_vi.loc[J.v.i==vi].shape)
-            J_proba_vi[('j','')] = J.loc[J.v.i==vi].index.values
-            J_proba_vi['P_vf__vi_z'] = self.k_beighbors_classifiers[vi].predict(X)
-            # print(J_proba_vi.shape)
-        
-            J_proba = pd.concat([J_proba, J_proba_vi])
-        
-        J_proba.set_index('j', inplace=True)
-        
-        return(J_proba)
     
     def score(self, J, y):
         
@@ -116,50 +106,16 @@ class KNeighborsRegressor(_Calibration):
             X = J.loc[idx, 'z'].values
             X = _clean_X(X) # remove NaN columns
             
-            s.append(self.k_beighbors_classifiers[vi].score(X, y[idx,:]))
+            
+            # focus on different final state
+            list_vf = self.list_vf.copy()
+            idx_vi = list_vf.index(vi)
+            idx_vf = list(np.arange(len(list_vf)))
+            idx_vf.remove(idx_vi)
+                        
+            yx = y[idx,:]
+            yx = yx[:, idx_vf]
+            
+            s.append(self.k_beighbors_classifiers[vi].score(X, yx))
         
         return(s)
-
-# class KNeighborsRegressor():
-#     def __init__(self, params):
-#         self.params = params
-        
-#     def fit(self, J):
-#         self.transition = {}
-#         for trans, param in self.params.items():
-#             print(trans)
-            
-#             P_vf__vi_z = build.computes_P_vf__vi_z(J)
-            
-#             J_with_P = J.merge(right=P_vf__vi_z, how='left')
-#             J_with_P.fillna(0, inplace=True)
-            
-#             X = J_with_P.loc[(J_with_P.v.i==trans[0])][['z']].values
-#             y = J_with_P.loc[(J_with_P.v.i==trans[0])][('P_vf__vi_z',trans[1])].values.T
-            
-#             self.transition[trans] = sklearn.neighbors.KNeighborsRegressor(param['n_neighbors'], weights=param['weights']).fit(X, y)
-            
-#     def predict(self, J):
-#         P = pd.DataFrame(index = J.index.values)
-#         for trans, param in self.params.items():
-#             X = J.loc[J.v.i==trans[0]][['z']].values
-            
-#             P.loc[J.v.i==trans[0], str(trans[1])] = self.transition[trans].predict(X)
-        
-#         return(P)
-            
-#     def scores(self, J):
-#         P = pd.DataFrame(index = J.index.values)
-#         for trans, param in self.params.items():
-#             print(trans)
-            
-#             P_vf__vi_z = build.computes_P_vf__vi_z(J)
-            
-#             J_with_P = J.merge(right=P_vf__vi_z)
-            
-#             X = J_with_P.loc[(J_with_P.v.i==trans[0])][['z']].values
-#             y = J_with_P.loc[J_with_P.v.i==trans[0]][('P_vf__vi_z',trans[1])].values.T
-            
-#             print(self.transition[trans].score(X, y))
-        
-#         return(P)

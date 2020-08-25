@@ -124,7 +124,9 @@ class _Calibration():
             P_z__vi_vf[(name, vf)] = P_z__vi_vf.N_z_vi_vf / P_z__vi_vf.N_vi_vf
             
             P_z__vi_vf.drop(['N_z_vi_vf', 'N_vi_vf'], axis=1, level=0, inplace=True)
-            
+        
+        P_z__vi_vf.drop(('v','f'), axis=1, inplace=True)
+        
         if output=='self':
             self.P_z__vi_vf = P_z__vi_vf
         elif output=='return':
