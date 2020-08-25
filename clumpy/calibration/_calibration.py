@@ -33,11 +33,7 @@ class _Calibration():
         
         return(P_vf__vi.fillna(0))
         
-    def compute_P_z__vi(self, case:definition.Case=None, name='P_z__vi', J=None, keep_N=False, output='self'):
-        
-        if type(J)==type(None):
-            J = case.discrete_J
-        
+    def compute_P_z__vi(self, J, name='P_z__vi', keep_N=False, output='self'):
         J = J.fillna(-1)
         
         col_vi = [('v', 'i')]
@@ -61,6 +57,8 @@ class _Calibration():
         elif output=='return':
             return(P_z__vi)
         
+    # def r2_score()
+        
     def build_P_z__vi_map(self, case:definition.Case, P_name='P_z__vi', J=None):
         
         if type(J)==type(None):
@@ -73,6 +71,65 @@ class _Calibration():
         M.flat[J_with_P.index.values] = J_with_P[P_name].values
         
         return(M)
+    
+    def compute_P_z__vi_vf(self, J=None, name='P_z__vi_vf', output='self'):
+        """
+        Computes transition probabilities directly from entries as simple statistic probabilities.
+
+        Parameters
+        ----------
+        case : definition.Case (default=``None``)
+            The case from witch pixels states and corresponding features are used (``case.discrete_J``). If ``None``, ``J`` is expected.
+        J : pandas dataframe (default=``None``)
+            The pixels states and corresponding features to use. Expected if ``case=None``.
+        name : string (default=``P_vf__vi_z``)
+            The output transition probability column name.
+        keep_N : boolean (default=``False``)
+            If ``True``, the number of concerned pixels is kept for each combination.
+        output : {'self', 'return'}, (default=``self``)
+            The way to return the result.
+            
+                self
+                    The result is saved as an attribute in ``case.P_vf__vi_z``.
+                
+                return
+                    The result is returned.
+
+        Returns
+        -------
+        A pandas dataframe which can be returned or saved as an attribute according to ``output``.
+
+        """        
+        col_vi = [('v', 'i')]
+        col_vf = [('v','f')]
+        cols_z = J[['z']].columns.to_list()
+        
+        J = J.fillna(-1)
+                
+        N_z_vi_vf = J.groupby(col_vi+col_vf+cols_z).size().reset_index(name=('N_z_vi_vf',''))
+        N_vi_vf = J.groupby(col_vi+col_vf).size().reset_index(name=('N_vi_vf',''))
+        
+        N_z_vi_vf = N_z_vi_vf.merge(N_vi_vf, how='left')
+        
+        P_z__vi_vf = J[col_vi + cols_z].drop_duplicates()
+        
+        list_vf = np.sort(N_z_vi_vf.v.f.unique())
+        for vf in list_vf:
+            N_z_vi_vfx = N_z_vi_vf.loc[N_z_vi_vf.v.f == vf].copy()
+            N_vi_vfx = N_vi_vf.loc[N_vi_vf.v.f == vf].copy()
+            
+            P_z__vi_vf = P_z__vi_vf.merge(N_z_vi_vfx, how='left')
+            P_z__vi_vf = P_z__vi_vf.merge(N_vi_vfx, how='left')
+            
+            P_z__vi_vf[(name, vf)] = P_z__vi_vf.N_z_vi_vf / P_z__vi_vf.N_vi_vf
+            
+            P_z__vi_vf.drop(['N_z_vi_vf', 'N_vi_vf'], axis=1, level=0, inplace=True)
+            
+        if output=='self':
+            self.P_z__vi_vf = P_z__vi_vf
+        elif output=='return':
+            return(P_z__vi_vf)
+
     
     def compute_P_vf__vi_z(self, case:definition.Case=None, J=None, name='P_vf__vi_z', keep_N=False, output='self'):
         """

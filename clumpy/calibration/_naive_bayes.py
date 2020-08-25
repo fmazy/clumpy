@@ -2,6 +2,7 @@ from ._calibration import _Calibration
 from ..definition._case import Case
 from ..definition._layer import TransitionProbabilityLayers
 
+import sklearn.metrics
 import pandas as pd
 import numpy as np
 from matplotlib import pyplot as plt
@@ -13,7 +14,7 @@ class NaiveBayes(_Calibration):
     # def __init__(self):
         # super().__init__()
         
-    def fit(self, J, binarizer):
+    def fit(self, J):
         """
         fit model with a discretized case
 
@@ -34,17 +35,40 @@ class NaiveBayes(_Calibration):
             ``self.P_vf__vi``
 
         """
-        self.binarizer = binarizer
         self._compute_P_zk__vi(J)
         self._compute_P_zk__vi_vf(J)
         self.P_vf__vi = self._compute_P_vf__vi(J)
         
     def predict(self, J):
-        P_z__vi = self._compute_naive_P_z__vi(J).fillna(0)
-        P_z__vi_vf = self._compute_naive_P_z__vi_vf(J).fillna(0)
-        P_vf__vi_z = _compute_P_vf__vi_z_with_bayes(self.P_vf__vi, P_z__vi, P_z__vi_vf).fillna(0)
+        
+        J = J.copy()
+        col_vi = [('v','i')]
+        cols_z = J[['z']].columns.to_list()
+        
+        J = J[col_vi+cols_z]
+        
+        P_z__vi = self._compute_naive_P_z__vi(J)
+        P_z__vi_vf = self._compute_naive_P_z__vi_vf(J)
+        P_vf__vi_z = _compute_P_vf__vi_z_with_bayes(self.P_vf__vi, P_z__vi, P_z__vi_vf)
         
         return(J.merge(P_vf__vi_z, how='left'))
+    
+    def score(self, J, y):
+        
+        J = J.copy()
+        J.reset_index(inplace=True)
+        
+        J_predict = self.predict(J)
+        
+        s = []
+        for vi in J_predict.v.i.unique():
+            idx = J_predict.loc[J.v.i == vi].index.values
+            
+            P_vf__vi_z = J_predict.loc[idx, 'P_vf__vi_z'].values
+            
+            s.append(sklearn.metrics.r2_score(y[idx], P_vf__vi_z))
+        
+        return(s)
         
     def transition_probability_maps(self, case:Case, P_vf__vi = None):
         """
@@ -80,137 +104,100 @@ class NaiveBayes(_Calibration):
         return(maps)
         
     def _compute_P_zk__vi(self, J):
-        self.P_zk__vi = pd.DataFrame(columns=['vi','Zk_name','q','P_zk__vi'])
+        self.P_zk__vi = {}
         
         for vi in J.v.i.unique():
-            # restriction to considered pixels
             J_vi = J.loc[(J.v.i==vi)]
-            for Zk_name in J.z.columns.to_list():
-                
-                # restriction to considered alpha
-                alpha_Zk = self.binarizer.alpha[(vi, Zk_name)]
-                
-                # we count every unique combinaisons of vi, Zk
-                count = J_vi.z.groupby([Zk_name]).size().reset_index(name='P_zk__vi')
-                
-                # we fill holes where no occurences have been found
-                q = count[Zk_name].values
-                n = count['P_zk__vi'].values
-                n_full = np.zeros((len(alpha_Zk)+1))
-                n_full[q.astype(int)] = n
-                
-                # sub df creation
-                df_sub = pd.DataFrame(columns=['vi','Zk_name','q','P_zk__vi'])
-                df_sub.q = np.arange((len(alpha_Zk)+1))
-                df_sub.P_zk__vi = n_full/n_full.sum()
-                df_sub['vi'] = vi
-                df_sub['Zk_name'] = Zk_name
-                
-                # self.P_zk__vi concatenation
-                self.P_zk__vi = pd.concat([self.P_zk__vi, df_sub], ignore_index=True)
-                
-    def _compute_P_zk__vi_vf(self, J):        
-        self.P_zk__vi_vf = pd.DataFrame(columns=['vi','vf','Zk_name','q','P_zk__vi_vf'])
+            for zk_name in J.z.columns.to_list():
+                self.P_zk__vi[(vi, zk_name)] = self.compute_P_z__vi(J_vi[[('v','i'), ('z', zk_name)]], name=('P_zk__vi', zk_name), output='return')
+                        
+    def _compute_P_zk__vi_vf(self, J):       
+        
+        self.P_zk__vi_vf = {}
         
         for vi in J.v.i.unique():
-            # restriction to considered pixels
-            for Zk_name in J.z.columns.to_list():
-                for vf in J.v.f.unique():
-                    # restriction to considered pixels
-                    J_vi_vf = J.loc[(J.v.i==vi) & (J.v.f==vf)]
-                    
-                        
-                    # restriction to considered alpha
-                    alpha_Zk = self.binarizer.alpha[(vi, Zk_name)]
-                    
-                    # we count every unique combinaisons of vi, vf, Zk
-                    count = J_vi_vf.z.groupby([Zk_name]).size().reset_index(name='P_zk__vi_vf')
-                    
-                    # we fill holes where no occurences have been found
-                    q = count[Zk_name].values
-                    n = count['P_zk__vi_vf'].values
-                    n_full = np.zeros((len(alpha_Zk)+1))
-                    n_full[q.astype(int)] = n
-                    
-                    # sub df creation
-                    df_sub = pd.DataFrame(columns=['vi','vf','Zk_name','q','P_zk__vi_vf'])
-                    df_sub.q = np.arange((len(alpha_Zk)+1))
-                    df_sub.P_zk__vi_vf = n_full / n_full.sum()
-                    df_sub['vi'] = vi
-                    df_sub['vf'] = vi
-                    df_sub['Zk_name'] = Zk_name
-                    
-                    # self.P_zk__vi_vf concatenation
-                    self.P_zk__vi_vf = pd.concat([self.P_zk__vi_vf, df_sub], ignore_index=True)
+            J_vi = J.loc[(J.v.i==vi)]
+            for vf in J_vi.v.f.unique():
+                if vf != vi:
+                    J_vi_vf = J_vi.loc[(J.v.f==vf)]
+                    for zk_name in J.z.columns.to_list():
+                        self.P_zk__vi_vf[(vi, vf, zk_name)] = self.compute_P_z__vi_vf(J_vi_vf[[('v','i'), ('v','f'), ('z', zk_name)]], name='P_z'+zk_name+'__vi_vf', output='return')
+
     
-    def _compute_naive_P_z__vi(self, J):
-        J = J.copy()
+    def _compute_naive_P_z__vi(self, J):        
+        col_vi = [('v', 'i')]
+        cols_z = J[['z']].columns.to_list()
         
-        if ('v','f') in J.columns:
-            J = J.drop(('v', 'f'), axis=1)
+        P_z__vi = J[col_vi + cols_z].drop_duplicates()
         
-        P_z__vi = J.drop_duplicates()
+        for (vi, zk_name), P_zk__vi in self.P_zk__vi.items():
+            P_z__vi = P_z__vi.merge(P_zk__vi, how='left')
         
-        Ti = list(self.P_zk__vi.groupby(['vi']).size().index)
-        Z = list(self.P_zk__vi.groupby(['vi','Zk_name']).size().index)
+        P_z__vi[('P_z__vi','')] = P_z__vi.P_zk__vi.product(axis=1, min_count=1)
         
-        # print(Ti)
-        # print(Z)
-        
-        for vi in Ti:
-            for Zk in Z:
-                if Zk[0] == vi:
-                    Zk_name = Zk[1]
-                    cols = [('v', 'i'), ('z', Zk_name), ('P_zk__vi', Zk_name)]
-                    cols = pd.MultiIndex.from_tuples(cols)
-                    df = pd.DataFrame(columns=cols)
-                    df[cols] = self.P_zk__vi.loc[(self.P_zk__vi.vi == vi) &
-                                            (self.P_zk__vi.Zk_name == Zk_name), ['vi', 'q', 'P_zk__vi']]
-                    
-                    P_z__vi = P_z__vi.merge(df.astype(float), how='left')
-                    
-            
-            
-            P_z__vi.loc[P_z__vi.v.i == vi, ('P_z__vi', '')] = P_z__vi.loc[P_z__vi.v.i == vi].P_zk__vi.product(axis=1, min_count=1)
-                    
-            P_z__vi.drop('P_zk__vi', axis=1, level=0, inplace=True)
+        P_z__vi.drop('P_zk__vi', axis=1, level=0, inplace=True)
         
         return(P_z__vi)
     
     def _compute_naive_P_z__vi_vf(self, J):
-        J = J.copy()
+        col_vi = [('v', 'i')]
+        cols_z = J[['z']].columns.to_list()
         
-        if ('v','f') in J.columns:
-            J = J.drop(('v', 'f'), axis=1)
+        P_z__vi_vf = J[col_vi + cols_z].drop_duplicates()
         
-        P_z__vi_vf = J.drop_duplicates()
+        list_vf = []
+        list_zk_name = []
+        for (vi, vf, zk_name), P_zk__vi_vf in self.P_zk__vi_vf.items():
+            list_vf.append(vf)
+            list_zk_name.append(zk_name)
+            P_z__vi_vf = P_z__vi_vf.merge(P_zk__vi_vf, how='left')
         
-        T = list(self.P_zk__vi_vf.groupby(['vi','vf']).size().index)
-        Z = list(self.P_zk__vi_vf.groupby(['vi','Zk_name']).size().index)
+        for vf in list_vf:
+            P_z__vi_vf[('P_z__vi_vf',vf)] = P_z__vi_vf[[('P_z'+zk_name+'__vi_vf', vf) for zk_name in list_zk_name]].product(axis=1, min_count=1)
+        
+        P_z__vi_vf.drop(['P_z'+zk_name+'__vi_vf' for zk_name in list_zk_name], level=0, axis=1, inplace=True)
+        
+        return(P_z__vi_vf)
+        # P_z__vi[('P_z__vi','')] = P_z__vi.P_zk__vi.product(axis=1, min_count=1)
+        
+        # P_z__vi.drop('P_zk__vi', axis=1, level=0, inplace=True)
+        
+        # return(P_z__vi)
+        
+        
+        # J = J.copy()
+        
+        # if ('v','f') in J.columns:
+        #     J = J.drop(('v', 'f'), axis=1)
+        
+        # P_z__vi_vf = J.drop_duplicates()
+        
+        # T = list(self.P_zk__vi_vf.groupby(['vi','vf']).size().index)
+        # Z = list(self.P_zk__vi_vf.groupby(['vi','Zk_name']).size().index)
         
         # print(T)
         # print(Z)
         
-        for Tk in T:
-            vi = Tk[0]
-            vf = Tk[1]
-            for Zk in Z:
-                if Zk[0] == vi:
-                    Zk_name = Zk[1]
-                    cols = [('v', 'i'), ('z', Zk_name), ('P_zk__vi_vf', Zk_name)]
-                    cols = pd.MultiIndex.from_tuples(cols)
-                    df = pd.DataFrame(columns=cols)
-                    df[cols] = self.P_zk__vi_vf.loc[(self.P_zk__vi_vf.vi == vi) &
-                                                     (self.P_zk__vi_vf.vf == vf) &
-                                                     (self.P_zk__vi_vf.Zk_name == Zk_name), ['vi', 'q', 'P_zk__vi_vf']]
+        # for Tk in T:
+        #     vi = Tk[0]
+        #     vf = Tk[1]
+        #     for Zk in Z:
+        #         if Zk[0] == vi:
+        #             Zk_name = Zk[1]
+        #             cols = [('v', 'i'), ('z', Zk_name), ('P_zk__vi_vf', Zk_name)]
+        #             cols = pd.MultiIndex.from_tuples(cols)
+        #             df = pd.DataFrame(columns=cols)
+        #             df[cols] = self.P_zk__vi_vf.loc[(self.P_zk__vi_vf.vi == vi) &
+        #                                              (self.P_zk__vi_vf.vf == vf) &
+        #                                              (self.P_zk__vi_vf.Zk_name == Zk_name), ['vi', 'q', 'P_zk__vi_vf']]
                     
-                    P_z__vi_vf = P_z__vi_vf.merge(df.astype(float), how='left')
+        #             P_z__vi_vf = P_z__vi_vf.merge(df.astype(float), how='left')
             
-            P_z__vi_vf.loc[P_z__vi_vf.v.i==vi, ('P_z__vi_vf', vf)] = P_z__vi_vf.loc[P_z__vi_vf.v.i==vi].P_zk__vi_vf.product(axis=1, min_count=1)
+        #     P_z__vi_vf.loc[P_z__vi_vf.v.i==vi, ('P_z__vi_vf', vf)] = P_z__vi_vf.loc[P_z__vi_vf.v.i==vi].P_zk__vi_vf.product(axis=1, min_count=1)
             
-            P_z__vi_vf.drop('P_zk__vi_vf', axis=1, level=0, inplace=True)
+        #     P_z__vi_vf.drop('P_zk__vi_vf', axis=1, level=0, inplace=True)
                 
-        return(P_z__vi_vf)
+        # return(P_z__vi_vf)
     
     def plot_P_zk__vi(self, vi, Zk_name, max_one=False, sum_one=False, color=None, linestyle='-', linewidth=1.5, label=None, alpha=None, step=True):
         """
@@ -304,14 +291,10 @@ class NaiveBayes(_Calibration):
     
 
 def _compute_P_vf__vi_z_with_bayes(P_vf__vi, P_z__vi, P_z__vi_vf, keep_P=False):
+            
+    P_vf__vi_z = P_z__vi_vf.merge(P_z__vi, how='left')
     
-    col_vi = [('v','i')]
-    
-    cols_z = P_z__vi_vf[['v','z']].columns.to_list()
-    
-    P_vf__vi_z = P_z__vi_vf.merge(P_z__vi, how='left', on=col_vi+cols_z)
-    
-    P_vf__vi_z = P_vf__vi_z.merge(P_vf__vi.astype(float), how='left', on=col_vi)
+    P_vf__vi_z = P_vf__vi_z.merge(P_vf__vi, how='left')
         
     for vf in P_z__vi_vf.P_z__vi_vf.columns.to_list():
         idx = P_vf__vi_z.loc[P_vf__vi_z.P_z__vi > 0].index.values
