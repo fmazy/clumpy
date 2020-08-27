@@ -1,0 +1,307 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Binarizer &mdash; clumpy 0.1.0 documentation</title>
+  
+
+  
+  
+    <link rel="shortcut icon" href="../_static/logo.ico"/>
+  
+  
+  
+
+  
+  <script type="text/javascript" src="../_static/js/modernizr.min.js"></script>
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+        <script type="text/javascript" src="../_static/jquery.js"></script>
+        <script type="text/javascript" src="../_static/underscore.js"></script>
+        <script type="text/javascript" src="../_static/doctools.js"></script>
+        <script type="text/javascript" src="../_static/language_data.js"></script>
+        <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
+
+    
+
+  
+  <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Model selection" href="../calibration/model_selection.html" />
+    <link rel="prev" title="Case" href="../definition/case.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../index.html" class="icon icon-home"> clumpy
+          
+
+          
+            
+            <img src="../_static/logo.png" class="logo" alt="Logo"/>
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Getting started</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../tutorials.html">Tutorials</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../release_notes.html">Release Notes</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Definition</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../definition/layer.html">Layer</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../definition/case.html">Case</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Pre-processing</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Binarizer</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Calibration</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../calibration/model_selection.html">Model selection</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../calibration/naive_bayes.html">Naive Bayes Calibration Method</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../calibration/knn.html">K-Nearest Neighbors regressor</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Allocation</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../allocation/simple_unbiased.html">Simple Unbiased Allocation Method</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../allocation/generalized_von_neumann.html">Generalized Von Neumann Allocation Method</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../allocation/dinamica.html">Dinamica Allocation Method</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">clumpy</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../index.html">Docs</a> &raquo;</li>
+        
+      <li>Binarizer</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="../_sources/preprocessing/binarizer.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="binarizer">
+<h1>Binarizer<a class="headerlink" href="#binarizer" title="Permalink to this headline">¶</a></h1>
+<dl class="class">
+<dt id="clumpy.preprocessing.Binarizer">
+<em class="property">class </em><code class="sig-prename descclassname">clumpy.preprocessing.</code><code class="sig-name descname">Binarizer</code><a class="headerlink" href="#clumpy.preprocessing.Binarizer" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<dl class="method">
+<dt id="clumpy.preprocessing.Binarizer.fit">
+<code class="sig-name descname">fit</code><span class="sig-paren">(</span><em class="sig-param">J</em>, <em class="sig-param">fit_params</em>, <em class="sig-param">sound=0</em>, <em class="sig-param">plot=False</em><span class="sig-paren">)</span><a class="headerlink" href="#clumpy.preprocessing.Binarizer.fit" title="Permalink to this definition">¶</a></dt>
+<dd><p>Fit the binarizer.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>J</strong> (<em>pandas dataframe.</em>) – A two level <code class="docutils literal notranslate"><span class="pre">v</span></code> and <code class="docutils literal notranslate"><span class="pre">z</span></code> (X) columns are expected. In case of using the optbinning method, <code class="docutils literal notranslate"><span class="pre">vf</span></code> is expected.</p></li>
+<li><p><strong>fit_params</strong> (<em>dict</em>) – <p>A dictionnary of parameters for each initial state and feature.</p>
+<blockquote>
+<div><ul>
+<li><p><code class="docutils literal notranslate"><span class="pre">{'method':'optbinning'}</span></code> : the optimal binning according to the final states.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">{'method':'numpy',</span> <span class="pre">'bins':'auto'}</span></code> : the numpy binarization with its bins parameter method.</p></li>
+</ul>
+</div></blockquote>
+</p></li>
+<li><p><strong>sound</strong> (<em>int</em><em>, </em><em>default=0</em>) – If <code class="docutils literal notranslate"><span class="pre">sound==0</span></code>, the method is quiet</p></li>
+<li><p><strong>plot</strong> (<em>boolean</em><em>, </em><em>default=False</em>) – If <code class="docutils literal notranslate"><span class="pre">True</span></code>, a plot is displayed.</p></li>
+</ul>
+</dd>
+</dl>
+<p class="rubric">Examples</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">fit_params</span> <span class="o">=</span> <span class="p">{(</span><span class="mi">1</span><span class="p">,</span> <span class="s1">&#39;z0&#39;</span><span class="p">):{</span><span class="s1">&#39;method&#39;</span><span class="p">:</span><span class="s1">&#39;optbinning&#39;</span><span class="p">},</span>
+<span class="go">      (1, &#39;z1&#39;):{&#39;method&#39;:&#39;optbinning&#39;}}</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">binarizer</span> <span class="o">=</span> <span class="n">clumpy</span><span class="o">.</span><span class="n">preprocessing</span><span class="o">.</span><span class="n">Binarizer</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">binarizer</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">J</span><span class="p">,</span> <span class="n">fit_params</span><span class="p">,</span> <span class="n">plot</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="method">
+<dt id="clumpy.preprocessing.Binarizer.inverse_transform">
+<code class="sig-name descname">inverse_transform</code><span class="sig-paren">(</span><em class="sig-param">J</em>, <em class="sig-param">where='mean'</em><span class="sig-paren">)</span><a class="headerlink" href="#clumpy.preprocessing.Binarizer.inverse_transform" title="Permalink to this definition">¶</a></dt>
+<dd><p>Inverse the binarization.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>J</strong> (<em>pandas dataframe.</em>) – Data to inverse. A two level <code class="docutils literal notranslate"><span class="pre">v</span></code> and <code class="docutils literal notranslate"><span class="pre">z</span></code> (X) columns are expected.</p></li>
+<li><p><strong>where</strong> (<em>{'mean'</em><em>, </em><em>'right'</em><em>, </em><em>'left'}</em><em> (</em><em>default=``mean``</em><em>)</em>) – <p>Where the value should be computed.</p>
+<blockquote>
+<div><ul>
+<li><p><code class="docutils literal notranslate"><span class="pre">'mean'</span></code> : the returned data is the averaged of bins limits.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">'left'</span></code> : the returned data is the low limit of the bin.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">'right'</span></code> : the returned data is the high limit of the bin.</p></li>
+</ul>
+</div></blockquote>
+</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="clumpy.preprocessing.Binarizer.transform">
+<code class="sig-name descname">transform</code><span class="sig-paren">(</span><em class="sig-param">J</em><span class="sig-paren">)</span><a class="headerlink" href="#clumpy.preprocessing.Binarizer.transform" title="Permalink to this definition">¶</a></dt>
+<dd><p>binarize the entry.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>J</strong> (<em>pandas dataframe.</em>) – Data to transorm. A two level <code class="docutils literal notranslate"><span class="pre">v</span></code> and <code class="docutils literal notranslate"><span class="pre">z</span></code> (X) columns are expected.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p></p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>A discretized pandas dataframe. Other columns are kept.</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="../calibration/model_selection.html" class="btn btn-neutral float-right" title="Model selection" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="../definition/case.html" class="btn btn-neutral float-left" title="Case" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2020, François-Rémi Mazy
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

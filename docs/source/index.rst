@@ -25,15 +25,17 @@ Clumpy is a land use and cover change (LUCC) modeler in development written in P
 
 .. toctree::
     :maxdepth: 1
-    :caption: Discretization
+    :caption: Pre-processing
 
-    discretization/discretization
+    preprocessing/binarizer
 
 .. toctree::
     :maxdepth: 1
     :caption: Calibration
     
+    calibration/model_selection
     calibration/naive_bayes
+    calibration/knn
     
 
 .. toctree::

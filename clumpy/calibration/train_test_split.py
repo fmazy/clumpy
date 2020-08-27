@@ -17,7 +17,6 @@ def train_test_split(J, test_size=0.25):
     Parameters
         ----------
         J : pandas dataframe.
-            A two level ``z`` column is expected.
 
         Returns
         -------

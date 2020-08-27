@@ -27,9 +27,7 @@
         <script type="text/javascript" src="../_static/underscore.js"></script>
         <script type="text/javascript" src="../_static/doctools.js"></script>
         <script type="text/javascript" src="../_static/language_data.js"></script>
-        <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
         <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
-        <script type="text/x-mathjax-config">MathJax.Hub.Config({"tex2jax": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true, "ignoreClass": "document", "processClass": "math|output_area"}})</script>
     
     <script type="text/javascript" src="../_static/js/theme.js"></script>
 
@@ -98,13 +96,15 @@
 <li class="toctree-l1"><a class="reference internal" href="../definition/layer.html">Layer</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../definition/case.html">Case</a></li>
 </ul>
-<p class="caption"><span class="caption-text">Discretization</span></p>
+<p class="caption"><span class="caption-text">Pre-processing</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="../discretization/discretization.html">Discretization</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../preprocessing/binarizer.html">Binarizer</a></li>
 </ul>
 <p class="caption"><span class="caption-text">Calibration</span></p>
 <ul>
+<li class="toctree-l1"><a class="reference internal" href="../calibration/model_selection.html">Model selection</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../calibration/naive_bayes.html">Naive Bayes Calibration Method</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../calibration/knn.html">K-Nearest Neighbors regressor</a></li>
 </ul>
 <p class="caption"><span class="caption-text">Allocation</span></p>
 <ul class="current">
@@ -175,31 +175,7 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  
-<style>
-/* CSS overrides for sphinx_rtd_theme */
-
-/* 24px margin */
-.nbinput.nblast.container,
-.nboutput.nblast.container {
-    margin-bottom: 19px;  /* padding has already 5px */
-}
-
-/* ... except between code cells! */
-.nblast.container + .nbinput.container {
-    margin-top: -19px;
-}
-
-.admonition > p:before {
-    margin-right: 4px;  /* make room for the exclamation icon */
-}
-
-/* Fix math alignment, see https://github.com/rtfd/sphinx_rtd_theme/pull/686 */
-.math {
-    text-align: unset;
-}
-</style>
-<div class="section" id="dinamica-allocation-method">
+  <div class="section" id="dinamica-allocation-method">
 <h1>Dinamica Allocation Method<a class="headerlink" href="#dinamica-allocation-method" title="Permalink to this headline">¶</a></h1>
 <dl class="class">
 <dt id="clumpy.allocation.Dinamica">
@@ -213,7 +189,7 @@
 </dl>
 <dl class="method">
 <dt id="clumpy.allocation.Dinamica.allocate">
-<code class="sig-name descname">allocate</code><span class="sig-paren">(</span><em class="sig-param">case: clumpy.definition._case.Case</em>, <em class="sig-param">calibration=None</em>, <em class="sig-param">P_vf__vi=None</em>, <em class="sig-param">probability_maps=None</em>, <em class="sig-param">F=10</em>, <em class="sig-param">replace=True</em>, <em class="sig-param">k=500</em>, <em class="sig-param">sound=2</em>, <em class="sig-param">dict_args={}</em><span class="sig-paren">)</span><a class="headerlink" href="#clumpy.allocation.Dinamica.allocate" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">allocate</code><span class="sig-paren">(</span><em class="sig-param">case: clumpy.definition._case.Case</em>, <em class="sig-param">probability_maps=None</em>, <em class="sig-param">F=10</em>, <em class="sig-param">replace=True</em>, <em class="sig-param">k=500</em>, <em class="sig-param">sound=2</em>, <em class="sig-param">dict_args={}</em><span class="sig-paren">)</span><a class="headerlink" href="#clumpy.allocation.Dinamica.allocate" title="Permalink to this definition">¶</a></dt>
 <dd><p>Fast allocation like Dinamica. To reproduce exactly Dinamica behavior, use allocate_as_dinamica which is slower.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -263,14 +239,12 @@
 
 <dl class="method">
 <dt id="clumpy.allocation.Dinamica.allocate_monopixel_patches">
-<code class="sig-name descname">allocate_monopixel_patches</code><span class="sig-paren">(</span><em class="sig-param">case: clumpy.definition._case.Case</em>, <em class="sig-param">calibration=None</em>, <em class="sig-param">P_vf__vi=None</em>, <em class="sig-param">probability_maps=None</em>, <em class="sig-param">F=10</em>, <em class="sig-param">replace=True</em>, <em class="sig-param">k=500</em>, <em class="sig-param">sound=2</em>, <em class="sig-param">dict_args={}</em><span class="sig-paren">)</span><a class="headerlink" href="#clumpy.allocation.Dinamica.allocate_monopixel_patches" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">allocate_monopixel_patches</code><span class="sig-paren">(</span><em class="sig-param">case: clumpy.definition._case.Case</em>, <em class="sig-param">probability_maps=None</em>, <em class="sig-param">F=10</em>, <em class="sig-param">replace=True</em>, <em class="sig-param">k=500</em>, <em class="sig-param">sound=2</em>, <em class="sig-param">dict_args={}</em><span class="sig-paren">)</span><a class="headerlink" href="#clumpy.allocation.Dinamica.allocate_monopixel_patches" title="Permalink to this definition">¶</a></dt>
 <dd><p>Fast allocation for monopixel patches</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>case</strong> (<a class="reference internal" href="../definition/case.html#clumpy.definition.Case" title="clumpy.definition.Case"><em>definition.Case</em></a>) – Starting case which have to be discretized.</p></li>
-<li><p><strong>calibration</strong> (<em>_Calibration</em><em> (</em><em>default=None</em><em>)</em>) – Calibration object. If <code class="docutils literal notranslate"><span class="pre">None</span></code>, the probability maps is expected.</p></li>
-<li><p><strong>P_vf__vi</strong> (<em>Pandas DataFrame</em><em> (</em><em>default=None</em><em>)</em>) – The transition matrix. If <code class="docutils literal notranslate"><span class="pre">None</span></code>, the fitted <code class="docutils literal notranslate"><span class="pre">self.P_vf__vi</span></code> is used.</p></li>
 <li><p><strong>probability_maps</strong> (<a class="reference internal" href="../definition/layer.html#clumpy.definition.TransitionProbabilityLayers" title="clumpy.definition.TransitionProbabilityLayers"><em>definition.TransitionProbabilityLayers</em></a><em> (</em><em>default=None</em><em>)</em>) – The transition probabilities maps. If <code class="docutils literal notranslate"><span class="pre">None</span></code>, it is computed according to the given case. It overwrites the calibration and <code class="docutils literal notranslate"><span class="pre">P_vf__vi</span></code>.</p></li>
 <li><p><strong>F</strong> (<em>float</em><em> (</em><em>default=10</em><em>)</em>) – Pruning factor.</p></li>
 <li><p><strong>replace</strong> (<em>bool</em><em> (</em><em>default=True</em><em>)</em>) – Replace rejected pixels in the pool (source of allocation bias).</p></li>
@@ -288,7 +262,7 @@
 
 <dl class="method">
 <dt id="clumpy.allocation.Dinamica.test">
-<code class="sig-name descname">test</code><span class="sig-paren">(</span><em class="sig-param">monopixel_patches=True</em>, <em class="sig-param">alpha=0.95</em>, <em class="sig-param">epsilon=0.01</em>, <em class="sig-param">gamma=0.8</em>, <em class="sig-param">cores=1</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#clumpy.allocation.Dinamica.test" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">test</code><span class="sig-paren">(</span><em class="sig-param">monopixel_patches=True</em>, <em class="sig-param">alpha=0.95</em>, <em class="sig-param">epsilon=0.01</em>, <em class="sig-param">gamma=0.8</em>, <em class="sig-param">cores=1</em>, <em class="sig-param">return_patches=False</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#clumpy.allocation.Dinamica.test" title="Permalink to this definition">¶</a></dt>
 <dd><p>Tests the allocation according to the calibration. Given the law of large numbers, if one repeats the allocation a certain amount of times, one should find the calibration by simple frequency analysis.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>

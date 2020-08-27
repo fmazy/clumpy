@@ -18,24 +18,96 @@ from ._calibration import _clean_X
 
 class KNeighborsRegressor(_Calibration):
     """
-    K-Nearest-Neighbors calibration
+    K-Nearest-Neighbors calibration.
+    
+    Parameters
+    ----------
+    n_neighbors : int, default=5
+        Number of neighbors to use by default for kneighbors queries.
+        
+    weights : {'uniform', 'distance'} or callable, default='uniform'
+        weight function used in prediction.  Possible values:
+        
+        - 'uniform' : uniform weights.  All points in each neighborhood
+          are weighted equally.
+        - 'distance' : weight points by the inverse of their distance.
+          in this case, closer neighbors of a query point will have a
+          greater influence than neighbors which are further away.
+        - [callable] : a user-defined function which accepts an
+          array of distances, and returns an array of the same shape
+          containing the weights.
+        
+        Uniform weights are used by default.
+        
+    algorithm : {'auto', 'ball_tree', 'kd_tree', 'brute'}, default='auto'
+        Algorithm used to compute the nearest neighbors:
+        
+        - 'ball_tree' will use :class:`BallTree`
+        - 'kd_tree' will use :class:`KDTree`
+        - 'brute' will use a brute-force search.
+        - 'auto' will attempt to decide the most appropriate algorithm
+          based on the values passed to :meth:`fit` method.
+        
+        Note: fitting on sparse input will override the setting of
+        this parameter, using brute force.
+        
+    leaf_size : int, default=30
+        Leaf size passed to BallTree or KDTree.  This can affect the
+        speed of the construction and query, as well as the memory
+        required to store the tree.  The optimal value depends on the
+        nature of the problem.
+    
+    p : int, default=2
+        Power parameter for the Minkowski metric. When p = 1, this is
+        equivalent to using manhattan_distance (l1), and euclidean_distance
+        (l2) for p = 2. For arbitrary p, minkowski_distance (l_p) is used.
+    
+    metric : str or callable, default='minkowski'
+        the distance metric to use for the tree.  The default metric is
+        minkowski, and with p=2 is equivalent to the standard Euclidean
+        metric. See the documentation of :class:`DistanceMetric` for a
+        list of available metrics. If metric is "precomputed", X is assumed to be a distance matrix and
+        must be square during fit. X may be a sparse graph,
+        in which case only "nonzero" elements may be considered neighbors.
+    
+    metric_params : dict, default=None
+        Additional keyword arguments for the metric function.
+    
+    n_jobs : int, default=None
+        The number of parallel jobs to run for neighbors search.
+        ``None`` means 1 unless in a :obj:`joblib.parallel_backend` context.
+        ``-1`` means using all processors. Doesn't affect :meth:`fit` method.
     """
     
-    def __init__(self, n_neighbors=5, weights='distance', algorithm='auto'):
+    def __init__(self, n_neighbors=5,
+                 weights='distance',
+                 algorithm='auto',
+                 leaf_size=30,
+                 p=2,
+                 metric='minkowski',
+                 metric_params=None,
+                 n_jobs=None):
         self.n_neighbors = n_neighbors
         self.weights = weights
         self.algorithm = algorithm
+        self.leaf_size = leaf_size
+        self.p = p
+        self.metric = metric
+        self.metric_params = metric_params
+        self.n_jobs = n_jobs
     
     def fit(self, J):
         """
-        fit model with a discretized case
+        Fit the model using J as training data
 
         Parameters
         ----------
         J : pandas dataframe.
-            A two level ``z`` column is expected.
+            A two level ``z`` (X) and ``P_vf__vi_z`` (y) columns are expected.
 
         """
+        
+        J = J.reindex(sorted(J.columns), axis=1)
         
         self.k_beighbors_classifiers = {}
         self.list_vf = list(np.sort(J.P_vf__vi_z.columns.to_list()))
@@ -43,64 +115,87 @@ class KNeighborsRegressor(_Calibration):
         for vi in J.v.i.unique():
             X = J.loc[J.v.i==vi, 'z'].values
             
-            
             list_vf_without_vi = self.list_vf.copy()
             list_vf_without_vi.remove(vi)
             y = J.loc[J.v.i==vi, [('P_vf__vi_z', vf) for vf in list_vf_without_vi]].values
-            
+                        
             X = _clean_X(X) # remove NaN columns
             
             self.k_beighbors_classifiers[vi] = sklearn.neighbors.KNeighborsRegressor(n_neighbors=self.n_neighbors,
                                                                                       weights=self.weights,
-                                                                                      algorithm=self.algorithm)
+                                                                                      algorithm=self.algorithm,
+                                                                                      leaf_size=self.leaf_size,
+                                                                                      p=self.p,
+                                                                                      metric=self.metric,
+                                                                                      metric_params=self.metric_params,
+                                                                                      n_jobs=self.n_jobs)
 
             self.k_beighbors_classifiers[vi].fit(X, y)
     
     def predict(self, J):
-        # index_init = J.index.values
-        # J = J.sort_values(('v','i'))
+        """
+        Predict the target for the provided data.
+
+        Parameters
+        ----------
+        J : pandas dataframe.
+            A two level ``z`` feature column is expected.
+
+        Returns
+        -------
+        J_predicted : pandas dataframe
+            Target values above the ``P_vf__vi_z`` column.
+
+        """
+        J = J.reindex(sorted(J.columns), axis=1)
         
         J = J[[('v','i')]+J[['z']].columns.to_list()].copy()
-        J.reset_index(drop=False, inplace=True)
-        J_proba = pd.DataFrame()
+        
+        P_vf__vi_z_names = [('P_vf__vi_z', vf) for vf in self.list_vf]
+        for P_vf__vi_z_name in P_vf__vi_z_names:
+            J[P_vf__vi_z_name] = 0
         
         for vi in J.v.i.unique():
-            print('vi',vi)
+            X = J.loc[J.v.i == vi, 'z'].values
+            X = _clean_X(X)
             
-            list_vf_without_vi = self.list_vf.copy()
-            list_vf_without_vi.remove(vi)
+            P_vf__vi_z_names_without_vi = P_vf__vi_z_names.copy()
+            P_vf__vi_z_names_without_vi.remove(('P_vf__vi_z', vi))
             
-            cols = [('v','i')] + J[['z']].columns.to_list() + [('P_vf__vi_z', vf) for vf in list_vf_without_vi]
-            cols = pd.MultiIndex.from_tuples(cols)
-            J_proba_vi = pd.DataFrame(columns=cols)
+            J.loc[J.v.i == vi, P_vf__vi_z_names_without_vi] = self.k_beighbors_classifiers[vi].predict(X)
             
-            
-            X = J.loc[J.v.i==vi, 'z'].values
-            J_proba_vi[['z']] = X
-            
-            X = _clean_X(X) # remove NaN columns
-            
-            J_proba_vi['P_vf__vi_z'] = self.k_beighbors_classifiers[vi].predict(X)
-            J_proba_vi[('v','i')] = vi
-            
-            J_proba_vi[('P_vf__vi_z', vi)] = 1 - J_proba_vi.P_vf__vi_z.sum(axis=1)
-            
-            J = J.merge(J_proba_vi, how='left')
-        
-        J.set_index('index', inplace=True)
-
+            J.loc[J.v.i == vi, ('P_vf__vi_z', vi)] = 1 - J.loc[J.v.i == vi].P_vf__vi_z.sum(axis=1)
+                
         J = J.reindex(sorted(J.columns), axis=1)
 
         return(J)
     
     
     def score(self, J, y):
+        """
+        Return the coefficient of determination R^2 of the prediction.
+
+        The coefficient R^2 is defined as (1 - u/v), where u is the residual sum of squares ((y_true - y_pred) ** 2).sum() and v is the total sum of squares ((y_true - y_true.mean()) ** 2).sum(). The best possible score is 1.0 and it can be negative (because the model can be arbitrarily worse). A constant model that always predicts the expected value of y, disregarding the input features, would get a R^2 score of 0.0. It returns the coefficient R^2 for each initial states.
+
+        Parameters
+        ----------
+        J : pandas dataframe.
+            A two level ``z`` feature column is expected.
         
-        J = J.copy()
+        y : numpy array.
+            True ``P_vf__vi_z`` values for J in the same order.
+
+        Returns
+        -------
+        score : list of floats
+            R^2 of self.predict(J) wrt. y for each ``vi`` in the ascending order.
+
+        """
+        J = J.reindex(sorted(J.columns), axis=1)
         J.reset_index(inplace=True)
         
-        s = []
-        for vi in J.v.i.unique():
+        score = []
+        for vi in np.sort(J.v.i.unique()):
             idx = J.loc[J.v.i == vi].index.values
             
             X = J.loc[idx, 'z'].values
@@ -116,6 +211,6 @@ class KNeighborsRegressor(_Calibration):
             yx = y[idx,:]
             yx = yx[:, idx_vf]
             
-            s.append(self.k_beighbors_classifiers[vi].score(X, yx))
+            score.append(self.k_beighbors_classifiers[vi].score(X, yx))
         
-        return(s)
+        return(score)

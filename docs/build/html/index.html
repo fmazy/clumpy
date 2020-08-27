@@ -27,9 +27,7 @@
         <script type="text/javascript" src="_static/underscore.js"></script>
         <script type="text/javascript" src="_static/doctools.js"></script>
         <script type="text/javascript" src="_static/language_data.js"></script>
-        <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
         <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
-        <script type="text/x-mathjax-config">MathJax.Hub.Config({"tex2jax": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true, "ignoreClass": "document", "processClass": "math|output_area"}})</script>
     
     <script type="text/javascript" src="_static/js/theme.js"></script>
 
@@ -98,13 +96,15 @@
 <li class="toctree-l1"><a class="reference internal" href="definition/layer.html">Layer</a></li>
 <li class="toctree-l1"><a class="reference internal" href="definition/case.html">Case</a></li>
 </ul>
-<p class="caption"><span class="caption-text">Discretization</span></p>
+<p class="caption"><span class="caption-text">Pre-processing</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="discretization/discretization.html">Discretization</a></li>
+<li class="toctree-l1"><a class="reference internal" href="preprocessing/binarizer.html">Binarizer</a></li>
 </ul>
 <p class="caption"><span class="caption-text">Calibration</span></p>
 <ul>
+<li class="toctree-l1"><a class="reference internal" href="calibration/model_selection.html">Model selection</a></li>
 <li class="toctree-l1"><a class="reference internal" href="calibration/naive_bayes.html">Naive Bayes Calibration Method</a></li>
+<li class="toctree-l1"><a class="reference internal" href="calibration/knn.html">K-Nearest Neighbors regressor</a></li>
 </ul>
 <p class="caption"><span class="caption-text">Allocation</span></p>
 <ul>
@@ -175,31 +175,7 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  
-<style>
-/* CSS overrides for sphinx_rtd_theme */
-
-/* 24px margin */
-.nbinput.nblast.container,
-.nboutput.nblast.container {
-    margin-bottom: 19px;  /* padding has already 5px */
-}
-
-/* ... except between code cells! */
-.nblast.container + .nbinput.container {
-    margin-top: -19px;
-}
-
-.admonition > p:before {
-    margin-right: 4px;  /* make room for the exclamation icon */
-}
-
-/* Fix math alignment, see https://github.com/rtfd/sphinx_rtd_theme/pull/686 */
-.math {
-    text-align: unset;
-}
-</style>
-<div class="section" id="clumpy-comprehensive-land-use-models-in-python">
+  <div class="section" id="clumpy-comprehensive-land-use-models-in-python">
 <h1>clumpy : Comprehensive Land Use Models in Python<a class="headerlink" href="#clumpy-comprehensive-land-use-models-in-python" title="Permalink to this headline">¶</a></h1>
 <p>Clumpy is a land use and cover change (LUCC) modeler in development written in Python3. Only basic parameters are for now avaiable through python script usage. A GUI is considered as a plugin of Qgis which uses this present library.</p>
 <div class="toctree-wrapper compound">
@@ -218,15 +194,17 @@
 </ul>
 </div>
 <div class="toctree-wrapper compound">
-<p class="caption"><span class="caption-text">Discretization</span></p>
+<p class="caption"><span class="caption-text">Pre-processing</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="discretization/discretization.html">Discretization</a></li>
+<li class="toctree-l1"><a class="reference internal" href="preprocessing/binarizer.html">Binarizer</a></li>
 </ul>
 </div>
 <div class="toctree-wrapper compound">
 <p class="caption"><span class="caption-text">Calibration</span></p>
 <ul>
+<li class="toctree-l1"><a class="reference internal" href="calibration/model_selection.html">Model selection</a></li>
 <li class="toctree-l1"><a class="reference internal" href="calibration/naive_bayes.html">Naive Bayes Calibration Method</a></li>
+<li class="toctree-l1"><a class="reference internal" href="calibration/knn.html">K-Nearest Neighbors regressor</a></li>
 </ul>
 </div>
 <div class="toctree-wrapper compound">

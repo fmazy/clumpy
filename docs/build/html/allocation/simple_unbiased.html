@@ -27,9 +27,7 @@
         <script type="text/javascript" src="../_static/underscore.js"></script>
         <script type="text/javascript" src="../_static/doctools.js"></script>
         <script type="text/javascript" src="../_static/language_data.js"></script>
-        <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
         <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
-        <script type="text/x-mathjax-config">MathJax.Hub.Config({"tex2jax": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true, "ignoreClass": "document", "processClass": "math|output_area"}})</script>
     
     <script type="text/javascript" src="../_static/js/theme.js"></script>
 
@@ -41,7 +39,7 @@
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
     <link rel="next" title="Generalized Von Neumann Allocation Method" href="generalized_von_neumann.html" />
-    <link rel="prev" title="Naive Bayes Calibration Method" href="../calibration/naive_bayes.html" /> 
+    <link rel="prev" title="K-Nearest Neighbors regressor" href="../calibration/knn.html" /> 
 </head>
 
 <body class="wy-body-for-nav">
@@ -99,13 +97,15 @@
 <li class="toctree-l1"><a class="reference internal" href="../definition/layer.html">Layer</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../definition/case.html">Case</a></li>
 </ul>
-<p class="caption"><span class="caption-text">Discretization</span></p>
+<p class="caption"><span class="caption-text">Pre-processing</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="../discretization/discretization.html">Discretization</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../preprocessing/binarizer.html">Binarizer</a></li>
 </ul>
 <p class="caption"><span class="caption-text">Calibration</span></p>
 <ul>
+<li class="toctree-l1"><a class="reference internal" href="../calibration/model_selection.html">Model selection</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../calibration/naive_bayes.html">Naive Bayes Calibration Method</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../calibration/knn.html">K-Nearest Neighbors regressor</a></li>
 </ul>
 <p class="caption"><span class="caption-text">Allocation</span></p>
 <ul class="current">
@@ -176,31 +176,7 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  
-<style>
-/* CSS overrides for sphinx_rtd_theme */
-
-/* 24px margin */
-.nbinput.nblast.container,
-.nboutput.nblast.container {
-    margin-bottom: 19px;  /* padding has already 5px */
-}
-
-/* ... except between code cells! */
-.nblast.container + .nbinput.container {
-    margin-top: -19px;
-}
-
-.admonition > p:before {
-    margin-right: 4px;  /* make room for the exclamation icon */
-}
-
-/* Fix math alignment, see https://github.com/rtfd/sphinx_rtd_theme/pull/686 */
-.math {
-    text-align: unset;
-}
-</style>
-<div class="section" id="simple-unbiased-allocation-method">
+  <div class="section" id="simple-unbiased-allocation-method">
 <h1>Simple Unbiased Allocation Method<a class="headerlink" href="#simple-unbiased-allocation-method" title="Permalink to this headline">¶</a></h1>
 <dl class="class">
 <dt id="clumpy.allocation.SimpleUnbiased">
@@ -248,6 +224,7 @@
 <blockquote>
 <div><p><code class="docutils literal notranslate"><span class="pre">self.ghost_allocation</span></code></p>
 <p><code class="docutils literal notranslate"><span class="pre">self.execution_time</span></code> One microseconds precision for Linux and Mac OS and 16 milliseconds precision for Windows.</p>
+<p><code class="docutils literal notranslate"><span class="pre">self.detailed_execution_time</span></code> One microseconds precision for Linux and Mac OS and 16 milliseconds precision for Windows.</p>
 <p><code class="docutils literal notranslate"><span class="pre">self.tested_pixels</span></code></p>
 <p><code class="docutils literal notranslate"><span class="pre">self.infos</span></code></p>
 <p><code class="docutils literal notranslate"><span class="pre">self.N_vi_vf</span></code></p>
@@ -279,13 +256,86 @@
 <p>New attributes are availables :`</p>
 <blockquote>
 <div><p><code class="docutils literal notranslate"><span class="pre">self.execution_time</span></code> One microseconds precision for Linux and Mac OS and 16 milliseconds precision for Windows.</p>
+<p><code class="docutils literal notranslate"><span class="pre">self.detailed_execution_time</span></code> One microseconds precision for Linux and Mac OS and 16 milliseconds precision for Windows.</p>
 <p><code class="docutils literal notranslate"><span class="pre">self.tested_pixels</span></code></p>
 </div></blockquote>
 </dd></dl>
 
 <dl class="method">
+<dt id="clumpy.allocation.SimpleUnbiased.allocate_monopixel_patches2">
+<code class="sig-name descname">allocate_monopixel_patches2</code><span class="sig-paren">(</span><em class="sig-param">map_i</em>, <em class="sig-param">J_proba</em>, <em class="sig-param">sound=2</em>, <em class="sig-param">dict_args={}</em><span class="sig-paren">)</span><a class="headerlink" href="#clumpy.allocation.SimpleUnbiased.allocate_monopixel_patches2" title="Permalink to this definition">¶</a></dt>
+<dd><p>Simple allocation of monopixels patches whithout scenario control.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>case</strong> (<a class="reference internal" href="../definition/case.html#clumpy.definition.Case" title="clumpy.definition.Case"><em>definition.Case</em></a>) – Starting case which have to be discretized.</p></li>
+<li><p><strong>probability_maps</strong> (<a class="reference internal" href="../definition/layer.html#clumpy.definition.TransitionProbabilityLayers" title="clumpy.definition.TransitionProbabilityLayers"><em>definition.TransitionProbabilityLayers</em></a><em> (</em><em>default=None</em><em>)</em>) – The transition probabilities maps.</p></li>
+<li><p><strong>sound</strong> (<em>int</em><em> (</em><em>default=2</em><em>)</em>) – Text output level. <code class="docutils literal notranslate"><span class="pre">0</span></code> means silent mode.</p></li>
+<li><p><strong>dict_args</strong> (<em>dict</em><em> (</em><em>default=``{}``</em><em>)</em>) – The above optional arguments in a dictionary. Overwrites if already passed.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>map_f</strong> – The allocated land use map</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="../definition/layer.html#clumpy.definition.LandUseCoverLayer" title="clumpy.definition.LandUseCoverLayer">definition.LandUseCoverLayer</a></p>
+</dd>
+</dl>
+<p class="rubric">Notes</p>
+<p>New attributes are availables :`</p>
+<blockquote>
+<div><p><code class="docutils literal notranslate"><span class="pre">self.execution_time</span></code> One microseconds precision for Linux and Mac OS and 16 milliseconds precision for Windows.</p>
+<p><code class="docutils literal notranslate"><span class="pre">self.detailed_execution_time</span></code> One microseconds precision for Linux and Mac OS and 16 milliseconds precision for Windows.</p>
+<p><code class="docutils literal notranslate"><span class="pre">self.tested_pixels</span></code></p>
+</div></blockquote>
+</dd></dl>
+
+<dl class="method">
+<dt id="clumpy.allocation.SimpleUnbiased.allocate_with_expansion">
+<code class="sig-name descname">allocate_with_expansion</code><span class="sig-paren">(</span><em class="sig-param">case: clumpy.definition._case.Case</em>, <em class="sig-param">probability_maps=None</em>, <em class="sig-param">update='none'</em>, <em class="sig-param">sound=2</em>, <em class="sig-param">dict_args={}</em><span class="sig-paren">)</span><a class="headerlink" href="#clumpy.allocation.SimpleUnbiased.allocate_with_expansion" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>case</strong> (<a class="reference internal" href="../definition/case.html#clumpy.definition.Case" title="clumpy.definition.Case"><em>definition.Case</em></a>) – Starting case which have to be discretized.</p></li>
+<li><p><strong>probability_maps</strong> (<a class="reference internal" href="../definition/layer.html#clumpy.definition.TransitionProbabilityLayers" title="clumpy.definition.TransitionProbabilityLayers"><em>definition.TransitionProbabilityLayers</em></a><em> (</em><em>default=None</em><em>)</em>) – The transition probabilities maps. If <code class="docutils literal notranslate"><span class="pre">None</span></code>, it is computed according to the given case. It overwrites the calibration and <code class="docutils literal notranslate"><span class="pre">P_vf__vi</span></code>.</p></li>
+<li><p><strong>update</strong> (<em>{'none'</em><em>, </em><em>'transition'</em><em>, </em><em>'ghost'</em><em>, </em><em>'both'}</em><em>, </em><em>(</em><em>default='none'</em><em>)</em>) – <p>The P(z|vi,vf) update policy.</p>
+<dl class="simple">
+<dt>none</dt><dd><p>no update</p>
+</dd>
+<dt>transition</dt><dd><p>only when a transition is achieved.</p>
+</dd>
+<dt>ghost</dt><dd><p>only when the ghost tolerance is reached.</p>
+</dd>
+<dt>both</dt><dd><p>for both transition and ghost modes.</p>
+</dd>
+</dl>
+</p></li>
+<li><p><strong>sound</strong> (<em>int</em><em> (</em><em>default=2</em><em>)</em>) – Text output level. <code class="docutils literal notranslate"><span class="pre">0</span></code> means silent mode.</p></li>
+<li><p><strong>dict_args</strong> (<em>dict</em><em> (</em><em>default=``{}``</em><em>)</em>) – The above optional arguments in a dictionary. Overwrites if already passed.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>map_f</strong> – The allocated land use map</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="../definition/layer.html#clumpy.definition.LandUseCoverLayer" title="clumpy.definition.LandUseCoverLayer">definition.LandUseCoverLayer</a></p>
+</dd>
+</dl>
+<p class="rubric">Notes</p>
+<p>New attributes are availables :</p>
+<blockquote>
+<div><p><code class="docutils literal notranslate"><span class="pre">self.ghost_allocation</span></code></p>
+<p><code class="docutils literal notranslate"><span class="pre">self.detailed_execution_time</span></code> One microseconds precision for Linux and Mac OS and 16 milliseconds precision for Windows.</p>
+<p><code class="docutils literal notranslate"><span class="pre">self.tested_pixels</span></code></p>
+<p><code class="docutils literal notranslate"><span class="pre">self.infos</span></code></p>
+<p><code class="docutils literal notranslate"><span class="pre">self.N_vi_vf</span></code></p>
+<p><code class="docutils literal notranslate"><span class="pre">self.N_vi_vf_target</span></code></p>
+</div></blockquote>
+</dd></dl>
+
+<dl class="method">
 <dt id="clumpy.allocation.SimpleUnbiased.test">
-<code class="sig-name descname">test</code><span class="sig-paren">(</span><em class="sig-param">monopixel_patches=True</em>, <em class="sig-param">alpha=0.95</em>, <em class="sig-param">epsilon=0.01</em>, <em class="sig-param">gamma=0.8</em>, <em class="sig-param">cores=1</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#clumpy.allocation.SimpleUnbiased.test" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">test</code><span class="sig-paren">(</span><em class="sig-param">monopixel_patches=True</em>, <em class="sig-param">alpha=0.95</em>, <em class="sig-param">epsilon=0.01</em>, <em class="sig-param">gamma=0.8</em>, <em class="sig-param">cores=1</em>, <em class="sig-param">return_patches=False</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#clumpy.allocation.SimpleUnbiased.test" title="Permalink to this definition">¶</a></dt>
 <dd><p>Tests the allocation according to the calibration. Given the law of large numbers, if one repeats the allocation a certain amount of times, one should find the calibration by simple frequency analysis.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -322,7 +372,7 @@
         <a href="generalized_von_neumann.html" class="btn btn-neutral float-right" title="Generalized Von Neumann Allocation Method" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
-        <a href="../calibration/naive_bayes.html" class="btn btn-neutral float-left" title="Naive Bayes Calibration Method" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+        <a href="../calibration/knn.html" class="btn btn-neutral float-left" title="K-Nearest Neighbors regressor" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
       
     </div>
   

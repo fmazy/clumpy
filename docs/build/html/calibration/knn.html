@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Naive Bayes Calibration Method &mdash; clumpy 0.1.0 documentation</title>
+  <title>K-Nearest Neighbors regressor &mdash; clumpy 0.1.0 documentation</title>
   
 
   
@@ -38,8 +38,8 @@
   <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="next" title="K-Nearest Neighbors regressor" href="knn.html" />
-    <link rel="prev" title="Model selection" href="model_selection.html" /> 
+    <link rel="next" title="Simple Unbiased Allocation Method" href="../allocation/simple_unbiased.html" />
+    <link rel="prev" title="Naive Bayes Calibration Method" href="naive_bayes.html" /> 
 </head>
 
 <body class="wy-body-for-nav">
@@ -104,8 +104,8 @@
 <p class="caption"><span class="caption-text">Calibration</span></p>
 <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="model_selection.html">Model selection</a></li>
-<li class="toctree-l1 current"><a class="current reference internal" href="#">Naive Bayes Calibration Method</a></li>
-<li class="toctree-l1"><a class="reference internal" href="knn.html">K-Nearest Neighbors regressor</a></li>
+<li class="toctree-l1"><a class="reference internal" href="naive_bayes.html">Naive Bayes Calibration Method</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">K-Nearest Neighbors regressor</a></li>
 </ul>
 <p class="caption"><span class="caption-text">Allocation</span></p>
 <ul>
@@ -157,13 +157,13 @@
     
       <li><a href="../index.html">Docs</a> &raquo;</li>
         
-      <li>Naive Bayes Calibration Method</li>
+      <li>K-Nearest Neighbors regressor</li>
     
     
       <li class="wy-breadcrumbs-aside">
         
             
-            <a href="../_sources/calibration/naive_bayes.rst.txt" rel="nofollow"> View page source</a>
+            <a href="../_sources/calibration/knn.rst.txt" rel="nofollow"> View page source</a>
           
         
       </li>
@@ -176,46 +176,75 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <div class="section" id="naive-bayes-calibration-method">
-<h1>Naive Bayes Calibration Method<a class="headerlink" href="#naive-bayes-calibration-method" title="Permalink to this headline">¶</a></h1>
+  <div class="section" id="k-nearest-neighbors-regressor">
+<h1>K-Nearest Neighbors regressor<a class="headerlink" href="#k-nearest-neighbors-regressor" title="Permalink to this headline">¶</a></h1>
 <dl class="class">
-<dt id="clumpy.calibration.NaiveBayes">
-<em class="property">class </em><code class="sig-prename descclassname">clumpy.calibration.</code><code class="sig-name descname">NaiveBayes</code><a class="headerlink" href="#clumpy.calibration.NaiveBayes" title="Permalink to this definition">¶</a></dt>
+<dt id="clumpy.calibration.KNeighborsRegressor">
+<em class="property">class </em><code class="sig-prename descclassname">clumpy.calibration.</code><code class="sig-name descname">KNeighborsRegressor</code><span class="sig-paren">(</span><em class="sig-param">n_neighbors=5</em>, <em class="sig-param">weights='distance'</em>, <em class="sig-param">algorithm='auto'</em>, <em class="sig-param">leaf_size=30</em>, <em class="sig-param">p=2</em>, <em class="sig-param">metric='minkowski'</em>, <em class="sig-param">metric_params=None</em>, <em class="sig-param">n_jobs=None</em><span class="sig-paren">)</span><a class="headerlink" href="#clumpy.calibration.KNeighborsRegressor" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">clumpy.calibration._calibration._Calibration</span></code></p>
-<p>Naive Bayes calibration.</p>
+<p>K-Nearest-Neighbors calibration.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>n_neighbors</strong> (<em>int</em><em>, </em><em>default=5</em>) – Number of neighbors to use by default for kneighbors queries.</p></li>
+<li><p><strong>weights</strong> (<em>{'uniform'</em><em>, </em><em>'distance'}</em><em> or </em><em>callable</em><em>, </em><em>default='uniform'</em>) – <p>weight function used in prediction.  Possible values:</p>
+<ul>
+<li><p>’uniform’ : uniform weights.  All points in each neighborhood
+are weighted equally.</p></li>
+<li><p>’distance’ : weight points by the inverse of their distance.
+in this case, closer neighbors of a query point will have a
+greater influence than neighbors which are further away.</p></li>
+<li><p>[callable] : a user-defined function which accepts an
+array of distances, and returns an array of the same shape
+containing the weights.</p></li>
+</ul>
+<p>Uniform weights are used by default.</p>
+</p></li>
+<li><p><strong>algorithm</strong> (<em>{'auto'</em><em>, </em><em>'ball_tree'</em><em>, </em><em>'kd_tree'</em><em>, </em><em>'brute'}</em><em>, </em><em>default='auto'</em>) – <p>Algorithm used to compute the nearest neighbors:</p>
+<ul>
+<li><p>’ball_tree’ will use <code class="xref py py-class docutils literal notranslate"><span class="pre">BallTree</span></code></p></li>
+<li><p>’kd_tree’ will use <code class="xref py py-class docutils literal notranslate"><span class="pre">KDTree</span></code></p></li>
+<li><p>’brute’ will use a brute-force search.</p></li>
+<li><p>’auto’ will attempt to decide the most appropriate algorithm
+based on the values passed to <a class="reference internal" href="#clumpy.calibration.KNeighborsRegressor.fit" title="clumpy.calibration.KNeighborsRegressor.fit"><code class="xref py py-meth docutils literal notranslate"><span class="pre">fit()</span></code></a> method.</p></li>
+</ul>
+<p>Note: fitting on sparse input will override the setting of
+this parameter, using brute force.</p>
+</p></li>
+<li><p><strong>leaf_size</strong> (<em>int</em><em>, </em><em>default=30</em>) – Leaf size passed to BallTree or KDTree.  This can affect the
+speed of the construction and query, as well as the memory
+required to store the tree.  The optimal value depends on the
+nature of the problem.</p></li>
+<li><p><strong>p</strong> (<em>int</em><em>, </em><em>default=2</em>) – Power parameter for the Minkowski metric. When p = 1, this is
+equivalent to using manhattan_distance (l1), and euclidean_distance
+(l2) for p = 2. For arbitrary p, minkowski_distance (l_p) is used.</p></li>
+<li><p><strong>metric</strong> (<em>str</em><em> or </em><em>callable</em><em>, </em><em>default='minkowski'</em>) – the distance metric to use for the tree.  The default metric is
+minkowski, and with p=2 is equivalent to the standard Euclidean
+metric. See the documentation of <code class="xref py py-class docutils literal notranslate"><span class="pre">DistanceMetric</span></code> for a
+list of available metrics. If metric is “precomputed”, X is assumed to be a distance matrix and
+must be square during fit. X may be a sparse graph,
+in which case only “nonzero” elements may be considered neighbors.</p></li>
+<li><p><strong>metric_params</strong> (<em>dict</em><em>, </em><em>default=None</em>) – Additional keyword arguments for the metric function.</p></li>
+<li><p><strong>n_jobs</strong> (<em>int</em><em>, </em><em>default=None</em>) – The number of parallel jobs to run for neighbors search.
+<code class="docutils literal notranslate"><span class="pre">None</span></code> means 1 unless in a <code class="xref py py-obj docutils literal notranslate"><span class="pre">joblib.parallel_backend</span></code> context.
+<code class="docutils literal notranslate"><span class="pre">-1</span></code> means using all processors. Doesn’t affect <a class="reference internal" href="#clumpy.calibration.KNeighborsRegressor.fit" title="clumpy.calibration.KNeighborsRegressor.fit"><code class="xref py py-meth docutils literal notranslate"><span class="pre">fit()</span></code></a> method.</p></li>
+</ul>
+</dd>
+</dl>
 <dl class="method">
-<dt id="clumpy.calibration.NaiveBayes.fit">
-<code class="sig-name descname">fit</code><span class="sig-paren">(</span><em class="sig-param">J</em><span class="sig-paren">)</span><a class="headerlink" href="#clumpy.calibration.NaiveBayes.fit" title="Permalink to this definition">¶</a></dt>
+<dt id="clumpy.calibration.KNeighborsRegressor.fit">
+<code class="sig-name descname">fit</code><span class="sig-paren">(</span><em class="sig-param">J</em><span class="sig-paren">)</span><a class="headerlink" href="#clumpy.calibration.KNeighborsRegressor.fit" title="Permalink to this definition">¶</a></dt>
 <dd><p>Fit the model using J as training data</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><p><strong>J</strong> (<em>pandas dataframe.</em>) – A two level <code class="docutils literal notranslate"><span class="pre">z</span></code> (X) and <code class="docutils literal notranslate"><span class="pre">P_vf__vi_z</span></code> (y) columns are expected.</p>
 </dd>
 </dl>
-<p class="rubric">Notes</p>
-<p>New attributes are availables :</p>
-<blockquote>
-<div><p><code class="docutils literal notranslate"><span class="pre">self.P_zk__vi</span></code></p>
-<p><code class="docutils literal notranslate"><span class="pre">self.P_zk__vi_vf</span></code></p>
-<p><code class="docutils literal notranslate"><span class="pre">self.P_vf__vi</span></code></p>
-</div></blockquote>
 </dd></dl>
 
 <dl class="method">
-<dt id="clumpy.calibration.NaiveBayes.plot_P_zk__vi">
-<code class="sig-name descname">plot_P_zk__vi</code><span class="sig-paren">(</span><em class="sig-param">vi</em>, <em class="sig-param">Zk_name</em>, <em class="sig-param">max_one=False</em>, <em class="sig-param">sum_one=False</em>, <em class="sig-param">color=None</em>, <em class="sig-param">linestyle='-'</em>, <em class="sig-param">linewidth=1.5</em>, <em class="sig-param">label=None</em>, <em class="sig-param">alpha=None</em>, <em class="sig-param">step=True</em><span class="sig-paren">)</span><a class="headerlink" href="#clumpy.calibration.NaiveBayes.plot_P_zk__vi" title="Permalink to this definition">¶</a></dt>
-<dd><p>plots a given <span class="math notranslate nohighlight">\(P_k(\hat{z}|v_i,v_f)\)</span>.</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="clumpy.calibration.NaiveBayes.plot_P_zk__vi_vf">
-<code class="sig-name descname">plot_P_zk__vi_vf</code><span class="sig-paren">(</span><em class="sig-param">vi</em>, <em class="sig-param">vf</em>, <em class="sig-param">Zk_name</em>, <em class="sig-param">max_one=False</em>, <em class="sig-param">sum_one=False</em>, <em class="sig-param">color=None</em>, <em class="sig-param">linestyle='-'</em>, <em class="sig-param">linewidth=1.5</em>, <em class="sig-param">label=None</em>, <em class="sig-param">alpha=None</em>, <em class="sig-param">step=True</em><span class="sig-paren">)</span><a class="headerlink" href="#clumpy.calibration.NaiveBayes.plot_P_zk__vi_vf" title="Permalink to this definition">¶</a></dt>
-<dd><p>plots a given <span class="math notranslate nohighlight">\(P_k(\hat{z}|v_i,v_f)\)</span>.</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="clumpy.calibration.NaiveBayes.predict">
-<code class="sig-name descname">predict</code><span class="sig-paren">(</span><em class="sig-param">J</em><span class="sig-paren">)</span><a class="headerlink" href="#clumpy.calibration.NaiveBayes.predict" title="Permalink to this definition">¶</a></dt>
+<dt id="clumpy.calibration.KNeighborsRegressor.predict">
+<code class="sig-name descname">predict</code><span class="sig-paren">(</span><em class="sig-param">J</em><span class="sig-paren">)</span><a class="headerlink" href="#clumpy.calibration.KNeighborsRegressor.predict" title="Permalink to this definition">¶</a></dt>
 <dd><p>Predict the target for the provided data.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -231,8 +260,8 @@
 </dd></dl>
 
 <dl class="method">
-<dt id="clumpy.calibration.NaiveBayes.score">
-<code class="sig-name descname">score</code><span class="sig-paren">(</span><em class="sig-param">J</em>, <em class="sig-param">y</em><span class="sig-paren">)</span><a class="headerlink" href="#clumpy.calibration.NaiveBayes.score" title="Permalink to this definition">¶</a></dt>
+<dt id="clumpy.calibration.KNeighborsRegressor.score">
+<code class="sig-name descname">score</code><span class="sig-paren">(</span><em class="sig-param">J</em>, <em class="sig-param">y</em><span class="sig-paren">)</span><a class="headerlink" href="#clumpy.calibration.KNeighborsRegressor.score" title="Permalink to this definition">¶</a></dt>
 <dd><p>Return the coefficient of determination R^2 of the prediction.</p>
 <p>The coefficient R^2 is defined as (1 - u/v), where u is the residual sum of squares ((y_true - y_pred) ** 2).sum() and v is the total sum of squares ((y_true - y_true.mean()) ** 2).sum(). The best possible score is 1.0 and it can be negative (because the model can be arbitrarily worse). A constant model that always predicts the expected value of y, disregarding the input features, would get a R^2 score of 0.0. It returns the coefficient R^2 for each initial states.</p>
 <dl class="field-list simple">
@@ -263,10 +292,10 @@
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
-        <a href="knn.html" class="btn btn-neutral float-right" title="K-Nearest Neighbors regressor" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+        <a href="../allocation/simple_unbiased.html" class="btn btn-neutral float-right" title="Simple Unbiased Allocation Method" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
-        <a href="model_selection.html" class="btn btn-neutral float-left" title="Model selection" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+        <a href="naive_bayes.html" class="btn btn-neutral float-left" title="Naive Bayes Calibration Method" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
       
     </div>
   

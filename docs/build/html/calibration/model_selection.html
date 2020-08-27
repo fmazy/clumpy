@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Tutorial : discretization &mdash; clumpy 0.1.0 documentation</title>
+  <title>Model selection &mdash; clumpy 0.1.0 documentation</title>
   
 
   
@@ -38,8 +38,8 @@
   <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="next" title="Release Notes" href="../release_notes.html" />
-    <link rel="prev" title="Tutorials" href="../tutorials.html" /> 
+    <link rel="next" title="Naive Bayes Calibration Method" href="naive_bayes.html" />
+    <link rel="prev" title="Binarizer" href="../preprocessing/binarizer.html" /> 
 </head>
 
 <body class="wy-body-for-nav">
@@ -87,15 +87,9 @@
             
             
               <p class="caption"><span class="caption-text">Getting started</span></p>
-<ul class="current">
+<ul>
 <li class="toctree-l1"><a class="reference internal" href="../installation.html">Installation</a></li>
-<li class="toctree-l1 current"><a class="reference internal" href="../tutorials.html">Tutorials</a><ul class="current">
-<li class="toctree-l2 current"><a class="reference internal" href="../tutorials.html#calibration-tutorial">Calibration tutorial</a><ul class="current">
-<li class="toctree-l3 current"><a class="current reference internal" href="#">Tutorial : discretization</a></li>
-</ul>
-</li>
-</ul>
-</li>
+<li class="toctree-l1"><a class="reference internal" href="../tutorials.html">Tutorials</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../release_notes.html">Release Notes</a></li>
 </ul>
 <p class="caption"><span class="caption-text">Definition</span></p>
@@ -108,10 +102,10 @@
 <li class="toctree-l1"><a class="reference internal" href="../preprocessing/binarizer.html">Binarizer</a></li>
 </ul>
 <p class="caption"><span class="caption-text">Calibration</span></p>
-<ul>
-<li class="toctree-l1"><a class="reference internal" href="../calibration/model_selection.html">Model selection</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../calibration/naive_bayes.html">Naive Bayes Calibration Method</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../calibration/knn.html">K-Nearest Neighbors regressor</a></li>
+<ul class="current">
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Model selection</a></li>
+<li class="toctree-l1"><a class="reference internal" href="naive_bayes.html">Naive Bayes Calibration Method</a></li>
+<li class="toctree-l1"><a class="reference internal" href="knn.html">K-Nearest Neighbors regressor</a></li>
 </ul>
 <p class="caption"><span class="caption-text">Allocation</span></p>
 <ul>
@@ -163,15 +157,13 @@
     
       <li><a href="../index.html">Docs</a> &raquo;</li>
         
-          <li><a href="../tutorials.html">Tutorials</a> &raquo;</li>
-        
-      <li>Tutorial : discretization</li>
+      <li>Model selection</li>
     
     
       <li class="wy-breadcrumbs-aside">
         
             
-            <a href="../_sources/tutorials/tutorial_discretization.rst.txt" rel="nofollow"> View page source</a>
+            <a href="../_sources/calibration/model_selection.rst.txt" rel="nofollow"> View page source</a>
           
         
       </li>
@@ -184,9 +176,22 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <div class="section" id="tutorial-discretization">
-<h1>Tutorial : discretization<a class="headerlink" href="#tutorial-discretization" title="Permalink to this headline">¶</a></h1>
-<p>blabla</p>
+  <div class="section" id="model-selection">
+<h1>Model selection<a class="headerlink" href="#model-selection" title="Permalink to this headline">¶</a></h1>
+<dl class="function">
+<dt id="clumpy.calibration.train_test_split">
+<code class="sig-prename descclassname">clumpy.calibration.</code><code class="sig-name descname">train_test_split</code><span class="sig-paren">(</span><em class="sig-param">J</em>, <em class="sig-param">test_size=0.25</em><span class="sig-paren">)</span><a class="headerlink" href="#clumpy.calibration.train_test_split" title="Permalink to this definition">¶</a></dt>
+<dd><p>Train test split for each initial state.</p>
+<dl>
+<dt>Parameters</dt><dd><p>J : pandas dataframe.</p>
+<dl class="simple">
+<dt>splitting<span class="classifier">list</span></dt><dd><p>List containing train-test split of inputs.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
 </div>
 
 
@@ -197,10 +202,10 @@
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
-        <a href="../release_notes.html" class="btn btn-neutral float-right" title="Release Notes" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+        <a href="naive_bayes.html" class="btn btn-neutral float-right" title="Naive Bayes Calibration Method" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
-        <a href="../tutorials.html" class="btn btn-neutral float-left" title="Tutorials" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+        <a href="../preprocessing/binarizer.html" class="btn btn-neutral float-left" title="Binarizer" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
       
     </div>
   
