@@ -193,7 +193,12 @@ class LandUseCoverLayer(_Layer):
         txt = txt + ""
         return (txt)
     
-    def display(self, values, colors, names, center, window):
+    def set_style(self, dict_style):
+        self.style_values = list(dict_style.keys())
+        self.style_names = [dict_style[i][0] for i in dict_style.keys()]
+        self.style_colors = [dict_style[i][1] for i in dict_style.keys()]
+    
+    def display(self, center, window):
         """
         Display the land use cover layer through python console with matplotlib.
 
@@ -210,29 +215,36 @@ class LandUseCoverLayer(_Layer):
         window : (int,int)
             Window dimensions as a tuple.
         """
+        values = self.style_values
+        colors = self.style_colors
+        names = self.style_names
+        
         colors = colors[:-1] + [colors[-2]] + [colors[-1]]
         bounds = np.array(values+[values[-1]+1])-0.5
         
         cmap = mpl.colors.ListedColormap(colors)
         norm = mpl.colors.BoundaryNorm(bounds, cmap.N)
-                
-        x1 = int(center[0] - window/2)
-        x2 = int(center[0] + window/2)
-        y1 = int(center[1] - window/2)
-        y2 = int(center[1] + window/2)
+        
+        if type(window) == int:
+            window = (window, window)
+        
+        x1 = int(center[0] - window[0]/2)
+        x2 = int(center[0] + window[0]/2)
+        y1 = int(center[1] - window[1]/2)
+        y2 = int(center[1] + window[1]/2)
         
         if x1 < 0:
             x1 = 0
-            x2 = window
+            x2 = window[0]
         if x2 >= self.data.shape[0]:
             x2 = int(self.data.shape[0])
-            x1 = x2 - window
+            x1 = x2 - window[0]
         if y1 < 0:
             y1 = 0
-            y2 = window
+            y2 = window[1]
         if y2 >= self.data.shape[1]:
             y2 = int(self.data.shape[1])
-            y1 = y2 - window
+            y1 = y2 - window[1]
         
         plt.imshow(self.data[x1:x2, y1:y2], interpolation='none', cmap=cmap, norm=norm)
         plt.yticks([], [])
@@ -240,7 +252,6 @@ class LandUseCoverLayer(_Layer):
         cb = plt.colorbar()
         cb.set_ticks(values)
         cb.set_ticklabels(names)
-        cb.set_label('$v_f$', fontsize=14)
 
 
 class FeatureLayer(_Layer):

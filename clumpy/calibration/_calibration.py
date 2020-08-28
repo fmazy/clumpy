@@ -125,6 +125,15 @@ def compute_P_z__vi_vf(J=None, name='P_z__vi_vf'):
     
     return(P_z__vi_vf)
 
+def compute_P_vi(J, name='P_vi'):
+    df = J.groupby([('v','i')]).size().reset_index(name=(name,''))
+    df[name] = df[name] / df[name].sum()
+    return(df)
+    # P_vi = pd.DataFrame(columns=pd.MultiIndex.from_tuples([('v','i'), (name, '')]))
+    
+    # for vi in J.v.i.unique():
+    #     P_vi.loc[P_vi.index.size] = [vi, J.loc[J.v.i.unique()]]
+
 def compute_P_vf__vi(J, name='P_vf__vi'):       
     P_vf__vi = pd.DataFrame(columns=pd.MultiIndex.from_tuples([('v','i')]))
     
@@ -136,6 +145,8 @@ def compute_P_vf__vi(J, name='P_vf__vi'):
         P_vf__vi.loc[P_vf__vi.index.size, ('v','i')] = vi
         for vf in df.loc[df.v.i==vi].v.f.unique():
             P_vf__vi.loc[P_vf__vi.v.i==vi,('P_vf__vi', vf)] = df.loc[(df.v.i==vi) & (df.v.f==vf)].P_vf__vi.values[0]
+    
+    P_vf__vi = P_vf__vi.reindex(sorted(P_vf__vi.columns), axis=1)
     
     return(P_vf__vi.fillna(0))
 

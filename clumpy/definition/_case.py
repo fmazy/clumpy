@@ -8,6 +8,7 @@ Created on Wed Jun  3 09:35:47 2020
 
 # import numpy as np
 import pandas as pd
+import numpy as np
 from scipy import ndimage
 
 from ._transition import _Transition
@@ -22,7 +23,7 @@ class Case():
     map_i : [LayerLUC]
         The initial LUC map.
         
-    list_vi_vf : list of tuples
+    dict_vi_vf : list of tuples
         The list of studied transitions represented as tuples. Example : ``[(3,2), (3,4), (7,2)]``
             
     map_f : [LayerLUC] or None (default=None)
@@ -40,20 +41,25 @@ class Case():
         The transitions definitions
     
     """
-    def __init__(self, map_i, list_vi_vf, map_f=None, restrict_vf_to_studied_ones = True):
+    def __init__(self, map_i, dict_vi_vf, map_f=None, restrict_vf_to_studied_ones = True):
         self.map_i = map_i
         self.map_f = map_f
         
-        self.list_vi_vf = list_vi_vf
+        self.dict_vi_vf = dict_vi_vf
         
-        self.transitions = _Transition()
-        for vi_vf in list_vi_vf:
-            self.transitions.addTif(vi=vi_vf[0], vf=vi_vf[1])
-
         self._create_J()
         
-        if restrict_vf_to_studied_ones and type(map_f) != type(None):
+        if restrict_vf_to_studied_ones == True and type(map_f) != type(None):
             self._restrict_vf_to_studied_ones()
+        
+        # self.transitions = _Transition()
+        # for vi_vf in dict_vi_vf:
+        #     self.transitions.addTif(vi=vi_vf[0], vf=vi_vf[1])
+
+        # self._create_J()
+        
+        # if restrict_vf_to_studied_ones and type(map_f) != type(None):
+        #     self._restrict_vf_to_studied_ones()
             
     def _create_J(self):
         # self.layer_LUC_i = layer_LUC_i
@@ -63,33 +69,31 @@ class Case():
         cols = [('v', 'i')]
         cols = pd.MultiIndex.from_tuples(cols)
         
-        self._J = pd.DataFrame(self.map_i.data.flat, columns=cols)
+        self._J = pd.DataFrame(columns=cols)
         
-        # restrict to pixels with vi in Ti
-        self._J = self._J.loc[self._J.v.i.isin(self.transitions.Ti.keys())]
-        
-        # complete with vf values
-        if self.map_f != None:
-            self._add_vf()
+        for vi in self.dict_vi_vf.keys():
+            J_vi = pd.DataFrame(columns=cols)
             
-        # self.discrete_J = self._J.copy() # if their is no discretization made, it exists !
+            J_vi[('j','')] = np.where(self.map_i.data.flat==vi)[0]
+            J_vi[('v','i')] = vi
+            J_vi.set_index('j', inplace=True)
+            
+            self._J = pd.concat([self._J, J_vi])
+        
+        if type(self.map_f) != type(None):
+            self._J[('v','f')] = self.map_f.data.flat[self._J.index.values]
+        
+        
+    def get_J(self, copy=True):
+        if copy:
+            return(self._J.copy())
+        else:
+            return(self._J)
+            
+    def _restrict_vf_to_studied_ones(self):
+        for vi in self.dict_vi_vf.keys():
+            self._J.loc[(self._J.v.i == vi) & ~(self._J.v.f.isin(self.dict_vi_vf[vi])), ('v','f')] = vi    
     
-    def get_J(self):
-        return(self._J.copy())
-    
-    def _add_vf(self):       
-        self._J['v', 'f'] = self.map_f.data.flat[self._J.index.values]
-        
-    def _restrict_vf_to_studied_ones(self):            
-        N_vi_vf = self._J.groupby([('v','i'), ('v','f')]).size().reset_index(name=('N_vi_vf',''))
-        # print(N_vi_vf)
-        for index, row in N_vi_vf.iterrows():
-            vi = row[('v','i')]
-            vf = row[('v','f')]
-            
-            if vf not in self.transitions.Ti[vi].Tif.keys():
-                self._J.loc[(self._J.v.i==vi) & (self._J.v.f==vf), ('v','f')] = vi       
-            
     def add_distance_to_v_as_feature(self, list_vi, v, name=None, scale=1):
         """
         add an explanatory variable as a distance to a state
@@ -136,7 +140,7 @@ class Case():
         """
         # get all vi
         list_vi.sort()
-        vi_T = list(self.transitions.Ti.keys())
+        vi_T = list(self.dict_vi_vf.keys())
         vi_T.sort()
             
         # if vi states asked represent all vi transitions, takes all indexes
@@ -151,11 +155,11 @@ class Case():
         
         self._J.sort_index(axis=1, inplace=True)
         
-        # finally, we create for each vi the corresponding Z                
-        for vi in list_vi:
-            self.transitions.Ti[vi].Z[name] = _Zk(name = name,
-                                                            kind = kind,
-                                                            Ti = self.transitions.Ti[vi])
+        # # finally, we create for each vi the corresponding Z                
+        # for vi in list_vi:
+        #     self.transitions.Ti[vi].Z[name] = _Zk(name = name,
+        #                                                     kind = kind,
+        #                                                     Ti = self.transitions.Ti[vi])
             
     def add_layer_as_feature(self, list_vi, layer_EV, name=None):
         """
