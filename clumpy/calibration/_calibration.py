@@ -8,16 +8,7 @@ class _Calibration():
     # def __init__(self):
         # self.a = None
     
-    def _compute_P_vf__vi_from_P_vf__vi_z(self, J):
-        P_vf__vi = pd.DataFrame(columns=pd.MultiIndex.from_tuples([('v','i')]))
-    
-        P_vf__vi[('v','i')] = np.sort(J.v.i.unique()) 
-        
-        for vi in np.sort(J.v.i.unique()):
-            for vf in J.P_vf__vi_z.columns.to_list():
-                P_vf__vi.loc[P_vf__vi.v.i==vi, ('P_vf__vi', vf)] = J.loc[J.v.i==vi, ('P_vf__vi_z', vf)].sum() / J.loc[J.v.i==vi].index.size
-                
-        return(P_vf__vi)      
+ 
 
         
     # def r2_score()
@@ -35,6 +26,17 @@ class _Calibration():
         
         return(M)
     
+
+def compute_P_vf__vi_from_P_vf__vi_z(J, name='P_vf__vi'):
+    P_vf__vi = pd.DataFrame(columns=pd.MultiIndex.from_tuples([('v','i')]))
+
+    P_vf__vi[('v','i')] = np.sort(J.v.i.unique()) 
+    
+    for vi in np.sort(J.v.i.unique()):
+        for vf in J.P_vf__vi_z.columns.to_list():
+            P_vf__vi.loc[P_vf__vi.v.i==vi, (name, vf)] = J.loc[J.v.i==vi, ('P_vf__vi_z', vf)].sum() / J.loc[J.v.i==vi].index.size
+            
+    return(P_vf__vi)     
 
 
 def get_features_and_targets(P_vf__vi_z):

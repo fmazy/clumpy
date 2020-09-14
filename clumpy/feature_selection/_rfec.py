@@ -8,8 +8,9 @@ Created on Fri Aug 28 15:48:52 2020
 
 from ..calibration import compute_P_vf__vi_z
 
-class RFE():
+class RFEC():
     """
+    Recursive Feature Elimination by Correlation
     Parameters
     ----------
     estimator : object
@@ -27,8 +28,7 @@ class RFE():
     verbose : int, (default=0)
         Controls verbosity of output.
     """
-    def __init__(self, estimator, n_features_to_select=None, step=1, verbose=0):
-        self.estimator = estimator
+    def __init__(self, n_features_to_select=None, step=1, verbose=0):
         self.n_features_to_select = n_features_to_select
         self.step = step
         self.verbose = verbose
@@ -52,7 +52,12 @@ class RFE():
             
             print(P_vf__vi_z)
             
-            estimator.fit(P_vf__vi_z)
+            for vi in P_vf__vi_z.v.i.unique():
+                for vf in P_vf__vi_z.P_vf__vi_z.columns.to_list():
+                    print(vi, '->', vf)
+                    for feature_name in features_names:
+                        c = P_vf__vi_z.loc[P_vf__vi_z.v.i==vi][[feature_name, ('P_vf__vi_z',vf)]].corr().values[0,1]
+                        print('\t '+feature_name[1]+', corr='+str(c))
             
             # return(estim1)
             

@@ -43,18 +43,19 @@ class Binarizer():
     
         for (vi, feature_name), fit_param in fit_params.items():        
             X = J.loc[J.v.i==vi, ('z',feature_name)].values
-            y = J.loc[J.v.i==vi, ('v', 'f')].values
+            
             
             # if param['method'] == 'numpy':
             #     alpha_sub.alpha = _compute_bins_with_numpy(case.J, Zk, param['bins'])
                 
             if fit_param['method'] == 'optbinning':
+                y = J.loc[J.v.i==vi, ('v', 'f')].values
                 self.alpha[(vi, feature_name)] = _compute_bins_with_optbinning(X, y, name=feature_name, sound=sound, plot=plot)
                 
             elif fit_param['method'] == 'numpy':
                 if 'bins' not in fit_param.keys():
                     fit_param['bins'] = 'auto'
-                self.alpha[(vi, feature_name)] = _compute_linear_bins(X, fit_param['bins'], sound=sound, plot=plot)
+                self.alpha[(vi, feature_name)] = _compute_linear_bins(X, fit_param['bins'], sound=sound, plot=plot, plot_title='vi='+str(vi)+' - '+feature_name)
     
     def transform(self, J):
         """
@@ -151,13 +152,14 @@ def _compute_bins_with_optbinning(X, y, name='name', sound=0, plot=False):
     
     return(alpha)
 
-def _compute_linear_bins(X, bins, sound=0, plot=False):
+def _compute_linear_bins(X, bins, sound=0, plot=False, plot_title=''):
     alpha_N, alpha = np.histogram(X, bins=bins)
     # # on agrandie d'un chouilla le dernier bin pour inclure le bord supérieur
     alpha[-1] += (alpha[-1]-alpha[-2])*0.001
     
     if plot:
         plt.step(alpha, np.append(alpha_N,0), where='post')
+        plt.title(plot_title)
         plt.show()
     
     return(alpha)

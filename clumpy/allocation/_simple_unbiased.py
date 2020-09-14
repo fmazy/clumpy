@@ -19,7 +19,7 @@ class SimpleUnbiased(_Allocation):
     def __init__(self, params = None):
         super().__init__(params)
     
-    def allocate_monopixel_patches2(self,
+    def allocate_monopixel_patches(self,
                                    map_i,
                                    J_proba,
                                    sound=2,
@@ -30,12 +30,7 @@ class SimpleUnbiased(_Allocation):
         Parameters
         ----------
             
-        case : definition.Case
-            Starting case which have to be discretized.
-            
-        probability_maps : definition.TransitionProbabilityLayers (default=None)
-            The transition probabilities maps.
-            
+                    
         sound : int (default=2)
             Text output level. ``0`` means silent mode.
             
@@ -115,97 +110,97 @@ class SimpleUnbiased(_Allocation):
         
         return(map_f)
     
-    def allocate_monopixel_patches(self,
-                                   case:definition.Case,
-                                   probability_maps=None,
-                                   sound=2,
-                                   dict_args={}):
-        """
-        Simple allocation of monopixels patches whithout scenario control.
+    # def allocate_monopixel_patches(self,
+    #                                case:definition.Case,
+    #                                probability_maps=None,
+    #                                sound=2,
+    #                                dict_args={}):
+    #     """
+    #     Simple allocation of monopixels patches whithout scenario control.
 
-        Parameters
-        ----------
+    #     Parameters
+    #     ----------
             
-        case : definition.Case
-            Starting case which have to be discretized.
+    #     case : definition.Case
+    #         Starting case which have to be discretized.
             
-        probability_maps : definition.TransitionProbabilityLayers (default=None)
-            The transition probabilities maps.
+    #     probability_maps : definition.TransitionProbabilityLayers (default=None)
+    #         The transition probabilities maps.
             
-        sound : int (default=2)
-            Text output level. ``0`` means silent mode.
+    #     sound : int (default=2)
+    #         Text output level. ``0`` means silent mode.
             
-        dict_args : dict (default=``{}``)
-            The above optional arguments in a dictionary. Overwrites if already passed. 
+    #     dict_args : dict (default=``{}``)
+    #         The above optional arguments in a dictionary. Overwrites if already passed. 
 
-        Returns
-        -------
-        map_f : definition.LandUseCoverLayer
-            The allocated land use map
+    #     Returns
+    #     -------
+    #     map_f : definition.LandUseCoverLayer
+    #         The allocated land use map
             
-        Notes
-        -----
-        New attributes are availables :`
+    #     Notes
+    #     -----
+    #     New attributes are availables :`
             
-            ``self.execution_time`` One microseconds precision for Linux and Mac OS and 16 milliseconds precision for Windows.
+    #         ``self.execution_time`` One microseconds precision for Linux and Mac OS and 16 milliseconds precision for Windows.
         
-            ``self.detailed_execution_time`` One microseconds precision for Linux and Mac OS and 16 milliseconds precision for Windows.
+    #         ``self.detailed_execution_time`` One microseconds precision for Linux and Mac OS and 16 milliseconds precision for Windows.
             
-            ``self.tested_pixels``
-        """
-        np.random.seed() # needed to seed in case of multiprocessing
+    #         ``self.tested_pixels``
+    #     """
+    #     np.random.seed() # needed to seed in case of multiprocessing
         
-        probability_maps=dict_args.get('probability_maps', probability_maps)
-        sound=dict_args.get('sound', sound)
+    #     probability_maps=dict_args.get('probability_maps', probability_maps)
+    #     sound=dict_args.get('sound', sound)
         
-        global_start_time = time.time()
-        start_time = time.time()
-        J = case.discrete_J.copy()
+    #     global_start_time = time.time()
+    #     start_time = time.time()
+    #     J = case.discrete_J.copy()
             
-        map_f_data = case.map_i.data.copy()
+    #     map_f_data = case.map_i.data.copy()
         
-        self.detailed_execution_time = {}
+    #     self.detailed_execution_time = {}
         
-        self.detailed_execution_time['pixels_initialization']=time.time()-start_time
-        start_time = time.time()
+    #     self.detailed_execution_time['pixels_initialization']=time.time()-start_time
+    #     start_time = time.time()
         
-        try:
-            self._add_P_vf__vi_z_to_J(J, probability_maps, inplace=True)
-        except:
-            raise TypeError('unexpected probability_maps')
+    #     try:
+    #         self._add_P_vf__vi_z_to_J(J, probability_maps, inplace=True)
+    #     except:
+    #         raise TypeError('unexpected probability_maps')
             
-        # GART
-        self.tested_pixels = [J.index.size]
-        self._generalized_acceptation_rejection_test(J, inplace=True, accepted_only=True)
+    #     # GART
+    #     self.tested_pixels = [J.index.size]
+    #     self._generalized_acceptation_rejection_test(J, inplace=True, accepted_only=True)
         
-        self.detailed_execution_time['sampling']=[time.time()-start_time]
-        start_time = time.time()
+    #     self.detailed_execution_time['sampling']=[time.time()-start_time]
+    #     start_time = time.time()
                 
-        # allocation
-        map_f_data.flat[J.index.values] = J.v.f.values
+    #     # allocation
+    #     map_f_data.flat[J.index.values] = J.v.f.values
         
-        self.detailed_execution_time['pixels_initialization']=time.time()-start_time
+    #     self.detailed_execution_time['pixels_initialization']=time.time()-start_time
 
-        self.detailed_execution_time['patches_parameters_initialization']=[0]
+    #     self.detailed_execution_time['patches_parameters_initialization']=[0]
         
-        self.execution_time = time.time() - global_start_time
+    #     self.execution_time = time.time() - global_start_time
         
-        # post processing
-        map_f = definition.LandUseCoverLayer(name="luc_simple",
-                                               time=None,
-                                               scale=case.map_i.scale)
-        map_f.import_numpy(data=map_f_data, sound=sound)
+    #     # post processing
+    #     map_f = definition.LandUseCoverLayer(name="luc_simple",
+    #                                            time=None,
+    #                                            scale=case.map_i.scale)
+    #     map_f.import_numpy(data=map_f_data, sound=sound)
         
-        if sound>0:
-            print('FINISHED')
-            print('========')
-            print('execution times')
-            print(self.detailed_execution_time)
+    #     if sound>0:
+    #         print('FINISHED')
+    #         print('========')
+    #         print('execution times')
+    #         print(self.detailed_execution_time)
         
-            N_vi_vf = J.groupby([('v','i'), ('v','f')]).size().reset_index(name=('N_vi_vf', ''))
-            print(N_vi_vf)
+    #         N_vi_vf = J.groupby([('v','i'), ('v','f')]).size().reset_index(name=('N_vi_vf', ''))
+    #         print(N_vi_vf)
         
-        return(map_f)
+    #     return(map_f)
         
     def allocate(self,
                  case:definition.Case,
