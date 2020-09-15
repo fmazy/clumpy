@@ -195,5 +195,11 @@ class Case():
     #     X_train = scaler.transform(X_train)  # doctest: +SKIP
     #     # apply same transformation to test data
     #     X_test = scaler.transform(X_test)  # doctest: +SKIP
-        
-        
+
+def get_pixels_coordinates(J, map_shape):
+    x, y = np.unravel_index(J.index.values, map_shape)
+    coor = np.zeros((x.size,2))
+    coor[:,0] = x
+    coor[:,1]  = y
+    return(coor)
+            

@@ -15,12 +15,11 @@ from skimage import measure # for patch perimeters
 from ..definition import _transition
 from .. import tools as dmtools
 from .. import definition
+# from . import compute_P_vf__vi
 
 
-def analyse(case, neighbors_structure = 'queen'):
-    map_shape = np.shape(case.map_i.data)
-    
-    J = case.J.copy()
+def analyse(J, map_shape, neighbors_structure = 'queen'):
+
     
     if neighbors_structure == 'queen':
         structure = np.ones((3,3))
@@ -32,16 +31,19 @@ def analyse(case, neighbors_structure = 'queen'):
         print('ERROR : unexpected neighbors_structure value')
         return(False)
     
-    list_vi = []
-    list_vf = []
-    for vi_vf in case.list_vi_vf:
-        list_vi.append(vi_vf[0])
-        list_vf.append(vi_vf[1])
+    P_vf__vi = compute_P_vf__vi(J)
+    
+    list_vi = P_vf__vi.v.i.unique()
+    list_vf = P_vf__vi.P_vf__vi.columns.to_list()
+    
+    list_vi_vf = []
+    for vi in list_vi:
+        list_vi_vf.append([(vi, vf) for vf in list_vf])
     
     J_vf = J.loc[J.v.f.isin(list_vf)].copy()
     
     J['vi_vf'] = list(zip(J.v.i, J.v.f))
-    J_vi_vf = J.loc[J.vi_vf.isin(case.list_vi_vf)].copy()    
+    J_vi_vf = J.loc[J.vi_vf.isin(list_vi_vf)].copy()    
       
     J_vi_vf.drop('vi_vf', axis=1, level=0, inplace=True)
     
@@ -73,7 +75,7 @@ def analyse(case, neighbors_structure = 'queen'):
     J_vi_vf[('id_patch','vi_vf')] = -1
     patches_vi_vf = pd.DataFrame()
     
-    for vi_vf in case.list_vi_vf:
+    for vi_vf in list_vi_vf:
         vi = vi_vf[0]
         vf = vi_vf[1]
         

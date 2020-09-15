@@ -412,3 +412,6 @@ def compute_P_vf__vi_from_transition_probability_maps(case, probability_maps):
         P_vf__vi.loc[P_vf__vi.v.i==vi, ('P_vf__vi',vi)] = 1 - P_vf__vi.loc[P_vf__vi.v.i==vi].P_vf__vi.sum(axis=1)
 
     return(P_vf__vi.fillna(0))
+
+# def update_P_vf__vi_z(J, P_z__vi, P_vf__vi):
+    
