@@ -413,5 +413,46 @@ def compute_P_vf__vi_from_transition_probability_maps(case, probability_maps):
 
     return(P_vf__vi.fillna(0))
 
-# def update_P_vf__vi_z(J, P_z__vi, P_vf__vi):
+def update_P_vf__vi_z(P_vf__vi_z_original,
+                      P_z__vi_original=None,
+                      P_z__vi_new=None,
+                      P_vf__vi_original=None,
+                      P_vf__vi_new=None,
+                      name='P_vf__vi_z'):
+        
+    columns_to_remove = []
+    
+    # if new P_z__vi
+    if type(P_z__vi_original) != type(None):
+        P_vf__vi_z_original = P_vf__vi_z_original.merge(P_z__vi_original, how='left')
+        P_vf__vi_z_original = P_vf__vi_z_original.merge(P_z__vi_new, how='left')
+        columns_to_remove.append('P_z__vi_original')
+        columns_to_remove.append('P_z__vi_new')
+    
+    # if new P_vf__vi
+    if type(P_vf__vi_original) != type(None):
+        P_vf__vi_z_original = P_vf__vi_z_original.merge(P_vf__vi_original, how='left')
+        P_vf__vi_z_original = P_vf__vi_z_original.merge(P_vf__vi_new, how='left')
+        columns_to_remove.append('P_vf__vi_original')
+        columns_to_remove.append('P_vf__vi_new')
+        
+    # if updates P_z__vi only
+    if type(P_z__vi_original) != type(None) and type(P_vf__vi_original) == type(None):
+        for vf in P_vf__vi_z_original.P_vf__vi_z_original.columns.to_list():
+            P_vf__vi_z_original[(name, vf)] = P_vf__vi_z_original.P_vf__vi_z_original[vf] * P_vf__vi_z_original.P_z__vi_original / P_vf__vi_z_original.P_z__vi_new
+    
+    # if updates P_vf__vi only
+    if type(P_z__vi_original) == type(None) and type(P_vf__vi_original) != type(None):
+        for vf in P_vf__vi_z_original.P_vf__vi_z_original.columns.to_list():
+            P_vf__vi_z_original[(name, vf)] = P_vf__vi_z_original.P_vf__vi_z_original[vf] * P_vf__vi_z_original.P_vf__vi_new[vf] / P_vf__vi_z_original.P_vf__vi_original[vf]        
+    
+    # if updates P_z__vi and P_vf__vi
+    if type(P_z__vi_original) != type(None) and type(P_vf__vi_original) != type(None):
+        for vf in P_vf__vi_z_original.P_vf__vi_z_original.columns.to_list():
+            P_vf__vi_z_original[(name, vf)] = P_vf__vi_z_original.P_vf__vi_z_original[vf] * P_vf__vi_z_original.P_z__vi_original / P_vf__vi_z_original.P_z__vi_new * P_vf__vi_z_original.P_vf__vi_new[vf] / P_vf__vi_z_original.P_vf__vi_original[vf] 
+            
+    P_vf__vi_z_original.drop(columns_to_remove, axis=1, level=0, inplace=True)        
+    
+
+    return(P_vf__vi_z_original)
     
