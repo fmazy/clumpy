@@ -45,12 +45,30 @@ class Case():
         self.map_i = map_i
         self.map_f = map_f
         
-        self.dict_vi_vf = dict_vi_vf
+        self.layers = ['vi']
         
-        self._create_J()
+        if type(None) != type(map_f):
+            self.layers.append('vf')
         
-        if restrict_vf_to_studied_ones == True and type(map_f) != type(None):
-            self._restrict_vf_to_studied_ones()
+            self.J = np.stack((self.map_i.data.copy(),
+                               self.map_f.data.copy()))
+            
+        else:
+            self.J = np.zeros((1,
+                               self.map_i.data.shape[0],
+                               self.map_i.data.shape[1]))
+            
+            self.J[0, :, :] = self.map_i.data.copy()
+        
+        # if type(None) != type(map_f):
+            # self.J[:,:,1] = self.map_f.data
+        
+        # self.dict_vi_vf = dict_vi_vf
+        
+        # self._create_J()
+        
+        # if restrict_vf_to_studied_ones == True and type(map_f) != type(None):
+            # self._restrict_vf_to_studied_ones()
         
         # self.transitions = _Transition()
         # for vi_vf in dict_vi_vf:
@@ -138,22 +156,24 @@ class Case():
             distance_to_v
                 The same as dyn but specific for distance to a state features.
         """
+        self.J = np.concatenate((self.J, [data]))
+        
         # get all vi
-        list_vi.sort()
-        vi_T = list(self.dict_vi_vf.keys())
-        vi_T.sort()
+        # list_vi.sort()
+        # vi_T = list(self.dict_vi_vf.keys())
+        # vi_T.sort()
             
         # if vi states asked represent all vi transitions, takes all indexes
-        if list_vi == vi_T:
-            self._J['z', name] = data.flat[self._J.index.values]
+        # if list_vi == vi_T:
+            # self._J['z', name] = data.flat[self._J.index.values]
             
-        else: # else, just add necessary                
+        # else: # else, just add necessary                
             # then, for each vi
-            for vi in list_vi:
-                j = self._J.loc[self._J.v.i == vi].index.values
-                self._J.loc[j, ('z', name)] = data.flat[j]
+            # for vi in list_vi:
+                # j = self._J.loc[self._J.v.i == vi].index.values
+                # self._J.loc[j, ('z', name)] = data.flat[j]
         
-        self._J.sort_index(axis=1, inplace=True)
+        # self._J.sort_index(axis=1, inplace=True)
         
         # # finally, we create for each vi the corresponding Z                
         # for vi in list_vi:
