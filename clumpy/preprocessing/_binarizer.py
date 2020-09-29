@@ -45,6 +45,9 @@ class Binarizer():
             X = J.loc[J.v.i==vi, ('z',feature_name)].values
             
             
+            if sound>0:
+                print(vi, feature_name)
+            
             # if param['method'] == 'numpy':
             #     alpha_sub.alpha = _compute_bins_with_numpy(case.J, Zk, param['bins'])
                 
