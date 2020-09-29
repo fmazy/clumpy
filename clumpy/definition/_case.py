@@ -10,6 +10,7 @@ Created on Wed Jun  3 09:35:47 2020
 import pandas as pd
 import numpy as np
 from scipy import ndimage
+from copy import deepcopy
 
 from ._transition import _Transition
 from ._feature import _Zk
@@ -47,19 +48,17 @@ class Case():
         
         self.layers = ['vi']
         
-        if type(None) != type(map_f):
-            self.layers.append('vf')
+        self.J = {}
+        self.vf = {}
+        self.Z = {}
+        self.Z_names = {}
         
-            self.J = np.stack((self.map_i.data.copy(),
-                               self.map_f.data.copy()))
+        for vi in dict_vi_vf.keys():
+            self.J[vi] = np.where(self.map_i.data.flat==vi)[0]
+            self.vf[vi] = self.map_f.data.flat[self.J[vi]]
+            self.Z[vi] = None
+            self.Z_names[vi] = None
             
-        else:
-            self.J = np.zeros((1,
-                               self.map_i.data.shape[0],
-                               self.map_i.data.shape[1]))
-            
-            self.J[0, :, :] = self.map_i.data.copy()
-        
         # if type(None) != type(map_f):
             # self.J[:,:,1] = self.map_f.data
         
@@ -78,7 +77,10 @@ class Case():
         
         # if restrict_vf_to_studied_ones and type(map_f) != type(None):
         #     self._restrict_vf_to_studied_ones()
-            
+    
+    def copy(self):
+        return(deepcopy(self))
+    
     def _create_J(self):
         # self.layer_LUC_i = layer_LUC_i
         # self.T = T
@@ -156,7 +158,14 @@ class Case():
             distance_to_v
                 The same as dyn but specific for distance to a state features.
         """
-        self.J = np.concatenate((self.J, [data]))
+        for vi in list_vi:
+            if type(self.Z[vi]) == type(None):
+                self.Z[vi] = data.flat[self.J[vi]]
+                self.Z_names[vi] = [name]
+            else:
+                self.Z[vi] = np.column_stack((self.Z[vi],
+                                              data.flat[self.J[vi]]))
+                self.Z_names[vi].append(name)
         
         # get all vi
         # list_vi.sort()
@@ -215,6 +224,31 @@ class Case():
     #     X_train = scaler.transform(X_train)  # doctest: +SKIP
     #     # apply same transformation to test data
     #     X_test = scaler.transform(X_test)  # doctest: +SKIP
+    
+    def get_z_column_id(self, vi, z_name):
+        return(self.Z_names[vi].index(z_name))
+    
+    def get_z(self, vi, z_name):
+        
+        column_id = self.get_z_column_id(vi, z_name)
+        
+        return(self.Z[vi][:,column_id])
+    
+    def remove(self, vi, condition, inplace=False):
+        return(self.keep_only(vi, ~condition, inplace=inplace))
+        
+    def keep_only(self, vi, condition, inplace=False):
+        if inplace:
+            case = self
+        else:
+            case = self.copy()
+        
+        case.J[vi] = case.J[vi][condition]
+        case.Z[vi] = case.Z[vi][condition,:]
+        case.vf[vi] = case.vf[vi][condition]
+        
+        if not inplace:
+            return(case)
 
 def get_pixels_coordinates(J, map_shape):
     x, y = np.unravel_index(J.index.values, map_shape)

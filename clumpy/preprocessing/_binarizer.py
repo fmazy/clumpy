@@ -12,7 +12,7 @@ class Binarizer():
     """
     Binarizer
     """
-    def fit(self, J, fit_params, sound=0, plot=False):
+    def fit(self, case, fit_params, sound=0, plot=False):
         """
         Fit the binarizer.
 
@@ -41,26 +41,22 @@ class Binarizer():
         
         self.alpha = {}
     
-        for (vi, feature_name), fit_param in fit_params.items():        
-            X = J.loc[J.v.i==vi, ('z',feature_name)].values
+        for (vi, feature_name), fit_param in fit_params.items(): 
             
+            X = case.get_z(vi, feature_name)
             
             if sound>0:
                 print(vi, feature_name)
             
             # if param['method'] == 'numpy':
             #     alpha_sub.alpha = _compute_bins_with_numpy(case.J, Zk, param['bins'])
-                
-            if fit_param['method'] == 'optbinning':
-                y = J.loc[J.v.i==vi, ('v', 'f')].values
-                self.alpha[(vi, feature_name)] = _compute_bins_with_optbinning(X, y, name=feature_name, sound=sound, plot=plot)
-                
-            elif fit_param['method'] == 'numpy':
+                                
+            if fit_param['method'] == 'numpy':
                 if 'bins' not in fit_param.keys():
                     fit_param['bins'] = 'auto'
                 self.alpha[(vi, feature_name)] = _compute_linear_bins(X, fit_param['bins'], sound=sound, plot=plot, plot_title='vi='+str(vi)+' - '+feature_name)
     
-    def transform(self, J):
+    def transform(self, case, inplace=False):
         """
         binarize the entry.
 
@@ -74,13 +70,18 @@ class Binarizer():
         A discretized pandas dataframe. Other columns are kept.
 
         """
-        J = J.copy()
-        
-        for (vi, feature_name), alpha in self.alpha.items():                    
-            J.loc[J.v.i == vi, ('z', feature_name)] = np.digitize(J.loc[J.v.i == vi, ('z', feature_name)],
-                                                                           bins=alpha)
-        
-        return(J)
+        if not inplace:
+            case = case.copy()
+
+        for (vi, feature_name), alpha in self.alpha.items():
+            
+            column_id = case.get_z_column_id(vi, feature_name)
+            
+            case.Z[vi][:, column_id] = np.digitize(case.Z[vi][:, column_id],
+                                                   bins=alpha)
+    
+        if not inplace:
+            return(case)
         # fill na with 0
         # J.fillna(value=0, inplace=True)
     

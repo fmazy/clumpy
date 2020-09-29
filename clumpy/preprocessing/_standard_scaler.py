@@ -14,7 +14,7 @@ class StandardScaler():
     Standardize ``z`` features by removing the mean and scaling to unit variance for each initial states.
     """
     
-    def fit(self, J):
+    def fit(self, case):
         """
         Compute the mean and std to be used for later scaling.
 
@@ -26,18 +26,11 @@ class StandardScaler():
         """
         self._standard_scalers_according_to_vi = {}
         
-        for vi in J.v.i.unique():
-            J_vi = J.loc[J.v.i==vi,'z'].values.copy()
-            # check if a column is full of nan:
-            columns_sumed_na = np.isnan(J_vi).sum(axis=0)
-            for idx, c in enumerate(columns_sumed_na):
-                if c == J_vi.shape[0]:
-                    J_vi[:,idx] = 0
-            
+        for vi in case.J.keys():
             self._standard_scalers_according_to_vi[vi] = SklearnStandardScaler()  # doctest: +SKIP
-            self._standard_scalers_according_to_vi[vi].fit(J_vi)  # doctest: +SKIP
+            self._standard_scalers_according_to_vi[vi].fit(case.Z[vi])  # doctest: +SKIP
             
-    def transform(self, J):
+    def transform(self, case, inplace=False):
         """
         Perform standardization by centering and scaling
 
@@ -51,11 +44,14 @@ class StandardScaler():
         Standardized J.
 
         """
-        J = J.copy()
-        for vi in J.v.i.unique():
-            J.loc[J.v.i==vi, 'z'] = self._standard_scalers_according_to_vi[vi].transform(J.loc[J.v.i==vi, 'z'].values)
+        if not inplace:
+            case = case.copy()
         
-        return(J)
+        for vi in case.J.keys():
+            case.Z[vi] = self._standard_scalers_according_to_vi[vi].transform(case.Z[vi])
+        
+        if not inplace:
+            return(case)
     
     def inverse_transform(self, J):
         """
