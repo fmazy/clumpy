@@ -11,9 +11,11 @@ import pandas as pd
 import numpy as np
 from scipy import ndimage
 from copy import deepcopy
+from sys import getsizeof
 
 from ._transition import _Transition
 from ._feature import _Zk
+from ..tools import human_size
 
 class Case():
     """
@@ -80,6 +82,24 @@ class Case():
     
     def copy(self):
         return(deepcopy(self))
+    
+    def get_size(self, print_value=True, human=True, return_value=False):
+        s = 0
+        for vi in self.J.keys():
+            s += getsizeof(self.J[vi])
+            s += getsizeof(self.vf[vi])
+            s += getsizeof(self.Z[vi])
+            
+        if print_value:
+            if human:
+                sh = human_size(s)
+                print(str(round(sh[0],2))+' '+sh[1])
+            else:
+                print(str(s)+' B')
+        
+        if return_value:
+            return(s)
+        
     
     def _create_J(self):
         # self.layer_LUC_i = layer_LUC_i

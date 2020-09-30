@@ -10,6 +10,15 @@ The tool module of demeter
 import numpy as np
 import pandas as pd
 
+def human_size(s):
+    units = ['B', 'KiB', 'MiB', 'GiB', 'TiB', 'PiB', 'EiB', 'ZiB', 'YiB']
+    i = 0
+    while round(s/1024) > 0:
+        s = s / 1024
+        i += 1
+    
+    return(s, units[i])
+
 def flat_midf(df, inplace=False):
     if not inplace:
         df = df.copy()

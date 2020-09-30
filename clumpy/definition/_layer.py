@@ -11,7 +11,8 @@ from matplotlib import pyplot as plt
 import matplotlib as mpl
 import re
 from copy import deepcopy
-
+from sys import getsizeof
+from ..tools import human_size
 
 class _Layer:
     """
@@ -102,6 +103,17 @@ class _Layer:
         f.close()
         
         print('done')
+        
+    def get_size(self, print_value=True, human=True, return_value=False):
+        s = getsizeof(self.data)
+        if print_value:
+            if human:
+                sh = human_size(s)
+                print(str(round(sh[0],2))+' '+sh[1])
+            else:
+                print(s)
+        if return_value:
+            return(s)
 
 
 class LandUseCoverLayer(_Layer):
