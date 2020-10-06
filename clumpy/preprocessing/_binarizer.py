@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 
 from .. import definition
+from ..tools import np_suitable_integer_type
 
 import pandas as pd
 import os
@@ -79,13 +80,14 @@ class Binarizer():
             
             case.Z[vi][:, column_id] = np.digitize(case.Z[vi][:, column_id],
                                                    bins=alpha)
+            
+        for vi in case.Z.keys():
+            case.Z[vi] = np_suitable_integer_type(case.Z[vi])
     
         if not inplace:
             return(case)
-        # fill na with 0
-        # J.fillna(value=0, inplace=True)
     
-    def inverse_transform(self, J, where='mean'):
+    def inverse_transform(self, case, where='mean', inplace=False):
         """
         Inverse the binarization.
 
@@ -101,32 +103,34 @@ class Binarizer():
                 - ``'right'`` : the returned data is the high limit of the bin.
 
         """
-        J = J.copy()
+        if not inplace:
+            case = case.copy()
         
         for (vi, feature_name), alpha in self.alpha.items():
             
+            case.Z[vi] = case.Z[vi].astype(np.float)
+            
+            column_id = case.get_z_column_id(vi, feature_name)
+            
+            idz = (case.Z[vi][:, column_id] != 0) & (case.Z[vi][:, column_id] != alpha.size)
+            
             if where=='mean':
-                J.loc[(J.v.i == vi) &
-                      (J.z[feature_name] != 0) &
-                      (J.z[feature_name] != alpha.size), ('z', feature_name)] = (alpha[J.loc[J.v.i == vi, ('z', feature_name)].values.astype(int)-1] + alpha[J.loc[J.v.i == vi, ('z', feature_name)].values.astype(int)]) / 2
+                case.Z[vi][idz, column_id] = (alpha[case.Z[vi][idz, column_id].astype(np.int)-1] + alpha[case.Z[vi][idz, column_id].astype(np.int)]) / 2
                 
             elif where == 'left':
-                J.loc[(J.v.i == vi) &
-                          (J.z[feature_name] != 0) &
-                          (J.z[feature_name] != alpha.size), ('z', feature_name)] = alpha[J.loc[J.v.i == vi, ('z', feature_name)].values.astype(int)-1]
+                case.Z[vi][idz, column_id] = alpha[case.Z[vi][idz, column_id].astype(np.int)-1]
                                                                                      
             elif where == 'right':
-                J.loc[(J.v.i == vi) &
-                          (J.z[feature_name] != 0) &
-                          (J.z[feature_name] != alpha.size), ('z', feature_name)] = alpha[J.loc[J.v.i == vi, ('z', feature_name)].values.astype(int)]
-                
-            J.loc[(J.v.i == vi) &
-                  (J.z[feature_name] == 0), ('z', feature_name)] = - np.inf
+                case.Z[vi][idz, column_id] = alpha[case.Z[vi][idz, column_id].astype(np.int)]
             
-            J.loc[(J.v.i == vi) &
-                  (J.z[feature_name] == alpha.size), ('z', feature_name)] = np.inf
-        
-        return(J)
+            idz = case.Z[vi][:, column_id] == 0
+            case.Z[vi][idz, column_id] = - np.inf
+            
+            idz = case.Z[vi][:, column_id] == alpha.size
+            case.Z[vi][idz, column_id] = np.inf
+            
+        if not inplace:
+            return(case)
 
 def _compute_bins_with_optbinning(X, y, name='name', sound=0, plot=False):
     optb = MulticlassOptimalBinning(name=name, solver="cp")

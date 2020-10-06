@@ -95,8 +95,11 @@ class KNeighborsRegressor(_Calibration):
         self.metric = metric
         self.metric_params = metric_params
         self.n_jobs = n_jobs
+        
+    # def feature_selection(self, case):
+        
     
-    def fit(self, J):
+    def fit(self, P_z__vi_vf):
         """
         Fit the model using J as training data
 
@@ -107,20 +110,10 @@ class KNeighborsRegressor(_Calibration):
 
         """
         
-        J = J.reindex(sorted(J.columns), axis=1)
         
         self.k_beighbors_classifiers = {}
-        self.list_vf = list(np.sort(J.P_vf__vi_z.columns.to_list()))
         
-        for vi in J.v.i.unique():
-            X = J.loc[J.v.i==vi, 'z'].values
-            
-            list_vf_without_vi = self.list_vf.copy()
-            list_vf_without_vi.remove(vi)
-            y = J.loc[J.v.i==vi, [('P_vf__vi_z', vf) for vf in list_vf_without_vi]].values
-                        
-            X = _clean_X(X) # remove NaN columns
-            
+        for vi in P_z__vi_vf.keys():
             self.k_beighbors_classifiers[vi] = sklearn.neighbors.KNeighborsRegressor(n_neighbors=self.n_neighbors,
                                                                                       weights=self.weights,
                                                                                       algorithm=self.algorithm,
@@ -130,45 +123,58 @@ class KNeighborsRegressor(_Calibration):
                                                                                       metric_params=self.metric_params,
                                                                                       n_jobs=self.n_jobs)
 
-            self.k_beighbors_classifiers[vi].fit(X, y)
+            self.k_beighbors_classifiers[vi].fit(P_z__vi_vf[vi].z.values, 
+                                                 P_z__vi_vf[vi].P_z__vi_vf.values)
+            
+    def predict(self, case):
+        P_z__vi_vf = {}
+        for vi in case.Z.keys():
+            
+            # df = pd.DataFrame(case.Z[vi])
+            # df_unique = df.drop_duplicates()
+            
+            # df_unique('P_z__vi_vf')
+            P_z__vi_vf[vi] = self.k_beighbors_classifiers[vi].predict(case.Z[vi])
+            
+        return(P_z__vi_vf)
     
-    def predict(self, J):
-        """
-        Predict the target for the provided data.
+    # def predict(self, J):
+    #     """
+    #     Predict the target for the provided data.
 
-        Parameters
-        ----------
-        J : pandas dataframe.
-            A two level ``z`` feature column is expected.
+    #     Parameters
+    #     ----------
+    #     J : pandas dataframe.
+    #         A two level ``z`` feature column is expected.
 
-        Returns
-        -------
-        J_predicted : pandas dataframe
-            Target values above the ``P_vf__vi_z`` column.
+    #     Returns
+    #     -------
+    #     J_predicted : pandas dataframe
+    #         Target values above the ``P_vf__vi_z`` column.
 
-        """
-        J = J.reindex(sorted(J.columns), axis=1)
+    #     """
+    #     J = J.reindex(sorted(J.columns), axis=1)
         
-        J = J[[('v','i')]+J[['z']].columns.to_list()].copy()
+    #     J = J[[('v','i')]+J[['z']].columns.to_list()].copy()
         
-        P_vf__vi_z_names = [('P_vf__vi_z', vf) for vf in self.list_vf]
-        for P_vf__vi_z_name in P_vf__vi_z_names:
-            J[P_vf__vi_z_name] = 0
+    #     P_vf__vi_z_names = [('P_vf__vi_z', vf) for vf in self.list_vf]
+    #     for P_vf__vi_z_name in P_vf__vi_z_names:
+    #         J[P_vf__vi_z_name] = 0
         
-        for vi in J.v.i.unique():
-            X = J.loc[J.v.i == vi, 'z'].values
-            X = _clean_X(X)
+    #     for vi in J.v.i.unique():
+    #         X = J.loc[J.v.i == vi, 'z'].values
+    #         X = _clean_X(X)
             
-            P_vf__vi_z_names_without_vi = P_vf__vi_z_names.copy()
-            P_vf__vi_z_names_without_vi.remove(('P_vf__vi_z', vi))
+    #         P_vf__vi_z_names_without_vi = P_vf__vi_z_names.copy()
+    #         P_vf__vi_z_names_without_vi.remove(('P_vf__vi_z', vi))
             
-            J.loc[J.v.i == vi, P_vf__vi_z_names_without_vi] = self.k_beighbors_classifiers[vi].predict(X)
+    #         J.loc[J.v.i == vi, P_vf__vi_z_names_without_vi] = self.k_beighbors_classifiers[vi].predict(X)
             
-            J.loc[J.v.i == vi, ('P_vf__vi_z', vi)] = 1 - J.loc[J.v.i == vi].P_vf__vi_z.sum(axis=1)
+    #         J.loc[J.v.i == vi, ('P_vf__vi_z', vi)] = 1 - J.loc[J.v.i == vi].P_vf__vi_z.sum(axis=1)
                 
-        J = J.reindex(sorted(J.columns), axis=1)
+    #     J = J.reindex(sorted(J.columns), axis=1)
 
-        return(J)
+    #     return(J)
     
     
     def score(self, J, y):

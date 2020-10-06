@@ -47,13 +47,13 @@ class StandardScaler():
         if not inplace:
             case = case.copy()
         
-        for vi in case.J.keys():
+        for vi in case.Z.keys():
             case.Z[vi] = self._standard_scalers_according_to_vi[vi].transform(case.Z[vi])
         
         if not inplace:
             return(case)
     
-    def inverse_transform(self, J):
+    def inverse_transform(self, case, inplace=False):
         """
         Scale back the data to the original representation
 
@@ -67,8 +67,11 @@ class StandardScaler():
         Standardized J.
 
         """
-        J = J.copy()
-        for vi in J.v.i.unique():
-            J.loc[J.v.i==vi, 'z'] = self._standard_scalers_according_to_vi[vi].inverse_transform(J.loc[J.v.i==vi, 'z'].values)
+        if not inplace:
+            case = case.copy()
+        
+        for vi in case.Z.keys():
+            case.Z[vi] = self._standard_scalers_according_to_vi[vi].inverse_transform(case.Z[vi])
             
-        return(J)
+        if not inplace:
+            return(case)

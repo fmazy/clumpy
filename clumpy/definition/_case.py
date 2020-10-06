@@ -16,6 +16,7 @@ from sys import getsizeof
 from ._transition import _Transition
 from ._feature import _Zk
 from ..tools import human_size
+from ..tools import np_suitable_integer_type
 
 class Case():
     """
@@ -48,37 +49,30 @@ class Case():
         self.map_i = map_i
         self.map_f = map_f
         
+        self.dict_vi_vf = dict_vi_vf
+        
         self.layers = ['vi']
         
         self.J = {}
-        self.vf = {}
+        if map_f is not None:
+            self.vf = {}
+        else:
+            self.vf = None
         self.Z = {}
         self.Z_names = {}
         
         for vi in dict_vi_vf.keys():
-            self.J[vi] = np.where(self.map_i.data.flat==vi)[0]
-            self.vf[vi] = self.map_f.data.flat[self.J[vi]]
+            self.J[vi] = np_suitable_integer_type(np.where(self.map_i.data.flat==vi)[0])
+            
+            if map_f is not None:
+                self.vf[vi] = np_suitable_integer_type(self.map_f.data.flat[self.J[vi]])
+                
+                if restrict_vf_to_studied_ones:
+                    self.vf[vi][~np.isin(self.vf[vi], dict_vi_vf[vi])] = vi
+                    
             self.Z[vi] = None
             self.Z_names[vi] = None
-            
-        # if type(None) != type(map_f):
-            # self.J[:,:,1] = self.map_f.data
-        
-        # self.dict_vi_vf = dict_vi_vf
-        
-        # self._create_J()
-        
-        # if restrict_vf_to_studied_ones == True and type(map_f) != type(None):
-            # self._restrict_vf_to_studied_ones()
-        
-        # self.transitions = _Transition()
-        # for vi_vf in dict_vi_vf:
-        #     self.transitions.addTif(vi=vi_vf[0], vf=vi_vf[1])
 
-        # self._create_J()
-        
-        # if restrict_vf_to_studied_ones and type(map_f) != type(None):
-        #     self._restrict_vf_to_studied_ones()
     
     def copy(self):
         return(deepcopy(self))
@@ -99,41 +93,7 @@ class Case():
         
         if return_value:
             return(s)
-        
-    
-    def _create_J(self):
-        # self.layer_LUC_i = layer_LUC_i
-        # self.T = T
-        
-        # all pixels with vi value
-        cols = [('v', 'i')]
-        cols = pd.MultiIndex.from_tuples(cols)
-        
-        self._J = pd.DataFrame(columns=cols)
-        
-        for vi in self.dict_vi_vf.keys():
-            J_vi = pd.DataFrame(columns=cols)
-            
-            J_vi[('j','')] = np.where(self.map_i.data.flat==vi)[0]
-            J_vi[('v','i')] = vi
-            J_vi.set_index('j', inplace=True)
-            
-            self._J = pd.concat([self._J, J_vi])
-        
-        if type(self.map_f) != type(None):
-            self._J[('v','f')] = self.map_f.data.flat[self._J.index.values]
-        
-        
-    def get_J(self, copy=True):
-        if copy:
-            return(self._J.copy())
-        else:
-            return(self._J)
-            
-    def _restrict_vf_to_studied_ones(self):
-        for vi in self.dict_vi_vf.keys():
-            self._J.loc[(self._J.v.i == vi) & ~(self._J.v.f.isin(self.dict_vi_vf[vi])), ('v','f')] = vi    
-    
+               
     def add_distance_to_v_as_feature(self, list_vi, v, name=None, scale=1):
         """
         add an explanatory variable as a distance to a state
@@ -187,28 +147,7 @@ class Case():
                                               data.flat[self.J[vi]]))
                 self.Z_names[vi].append(name)
         
-        # get all vi
-        # list_vi.sort()
-        # vi_T = list(self.dict_vi_vf.keys())
-        # vi_T.sort()
-            
-        # if vi states asked represent all vi transitions, takes all indexes
-        # if list_vi == vi_T:
-            # self._J['z', name] = data.flat[self._J.index.values]
-            
-        # else: # else, just add necessary                
-            # then, for each vi
-            # for vi in list_vi:
-                # j = self._J.loc[self._J.v.i == vi].index.values
-                # self._J.loc[j, ('z', name)] = data.flat[j]
-        
-        # self._J.sort_index(axis=1, inplace=True)
-        
-        # # finally, we create for each vi the corresponding Z                
-        # for vi in list_vi:
-        #     self.transitions.Ti[vi].Z[name] = _Zk(name = name,
-        #                                                     kind = kind,
-        #                                                     Ti = self.transitions.Ti[vi])
+
             
     def add_layer_as_feature(self, list_vi, layer_EV, name=None):
         """
@@ -226,25 +165,7 @@ class Case():
             name = layer_EV.name
             
         self.add_numpy_as_feature(list_vi, layer_EV.data, name)
-        
-    # def standard_scale(self):
-    #     """
-    #     Standardize features by removing the mean and scaling to unit variance for each initial states.
-        
-    #     Notes
-    #     -----
-    #         New attributes are then available :
-        
-    #             ``self._J_standard``
-    #                 The standardized features.
-    #     """
-    #     scaler = SklearnStandardScaler()  # doctest: +SKIP
-    #     # Don't cheat - fit only on training data
-    #     scaler.fit(X_train)  # doctest: +SKIP
-    #     X_train = scaler.transform(X_train)  # doctest: +SKIP
-    #     # apply same transformation to test data
-    #     X_test = scaler.transform(X_test)  # doctest: +SKIP
-    
+            
     def get_z_column_id(self, vi, z_name):
         return(self.Z_names[vi].index(z_name))
     
@@ -253,6 +174,12 @@ class Case():
         column_id = self.get_z_column_id(vi, z_name)
         
         return(self.Z[vi][:,column_id])
+    
+    def get_J(self, vi):
+        return(self.J[vi])
+    
+    def get_vf(self, vi):
+        return(self.vf[vi])
     
     def remove(self, vi, condition, inplace=False):
         return(self.keep_only(vi, ~condition, inplace=inplace))
@@ -265,7 +192,27 @@ class Case():
         
         case.J[vi] = case.J[vi][condition]
         case.Z[vi] = case.Z[vi][condition,:]
-        case.vf[vi] = case.vf[vi][condition]
+        
+        if case.vf is not None:
+            case.vf[vi] = case.vf[vi][condition]
+        
+        if not inplace:
+            return(case)
+        
+    def remove_z(self, vi, z_name, inplace=False):
+        if inplace:
+            case = self
+        else:
+            case = self.copy()
+        
+        column_id = self.get_z_column_id(vi, z_name)
+        
+        list_columns = list(range(case.Z[vi].shape[1]))
+        list_columns.pop(column_id)
+        
+        case.Z[vi] = case.Z[vi][:, list_columns]
+        
+        case.Z_names[vi].pop(column_id)
         
         if not inplace:
             return(case)
