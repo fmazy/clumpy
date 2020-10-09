@@ -30,35 +30,31 @@ class _Calibration():
             self.estimators[vi].fit(X[vi], 
                                     y[vi])
             
-    def predict(self, X):
+    def predict(self, X, m=1):
         y_predict = {}
         
         for vi in X.keys():
             y_predict[vi] = self.estimators[vi].predict(X[vi])
-                    
+            
+            if m is not None:
+                s = y_predict[vi].sum(axis=1)
+                idx = s > m
+                y_predict[vi][idx, :] = y_predict[vi][idx, :] / s[idx, None] * m
+            
         return(y_predict)
     
-    def predict_on_case(self, case, sound=0):
+    def predict_transition_probabilities(self, case, m=1, sound=0):
         if sound > 0:
             print('predict on unique z...')
-        X = case.get_unique_z(output='np')
-        
-        y_predict = self.predict(X)
         
         Z = case.get_z_as_dataframe()
-        if sound > 0:
-            print('merge on all z...')
+        
+        X = {}
         for vi in Z.keys():
-            if sound > 0:
-                print('\t vi='+str(vi))
-            col_names = pd.MultiIndex.from_tuples(Z[vi].columns.to_list())
-            Z_unique = pd.DataFrame(X[vi], columns=col_names)
-            for vf_idx in range(y_predict[vi].shape[1]):    
-                Z_unique[('P', vf_idx)] = y_predict[vi][:, vf_idx]
-            
-            Z[vi] = Z[vi].merge(Z_unique, how='left')
-            
-            Z[vi] = Z[vi].P.values
+            X[vi] = Z[vi].drop_duplicates(inplace=False).values
+        y_predict = self.predict(X, m=m)
+        
+        Z = get_transition_probabilities_by_merging(Z, X, y_predict, sound=sound)
             
         return(Z)
     
@@ -104,7 +100,23 @@ class _Calibration():
                 
         return(scores)
     
+def get_transition_probabilities_by_merging(Z, X, y, sound=0):
     
+    if sound > 0:
+        print('merge on all z...')
+    for vi in Z.keys():
+        if sound > 0:
+            print('\t vi='+str(vi))
+        col_names = pd.MultiIndex.from_tuples(Z[vi].columns.to_list())
+        Z_unique = pd.DataFrame(X[vi], columns=col_names)
+        for vf_idx in range(y[vi].shape[1]):    
+            Z_unique[('P', vf_idx)] = y[vi][:, vf_idx]
+        
+        
+        Z[vi] = Z[vi].merge(Z_unique, how='left').P.values
+        
+    return(Z)
+
     # def feature_selection_by_score(self,
     #                                 case,
     #                                 method='cv',
@@ -212,29 +224,7 @@ class _Calibration():
 #     return(P_vf__vi)     
 
 
-# def get_features_and_targets(P_vf__vi_z):
-#     """
-#     Get features and targets of a transition probabilities dataframe.
 
-#     Parameters
-#     ----------
-#     P_vf__vi_z : pandas dataframe 
-#         Transition probabilities. 
-    
-#     Returns
-#     -------
-#     ``X`` the initial state and the features and ``Y`` the targets, i.e. the transitions probabilities
-#     """    
-#     col_vi = [('v', 'i')]
-#     cols_z = P_vf__vi_z[['z']].columns.to_list()
-#     cols_P = P_vf__vi_z[['P_vf__vi_z']].columns.to_list()
-    
-#     X = P_vf__vi_z[col_vi+cols_z]
-#     Y =  P_vf__vi_z[cols_P]
-    
-#     return(X,Y)
-    
-#     # def transition_probability_maps():
 
 def get_X_y(P, name='P_vf__vi_z'):
     X = {}
@@ -363,10 +353,6 @@ def compute_P_vf__vi_z(case, name='P_vf__vi_z', n_smooth=None):
             # il faudrait rescaler pour obtenir le même P_vf__vi
     
     return(P_vf__vi_z)
-
-# def compute_P_vf__vi_from_P_vf__vi_z(P_vf__vi)
-
-
 
 def compute_P_vf__vi_z_with_bayes(P_vf__vi, P_z__vi, P_z__vi_vf, keep_P=False):
     P_vf__vi_z = {}

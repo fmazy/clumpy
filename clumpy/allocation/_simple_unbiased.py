@@ -19,11 +19,11 @@ class SimpleUnbiased(_Allocation):
     def __init__(self, params = None):
         super().__init__(params)
     
-    def allocate_monopixel_patches(self,
+    def _allocate_monopixel_patches(self,
                                    map_i,
-                                   J_proba,
-                                   sound=2,
-                                   dict_args={}):
+                                   case,
+                                   tp,
+                                   sound=2):
         """
         Simple allocation of monopixels patches whithout scenario control.
 
@@ -54,9 +54,7 @@ class SimpleUnbiased(_Allocation):
         """
         np.random.seed() # needed to seed in case of multiprocessing
         
-        map_i=dict_args.get('probability_maps', map_i)
-        J_proba=dict_args.get('probability_maps', J_proba)
-        sound=dict_args.get('sound', sound)
+        
         
         global_start_time = time.time()
         start_time = time.time()
@@ -67,20 +65,17 @@ class SimpleUnbiased(_Allocation):
         
         self.detailed_execution_time['pixels_initialization']=time.time()-start_time
         start_time = time.time()
-        
-        J = J_proba.copy()
-        
-        J[('v','i')] = map_i.data.flat[J.index.values]
-        
+                
         # GART
-        self.tested_pixels = [J.index.size]
-        self._generalized_acceptation_rejection_test(J, inplace=True, accepted_only=True)
+        self.tested_pixels = [np.sum([tp_vi.shape[0] for tp_vi in tp.values()])]
+        vf = self._generalized_acceptation_rejection_test(tp, case.dict_vi_vf)
         
         self.detailed_execution_time['sampling']=[time.time()-start_time]
         start_time = time.time()
                 
         # allocation
-        map_f_data.flat[J.index.values] = J.v.f.values
+        for vi in tp.keys():
+            map_f_data.flat[case.J[vi]] = vf[vi]
         
         self.detailed_execution_time['pixels_initialization']=time.time()-start_time
 
@@ -102,11 +97,11 @@ class SimpleUnbiased(_Allocation):
             
             
             
-            N_vi_vf = J.groupby([('v','i'), ('v','f')]).size().reset_index(name=('N_vi_vf', ''))
-            N_vi = J_proba.groupby([('v','i')]).size().reset_index(name=('N_vi', ''))
-            N_vi_vf = N_vi_vf.merge(N_vi)
-            N_vi_vf['P_vf__vi'] = N_vi_vf.N_vi_vf / N_vi_vf.N_vi
-            print(N_vi_vf)
+            # N_vi_vf = J.groupby([('v','i'), ('v','f')]).size().reset_index(name=('N_vi_vf', ''))
+            # N_vi = J_proba.groupby([('v','i')]).size().reset_index(name=('N_vi', ''))
+            # N_vi_vf = N_vi_vf.merge(N_vi)
+            # N_vi_vf['P_vf__vi'] = N_vi_vf.N_vi_vf / N_vi_vf.N_vi
+            # print(N_vi_vf)
         
         return(map_f)
     
@@ -202,7 +197,7 @@ class SimpleUnbiased(_Allocation):
         
     #     return(map_f)
         
-    def allocate(self,
+    def _allocate(self,
                  case:definition.Case,
                  probability_maps=None,
                  update='none',

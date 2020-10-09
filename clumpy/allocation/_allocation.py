@@ -23,6 +23,19 @@ class _Allocation():
         self.execution_time = {'sampling':[], 'patches_parameters_initialization':[]}
         self.tested_pixels = []
         
+    def allocate_monopixel_patches(self,
+                                   map_i,
+                                   case,
+                                   tp,
+                                   sound,
+                                   dict_args={}):
+        
+        # map_i=dict_args.get('probability_maps', map_i)
+        # J_proba=dict_args.get('probability_maps', J_proba)
+        # sound=dict_args.get('sound', sound)
+        
+        self._allocate_monopixel_patches(map_i, case, tp, sound)
+        
     def _draw_patches_parameters(self, J, list_vi_vf):
         J['S_patch'] = 0
         for key in list_vi_vf:
@@ -59,39 +72,25 @@ class _Allocation():
         
         return(N_vi_vf)
     
-    def _generalized_acceptation_rejection_test(self, J, inplace=False, accepted_only=False):
+    def _generalized_acceptation_rejection_test(self, tp, dict_vi_vf):
         """
         """
-        # cum sum columns
-        # first column creation
+        vf = {}
         
-        if not inplace:
-            J = J.copy()
+        for vi in tp.keys():
+            vf[vi] = np.zeros(tp[vi].shape[0]) + vi
+            # cum sum along axis
+            cs = np.cumsum(tp[vi], axis=1)
             
-        # vf column
-        J[('v','f')] = J.v.i
-        
-        if 'P_vf__vi_z' in J.columns:
-            list_vf = J.P_vf__vi_z.columns.to_list()
-            for vf in list_vf:
-                J[('P_vf__vi_z_cs', vf)] = 0
-            # then cum sum
-            J[[('P_vf__vi_z_cs', vf) for vf in list_vf]] = np.cumsum(J[['P_vf__vi_z']].values, axis=1)
             # random value
-            J['gart_x'] = np.random.random(J.index.size)
-        
-            # vf attribution
-            for vf in list_vf[::-1]:
-                J.loc[J.gart_x<J[('P_vf__vi_z_cs',vf)], ('v','f')] = vf
+            x = np.random.random(tp[vi].shape[0])
+                                    
+            for id_vf in range(tp[vi].shape[1]):
+                inv_id_vf = tp[vi].shape[1] - 1 - id_vf
+                
+                vf[vi][x < cs[:, inv_id_vf]] = dict_vi_vf[vi][inv_id_vf]
             
-            # drop columns
-            J.drop(['P_vf__vi_z_cs', 'gart_x'], axis=1, level=0, inplace=True)
-        
-        if accepted_only:
-            J.drop(J.loc[J.v.i == J.v.f].index.values, axis=0, inplace=True)
-        
-        if not inplace:
-            return(J)
+        return(vf)
         
     def _add_P_vf__vi_z_to_J(self, J, probability_maps, inplace=False):
         if not inplace:

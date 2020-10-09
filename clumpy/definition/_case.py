@@ -43,7 +43,6 @@ class Case():
     
     transitions : [_Transition]
         The transitions definitions
-    
     """
     def __init__(self, map_i, dict_vi_vf, map_f=None, restrict_vf_to_studied_ones = True):
         self.map_i = map_i
