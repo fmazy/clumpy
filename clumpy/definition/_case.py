@@ -199,6 +199,26 @@ class Case():
         if not inplace:
             return(case)
         
+    def select_vi(self, vi, inplace=False):
+        if inplace:
+            case = self
+        else:
+            case = self.copy()
+        
+        vix_list = list(case.J.keys())
+        for vix in vix_list:
+            if vix != vi:
+                case.J.pop(vix)
+                case.Z_names.pop(vix)
+                case.Z.pop(vix)
+                case.dict_vi_vf.pop(vix)
+                
+                if case.vf is not None:
+                    case.vf.pop(vix)
+            
+        if not inplace:
+            return(case)
+        
     def remove_z(self, vi, z_name, inplace=False):
         if inplace:
             case = self
@@ -216,6 +236,26 @@ class Case():
         
         if not inplace:
             return(case)
+    
+    def get_z_as_dataframe(self):
+        z = {}
+        for vi in self.Z.keys():
+            col_names = pd.MultiIndex.from_tuples([('z',z_name) for z_name in self.Z_names[vi]])
+            z[vi] = pd.DataFrame(self.Z[vi], columns=col_names)
+        
+        return(z)
+    
+    def get_unique_z(self, output='np'):
+        z = self.get_z_as_dataframe()
+        
+        for vi in z.keys():
+            z[vi].drop_duplicates(inplace=True)
+            z[vi].reset_index(drop=True, inplace=True)
+            
+            if output=='np':
+                z[vi] = z[vi].values
+        
+        return(z)
 
 def get_pixels_coordinates(J, map_shape):
     x, y = np.unravel_index(J.index.values, map_shape)

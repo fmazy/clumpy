@@ -7,12 +7,15 @@ Created on Thu May 28 10:05:07 2020
 """
 from ._calibration import _Calibration
 from ..definition._case import Case
+from ._calibration import compute_P_z__vi_vf
 
 import numpy as np
 import sklearn.svm
 import sklearn.neighbors
+from sklearn.model_selection import train_test_split
 import pandas as pd
-from ._calibration import _clean_X
+from tqdm import tqdm
+
 
 #from ..allocation import build
 
@@ -96,127 +99,16 @@ class KNeighborsRegressor(_Calibration):
         self.metric_params = metric_params
         self.n_jobs = n_jobs
         
-    # def feature_selection(self, case):
+    def _new_estimator(self):
+        return(sklearn.neighbors.KNeighborsRegressor(n_neighbors=self.n_neighbors,
+                                                        weights=self.weights,
+                                                        algorithm=self.algorithm,
+                                                        leaf_size=self.leaf_size,
+                                                        p=self.p,
+                                                        metric=self.metric,
+                                                        metric_params=self.metric_params,
+                                                        n_jobs=self.n_jobs))
         
     
-    def fit(self, P_z__vi_vf):
-        """
-        Fit the model using J as training data
-
-        Parameters
-        ----------
-        J : pandas dataframe.
-            A two level ``z`` (X) and ``P_vf__vi_z`` (y) columns are expected.
-
-        """
-        
-        
-        self.k_beighbors_classifiers = {}
-        
-        for vi in P_z__vi_vf.keys():
-            self.k_beighbors_classifiers[vi] = sklearn.neighbors.KNeighborsRegressor(n_neighbors=self.n_neighbors,
-                                                                                      weights=self.weights,
-                                                                                      algorithm=self.algorithm,
-                                                                                      leaf_size=self.leaf_size,
-                                                                                      p=self.p,
-                                                                                      metric=self.metric,
-                                                                                      metric_params=self.metric_params,
-                                                                                      n_jobs=self.n_jobs)
-
-            self.k_beighbors_classifiers[vi].fit(P_z__vi_vf[vi].z.values, 
-                                                 P_z__vi_vf[vi].P_z__vi_vf.values)
             
-    def predict(self, case):
-        P_z__vi_vf = {}
-        for vi in case.Z.keys():
-            
-            # df = pd.DataFrame(case.Z[vi])
-            # df_unique = df.drop_duplicates()
-            
-            # df_unique('P_z__vi_vf')
-            P_z__vi_vf[vi] = self.k_beighbors_classifiers[vi].predict(case.Z[vi])
-            
-        return(P_z__vi_vf)
     
-    # def predict(self, J):
-    #     """
-    #     Predict the target for the provided data.
-
-    #     Parameters
-    #     ----------
-    #     J : pandas dataframe.
-    #         A two level ``z`` feature column is expected.
-
-    #     Returns
-    #     -------
-    #     J_predicted : pandas dataframe
-    #         Target values above the ``P_vf__vi_z`` column.
-
-    #     """
-    #     J = J.reindex(sorted(J.columns), axis=1)
-        
-    #     J = J[[('v','i')]+J[['z']].columns.to_list()].copy()
-        
-    #     P_vf__vi_z_names = [('P_vf__vi_z', vf) for vf in self.list_vf]
-    #     for P_vf__vi_z_name in P_vf__vi_z_names:
-    #         J[P_vf__vi_z_name] = 0
-        
-    #     for vi in J.v.i.unique():
-    #         X = J.loc[J.v.i == vi, 'z'].values
-    #         X = _clean_X(X)
-            
-    #         P_vf__vi_z_names_without_vi = P_vf__vi_z_names.copy()
-    #         P_vf__vi_z_names_without_vi.remove(('P_vf__vi_z', vi))
-            
-    #         J.loc[J.v.i == vi, P_vf__vi_z_names_without_vi] = self.k_beighbors_classifiers[vi].predict(X)
-            
-    #         J.loc[J.v.i == vi, ('P_vf__vi_z', vi)] = 1 - J.loc[J.v.i == vi].P_vf__vi_z.sum(axis=1)
-                
-    #     J = J.reindex(sorted(J.columns), axis=1)
-
-    #     return(J)
-    
-    
-    def score(self, J, y):
-        """
-        Return the coefficient of determination R^2 of the prediction.
-
-        The coefficient R^2 is defined as (1 - u/v), where u is the residual sum of squares ((y_true - y_pred) ** 2).sum() and v is the total sum of squares ((y_true - y_true.mean()) ** 2).sum(). The best possible score is 1.0 and it can be negative (because the model can be arbitrarily worse). A constant model that always predicts the expected value of y, disregarding the input features, would get a R^2 score of 0.0. It returns the coefficient R^2 for each initial states.
-
-        Parameters
-        ----------
-        J : pandas dataframe.
-            A two level ``z`` feature column is expected.
-        
-        y : numpy array.
-            True ``P_vf__vi_z`` values for J in the same order.
-
-        Returns
-        -------
-        score : list of floats
-            R^2 of self.predict(J) wrt. y for each ``vi`` in the ascending order.
-
-        """
-        J = J.reindex(sorted(J.columns), axis=1)
-        J.reset_index(inplace=True)
-        
-        score = []
-        for vi in np.sort(J.v.i.unique()):
-            idx = J.loc[J.v.i == vi].index.values
-            
-            X = J.loc[idx, 'z'].values
-            X = _clean_X(X) # remove NaN columns
-            
-            
-            # focus on different final state
-            list_vf = self.list_vf.copy()
-            idx_vi = list_vf.index(vi)
-            idx_vf = list(np.arange(len(list_vf)))
-            idx_vf.remove(idx_vi)
-                        
-            yx = y[idx,:]
-            yx = yx[:, idx_vf]
-            
-            score.append(self.k_beighbors_classifiers[vi].score(X, yx))
-        
-        return(score)

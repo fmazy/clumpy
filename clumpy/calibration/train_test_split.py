@@ -7,29 +7,36 @@ Created on Sun Aug 23 12:01:02 2020
 """
 
 import pandas as pd
-from sklearn.model_selection import train_test_split as sklearn_train_test_split
+from sklearn.model_selection import train_test_split
+import numpy as np
 
 
-def train_test_split(J, test_size=0.25):
-    """
-    Train test split for each initial state.
-    
-    Parameters
-        ----------
-        J : pandas dataframe.
-
-        Returns
-        -------
-        splitting : list
-            List containing train-test split of inputs.
-    """
-    J_train = pd.DataFrame()
-    J_test  = pd.DataFrame()
-    
-    for vi in J.v.i.unique():
-        J_vi_train, J_vi_test = sklearn_train_test_split(J.loc[J.v.i==vi], test_size=test_size)
+def train_test_split_non_null_constraint(X, y, test_size=0.2):
+    if len(y.shape) > 1:
+        non_null_values = y.sum(axis=1) > 0
         
-        J_train = pd.concat([J_train, J_vi_train])
-        J_test = pd.concat([J_test, J_vi_test])
+        X_train_nnv, X_test_nnv, y_train_nnv, y_test_nnv = train_test_split(X[non_null_values,:],
+                                                                            y[non_null_values,:],
+                                                                            test_size=test_size)
+        X_train_nv, X_test_nv, y_train_nv, y_test_nv = train_test_split(X[~non_null_values,:],
+                                                                        y[~non_null_values,:],
+                                                                        test_size=test_size)
         
-    return(J_train, J_test)
+    else:
+        non_null_values = y > 0
+        
+        X_train_nnv, X_test_nnv, y_train_nnv, y_test_nnv = train_test_split(X[non_null_values,:],
+                                                                            y[non_null_values],
+                                                                            test_size=test_size)
+        X_train_nv, X_test_nv, y_train_nv, y_test_nv = train_test_split(X[~non_null_values,:],
+                                                                        y[~non_null_values],
+                                                                        test_size=test_size)
+    
+    
+    
+    X_train = np.concatenate((X_train_nnv, X_train_nv))
+    X_test = np.concatenate((X_test_nnv, X_test_nv))
+    y_train = np.concatenate((y_train_nnv, y_train_nv))
+    y_test = np.concatenate((y_test_nnv, y_test_nv))
+    
+    return(X_train, X_test, y_train, y_test)
