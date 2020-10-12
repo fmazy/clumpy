@@ -9,6 +9,7 @@ import numpy as np
 from sklearn.neighbors import KNeighborsRegressor
 from tqdm import tqdm
 from sklearn.model_selection import cross_val_score as sklearn_cross_val_score
+from copy import deepcopy
 
 class _Calibration():
     # def __init__(self):
@@ -31,6 +32,12 @@ class _Calibration():
                                     y[vi])
             
     def predict(self, X, m=1):
+        
+        if X is pd.DataFrame:
+            X = deepcopy(X)
+            for vi in X.keys():
+                X[vi] = X[vi].z.values
+        
         y_predict = {}
         
         for vi in X.keys():
@@ -249,17 +256,15 @@ def compute_P_vf__vi(case, name='P_vf__vi'):
     P_vf__vi = {}
     
     for vi in case.Z.keys():
-        P_vf__vi[vi] = {}
         df = pd.DataFrame(case.vf[vi], columns=['vf'])
         df = df.groupby(by='vf').size().reset_index(name='N')
         
-        vf = df.vf.values
-        N = df.N.values
-        N = N / N.sum()
+        df.N /= df.N.sum()
+        P_vf__vi[vi] = df.loc[df.vf != vi].N.values
         
-        for i in range(len(vf)):
-            if vf[i] != vi:
-                P_vf__vi[vi][vf[i]] = N[i]
+        # for i in range(len(vf)):
+        #     if vf[i] != vi:
+        #         P_vf__vi[vi][vf[i]] = N[i]
     
     return(P_vf__vi)
 
