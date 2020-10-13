@@ -33,14 +33,8 @@ class _Allocation():
         # J_proba=dict_args.get('probability_maps', J_proba)
         # sound=dict_args.get('sound', sound)
         
-        return(self._allocate_monopixel_patches(case, tp, sound))
+        return(self._allocate_monopixel_patches(case, tp, sound))   
     
-    def allocate(self,
-                 case,
-                 tp,
-                 sound):
-        return(self._allocate(case, tp, sound))
-        
     def _draw_patches_parameters(self, J, list_vi_vf):
         J['S_patch'] = 0
         for key in list_vi_vf:
@@ -83,17 +77,22 @@ class _Allocation():
         vf = {}
         
         for vi in tp.keys():
-            vf[vi] = np.zeros(tp[vi].shape[0]) + vi
-            # cum sum along axis
-            cs = np.cumsum(tp[vi], axis=1)
+            vf[vi] = self._generalized_acceptation_rejection_test_vi(vi, tp[vi], dict_vi_vf[vi])
             
-            # random value
-            x = np.random.random(tp[vi].shape[0])
-                                    
-            for id_vf in range(tp[vi].shape[1]):
-                inv_id_vf = tp[vi].shape[1] - 1 - id_vf
-                
-                vf[vi][x < cs[:, inv_id_vf]] = dict_vi_vf[vi][inv_id_vf]
+        return(vf)
+    
+    def _generalized_acceptation_rejection_test_vi(self, vi, tp_vi, list_vf):
+        vf = np.zeros(tp_vi.shape[0]) + vi
+        # cum sum along axis
+        cs = np.cumsum(tp_vi, axis=1)
+        
+        # random value
+        x = np.random.random(tp_vi.shape[0])
+                                
+        for id_vf in range(tp_vi.shape[1]):
+            inv_id_vf = tp_vi.shape[1] - 1 - id_vf
+            
+            vf[x < cs[:, inv_id_vf]] = list_vf[inv_id_vf]
             
         return(vf)
         

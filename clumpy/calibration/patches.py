@@ -110,6 +110,15 @@ def analyse(case, neighbors_structure = 'queen'):
             
     return(patches)
 
+def compute_isl_exp_ratio(patches):
+    r = {}
+    for vi in patches.keys():
+        r[vi] = {}
+        for vf in patches[vi].keys():
+            r[vi][vf] = patches[vi][vf]['island'].mean()
+            
+    return(r)
+
 def remove_to_big_areas(patches, vi, vf, isl_exp, m, inplace=False):
     if not inplace:
         patches = deepcopy(patches)
@@ -119,7 +128,7 @@ def remove_to_big_areas(patches, vi, vf, isl_exp, m, inplace=False):
         id_isl_exp = ~id_isl_exp
         
     id_patches_to_keep = ~((patches[vi][vf]['area'] > m) & id_isl_exp)
-    print(id_patches_to_keep.mean())
+    print(str(round((1-id_patches_to_keep.mean())*100,4))+'% removed')
     
     for p in ['J', 'patch_id', 'island', 'area', 'eccentricity']:
         patches[vi][vf][p] = patches[vi][vf][p][id_patches_to_keep]
@@ -154,9 +163,11 @@ def compute_histograms(patches, name, bins=None, plot=True):
             
                 if plot:
                     plot_histogram(h[vi][vf][isl_exp],
-                                   t='bar',
-                                   title=str(vi)+'->'+str(vf)+' - '+str(isl_exp),
-                                   show=True)
+                                   t='bar')
+                    plt.xlabel(name)
+                    plt.ylabel('P')
+                    plt.title(str(vi)+'->'+str(vf)+' - '+str(isl_exp))
+                    plt.show()
                 
     return(h)
 

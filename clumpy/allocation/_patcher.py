@@ -67,7 +67,7 @@ def _weighted_neighbors(map_i_data,
         return(0)
     
     if neighbors_structure not in ['rook', 'queen']:
-        print('ERROR: unexpected neighbors_structure in weighted_neighbors')
+        print('ERROR: unexpected neighbors_structure in weighted_neighbors, get "'+str(neighbors_structure)+'"')
         return('ERROR')
     
     queen_star = np.ones((3,3))

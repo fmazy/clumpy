@@ -45,7 +45,7 @@ def np_suitable_integer_type(a):
 def np_drop_duplicates_from_column(a, column_id):
     return(a[np.unique(a[:, column_id], return_index=True)[1]])
         
-def plot_histogram(h, t='step', color=None, linestyle=None, linewidth=None, label=None, title=None, show=True):
+def plot_histogram(h, t='step', color=None, linestyle=None, linewidth=None, label=None):
 
     if t == 'step':
         y = np.append(h[0], 0)
@@ -68,144 +68,147 @@ def plot_histogram(h, t='step', color=None, linestyle=None, linewidth=None, labe
                 align='edge',
                 color=color,
                 label=label)
-    
-    if title is not None:
-        plt.title(title)
-    
-    if show:
-        plt.show()
-
-def flat_midf(df, inplace=False):
-    if not inplace:
-        df = df.copy()
         
-    df.columns = df.columns.to_list()
+def draw_within_histogram(bins, p, n):
+    x = np.random.choice(a=bins[:-1] + np.diff(bins)/2,
+                         size=n,
+                         replace=True,
+                         p=p)
     
-    if not inplace:
-        return(df)
-
-def unflat_midf(df, inplace=False):
-    if not inplace:
-        df = df.copy()
+    return(x)
     
-    df.columns = pd.MultiIndex.from_tuples(df.columns.to_list())
-    
-    if not inplace:
-        return(df)
 
-def divideWith0(a, b, out=0):
-    if out == 0:
-        c = np.divide(a, b, out = np.zeros_like(a), where= b!=0)
-    elif out == 'nan':
-        c = np.divide(a, b, out = np.zeros_like(a).fill(np.nan), where= b!=0)
-    return(c)
-
-def df_to_matrix(df, shape, coord_names, x_name):
-    """
-    only 2 dimensions for now...
-    """
+# def flat_midf(df, inplace=False):
+#     if not inplace:
+#         df = df.copy()
         
-    M = np.zeros(shape)
+#     df.columns = df.columns.to_list()
     
-    df['flat_index'] = np.ravel_multi_index(df[coord_names].values.T, dims=shape)    
-    # df = df.set_index([i_name, j_name])
-    
-    M.flat[df.flat_index.values] = df[x_name].values
-    
-    df.drop('flat_index', axis=1, inplace=True)
-    
-    return(M)
-    
-def matrix_to_df(M, coord_names, x_name, drop_null=True, reset_index=True, set_index=False):
-    
-    df = pd.DataFrame(columns=coord_names+[x_name])
-    
-    df[x_name] = M.flat
-    coords = np.unravel_index(np.arange(M.size), np.shape(M))
-    df[coord_names] = np.array(coords).T
+#     if not inplace:
+#         return(df)
 
+# def unflat_midf(df, inplace=False):
+#     if not inplace:
+#         df = df.copy()
     
-    if drop_null:
-        df = df.loc[df[x_name]!=0]
+#     df.columns = pd.MultiIndex.from_tuples(df.columns.to_list())
+    
+#     if not inplace:
+#         return(df)
+
+# def divideWith0(a, b, out=0):
+#     if out == 0:
+#         c = np.divide(a, b, out = np.zeros_like(a), where= b!=0)
+#     elif out == 'nan':
+#         c = np.divide(a, b, out = np.zeros_like(a).fill(np.nan), where= b!=0)
+#     return(c)
+
+# def df_to_matrix(df, shape, coord_names, x_name):
+#     """
+#     only 2 dimensions for now...
+#     """
         
-    if reset_index:
-        df.reset_index(inplace=True, drop=True)
-
-    if set_index:
-        df.set_index(['vi','vf'], inplace=True)
+#     M = np.zeros(shape)
     
-    return(df)
-
-# def df_matrix_to_df(df, i_name, j_name, x_name):
-    # index = 
-
-def generateBigNp(shape, index, values, default_value=0):
-    M = np.zeros(shape)
-    M.fill(default_value)
-    M.flat[index] = values
-    return(M)
+#     df['flat_index'] = np.ravel_multi_index(df[coord_names].values.T, dims=shape)    
+#     # df = df.set_index([i_name, j_name])
     
-def normalize(rawpoints, low=0.0, high=1.0):
-    mins = np.min(rawpoints, axis=None)
-    maxs = np.max(rawpoints, axis=None)
-    rng = maxs - mins
-    return high - (((high - low) * (maxs - rawpoints)) / rng)
+#     M.flat[df.flat_index.values] = df[x_name].values
+    
+#     df.drop('flat_index', axis=1, inplace=True)
+    
+#     return(M)
+    
+# def matrix_to_df(M, coord_names, x_name, drop_null=True, reset_index=True, set_index=False):
+    
+#     df = pd.DataFrame(columns=coord_names+[x_name])
+    
+#     df[x_name] = M.flat
+#     coords = np.unravel_index(np.arange(M.size), np.shape(M))
+#     df[coord_names] = np.array(coords).T
 
-def smoothRollingMean(y, box_pts):
-    """
     
-    """
-    box = np.ones(box_pts)/box_pts
-    y_smooth = np.convolve(y, box, mode='same')
-    return y_smooth
-
-def smooth(y, parameters, keep_sum=True):
-    """
-    smoothing function
-    :param y: series to smooth
-    :type y: numpy array
-    :param parameters: smoothing parameters. they are detailled below
-    :type parameters: dict
-    :param keep_sum: if `True`, the data sum is kept.
-    :type keep_sum: bool
-    
-    :returns: smoothed y
-    
-    smoothing parameters :
-    * `'rolling_mean'` (moving average), parameters:
-        * `'n'` box points number
+#     if drop_null:
+#         df = df.loc[df[x_name]!=0]
         
-    examples::
-        parameters={'algorithm': 'rolling_mean',
-                    'n': 2}
-    """
-    sum_y = np.sum(y)
-    if parameters['algorithm'] == 'rolling_mean':
-        y = smoothRollingMean(y, parameters['n'])
+#     if reset_index:
+#         df.reset_index(inplace=True, drop=True)
+
+#     if set_index:
+#         df.set_index(['vi','vf'], inplace=True)
     
-    if keep_sum:
-        y = y/np.sum(y)*sum_y
+#     return(df)
+
+# # def df_matrix_to_df(df, i_name, j_name, x_name):
+#     # index = 
+
+# def generateBigNp(shape, index, values, default_value=0):
+#     M = np.zeros(shape)
+#     M.fill(default_value)
+#     M.flat[index] = values
+#     return(M)
+    
+# def normalize(rawpoints, low=0.0, high=1.0):
+#     mins = np.min(rawpoints, axis=None)
+#     maxs = np.max(rawpoints, axis=None)
+#     rng = maxs - mins
+#     return high - (((high - low) * (maxs - rawpoints)) / rng)
+
+# def smoothRollingMean(y, box_pts):
+#     """
+    
+#     """
+#     box = np.ones(box_pts)/box_pts
+#     y_smooth = np.convolve(y, box, mode='same')
+#     return y_smooth
+
+# def smooth(y, parameters, keep_sum=True):
+#     """
+#     smoothing function
+#     :param y: series to smooth
+#     :type y: numpy array
+#     :param parameters: smoothing parameters. they are detailled below
+#     :type parameters: dict
+#     :param keep_sum: if `True`, the data sum is kept.
+#     :type keep_sum: bool
+    
+#     :returns: smoothed y
+    
+#     smoothing parameters :
+#     * `'rolling_mean'` (moving average), parameters:
+#         * `'n'` box points number
+        
+#     examples::
+#         parameters={'algorithm': 'rolling_mean',
+#                     'n': 2}
+#     """
+#     sum_y = np.sum(y)
+#     if parameters['algorithm'] == 'rolling_mean':
+#         y = smoothRollingMean(y, parameters['n'])
+    
+#     if keep_sum:
+#         y = y/np.sum(y)*sum_y
     
     return(y)
 
-def chi2(N,E):
-    return(np.sum(np.power(N-E,2)/E))    
+# def chi2(N,E):
+#     return(np.sum(np.power(N-E,2)/E))    
 
-def cramers_V(N,E):
+# def cramers_V(N,E):
     
-    nb = np.sum(N+E)
-    V = np.sqrt(chi2(N,E)/nb)
+#     nb = np.sum(N+E)
+#     V = np.sqrt(chi2(N,E)/nb)
     
-    return(V)
+#     return(V)
 
-def l2_distance(N,E):
-    return(np.sqrt(np.sum(np.power(N-E,2))))
+# def l2_distance(N,E):
+#     return(np.sqrt(np.sum(np.power(N-E,2))))
 
-def draw_in_histogram(bins, hist, shape):
+# def draw_in_histogram(bins, hist, shape):
     
-    # x = np.random.choice(bins)
+#     # x = np.random.choice(bins)
     
-    return(df)
+#     return(df)
     #     N = Ti.T.patchesHist.N.loc[(Ti.T.patchesHist.vi==Ti.vi) &
     #                                  (Ti.T.patchesHist.vf==Tif.vf) &
     #                                  (Ti.T.patchesHist.isl_exp == isl_exp)].values
@@ -222,7 +225,6 @@ def draw_in_histogram(bins, hist, shape):
     
     
 
-#%%
 #M=np.arange(10*10)
 #M = M.reshape((10,10))
 #M.fill(0)

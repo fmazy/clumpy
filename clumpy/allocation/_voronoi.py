@@ -1,5 +1,5 @@
 from ._allocation import _Allocation, compute_P_vf__vi_from_transition_probability_maps, update_P_vf__vi_z
-from ..calibration._calibration import _Calibration, compute_P_z__vi
+from ..calibration import compute_P_z__vi
 from ..definition import LandUseCoverLayer
 from ..definition import get_pixels_coordinates
 from ._patcher import _weighted_neighbors

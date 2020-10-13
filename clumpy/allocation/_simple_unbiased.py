@@ -2,10 +2,15 @@ from ._allocation import _Allocation, compute_P_vf__vi_from_transition_probabili
 # from ..calibration._calibration import _Calibration
 from .. import definition
 from ._patcher import _weighted_neighbors
+from .scenario import compute_P_vf__vi_from_transition_probabilities
+from ..tools import draw_within_histogram
+from ..calibration import compute_P_z__vi
+from tqdm import tqdm
 
 import numpy as np
 import pandas as pd
 import time
+from copy import deepcopy
 
 class SimpleUnbiased(_Allocation):
     """Simple Unbiased Allocation Method
@@ -60,7 +65,7 @@ class SimpleUnbiased(_Allocation):
         
         self.detailed_execution_time = {}
         
-        self.detailed_execution_time['pixels_initialization']=time.time()-start_time
+        self.detailed_execution_time['initialization']=time.time()-start_time
         start_time = time.time()
                 
         # GART
@@ -105,11 +110,153 @@ class SimpleUnbiased(_Allocation):
         
         return(map_f)
     
-    def _allocate(self,
+    def allocate(self,
                   case,
                   tp,
+                  isl_exp_ratio,
+                  h_area,
+                  h_eccentricity,
+                  neighbors_structure='rook',
+                  avoid_aggregation=False,
+                  nb_of_neighbors_to_fill=3,
+                  proceed_even_if_no_probability=True,
                   sound=2):
-        return(True)
+        
+        np.random.seed() # needed to seed in case of multiprocessing
+        
+        global_start_time = time.time()
+        start_time = time.time()
+                    
+        map_f_data = case.map_i.data.copy()
+        
+        P_z__vi = compute_P_z__vi(case)
+                   
+                
+        self.detailed_execution_time = {}
+        
+        self.detailed_execution_time['initialization']=time.time()-start_time
+        start_time = time.time()
+        
+        
+        for vi in tp.keys():
+            P_z__vi_all_J_vi = case.get_z_as_dataframe()[vi].merge(right=P_z__vi[vi],
+                                            how='left')
+            for isl_exp in ['isl', 'exp']:
+                r = []
+                averaged_area = []
+                for vf in case.dict_vi_vf[vi]:
+                     # first isl_exp edit
+                    r.append(isl_exp_ratio[vi][vf])
+                    if isl_exp == 'exp':
+                        r[-1] = 1-r[-1]
+                    
+                    # surface coef
+                    a = (h_area[vi][vf][isl_exp][1][:-1]+np.diff(h_area[vi][vf][isl_exp][1])/2)
+                    w = h_area[vi][vf][isl_exp][0]
+                    averaged_area.append(np.average(a, weights=w))    
+                
+                r = np.array(r)
+                averaged_area = np.array(averaged_area)
+                
+                tp_vi = tp[vi].copy()
+                
+                # if expansion, exclude too far pixels
+                if isl_exp == 'exp':
+                    c_all_vf = np.zeros(case.J[vi].shape).astype(bool)
+                    for id_vf, vf in enumerate(case.dict_vi_vf[vi]):
+                        c = case.get_z(vi=vi, z_name='distance_to_'+str(vf)) == 1
+                        tp_vi[c, id_vf] = 0
+                        
+                        c_all_vf = c_all_vf | c
+                    
+                    case_exp = case.keep_only(vi=vi, condition=c_all_vf)
+                    
+                    # P_z__vi has to be edited
+                    P_z__vi_case_exp = compute_P_z__vi(case_exp, name='P_z__vi_case_exp')
+                    P_z__vi_case_exp_all_J = P_z__vi_all_J_vi.merge(right=P_z__vi_case_exp[vi],
+                                                           how='left')
+                    
+                    P_z__vi_case_exp_all_J.fillna(0, inplace=True)
+                    
+                    tp_vi = tp_vi * (P_z__vi_case_exp_all_J.P_z__vi_case_exp.values / P_z__vi_case_exp_all_J.P_z__vi.values)[:, None]
+                    
+                    
+                # gart
+                tp_vi = tp_vi*r/averaged_area
+                print(averaged_area)
+                if tp_vi.sum(axis=1).max() > 1:
+                    print('Warning ! probability > 1')
+                    
+                gart = self._generalized_acceptation_rejection_test_vi(vi,
+                                                                       tp_vi,
+                                                                       case.dict_vi_vf[vi])
+                
+                # if expansion, tp should be not null for the patcher
+                if isl_exp == 'exp':
+                    tp_vi = tp[vi].copy()
+                
+                id_J_to_keep = gart != vi
+                
+                J = case.J[vi][id_J_to_keep]
+                vf_J = gart[id_J_to_keep]
+                                
+                area = np.zeros(J.shape)
+                eccentricity = np.zeros(J.shape)
+                map_tp = {}
+                for id_vf, vf in enumerate(case.dict_vi_vf[vi]):
+                    idx = vf_J == vf
+                    area[idx] = draw_within_histogram(bins = h_area[vi][vf][isl_exp][1],
+                                                    p = h_area[vi][vf][isl_exp][0],
+                                                    n = idx.sum())
+                
+                    eccentricity[idx] = draw_within_histogram(bins = h_eccentricity[vi][vf][isl_exp][1],
+                                                    p = h_eccentricity[vi][vf][isl_exp][0],
+                                                    n = idx.sum())
+                    
+                    map_tp[vf] = np.zeros(map_f_data.shape)
+                    map_tp[vf].flat[J] = tp_vi[id_J_to_keep, id_vf]
+                    
+                    print(vf, area[idx].mean())
+                    # print(vf, area[idx].sum()/case.J[vi].size)
+                    
+                    
+                id_J_sample = np.random.choice(np.arange(J.size),
+                                               size=J.size,
+                                               replace=False)
+                
+                # for id_J in tqdm(id_J_sample):
+                #     _weighted_neighbors(map_i_data = case.map_i.data,
+                #                   map_f_data=map_f_data,
+                #                   map_P_vf__vi_z=map_tp[vf_J[id_J]],
+                #                   j_kernel=J[id_J],
+                #                   vi=vi,
+                #                   vf=vf_J[id_J],
+                #                   patch_S=area[id_J],
+                #                   eccentricity_mean=eccentricity[id_J],
+                #                   eccentricity_std=0.05,
+                #                   neighbors_structure=neighbors_structure,
+                #                   avoid_aggregation=avoid_aggregation,
+                #                   nb_of_neighbors_to_fill=nb_of_neighbors_to_fill,
+                #                   proceed_even_if_no_probability=proceed_even_if_no_probability)
+                    
+                
+        
+        self.execution_time = time.time() - global_start_time
+        
+        # post processing
+        map_f = definition.LandUseCoverLayer(name="luc_simple",
+                                               time=None,
+                                               scale=case.map_i.scale)
+        map_f.import_numpy(data=map_f_data, sound=sound)
+        
+        if sound>0:
+            print('FINISHED')
+            print('========')
+            print('execution times')
+            print(self.detailed_execution_time)
+            print('total', round(self.execution_time,2), 's')
+            
+        return(map_f)
         
     def _allocate2(self,
                  case:definition.Case,

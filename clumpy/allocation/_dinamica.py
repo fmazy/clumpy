@@ -1,5 +1,5 @@
 from ._allocation import _Allocation, compute_P_vf__vi_from_transition_probability_maps
-from ..calibration._calibration import _Calibration
+# from ..calibration._calibration import _Calibration
 from .. import definition
 from ._patcher import _weighted_neighbors
 
@@ -424,7 +424,7 @@ class Dinamica(_Allocation):
         
         return(map_f)
     
-    def allocate_as_dinamica(self, calibration:_Calibration, case:definition.Case, P_vf__vi=None, F=10, replace=True):
+    def allocate_as_dinamica(self, calibration, case:definition.Case, P_vf__vi=None, F=10, replace=True):
         """
         Allocation as Dinamica. To have an equivalent faster process, please use allocate.
 
