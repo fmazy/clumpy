@@ -3,6 +3,7 @@ import pandas as pd
 from .. import definition
 from ..tools import np_suitable_integer_type
 from .train_test_split import train_test_split_non_null_constraint
+from ..allocation.scenario import compute_transition_probabilities
 
 from sklearn.model_selection import train_test_split
 import numpy as np
@@ -31,7 +32,7 @@ class _Calibration():
             self.estimators[vi].fit(X[vi], 
                                     y[vi])
             
-    def predict(self, X, m=1):
+    def predict(self, X, unit_measure=True):
         
         if X is pd.DataFrame:
             X = deepcopy(X)
@@ -43,27 +44,27 @@ class _Calibration():
         for vi in X.keys():
             y_predict[vi] = self.estimators[vi].predict(X[vi])
             
-            if m is not None:
-                s = y_predict[vi].sum(axis=1)
-                idx = s > m
-                y_predict[vi][idx, :] = y_predict[vi][idx, :] / s[idx, None] * m
+            if unit_measure:
+                y_predict[vi] = y_predict[vi] / y_predict[vi].sum(axis=0)
             
         return(y_predict)
     
-    def predict_transition_probabilities(self, case, m=1, sound=0):
+    def predict_transition_probabilities(self, case, P_vf__vi, epsilon=0.05, sound=0):
         if sound > 0:
             print('predict on unique z...')
         
-        Z = case.get_z_as_dataframe()
+        unique_Z = case.get_unique_z(output='pd')
+        P_z__vi_vf = self.predict(unique_Z)
         
-        X = {}
-        for vi in Z.keys():
-            X[vi] = Z[vi].drop_duplicates(inplace=False).values
-        y_predict = self.predict(X, m=m)
+        tp = compute_transition_probabilities(case = case,
+                                                    unique_Z = unique_Z,
+                                                    P_z__vi_vf = P_z__vi_vf,
+                                                    P_vf__vi = P_vf__vi,
+                                                    epsilon=epsilon,
+                                                    sound=sound)
         
-        Z = get_transition_probabilities_by_merging(Z, X, y_predict, sound=sound)
-            
-        return(Z)
+        
+        return(tp)
     
     def monte_carlo_score(self,
                           X,
@@ -73,6 +74,8 @@ class _Calibration():
                           return_all_scores=False,
                           split_method='nnc',
                           sound=0):
+        
+        # il faudrait se baser sur la fonction predict de l'objet qui vérifie la fermeture des probas...
         scores = {}
         
         estimator = self._new_estimator()
@@ -107,22 +110,22 @@ class _Calibration():
                 
         return(scores)
     
-def get_transition_probabilities_by_merging(Z, X, y, sound=0):
+# def get_transition_probabilities_by_merging(Z, X, y, sound=0):
     
-    if sound > 0:
-        print('merge on all z...')
-    for vi in Z.keys():
-        if sound > 0:
-            print('\t vi='+str(vi))
-        col_names = pd.MultiIndex.from_tuples(Z[vi].columns.to_list())
-        Z_unique = pd.DataFrame(X[vi], columns=col_names)
-        for vf_idx in range(y[vi].shape[1]):    
-            Z_unique[('P', vf_idx)] = y[vi][:, vf_idx]
+#     if sound > 0:
+#         print('merge on all z...')
+#     for vi in Z.keys():
+#         if sound > 0:
+#             print('\t vi='+str(vi))
+#         col_names = pd.MultiIndex.from_tuples(Z[vi].columns.to_list())
+#         Z_unique = pd.DataFrame(X[vi], columns=col_names)
+#         for vf_idx in range(y[vi].shape[1]):    
+#             Z_unique[('P', vf_idx)] = y[vi][:, vf_idx]
         
         
-        Z[vi] = Z[vi].merge(Z_unique, how='left').P.values
+#         Z[vi] = Z[vi].merge(Z_unique, how='left').P.values
         
-    return(Z)
+#     return(Z)
 
     # def feature_selection_by_score(self,
     #                                 case,
@@ -233,7 +236,7 @@ def get_transition_probabilities_by_merging(Z, X, y, sound=0):
 
 
 
-def get_X_y(P, name='P_vf__vi_z'):
+def get_X_y(P, name='P_z__vi_vf'):
     X = {}
     y = {}
     
@@ -252,19 +255,15 @@ def compute_P_vi(J, name='P_vi'):
     # for vi in J.v.i.unique():
     #     P_vi.loc[P_vi.index.size] = [vi, J.loc[J.v.i.unique()]]
 
-def compute_P_vf__vi(case, name='P_vf__vi'):       
+def compute_P_vf__vi(case):       
     P_vf__vi = {}
     
-    for vi in case.Z.keys():
-        df = pd.DataFrame(case.vf[vi], columns=['vf'])
-        df = df.groupby(by='vf').size().reset_index(name='N')
+    for vi in case.dict_vi_vf.keys():
+        P_vf__vi[vi] = []
+        for vf in case.dict_vi_vf[vi]:
+            P_vf__vi[vi].append((case.vf[vi] == vf).mean())
         
-        df.N /= df.N.sum()
-        P_vf__vi[vi] = df.loc[df.vf != vi].N.values
-        
-        # for i in range(len(vf)):
-        #     if vf[i] != vi:
-        #         P_vf__vi[vi][vf[i]] = N[i]
+        P_vf__vi[vi] = np.array(P_vf__vi[vi])
     
     return(P_vf__vi)
 

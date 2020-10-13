@@ -24,7 +24,6 @@ class _Allocation():
         self.tested_pixels = []
         
     def allocate_monopixel_patches(self,
-                                   map_i,
                                    case,
                                    tp,
                                    sound,
@@ -34,7 +33,7 @@ class _Allocation():
         # J_proba=dict_args.get('probability_maps', J_proba)
         # sound=dict_args.get('sound', sound)
         
-        self._allocate_monopixel_patches(map_i, case, tp, sound)
+        return(self._allocate_monopixel_patches(case, tp, sound))
         
     def _draw_patches_parameters(self, J, list_vi_vf):
         J['S_patch'] = 0

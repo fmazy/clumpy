@@ -20,7 +20,6 @@ class SimpleUnbiased(_Allocation):
         super().__init__(params)
     
     def _allocate_monopixel_patches(self,
-                                   map_i,
                                    case,
                                    tp,
                                    sound=2):
@@ -59,7 +58,7 @@ class SimpleUnbiased(_Allocation):
         global_start_time = time.time()
         start_time = time.time()
                     
-        map_f_data = map_i.data.copy()
+        map_f_data = case.map_i.data.copy()
         
         self.detailed_execution_time = {}
         
@@ -69,6 +68,9 @@ class SimpleUnbiased(_Allocation):
         # GART
         self.tested_pixels = [np.sum([tp_vi.shape[0] for tp_vi in tp.values()])]
         vf = self._generalized_acceptation_rejection_test(tp, case.dict_vi_vf)
+        
+        print((vf[3] == 7).mean())
+        print((vf[3] == 8).mean())
         
         self.detailed_execution_time['sampling']=[time.time()-start_time]
         start_time = time.time()
@@ -86,7 +88,7 @@ class SimpleUnbiased(_Allocation):
         # post processing
         map_f = definition.LandUseCoverLayer(name="luc_simple",
                                                time=None,
-                                               scale=map_i.scale)
+                                               scale=case.map_i.scale)
         map_f.import_numpy(data=map_f_data, sound=sound)
         
         if sound>0:
