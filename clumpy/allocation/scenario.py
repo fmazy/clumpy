@@ -7,7 +7,7 @@ import pandas as pd
 from copy import deepcopy
 import os
 
-from ..calibration import compute_P_z__vi
+from .. import calibration
 
 def compute_transition_probabilities(case,
                                      unique_Z,
@@ -24,7 +24,7 @@ def compute_transition_probabilities(case,
     
     all_Z = case.get_z_as_dataframe()
     
-    P_z__vi = compute_P_z__vi(case)
+    P_z__vi = calibration.compute_P_z__vi(case)
     
     for vi in P_z__vi_vf.keys():
         if sound > 0:

@@ -13,7 +13,7 @@ import multiprocessing as mp
 # import pandas as pd
 
 # from ..definition.data import create_J
-from ..calibration._calibration import _Calibration
+# from ..calibration._calibration import _Calibration
 
 
 class _Allocation():
@@ -26,7 +26,7 @@ class _Allocation():
     def allocate_monopixel_patches(self,
                                    case,
                                    tp,
-                                   sound,
+                                   sound=2,
                                    dict_args={}):
         
         # map_i=dict_args.get('probability_maps', map_i)
@@ -34,6 +34,12 @@ class _Allocation():
         # sound=dict_args.get('sound', sound)
         
         return(self._allocate_monopixel_patches(case, tp, sound))
+    
+    def allocate(self,
+                 case,
+                 tp,
+                 sound):
+        return(self._allocate(case, tp, sound))
         
     def _draw_patches_parameters(self, J, list_vi_vf):
         J['S_patch'] = 0

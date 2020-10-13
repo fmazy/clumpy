@@ -246,14 +246,14 @@ def get_X_y(P, name='P_z__vi_vf'):
         
     return(X, y)
 
-def compute_P_vi(J, name='P_vi'):
-    df = J.groupby([('v','i')]).size().reset_index(name=(name,''))
-    df[name] = df[name] / df[name].sum()
-    return(df)
-    # P_vi = pd.DataFrame(columns=pd.MultiIndex.from_tuples([('v','i'), (name, '')]))
+# def compute_P_vi(J, name='P_vi'):
+#     df = J.groupby([('v','i')]).size().reset_index(name=(name,''))
+#     df[name] = df[name] / df[name].sum()
+#     return(df)
+#     # P_vi = pd.DataFrame(columns=pd.MultiIndex.from_tuples([('v','i'), (name, '')]))
     
-    # for vi in J.v.i.unique():
-    #     P_vi.loc[P_vi.index.size] = [vi, J.loc[J.v.i.unique()]]
+#     # for vi in J.v.i.unique():
+#     #     P_vi.loc[P_vi.index.size] = [vi, J.loc[J.v.i.unique()]]
 
 def compute_P_vf__vi(case):       
     P_vf__vi = {}
@@ -358,18 +358,18 @@ def compute_P_vf__vi_z(case, name='P_vf__vi_z', n_smooth=None):
     
     return(P_vf__vi_z)
 
-def compute_P_vf__vi_z_with_bayes(P_vf__vi, P_z__vi, P_z__vi_vf, keep_P=False):
-    P_vf__vi_z = {}
+# def compute_P_vf__vi_z_with_bayes(P_vf__vi, P_z__vi, P_z__vi_vf, keep_P=False):
+#     P_vf__vi_z = {}
     
-    for vi in P_z__vi_vf.keys():
-        P_vf__vi_z[vi] = P_z__vi_vf[vi].merge(P_z__vi[vi], how='left')
+#     for vi in P_z__vi_vf.keys():
+#         P_vf__vi_z[vi] = P_z__vi_vf[vi].merge(P_z__vi[vi], how='left')
         
-        for vf in P_z__vi_vf[vi].P_z__vi_vf.columns.to_list():
-            P_vf__vi_z[vi][('P_vf__vi_z', vf)] = P_vf__vi[vi][vf] * P_vf__vi_z[vi][('P_z__vi_vf', vf)] / P_vf__vi_z[vi][('P_z__vi', '')]
+#         for vf in P_z__vi_vf[vi].P_z__vi_vf.columns.to_list():
+#             P_vf__vi_z[vi][('P_vf__vi_z', vf)] = P_vf__vi[vi][vf] * P_vf__vi_z[vi][('P_z__vi_vf', vf)] / P_vf__vi_z[vi][('P_z__vi', '')]
         
-        if not keep_P:
-            P_vf__vi_z[vi].drop(['P_z__vi_vf', 'P_z__vi'], axis=1, level=0, inplace=True)
+#         if not keep_P:
+#             P_vf__vi_z[vi].drop(['P_z__vi_vf', 'P_z__vi'], axis=1, level=0, inplace=True)
         
-        # P_vf__vi_z[cols_z] = P_vf__vi_z[cols_z].replace(to_replace=-1, value=np.nan).values
+#         # P_vf__vi_z[cols_z] = P_vf__vi_z[cols_z].replace(to_replace=-1, value=np.nan).values
         
-    return(P_vf__vi_z)
+#     return(P_vf__vi_z)

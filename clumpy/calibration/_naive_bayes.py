@@ -1,7 +1,7 @@
 from ._calibration import _Calibration
 from ..definition._case import Case
 from ..definition._layer import TransitionProbabilityLayers
-from ._calibration import compute_P_vf__vi, compute_P_vf__vi_z, compute_P_z__vi, compute_P_z__vi_vf, compute_P_vf__vi_z_with_bayes
+from ._calibration import compute_P_vf__vi, compute_P_vf__vi_z, compute_P_z__vi, compute_P_z__vi_vf
 
 import sklearn.metrics
 import pandas as pd

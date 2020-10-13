@@ -9,6 +9,7 @@ The tool module of demeter
 # -*- coding: utf-8 -*-
 import numpy as np
 import pandas as pd
+from matplotlib import pyplot as plt
 
 def human_size(s):
     units = ['B', 'KiB', 'MiB', 'GiB', 'TiB', 'PiB', 'EiB', 'ZiB', 'YiB']
@@ -41,9 +42,38 @@ def np_suitable_integer_type(a):
                     
     return(a.astype(t))
 
+def np_drop_duplicates_from_column(a, column_id):
+    return(a[np.unique(a[:, column_id], return_index=True)[1]])
         
+def plot_histogram(h, t='step', color=None, linestyle=None, linewidth=None, label=None, title=None, show=True):
+
+    if t == 'step':
+        y = np.append(h[0], 0)
+        x = h[1]
+        plt.step(x=x,
+                y=y,
+                where='post',
+                color=color,
+                linestyle=linestyle,
+                linewidth=linewidth,
+                label=label)
+    
+    elif t =='bar':
+        height = h[0]
+        x = h[1][:-1]
         
-        
+        plt.bar(x=x,
+                height=height,
+                width=np.diff(h[1])*0.9,
+                align='edge',
+                color=color,
+                label=label)
+    
+    if title is not None:
+        plt.title(title)
+    
+    if show:
+        plt.show()
 
 def flat_midf(df, inplace=False):
     if not inplace:

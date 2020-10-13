@@ -1,5 +1,5 @@
 from ._allocation import _Allocation, compute_P_vf__vi_from_transition_probability_maps
-from ..calibration._calibration import _Calibration
+# from ..calibration._calibration import _Calibration
 from .. import definition
 from ._patcher import _weighted_neighbors
 

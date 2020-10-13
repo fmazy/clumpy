@@ -8,17 +8,19 @@ import numpy as np
 import pandas as pd
 from scipy import ndimage # used for distance computing and patch measurements
 from matplotlib import pyplot as plt
+from copy import deepcopy
 #from PIL import Image
 #from scipy import signal, sparse
 from skimage import measure # for patch perimeters
 
 from ..definition import _transition
 from .. import tools as dmtools
-from .. import definition
-# from . import compute_P_vf__vi
+from ..tools import np_suitable_integer_type
+from ..tools import np_drop_duplicates_from_column
+from ..tools import plot_histogram
 
 
-def analyse(J, map_shape, neighbors_structure = 'queen'):
+def analyse(case, neighbors_structure = 'queen'):
 
     
     if neighbors_structure == 'queen':
@@ -31,219 +33,152 @@ def analyse(J, map_shape, neighbors_structure = 'queen'):
         print('ERROR : unexpected neighbors_structure value')
         return(False)
     
-    P_vf__vi = compute_P_vf__vi(J)
+    list_unique_vf = []
+    for vi in case.dict_vi_vf.keys():
+        for vf in case.dict_vi_vf[vi]:
+            if vf not in list_unique_vf:
+                list_unique_vf.append(vf)
     
-    list_vi = P_vf__vi.v.i.unique()
-    list_vf = P_vf__vi.P_vf__vi.columns.to_list()
+    J_vf = {}
+    patch_id_vf = {}
+    area_vf = {}
     
-    list_vi_vf = []
-    for vi in list_vi:
-        list_vi_vf.append([(vi, vf) for vf in list_vf])
-    
-    J_vf = J.loc[J.v.f.isin(list_vf)].copy()
-    
-    J['vi_vf'] = list(zip(J.v.i, J.v.f))
-    J_vi_vf = J.loc[J.vi_vf.isin(list_vi_vf)].copy()    
-      
-    J_vi_vf.drop('vi_vf', axis=1, level=0, inplace=True)
-    
-    J_vf[('id_patch','vf')] = -1
-    patches_vf = pd.DataFrame()
-    for vf in list_vf:
-        # on récupère la carte vf
-        j_vf = J_vf.loc[(J_vf.v.f == vf)].index.values
+    for vf in list_unique_vf:
+        print('vf=', vf)
+        # final pixels
+        J_vf[vf] = np_suitable_integer_type(np.where(case.map_f.data.flat==vf)[0])
         
-        M_vf = np.zeros(map_shape)
-        M_vf.flat[j_vf] = 1
         
-        # on donne à chaque ilot un id
+        # map of final pixels
+        M_vf = np.zeros(case.map_i.data.shape)
+        M_vf.flat[J_vf[vf]] = 1
+        
+        # patch id of vf
         lw_vf, _ = ndimage.measurements.label(M_vf, structure=structure)
-        J_vf.loc[j_vf, [('id_patch','vf')]] = lw_vf.flat[j_vf]
+        patch_id_vf[vf] = lw_vf.flat[J_vf[vf]]
         
-        # # paramètres des taches
-        p= pd.DataFrame(measure.regionprops_table(lw_vf, properties=['label','area']))
-        p.columns = pd.MultiIndex.from_tuples([('id_patch','vf'), ('S','vf')])
-        p[('v','f')] = vf
-        patches_vf = pd.concat([patches_vf, p], ignore_index=True)
-
-    J_vf.rename({'index':'j'}, level=0, axis=1, inplace=True)
-    J_vf.reset_index(drop=False, inplace=True)
-    J_vf.rename({'index':'j'}, level=0, axis=1, inplace=True)
-    J_vf = J_vf.merge(right=patches_vf.astype(float), how='left')
-    J_vf.drop('id_patch', axis=1, level=0, inplace=True)
+        print('\t number of patches:', patch_id_vf[vf].max())
         
-    J_vi_vf[('id_patch','vi_vf')] = -1
-    patches_vi_vf = pd.DataFrame()
+        # area of vf patches
+        area_vf[vf] = np.array(measure.regionprops_table(lw_vf, properties=['area'])['area'])
     
-    for vi_vf in list_vi_vf:
-        vi = vi_vf[0]
-        vf = vi_vf[1]
-        
-        # on fait comme pour vf mais pour vi -> vf 
-        j_vi_vf = J_vi_vf.loc[(J_vi_vf.v.i == vi) & (J_vi_vf.v.f == vf)].index.values
-        
-        M_vi_vf = np.zeros(map_shape)
-        M_vi_vf.flat[j_vi_vf] = 1
-        
-        # on donne à chaque ilot un id
-        lw_vi_vf, _ = ndimage.measurements.label(M_vi_vf, structure=structure)
-        J_vi_vf.loc[j_vi_vf, [('id_patch','vi_vf')]] = lw_vi_vf.flat[j_vi_vf]
-        
-        # paramètres des taches
-        p= pd.DataFrame(measure.regionprops_table(lw_vi_vf, properties=['label',
-                                                                        'area',
-                                                                        'centroid',
-                                                                        'inertia_tensor_eigvals']))
-        p.columns = pd.MultiIndex.from_tuples([('id_patch','vi_vf'),
-                                               ('parameters','area'),
-                                               ('parameters','centroid_x'),
-                                               ('parameters','centroid_y'),
-                                               ('parameters','l1'),
-                                               ('parameters','l2')])
-        p[('v','i')] = vi
-        p[('v','f')] = vf
-        patches_vi_vf = pd.concat([patches_vi_vf, p], ignore_index=True)
-    
-    J_vi_vf.reset_index(drop=False, inplace=True)
-    J_vi_vf.rename({'index':'j'}, level=0, axis=1, inplace=True)
-    J_vi_vf = J_vi_vf.merge(right=patches_vi_vf.astype(float), how='left')
-    J_vi_vf.set_index('j', inplace=True)
-        
-    patches = J_vi_vf.drop_duplicates().copy()
-    
-    patches.reset_index(drop=False, inplace=True)
-    patches.rename({'index':'j'}, level=0, axis=1, inplace=True)
-        
-    patches = patches.merge(right=J_vf, how='left')    
-    
-    patches[('parameters', 'isl_exp')] = 'exp'
-    patches.loc[patches.parameters.area == patches.S.vf, ('parameters', 'isl_exp')] = 'isl'
-    patches.drop(columns=('S','vf'), inplace=True)
-    
-    patches[('parameters','eccentricity')] = 1-np.sqrt(patches.parameters.l2 / patches.parameters.l1)
-    
-    patches.drop(columns=[('parameters', 'l1'), ('parameters','l2')], inplace=True)
-    
+    print('----')
+    patches = {}
+    for vi in case.dict_vi_vf.keys():
+        patches[vi] = {}
+        for vf in case.dict_vi_vf[vi]:
+            print(str(vi)+' -> '+str(vf))
+            
+            patches[vi][vf] = {}
+            
+            # transited pixels among J_vf
+            J_vi_vf = case.J[vi][case.vf[vi] == vf]
+            
+            # map of transited pixels
+            M_vi_vf = np.zeros(case.map_i.data.shape)
+            M_vi_vf.flat[J_vi_vf] = 1
+            
+            # patch id of vi->vf
+            lw_vi_vf, _ = ndimage.measurements.label(M_vi_vf, structure=structure)
+            patch_id_vi_vf = lw_vi_vf.flat[J_vi_vf]
+            
+            # unique pixel for a patch
+            one_pixel_from_patch_vi_vf = np.column_stack((J_vi_vf, patch_id_vi_vf))
+            one_pixel_from_patch_vi_vf = np_drop_duplicates_from_column(one_pixel_from_patch_vi_vf, 1)
+            
+            patches[vi][vf]['J'] = one_pixel_from_patch_vi_vf[:,0]
+            patches[vi][vf]['patch_id'] = one_pixel_from_patch_vi_vf[:,1]
+            
+            # area of vi vf patches
+            rpt = measure.regionprops_table(lw_vi_vf, properties=['area',
+                                                                  'inertia_tensor_eigvals'])
+            
+            patches[vi][vf]['area'] = np.array(rpt['area'])[one_pixel_from_patch_vi_vf[:,1]-1]
+            
+            l1_patch_vi_vf = np.array(rpt['inertia_tensor_eigvals-0'])[patches[vi][vf]['patch_id']-1]
+            l2_patch_vi_vf = np.array(rpt['inertia_tensor_eigvals-1'])[patches[vi][vf]['patch_id']-1]
+            
+            patches[vi][vf]['eccentricity'] = np.zeros(patches[vi][vf]['area'].shape)
+            id_none_mono_pixel_patches = patches[vi][vf]['area'] > 1
+            
+            patches[vi][vf]['eccentricity'][id_none_mono_pixel_patches] = 1 - np.sqrt(l2_patch_vi_vf[id_none_mono_pixel_patches] / l1_patch_vi_vf[id_none_mono_pixel_patches])
+                        
+            corresponding_area_vf = area_vf[vf][patch_id_vf[vf][np.searchsorted(J_vf[vf],
+                                                                                patches[vi][vf]['J'])]-1]
+            
+            patches[vi][vf]['island'] = corresponding_area_vf == patches[vi][vf]['area']
+            
     return(patches)
 
-
-def analyse_surfaces(map_i, map_f, T):
+def remove_to_big_areas(patches, vi, vf, isl_exp, m, inplace=False):
+    if not inplace:
+        patches = deepcopy(patches)
+    
+    id_isl_exp = patches[vi][vf]['island']
+    if isl_exp == 'exp':
+        id_isl_exp = ~id_isl_exp
         
-    # mériterait d'être nettoyé mais ça fonctionne bien !
+    id_patches_to_keep = ~((patches[vi][vf]['area'] > m) & id_isl_exp)
+    print(id_patches_to_keep.mean())
     
-    map_shape = np.shape(map_i.data)
+    for p in ['J', 'patch_id', 'island', 'area', 'eccentricity']:
+        patches[vi][vf][p] = patches[vi][vf][p][id_patches_to_keep]
     
-    surfaces = pd.DataFrame(columns=['vi', 'vf', 'S', 'isl_exp'])
-    
+    if not inplace:
+        return(patches)
 
-    
-    # all vf possible
-    list_vf = T.get_all_possible_vf()
-    
-    J = pd.DataFrame(map_i.data.flat, columns=['vi'])
-    J = J.assign(vf = map_f.data.flat)
-    
-    # restrict to pixels with vi in Ti
-    J = J.loc[J.vf.isin(list_vf)]
-    
-    for Ti in T.Ti.values():
-        for Tif in Ti.Tif.values():
-            
-            # patch identification for vi->vf
-            J_vi_vf = J.loc[(J.vi == Ti.vi) &
-                            (J.vf == Tif.vf)]
-            
-            M_vi_vf = np.zeros(map_shape)
-            M_vi_vf.flat[J_vi_vf.index.values] = 1
-            
-            lw_vi_vf, _ = ndimage.measurements.label(M_vi_vf) # création des îlots
-            J_vi_vf = J_vi_vf.assign(id_patch = lw_vi_vf.flat[J_vi_vf.index.values])
-            
-            # patch identification for * -> vf
-            J_vf = J.loc[(J.vf == Tif.vf)]
-            J_vf = J_vf.drop('vi', axis=1)
-            
-            M_vf = np.zeros(map_shape)
-            M_vf.flat[J_vf.index.values] = 1
-            
-            lw_vf, _ = ndimage.measurements.label(M_vf) # création des îlots
-            J_vf = J_vf.assign(id_patch = lw_vf.flat[J_vf.index.values])
-            
-            # in vi-> vf compute S and drop duplicates in J_vi_vf
-            S = J_vi_vf.groupby(['id_patch']).size().reset_index(name='S')
-            
-            J_vi_vf = J_vi_vf.reset_index().merge(right= S, how='left', on='id_patch').set_index('index')
-            J_vi_vf.drop_duplicates(inplace=True)
-            
-            # get id_patch from J_vf
-            J_vi_vf = J_vi_vf.assign(id_patch_J_vf = J_vf.loc[J_vi_vf.index, 'id_patch'])
-            
-            # compute S and drop duplicates in J_vf
-            S = J_vf.groupby(['id_patch']).size().reset_index(name='S_vf')
-            
-            J_vf = J_vf.reset_index().merge(right= S, how='left', on='id_patch').set_index('index')
-            J_vf.drop_duplicates(inplace=True)
-            
-            # merge with vi vf
-            J_vi_vf = J_vi_vf.merge(right=J_vf[['id_patch', 'S_vf']],
-                                    how='left',
-                                    left_on='id_patch_J_vf',
-                                    right_on='id_patch')
-            
-            # comparison
-            J_vi_vf = J_vi_vf.assign(S_diff=J_vi_vf.S-J_vi_vf.S_vf)
-            
-            # island or expansion ?
-            J_vi_vf = J_vi_vf.assign(isl_exp = 'exp')
-            J_vi_vf.loc[J_vi_vf.S_diff == 0, 'isl_exp'] = 'isl'
-            
-            surfaces = pd.concat([surfaces, J_vi_vf[['vi', 'vf', 'S', 'isl_exp']]], ignore_index = True)
-    
-    cols = [('v', 'i'), ('v', 'f'), ('patch','S'), ('patch', 'isl_exp')]
-    cols = pd.MultiIndex.from_tuples(cols)
-    surfaces.columns = cols
-    return(surfaces)
+def compute_histograms(patches, name, bins=None, plot=True):
+    h = {}
 
-def surfaces_histogram(surfaces, T):
-    surfaces_histogram = pd.DataFrame(columns=['vi', 'vf', 'isl_exp', 'S', 'N'])
-    for Ti in T.Ti.values():
-        for Tif in Ti.Tif.values():
+    for vi in patches.keys():
+        h[vi] = {}
+        for vf in patches[vi].keys():
+            h[vi][vf] = {}
+            
             for isl_exp in ['isl', 'exp']:
-                N, S = np.histogram(a=surfaces.loc[(surfaces.vi == Ti.vi) &
-                                                   (surfaces.vf == Tif.vf) &
-                                                   (surfaces.isl_exp == isl_exp)].S.values,
-                                                    bins='auto',
-                                                    density=True)
                 
-                N = np.append(N, 0) # faut que les listes aient la même longueur. ça conclut les bins.
+                b = 'auto'
+                if bins is not None:
+                    b = bins[vi][vf][isl_exp]
                 
-                sub_surfaces_histogram = pd.DataFrame(columns=['vi', 'vf', 'isl_exp', 'S', 'N'])
-                sub_surfaces_histogram.S = S
-                sub_surfaces_histogram.N = N
-                sub_surfaces_histogram.vi = Tif.Ti.vi
-                sub_surfaces_histogram.vf = Tif.vf
-                sub_surfaces_histogram.isl_exp = isl_exp
+                if isl_exp == 'isl':
+                    idx = patches[vi][vf]['island']
+                else:
+                    idx = ~patches[vi][vf]['island']
                 
-                surfaces_histogram = pd.concat([surfaces_histogram,
-                                                sub_surfaces_histogram], ignore_index=True)
+                N, S = np.histogram(patches[vi][vf][name][idx],
+                                                    bins=b,
+                                                    density=False)
                 
-    return(surfaces_histogram)
+                h[vi][vf][isl_exp] = [N/N.sum(), S]
+            
+                if plot:
+                    plot_histogram(h[vi][vf][isl_exp],
+                                   t='bar',
+                                   title=str(vi)+'->'+str(vf)+' - '+str(isl_exp),
+                                   show=True)
+                
+    return(h)
 
-def plot_surfaces_histogram(surfaces_histogram, vi, vf, isl_exp, color=None, linestyle=None, linewidth=None, label=None):
-    part = surfaces_histogram.loc[(surfaces_histogram.vi == vi) &
-                               (surfaces_histogram.vf == vf) &
-                               (surfaces_histogram.isl_exp == isl_exp)]
+
     
-    S = part.S.values
-    N = part.N.values
+
+
+# def plot_surfaces_histogram(surfaces_histogram, vi, vf, isl_exp, color=None, linestyle=None, linewidth=None, label=None):
+#     part = surfaces_histogram.loc[(surfaces_histogram.vi == vi) &
+#                                (surfaces_histogram.vf == vf) &
+#                                (surfaces_histogram.isl_exp == isl_exp)]
     
-    plt.step(x=S,
-            y=N,
-            where='post',
-            color=color,
-            linestyle=linestyle,
-            linewidth=linewidth,
-            label=label)
+#     S = part.S.values
+#     N = part.N.values
+    
+#     plt.step(x=S,
+#             y=N,
+#             where='post',
+#             color=color,
+#             linestyle=linestyle,
+#             linewidth=linewidth,
+#             label=label)
 
 def analyseDelta(Tif):
     df_J_vi_vf = Tif.Ti.J_vi.loc[Tif.Ti.J_vi.vf == Tif.vf].copy()
