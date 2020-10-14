@@ -255,6 +255,18 @@ class Case():
                 z[vi] = z[vi].values
         
         return(z)
+    
+    def select_vf_borders(self, binarizer):
+        for vi in self.dict_vi_vf.keys():
+            c_all_vf = np.zeros(self.J[vi].shape).astype(bool)
+            
+            for id_vf, vf in enumerate(case.dict_vi_vf[vi]):
+                c = case.get_z(vi=vi, z_name='distance_to_'+str(vf)) == 1
+                tp_vi[c, id_vf] = 0
+                
+                c_all_vf = c_all_vf | c
+            
+            case_exp = case.keep_only(vi=vi, condition=c_all_vf)
 
 def get_pixels_coordinates(J, map_shape):
     x, y = np.unravel_index(J.index.values, map_shape)

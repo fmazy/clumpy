@@ -49,7 +49,12 @@ class _Calibration():
             
         return(y_predict)
     
-    def predict_transition_probabilities(self, case, P_vf__vi, epsilon=0.05, sound=0):
+    def predict_transition_probabilities(self,
+                                         case,
+                                         P_vf__vi,
+                                         epsilon=0.05,
+                                         n_iter_max=100,
+                                         sound=0):
         if sound > 0:
             print('predict on unique z...')
         
@@ -61,8 +66,76 @@ class _Calibration():
                                                     P_z__vi_vf = P_z__vi_vf,
                                                     P_vf__vi = P_vf__vi,
                                                     epsilon=epsilon,
+                                                    n_iter_max=n_iter_max,
                                                     sound=sound)
         
+        
+        return(tp)
+    
+    def predict_transition_probabilities_isl_exp(self,
+                                                 case,
+                                                 P_vf__vi,
+                                                 id_J_exp,
+                                                 epsilon=0.05,
+                                                 n_iter_max=100,
+                                                 sound=0):
+        if sound > 0:
+            print('predict on unique z...')
+                
+        tp = {}
+        
+        # isl
+        unique_Z = case.get_unique_z(output='pd')
+        P_z__vi_vf = self.predict(unique_Z)
+        
+        
+        
+        tp['isl'] = compute_transition_probabilities(case = case,
+                                            unique_Z = unique_Z,
+                                            P_z__vi_vf = P_z__vi_vf,
+                                            P_vf__vi = P_vf__vi['isl'],
+                                            epsilon=epsilon,
+                                            n_iter_max=n_iter_max,
+                                            sound=sound)
+        
+        # exp
+        case_exp = case.copy()
+        exp_condition = {}
+        
+        for vi in case.dict_vi_vf.keys():
+            exp_condition[vi] = np.zeros(case.J[vi].shape).astype(bool)
+            for id_vf, vf in enumerate(case.dict_vi_vf[vi]):
+                exp_condition[vi] = exp_condition[vi] | id_J_exp[vi][vf]
+            
+            case_exp.keep_only(vi, exp_condition[vi], inplace=True)
+        
+        P_vf__vi_exp = {}
+        for vi in case.dict_vi_vf.keys():
+            P_vf__vi_exp[vi] = P_vf__vi['exp'][vi] * case.J[vi].size / case_exp.J[vi].size
+        
+        
+        unique_Z_exp = case_exp.get_unique_z(output='pd')
+        P_z__vi_vf_exp = self.predict(unique_Z_exp)
+        
+        for vi in case.dict_vi_vf.keys():
+            for id_vf, vf in enumerate(case.dict_vi_vf[vi]):
+                P_z__vi_vf_exp[vi][unique_Z_exp[vi][('z', 'distance_to_'+str(vf))] != 1, id_vf] = 0
+            
+            # unit measure
+            P_z__vi_vf_exp[vi] = P_z__vi_vf_exp[vi] / P_z__vi_vf_exp[vi].sum(axis=0)
+            
+        tp_exp = compute_transition_probabilities(case = case_exp,
+                                            unique_Z = unique_Z_exp,
+                                            P_z__vi_vf = P_z__vi_vf_exp,
+                                            P_vf__vi = P_vf__vi_exp,
+                                            epsilon=epsilon,
+                                            n_iter_max=n_iter_max,
+                                            sound=sound)
+        
+        tp['exp'] = {}
+        for vi in case.dict_vi_vf.keys():
+            tp['exp'][vi] = np.zeros_like(tp['isl'][vi])
+            tp['exp'][vi][exp_condition[vi], :] = tp_exp[vi]
         
         return(tp)
     

@@ -76,6 +76,10 @@ def draw_within_histogram(bins, p, n):
                          p=p)
     
     return(x)
+
+def histogram_mean(h):
+    a = (h[1][:-1]+np.diff(h[1])/2)
+    return(np.average(a, weights=h[0]))
     
 
 # def flat_midf(df, inplace=False):

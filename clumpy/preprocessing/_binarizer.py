@@ -112,25 +112,48 @@ class Binarizer():
             
             column_id = case.get_z_column_id(vi, feature_name)
             
-            idz = (case.Z[vi][:, column_id] != 0) & (case.Z[vi][:, column_id] != alpha.size)
+            self._inverse_transform_vi(z=case.Z[vi][:, column_id],
+                                       alpha=alpha,
+                                       where=where)
             
-            if where=='mean':
-                case.Z[vi][idz, column_id] = (alpha[case.Z[vi][idz, column_id].astype(np.int)-1] + alpha[case.Z[vi][idz, column_id].astype(np.int)]) / 2
+            # idz = (case.Z[vi][:, column_id] != 0) & (case.Z[vi][:, column_id] != alpha.size)
+            
+            # if where=='mean':
+            #     case.Z[vi][idz, column_id] = (alpha[case.Z[vi][idz, column_id].astype(np.int)-1] + alpha[case.Z[vi][idz, column_id].astype(np.int)]) / 2
                 
-            elif where == 'left':
-                case.Z[vi][idz, column_id] = alpha[case.Z[vi][idz, column_id].astype(np.int)-1]
+            # elif where == 'left':
+            #     case.Z[vi][idz, column_id] = alpha[case.Z[vi][idz, column_id].astype(np.int)-1]
                                                                                      
-            elif where == 'right':
-                case.Z[vi][idz, column_id] = alpha[case.Z[vi][idz, column_id].astype(np.int)]
+            # elif where == 'right':
+            #     case.Z[vi][idz, column_id] = alpha[case.Z[vi][idz, column_id].astype(np.int)]
             
-            idz = case.Z[vi][:, column_id] == 0
-            case.Z[vi][idz, column_id] = - np.inf
+            # idz = case.Z[vi][:, column_id] == 0
+            # case.Z[vi][idz, column_id] = - np.inf
             
-            idz = case.Z[vi][:, column_id] == alpha.size
-            case.Z[vi][idz, column_id] = np.inf
+            # idz = case.Z[vi][:, column_id] == alpha.size
+            # case.Z[vi][idz, column_id] = np.inf
             
         if not inplace:
             return(case)
+        
+    def _inverse_transform_vi(self, z, alpha, where):
+        
+        idz = (z != 0) & (z != alpha.size)
+        
+        if where=='mean':
+            z[idz] = (alpha[z[idz].astype(np.int)-1] + alpha[z[idz].astype(np.int)]) / 2
+            
+        elif where == 'left':
+            z[idz] = alpha[z[idz].astype(np.int)-1]
+                                                                                 
+        elif where == 'right':
+            z[idz] = alpha[z[idz].astype(np.int)]
+        
+        idz = z == 0
+        z[idz] = - np.inf
+        
+        idz = z == alpha.size
+        z[idz] = np.inf
 
 def _compute_bins_with_optbinning(X, y, name='name', sound=0, plot=False):
     optb = MulticlassOptimalBinning(name=name, solver="cp")

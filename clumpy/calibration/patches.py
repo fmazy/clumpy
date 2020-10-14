@@ -113,9 +113,10 @@ def analyse(case, neighbors_structure = 'queen'):
 def compute_isl_exp_ratio(patches):
     r = {}
     for vi in patches.keys():
-        r[vi] = {}
+        r[vi] = []
         for vf in patches[vi].keys():
-            r[vi][vf] = patches[vi][vf]['island'].mean()
+            r[vi].append(patches[vi][vf]['island'].mean())
+        r[vi] = np.array(r[vi])
             
     return(r)
 

@@ -72,7 +72,7 @@ def compute_transition_probabilities(case,
             print('=====\n')
         
     return(all_Z)
-
+    
 # def adjust_transition_probabilities(tp, P_vf__vi, inplace=False):
 #     if not inplace:
 #         tp = deepcopy(tp)
@@ -131,34 +131,39 @@ def compute_P_vf__vi_from_transition_probabilities(tp):
     for vi in tp.keys():
         P_vf__vi[vi] = tp[vi].sum(axis=0) / tp[vi].shape[0]
     return(P_vf__vi)
-
+    
 def _compute_P_vf__vi_from_transition_probabilities_vi(tp_vi):
     return(tp_vi.sum(axis=0) / tp_vi.shape[0])
 
-# def compute_multiple_step_transition_matrix(P_vf__vi, nb_steps):
+def compute_multi_step_P_vf__vi(P_vf__vi, dict_vi_vf, n):
     
-#     max_v = int(np.max([P_vf__vi.v.i.max(),np.max(P_vf__vi['P_vf__vi'].columns.to_list())]))
-    
-#     transition_matrix = np.diag(np.ones(max_v+1))
-    
-#     for vi in P_vf__vi.v.i.values:
-#         for vf in P_vf__vi['P_vf__vi'].columns.to_list():
-#             transition_matrix[int(vi),int(vf)] = P_vf__vi.loc[(P_vf__vi.v.i==vi), ('P_vf__vi', vf)].values[0]
-    
-#     eigen_values, P = np.linalg.eig(transition_matrix)
-#     # print(eigen_values)
-#     eigen_values = np.power(eigen_values, 1/nb_steps)
-    
-#     transition_matrix_multiple = np.dot(np.dot(P, np.diag(eigen_values)), np.linalg.inv(P))
-#     # return(transition_matrix_multiple)
-#     P_vf__vi_multiple = pd.DataFrame(columns=pd.MultiIndex.from_tuples([('v','i')]))
-    
-#     for vi in P_vf__vi.v.i.values:
-#         P_vf__vi_multiple.loc[P_vf__vi_multiple.index.size, ('v','i')] = vi
-#         for vf in P_vf__vi['P_vf__vi'].columns.to_list():
-#             P_vf__vi_multiple.loc[P_vf__vi_multiple.v.i==vi,('P_vf__vi', vf)] = transition_matrix_multiple[int(vi),int(vf)]
+    max_v = int(np.max([np.max(d) for d in dict_vi_vf.values()]))
         
-#     return(P_vf__vi_multiple)
+    transition_matrix = np.diag(np.ones(max_v+1))
+    
+    for vi in dict_vi_vf.keys():
+        for id_vf, vf in enumerate(dict_vi_vf[vi]):
+            transition_matrix[int(vi),int(vf)] = P_vf__vi[vi][id_vf]
+            transition_matrix[int(vf),int(vf)] -= P_vf__vi[vi][id_vf]
+    
+    transition_matrix = transition_matrix.astype(float)
+        
+    eigen_values, P = np.linalg.eig(transition_matrix)
+    
+    
+    # print(eigen_values)
+    eigen_values = np.power(eigen_values, 1/n)
+    
+    transition_matrix_multiple = np.dot(np.dot(P, np.diag(eigen_values)), np.linalg.inv(P))
+    
+    P_vf__vi_multiple = {}
+    for vi in dict_vi_vf.keys():
+        P_vf__vi_multiple[vi] = []
+        for id_vf, vf in enumerate(dict_vi_vf[vi]):
+            P_vf__vi_multiple[vi].append(transition_matrix_multiple[vi][vf])
+        P_vf__vi_multiple[vi] = np.array(P_vf__vi_multiple[vi])
+            
+    return(P_vf__vi_multiple)
 
 # def export_transition_matrix_as_dinamica(P_vf__vi, path):
 #     df = pd.DataFrame(columns=['From*', 'To*','Rate'])
