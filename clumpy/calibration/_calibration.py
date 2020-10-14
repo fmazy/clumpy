@@ -44,8 +44,13 @@ class _Calibration():
         for vi in X.keys():
             y_predict[vi] = self.estimators[vi].predict(X[vi])
             
+            y_predict[vi][y_predict[vi] < 0] = 0
+            
             if unit_measure:
-                y_predict[vi] = y_predict[vi] / y_predict[vi].sum(axis=0)
+                s = y_predict[vi].sum(axis=0)
+                id_column = s > 0
+                
+                y_predict[vi][:,id_column] = y_predict[vi][:,id_column] / s[id_column]
             
         return(y_predict)
     
@@ -87,9 +92,7 @@ class _Calibration():
         # isl
         unique_Z = case.get_unique_z(output='pd')
         P_z__vi_vf = self.predict(unique_Z)
-        
-        
-        
+                
         tp['isl'] = compute_transition_probabilities(case = case,
                                             unique_Z = unique_Z,
                                             P_z__vi_vf = P_z__vi_vf,
@@ -122,7 +125,9 @@ class _Calibration():
                 P_z__vi_vf_exp[vi][unique_Z_exp[vi][('z', 'distance_to_'+str(vf))] != 1, id_vf] = 0
             
             # unit measure
-            P_z__vi_vf_exp[vi] = P_z__vi_vf_exp[vi] / P_z__vi_vf_exp[vi].sum(axis=0)
+            s = P_z__vi_vf_exp[vi].sum(axis=0)
+            id_column = s > 0
+            P_z__vi_vf_exp[vi][:,id_column] = P_z__vi_vf_exp[vi][:,id_column] / s[id_column]
             
         tp_exp = compute_transition_probabilities(case = case_exp,
                                             unique_Z = unique_Z_exp,

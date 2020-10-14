@@ -121,7 +121,9 @@ class SimpleUnbiased(_Allocation):
                   avoid_aggregation=False,
                   nb_of_neighbors_to_fill=3,
                   proceed_even_if_no_probability=True,
-                  failed_patches_treshold=10,
+                  failed_patches_treshold=5,
+                  epsilon=0.05,
+                  n_iter_max_tp=100,
                   sound=2):
         
         case = case.copy()
@@ -149,18 +151,20 @@ class SimpleUnbiased(_Allocation):
             tp = calibrator.predict_transition_probabilities_isl_exp(case=case,
                                                                     P_vf__vi=P_vf__vi,
                                                                     id_J_exp=id_J_exp,
-                                                                    epsilon=0.05,
-                                                                    n_iter_max=100,
+                                                                    epsilon=epsilon,
+                                                                    n_iter_max=n_iter_max_tp,
                                                                     sound=1)
             
             for vi in case.dict_vi_vf.keys():
                 
-                pivot_cells_used = {}
-                for vf in case.dict_vi_vf[vi]:
-                    pivot_cells_used[vi] = 0
+                nb_pivot_cells = {}
+                nb_pivot_cells_success = {}
                 
                 for isl_exp in ['isl', 'exp']:
-                                        
+                    
+                    nb_pivot_cells[isl_exp] = {}
+                    nb_pivot_cells_success[isl_exp] = {}
+                    
                     # gart
                     if tp[isl_exp][vi].sum(axis=1).max() > 1.00000001:
                         print('Warning ! probability > 1')
@@ -178,38 +182,33 @@ class SimpleUnbiased(_Allocation):
                     area = np.zeros(J.shape)
                     eccentricity = np.zeros(J.shape)
                     map_tp = {}
-                    failed = {}
+                    
                     
                     
                     for id_vf, vf in enumerate(case.dict_vi_vf[vi]):
                         idx = vf_J == vf
-                        area[idx] = draw_within_histogram(bins = h_area[vi][vf][isl_exp][1],
-                                                        p = h_area[vi][vf][isl_exp][0],
-                                                        n = idx.sum()).astype(int)
-                    
-                        eccentricity[idx] = draw_within_histogram(bins = h_eccentricity[vi][vf][isl_exp][1],
-                                                        p = h_eccentricity[vi][vf][isl_exp][0],
-                                                        n = idx.sum())
                         
-                        map_tp[vf] = np.zeros(map_f_data.shape)
-                        map_tp[vf].flat[J] = tp['isl'][vi][id_J_to_keep, id_vf]
+                        nb_pivot_cells[isl_exp][vf] = idx.sum()
+                        nb_pivot_cells_success[isl_exp][vf] = 0
                         
-                        pivot_cells_used[vf] = 0
-                        failed[vf] = 0
+                        if idx.sum() > 0:
+                            area[idx] = draw_within_histogram(bins = h_area[vi][vf][isl_exp][1],
+                                                            p = h_area[vi][vf][isl_exp][0],
+                                                            n = idx.sum()).astype(int)
                         
-                    # map_f_data.flat[J] = vf_J
-                    # map_f = definition.LandUseCoverLayer(name="luc_simple",
-                    #                            time=None,
-                    #                            scale=case.map_i.scale)
-                    # map_f.import_numpy(data=map_f_data, sound=sound)
-                    # return(map_f)
-                                            
-                    id_J_sample = np.random.choice(np.arange(J.size),
-                                                   size=J.size,
-                                                   replace=False)
+                            eccentricity[idx] = draw_within_histogram(bins = h_eccentricity[vi][vf][isl_exp][1],
+                                                            p = h_eccentricity[vi][vf][isl_exp][0],
+                                                            n = idx.sum())
+                            
+                            map_tp[vf] = np.zeros(map_f_data.shape)
+                            map_tp[vf].flat[J] = tp['isl'][vi][id_J_to_keep, id_vf]
+                                                
                     
                     print('allocation...', isl_exp, vi)
                     
+                    id_J_sample = np.random.choice(np.arange(J.size),
+                                                       size=J.size,
+                                                       replace=False)
                     
                     for id_J in id_J_sample:
                         a = _weighted_neighbors(map_i_data = case.map_i.data,
@@ -228,9 +227,8 @@ class SimpleUnbiased(_Allocation):
                         
                         if a == 0:
                             failed_patches += 1
-                            failed[vf_J[id_J]] += 1
                         else:
-                            pivot_cells_used[vf_J[id_J]] += 1
+                            nb_pivot_cells_success[isl_exp][vf_J[id_J]] += 1
                             
                     
                 N_vi = case.J[vi].size
@@ -245,14 +243,17 @@ class SimpleUnbiased(_Allocation):
                 
                 # update scenario
                 for id_vf, vf in enumerate(case.dict_vi_vf[vi]):
-                    P_vf__vi[isl_exp][vi][id_vf] -= pivot_cells_used[vf] / N_vi
-                    P_vf__vi[isl_exp][vi][id_vf] *= N_vi / case.J[vi].size
-                    
+                    # update pixels borders
                     id_J_exp[vi][vf] = id_J_exp[vi][vf][pixels_to_keep]
-                    
-                    print('pivot_cells_used:', vf, pivot_cells_used[vf])
-            
-                    print('failed patches', vf, failed_patches)
+                    for isl_exp in ['isl', 'exp']:
+                        P_vf__vi[isl_exp][vi][id_vf] -= nb_pivot_cells_success[isl_exp][vf] / N_vi
+                        P_vf__vi[isl_exp][vi][id_vf] *= N_vi / case.J[vi].size
+                        
+                        print(isl_exp+' vf='+str(vf))
+                        print('\t nb of pivot cells: '+str(nb_pivot_cells[isl_exp][vf]))
+                        print('\t     nb of success: '+str(nb_pivot_cells_success[isl_exp][vf]))
+                                        
+            print('-> failed patches', failed_patches)
                     
                     
                 

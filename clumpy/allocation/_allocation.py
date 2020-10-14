@@ -77,11 +77,17 @@ class _Allocation():
         vf = {}
         
         for vi in tp.keys():
-            vf[vi] = self._generalized_acceptation_rejection_test_vi(vi, tp[vi], dict_vi_vf[vi])
+            vf[vi] = self._generalized_acceptation_rejection_test_vi(vi,
+                                                                     tp[vi],
+                                                                     dict_vi_vf[vi])
             
         return(vf)
     
     def _generalized_acceptation_rejection_test_vi(self, vi, tp_vi, list_vf):
+        tp_vi = np.nan_to_num(tp_vi)
+        
+        tp_vi[tp_vi<0] = 0
+        
         vf = np.zeros(tp_vi.shape[0]) + vi
         # cum sum along axis
         cs = np.cumsum(tp_vi, axis=1)
@@ -91,8 +97,13 @@ class _Allocation():
                                 
         for id_vf in range(tp_vi.shape[1]):
             inv_id_vf = tp_vi.shape[1] - 1 - id_vf
-            
-            vf[x < cs[:, inv_id_vf]] = list_vf[inv_id_vf]
+            try:
+                vf[x < cs[:, inv_id_vf]] = list_vf[inv_id_vf]
+            except ValueError:
+                print(x)
+                print(cs[:, inv_id_vf])
+                print(list_vf)
+                print(inv_id_vf)
             
         return(vf)
         

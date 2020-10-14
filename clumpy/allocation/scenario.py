@@ -8,6 +8,7 @@ from copy import deepcopy
 import os
 
 from .. import calibration
+from ..definition import TransitionProbabilityLayers
 
 def compute_transition_probabilities(case,
                                      unique_Z,
@@ -29,6 +30,10 @@ def compute_transition_probabilities(case,
     for vi in P_z__vi_vf.keys():
         if sound > 0:
             print('vi='+str(vi))
+            
+        P_vf__vi[vi] = np.nan_to_num(P_vf__vi[vi])
+        P_vf__vi[vi][P_vf__vi[vi] < 0] = 0
+            
         unique_Z[vi] = unique_Z[vi].merge(P_z__vi[vi], how='left')
         
         for id_vf, vf in enumerate(case.dict_vi_vf[vi]):
@@ -39,10 +44,11 @@ def compute_transition_probabilities(case,
         achieved = False
         while not achieved and n < n_iter_max:
             n += 1
-            if sound > 0:
+            if sound > 1:
                 print('iteration #'+str(n))
             s = (unique_Z[vi].P_z__vi_vf.values * P_vf__vi[vi]).sum(axis=1) / unique_Z[vi].P_z__vi.values
             
+            s = np.nan_to_num(s)
             idx_s = s > 1
             
             # edit P_z__vi_vf
@@ -57,9 +63,15 @@ def compute_transition_probabilities(case,
             # check if the scenario is reached
             p = all_Z[vi].P_vf__vi_z.values.mean(axis=0)
             
-            if sound > 0:
-                print(p / P_vf__vi[vi])
-            if (p / P_vf__vi[vi]).min() >= 1 - epsilon:
+            # for null probabilities
+            P = P_vf__vi[vi].copy()
+            idx = (p==0) & (P==0)
+            p[idx] = 1
+            P[idx] = 1
+            
+            if sound > 1:
+                print(p / P)
+            if (p / P).min() >= 1 - epsilon:
                 achieved = True
             else:
                 unique_Z[vi].P_z__vi_vf = unique_Z[vi].P_z__vi_vf / unique_Z[vi].P_z__vi_vf.sum()
@@ -67,64 +79,25 @@ def compute_transition_probabilities(case,
         all_Z[vi] = all_Z[vi].P_vf__vi_z.values
         
         if sound>0:
-            print('achieved for vi='+str(vi))
+            print('achieved for vi='+str(vi)+' with '+str(n)+' iterations')
             print('final P_vf__vi :', p)
             print('=====\n')
         
     return(all_Z)
-    
-# def adjust_transition_probabilities(tp, P_vf__vi, inplace=False):
-#     if not inplace:
-#         tp = deepcopy(tp)
-    
-#     old_P_vf__vi = compute_P_vf__vi_from_transition_probabilities(tp)
-    
-#     for vi in tp.keys():
-#         tp[vi] = _adjust_transition_probabilities_vi(tp[vi], P_vf__vi[vi], old_P_vf__vi[vi])
-            
-#     if not inplace:
-#         return(tp)
 
-# def _adjust_transition_probabilities_vi(tp_vi, P_vf__vix, old_P_vf__vix, m=1):
-#     tp_vi = tp_vi * P_vf__vix /  old_P_vf__vix
-        
-#     s = tp_vi.sum(axis=1)
-#     idx = s > m
-#     tp_vi[idx, :] = tp_vi[idx, :] / s[idx, None] * m
+def create_transition_probabilities_layers(case, tp):
+    tpl = TransitionProbabilityLayers()
+    for vi in case.dict_vi_vf.keys():
+        for id_vf, vf in enumerate(case.dict_vi_vf[vi]):
+            
+            M = np.zeros(case.map_i.data.shape) - 1.0
+            M.flat[case.J[vi]] = tp[vi][:, id_vf]
+            
+            tpl.add_layer(vi=vi,
+                          vf=vf,
+                          data=M)
     
-#     return(tp_vi)
-
-# def force_adjust_transition_probabilities(tp, P_vf__vi, step, epsilon, n_iter=1000, sound=0, inplace=False):
-#     if not inplace:
-#         tp = deepcopy(tp)
-        
-#     for vi in tp.keys():
-#         if sound > 0:
-#             print('vi='+str(vi))
-        
-#         P_vf__vi_command_vi = P_vf__vi[vi].copy()
-#         P_vf__vi_returned_vi = _compute_P_vf__vi_from_transition_probabilities_vi(tp[vi])
-        
-#         i = 0
-#         while((np.abs(P_vf__vi[vi] - P_vf__vi_returned_vi) > epsilon[vi]).sum() > 0):
-#             i += 1
-#             if i > n_iter:
-#                 print('maximum number of iterations reached.')
-#             coef = np.zeros_like(P_vf__vi_command_vi)
-#             coef[P_vf__vi[vi] - P_vf__vi_returned_vi > epsilon[vi]] = 1
-#             coef[P_vf__vi[vi] - P_vf__vi_returned_vi < - epsilon[vi]] = -1
-            
-#             P_vf__vi_command_vi = P_vf__vi_command_vi + coef * step[vi]
-            
-#             tp[vi] = _adjust_transition_probabilities_vi(tp[vi], P_vf__vi_command_vi, P_vf__vi_returned_vi)
-            
-#             P_vf__vi_returned_vi = _compute_P_vf__vi_from_transition_probabilities_vi(tp[vi])
-        
-#         if sound>0:
-#             print('   achieved in '+str(i)+' iterations.')
-        
-#     if not inplace:
-#         return(tp)
+    return(tpl)
 
 def compute_P_vf__vi_from_transition_probabilities(tp):
     P_vf__vi = {}
