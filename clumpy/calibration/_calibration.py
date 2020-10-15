@@ -67,12 +67,12 @@ class _Calibration():
         P_z__vi_vf = self.predict(unique_Z)
         
         tp = compute_transition_probabilities(case = case,
-                                                    unique_Z = unique_Z,
-                                                    P_z__vi_vf = P_z__vi_vf,
-                                                    P_vf__vi = P_vf__vi,
-                                                    epsilon=epsilon,
-                                                    n_iter_max=n_iter_max,
-                                                    sound=sound)
+                                                unique_Z = unique_Z,
+                                                P_z__vi_vf = P_z__vi_vf,
+                                                P_vf__vi = P_vf__vi,
+                                                epsilon=epsilon,
+                                                n_iter_max=n_iter_max,
+                                                sound=sound)
         
         
         return(tp)

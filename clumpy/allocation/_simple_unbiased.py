@@ -183,8 +183,6 @@ class SimpleUnbiased(_Allocation):
                     eccentricity = np.zeros(J.shape)
                     map_tp = {}
                     
-                    
-                    
                     for id_vf, vf in enumerate(case.dict_vi_vf[vi]):
                         idx = vf_J == vf
                         
