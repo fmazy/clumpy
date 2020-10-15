@@ -51,6 +51,8 @@ def compute_transition_probabilities(case,
             s = np.nan_to_num(s)
             idx_s = s > 1
             
+            print(unique_Z[vi].loc[idx_s,('P_z__vi')].values*case.J[vi].size)
+            
             # edit P_z__vi_vf
             unique_Z[vi].loc[idx_s, [('P_z__vi_vf', vf) for vf in case.dict_vi_vf[vi]]] = unique_Z[vi].loc[idx_s].P_z__vi_vf.values / s[idx_s, None]
             
