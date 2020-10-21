@@ -60,6 +60,7 @@ class _Calibration():
                                          epsilon=0.05,
                                          n_iter_max=100,
                                          sound=0):
+        
         if sound > 0:
             print('predict on unique z...')
         
