@@ -28,7 +28,10 @@ class StandardScaler():
         
         for vi in case.J.keys():
             self._standard_scalers_according_to_vi[vi] = SklearnStandardScaler()  # doctest: +SKIP
-            self._standard_scalers_according_to_vi[vi].fit(case.Z[vi])  # doctest: +SKIP
+            d = case.Z[vi]
+            if len(case.Z[vi].shape) == 1:
+                d = d.reshape(-1,1)
+            self._standard_scalers_according_to_vi[vi].fit(d)  # doctest: +SKIP
             
     def transform(self, case, inplace=False):
         """
@@ -48,7 +51,10 @@ class StandardScaler():
             case = case.copy()
         
         for vi in case.Z.keys():
-            case.Z[vi] = self._standard_scalers_according_to_vi[vi].transform(case.Z[vi])
+            d = case.Z[vi]
+            if len(case.Z[vi].shape) == 1:
+                d = d.reshape(-1,1)
+            case.Z[vi] = self._standard_scalers_according_to_vi[vi].transform(d)
         
         if not inplace:
             return(case)
