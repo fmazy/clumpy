@@ -6,8 +6,6 @@ Created on Wed Oct 21 10:37:01 2020
 @author: frem
 """
 
-from .._calibration import _Calibration, compute_P_z__vi_vf
-
 class _Cluster():
     
     def fit(self, case):
@@ -17,13 +15,15 @@ class _Cluster():
             print('vi=',vi)
             
             self.estimators[vi] = self._new_estimator()
-            self.estimators[vi].fit(case.Z[vi], case.vf[vi], list_vf=case.dict_vi_vf[vi])
+            self.estimators[vi].fit(case.Z[vi])
             
-    def predict(self, case):
-        labels = {}
-        P_z__vi_vf = {}
+    def transform(self, case, inplace=False):
+        if not inplace:
+            case = case.copy()
         
         for vi in case.Z.keys():
-            labels[vi], P_z__vi_vf[vi] = self.estimators[vi].predict(case.Z[vi])
+            case.Z[vi] = self.estimators[vi].predict(case.Z[vi])
+            case.Z_names[vi] = ['clustered']
         
-        return(labels, P_z__vi_vf)
+        if not inplace:
+            return(case)

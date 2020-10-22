@@ -32,7 +32,7 @@ class _Calibration():
             self.estimators[vi].fit(X[vi], 
                                     y[vi])
             
-    def predict(self, X, unit_measure=True):
+    def predict(self, X):
         
         if X is pd.DataFrame:
             X = deepcopy(X)
@@ -45,12 +45,6 @@ class _Calibration():
             y_predict[vi] = self.estimators[vi].predict(X[vi])
             
             y_predict[vi][y_predict[vi] < 0] = 0
-            
-            if unit_measure:
-                s = y_predict[vi].sum(axis=0)
-                id_column = s > 0
-                
-                y_predict[vi][:,id_column] = y_predict[vi][:,id_column] / s[id_column]
             
         return(y_predict)
     
@@ -377,7 +371,7 @@ def _distance_to_weights(d):
     w[w>1] = 1
     return(w)
 
-def compute_P_z__vi_vf(case, name='P_z__vi_vf', n_smooth = None):
+def compute_P_z__vi_vf(case, name='P_z__vi_vf', n_smooth = None, output='np'):
     P_z__vi_vf = compute_N_z_vi_vf(case, name=name)
     
     N_z_vi = compute_N_z_vi(case)
@@ -402,7 +396,17 @@ def compute_P_z__vi_vf(case, name='P_z__vi_vf', n_smooth = None):
             # scaling to have the sum equal to 1
             N_z_vi[vi][[name]] = N_z_vi[vi][name].values / N_z_vi[vi][name].sum(axis=0).values
     
-    return(N_z_vi)
+    if output == 'np':
+        X = {}
+        P = {}
+        
+        for vi in case.J.keys():
+            X[vi] = N_z_vi[vi].z.values
+            P[vi] = N_z_vi[vi][name].values
+        
+        return(X, P)
+    elif output == 'pd':
+        return(N_z_vi)
     
     
 def compute_P_vf__vi_z(case, name='P_vf__vi_z', n_smooth=None):

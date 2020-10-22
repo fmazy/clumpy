@@ -15,6 +15,7 @@ from sys import getsizeof
 
 from ._transition import _Transition
 from ._feature import _Zk
+from ._layer import FeatureLayer
 from ..tools import human_size
 from ..tools import np_suitable_integer_type
 
@@ -173,6 +174,19 @@ class Case():
         column_id = self.get_z_column_id(vi, z_name)
         
         return(self.Z[vi][:,column_id])
+    
+    def get_z_layer(self, vi, z_name):
+        z_layer = FeatureLayer(name='vi'+str(vi)+'_'+z_name,
+                               scale=self.map_i.scale)
+        
+        column_id = self.get_z_column_id(vi, z_name)
+        
+        M = np.zeros(self.map_i.data.shape) - 1
+        M.flat[self.J[vi]] = self.Z[vi][:, column_id]
+        
+        z_layer.import_numpy(M)
+        
+        return(z_layer)
     
     def get_J(self, vi):
         return(self.J[vi])
