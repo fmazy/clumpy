@@ -42,6 +42,10 @@ class _AgglomerativeEstimator():
     
     def fit(self, X):
         
+        n_sample = self.n_sample
+        if n_sample <= 1:
+            n_sample = int(n_sample * X.shape[0])
+        
         print('agglomerative clustering')
         ac = AgglomerativeClustering(n_clusters=self.n_clusters,
                                      affinity = self.affinity,
@@ -49,7 +53,7 @@ class _AgglomerativeEstimator():
                                      distance_threshold = self.distance_threshold)
         
         self.X_sample = X[np.random.choice(np.arange(X.shape[0]),
-                                       size=self.n_sample,
+                                       size=n_sample,
                                        replace=False),:]
         
         self.labels_sample = ac.fit_predict(self.X_sample)

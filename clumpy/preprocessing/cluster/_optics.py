@@ -5,20 +5,20 @@ from sklearn.neighbors import NearestNeighbors
 import numpy as np
 
 class OPTICS(_Cluster):
-    def __init__(self, min_samples=2, min_cluster_size=None, k=0.2):
+    def __init__(self, min_samples=2, max_eps=np.inf, k=0.2):
         self.min_samples = min_samples
+        self.max_eps = max_eps
         self.k = k
-        self.min_cluster_size = min_cluster_size
         
     def _new_estimator(self):
         return(_OPTICSEstimator(min_samples = self.min_samples,
-                                min_cluster_size = self.min_cluster_size,
+                                max_eps = self.max_eps,
                                 k=self.k))
     
 class _OPTICSEstimator():
-    def __init__(self, min_samples=2, min_cluster_size=None, k=0.2):
+    def __init__(self, min_samples=2, max_eps=np.inf, k=0.2):
         self.min_samples = min_samples
-        self.min_cluster_size = min_cluster_size
+        self.max_eps = max_eps
         self.k = k
     
     def fit(self, X):
@@ -30,7 +30,7 @@ class _OPTICSEstimator():
         
         print('agglomerative clustering')
         optics = OPTICSsklearn(min_samples=self.min_samples,
-                                    min_cluster_size=self.min_cluster_size)
+                               max_eps=self.max_eps)
         
         self.X_sample = X[np.random.choice(np.arange(X.shape[0]),
                                        size=n_fit,
