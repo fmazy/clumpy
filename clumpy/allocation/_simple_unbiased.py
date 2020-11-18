@@ -110,6 +110,156 @@ class SimpleUnbiased(_Allocation):
         
         return(map_f)
     
+    def allocate_simple(self,
+                  case,
+                  tp,
+                  h_area,
+                  h_eccentricity,
+                  neighbors_structure='rook',
+                  avoid_aggregation=False,
+                  nb_of_neighbors_to_fill=3,
+                  proceed_even_if_no_probability=True,
+                  failed_patches_treshold=5,
+                  epsilon=0.05,
+                  n_iter_max_tp=100,
+                  sound=2):
+        
+        case = case.copy()
+        
+        np.random.seed() # needed to seed in case of multiprocessing
+        
+        global_start_time = time.time()
+        start_time = time.time()
+                    
+        map_f_data = case.map_i.data.copy()
+                
+        self.detailed_execution_time = {}
+        
+        self.detailed_execution_time['initialization']=time.time()-start_time
+        start_time = time.time()
+        
+        
+        
+        failed_patches = failed_patches_treshold + 1
+        while failed_patches > failed_patches_treshold:
+            failed_patches = 0
+                        
+            for vi in case.dict_vi_vf.keys():
+                
+                nb_pivot_cells = {}
+                nb_pivot_cells_success = {}
+                
+                for isl_exp in ['isl', 'exp']:
+                    
+                    nb_pivot_cells[isl_exp] = {}
+                    nb_pivot_cells_success[isl_exp] = {}
+                    
+                    # gart
+                    if tp[isl_exp][vi].sum(axis=1).max() > 1.00000001:
+                        print('Warning ! probability > 1')
+                                    
+                    gart = self._generalized_acceptation_rejection_test_vi(vi,
+                                                                           tp[isl_exp][vi],
+                                                                           case.dict_vi_vf[vi])
+                    
+                                    
+                    id_J_to_keep = gart != vi
+                    
+                    J = case.J[vi][id_J_to_keep]
+                    vf_J = gart[id_J_to_keep]
+                                    
+                    area = np.zeros(J.shape)
+                    eccentricity = np.zeros(J.shape)
+                    map_tp = {}
+                    
+                    for id_vf, vf in enumerate(case.dict_vi_vf[vi]):
+                        idx = vf_J == vf
+                        
+                        nb_pivot_cells[isl_exp][vf] = idx.sum()
+                        nb_pivot_cells_success[isl_exp][vf] = 0
+                        
+                        if idx.sum() > 0:
+                            area[idx] = draw_within_histogram(bins = h_area[vi][vf][isl_exp][1],
+                                                            p = h_area[vi][vf][isl_exp][0],
+                                                            n = idx.sum()).astype(int)
+                        
+                            eccentricity[idx] = draw_within_histogram(bins = h_eccentricity[vi][vf][isl_exp][1],
+                                                            p = h_eccentricity[vi][vf][isl_exp][0],
+                                                            n = idx.sum())
+                            
+                            map_tp[vf] = np.zeros(map_f_data.shape)
+                            map_tp[vf].flat[J] = tp['isl'][vi][id_J_to_keep, id_vf]
+                                                
+                    
+                    print('allocation...', isl_exp, vi)
+                    
+                    id_J_sample = np.random.choice(np.arange(J.size),
+                                                       size=J.size,
+                                                       replace=False)
+                    
+                    for id_J in id_J_sample:
+                        a = _weighted_neighbors(map_i_data = case.map_i.data,
+                                      map_f_data=map_f_data,
+                                      map_P_vf__vi_z=map_tp[vf_J[id_J]],
+                                      j_kernel=J[id_J],
+                                      vi=vi,
+                                      vf=vf_J[id_J],
+                                      patch_S=area[id_J],
+                                      eccentricity_mean=eccentricity[id_J],
+                                      eccentricity_std=0.05,
+                                      neighbors_structure=neighbors_structure,
+                                      avoid_aggregation=avoid_aggregation,
+                                      nb_of_neighbors_to_fill=nb_of_neighbors_to_fill,
+                                      proceed_even_if_no_probability=proceed_even_if_no_probability)
+                        
+                        if a == 0:
+                            failed_patches += 1
+                        else:
+                            nb_pivot_cells_success[isl_exp][vf_J[id_J]] += 1
+                            
+                    
+                # N_vi = case.J[vi].size
+                    
+                # remove allocated pixels
+                pixels_to_keep = map_f_data.flat[case.J[vi]] == vi
+                case.keep_only(vi=vi,
+                               condition=pixels_to_keep,
+                               inplace=True)
+                
+                
+                
+                # update scenario
+                # for id_vf, vf in enumerate(case.dict_vi_vf[vi]):
+                #     for isl_exp in ['isl', 'exp']:
+                #         P_vf__vi[isl_exp][vi][id_vf] -= nb_pivot_cells_success[isl_exp][vf] / N_vi
+                #         P_vf__vi[isl_exp][vi][id_vf] *= N_vi / case.J[vi].size
+                        
+                #         print(isl_exp+' vf='+str(vf))
+                #         print('\t nb of pivot cells: '+str(nb_pivot_cells[isl_exp][vf]))
+                #         print('\t     nb of success: '+str(nb_pivot_cells_success[isl_exp][vf]))
+                                        
+            print('-> failed patches', failed_patches)
+            break
+                    
+                
+        
+        self.execution_time = time.time() - global_start_time
+        
+        # post processing
+        map_f = definition.LandUseCoverLayer(name="luc_simple",
+                                               time=None,
+                                               scale=case.map_i.scale)
+        map_f.import_numpy(data=map_f_data, sound=sound)
+        
+        if sound>0:
+            print('FINISHED')
+            print('========')
+            print('execution times')
+            print(self.detailed_execution_time)
+            print('total', round(self.execution_time,2), 's')
+            
+        return(map_f)
+    
     def allocate(self,
                   case,
                   calibrator,

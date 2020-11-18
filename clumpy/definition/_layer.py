@@ -13,6 +13,7 @@ import re
 from copy import deepcopy
 from sys import getsizeof
 from ..tools import human_size
+from copy import deepcopy
 
 class _Layer:
     """
@@ -114,6 +115,13 @@ class _Layer:
                 print(s)
         if return_value:
             return(s)
+        
+    def copy(self):
+        return(deepcopy(self))
+    # def copy(self):
+    #     c = _Layer(name=self.name, scale=self.scale)
+    #     c.data = self.data.copy()
+    #     return(c)
 
 
 class LandUseCoverLayer(_Layer):
