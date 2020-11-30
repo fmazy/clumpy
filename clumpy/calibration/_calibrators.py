@@ -7,7 +7,7 @@ Created on Wed Nov 18 10:48:12 2020
 """
 
 
-class _Calibrator():
+class Calibrators():
     def __init__(self, estimator, method, cv):
         self.method = method
         self.cv = cv

@@ -8,7 +8,7 @@ Created on Wed Nov 18 11:02:05 2020
 
 import numpy as np
 
-from ..metrics import brier_score_loss, log_loss
+from ..metrics import log_score
 from ..utils import check_list_parameters_vi, check_parameter_vi
 
 class Estimators():
@@ -17,7 +17,7 @@ class Estimators():
     Parameters
     ----------
     clf_vi : dict of estimators
-        Estimators of classification for each initial state vi
+        Estimators of classification for each initial state vi. 
     """
     def __init__(self, clf_vi):
         
@@ -66,11 +66,18 @@ class Estimators():
         
         C = {}
         for vi in self.classes_:
-            C[int(vi)] = self.clf_vi[vi].predict_proba(X_vi[vi])
             
+            # test if clf has predict_proba method
+            if hasattr(self.clf_vi[vi], "predict_proba"):
+                C[int(vi)] = self.clf_vi[vi].predict_proba(X_vi[vi])
+            else:  # use decision function as in https://scikit-learn.org/stable/auto_examples/calibration/plot_calibration_curve.html#sphx-glr-auto-examples-calibration-plot-calibration-curve-py
+                C[int(vi)] = self.clf_vi[vi].decision_function(X_vi[vi])
+                C[int(vi)] = \
+                    (C[int(vi)] - C[int(vi)].min()) / (C[int(vi)].max() - C[int(vi)].min())
+        
         return(C)
     
-    def score(self, X_vi, y_vi, method='brier'):
+    def score(self, X_vi, y_vi):
         """
         Return the evaluation metric score.
 
@@ -100,13 +107,8 @@ class Estimators():
         
         y_pred = self.predict_proba(X_vi)
         
-        if method=='brier':
-            return(brier_score_loss(y_vi, y_pred))
         
-        elif method=='logloss':
-            return(log_loss(y_vi, y_pred))
+        return(log_score(y_vi, y_pred))
         
-        else:
-            raise(ValueError("parameter `method` is wrong. expected one among {'brier', 'logloss'}"))
         
     

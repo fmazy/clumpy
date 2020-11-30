@@ -37,7 +37,7 @@ def check_list_parameters_vi(list_parameters_vi, list_vi = None):
             raise(ValueError("The parameters keys, i.e. vi should be the same."))
 
 
-def check_parameter_vi(parameter_vi):
+def check_parameter_vi(parameter_vi, keys=None):
     """
     Raise an error if the parameter function of vi is uncorrect.
 
@@ -45,6 +45,9 @@ def check_parameter_vi(parameter_vi):
     ----------
     parameter_vi : dict
         The parameter function of vi.
+        
+    keys : list, default=None
+        List of expected. If None, the test is passed.
         
     error_output : bool, default=True
         Raise an error if True. Else, return False.
@@ -60,6 +63,13 @@ def check_parameter_vi(parameter_vi):
     
     if not all(isinstance(k, int) for k in parameter_vi.keys()):
         raise(ValueError("All parameter_vi keys should be int. Get "+str(parameter_vi.keys())))
+        
+    if keys is not None:
+        keys = list(keys)
+        if len(parameter_vi.keys()) != len(keys):
+            raise(ValueError("The parameters keys are wrong. They should be "+str(keys)))
+        if not all(np.sort(list(parameter_vi.keys())) == np.sort(keys)):
+            raise(ValueError("The parameters keys are wrong. They should be "+str(keys)))
         
 def fill_default_parameter_vi(parameter_vi, default):
     """

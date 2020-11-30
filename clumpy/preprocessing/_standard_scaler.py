@@ -6,10 +6,46 @@ Created on Sun Aug 23 11:41:24 2020
 @author: frem
 """
 
+from ..utils import check_parameter_vi
+
 from sklearn.preprocessing import StandardScaler as SklearnStandardScaler
 import numpy as np
+from copy import deepcopy
 
 class StandardScaler():
+    
+    def fit(self, X_vi):
+        
+        check_parameter_vi(X_vi)
+        
+        self.standard_scalers_vi = {}
+        
+        for vi in X_vi.keys():
+            self.standard_scalers_vi[vi] = SklearnStandardScaler()
+            
+            d = X_vi[vi]
+            if len(X_vi[vi].shape) == 1:
+                d = d.reshape(-1,1)
+            self.standard_scalers_vi[vi].fit(d)  # doctest: +SKIP
+            
+    def transform(self, X_vi, inplace=False):
+        if not inplace:
+            X_vi = deepcopy(X_vi)
+            
+        check_parameter_vi(X_vi, keys = self.standard_scalers_vi.keys())
+        
+        for vi in X_vi:
+            d = X_vi[vi]
+            if len(X_vi[vi].shape) == 1:
+                d = d.reshape(-1,1)
+            X_vi[vi] = self.standard_scalers_vi[vi].transform(d)
+        
+        if not inplace:
+            return(X_vi)
+            
+        
+
+class StandardScaler1():
     """
     Standardize ``z`` features by removing the mean and scaling to unit variance for each initial states.
     """
