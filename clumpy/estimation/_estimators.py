@@ -23,7 +23,7 @@ class Estimators():
         
         check_parameter_vi(clf_vi)
         
-        self.clf_vi = clf_vi
+        self.est_u_ = clf_vi
         self.classes_ = np.array(list(clf_vi.keys())).astype(int)
     
     def fit(self, X_vi, y_vi):
@@ -40,7 +40,7 @@ class Estimators():
         
         check_list_parameters_vi([X_vi, y_vi], list_vi = self.classes_)
         
-        for vi, clf in self.clf_vi.items():
+        for vi, clf in self.est_u_.items():
             clf.fit(X_vi[vi], y_vi[vi])
     
     def predict_proba(self, X_vi):
@@ -68,10 +68,10 @@ class Estimators():
         for vi in self.classes_:
             
             # test if clf has predict_proba method
-            if hasattr(self.clf_vi[vi], "predict_proba"):
-                C[int(vi)] = self.clf_vi[vi].predict_proba(X_vi[vi])
+            if hasattr(self.est_u_[vi], "predict_proba"):
+                C[int(vi)] = self.est_u_[vi].predict_proba(X_vi[vi])
             else:  # use decision function as in https://scikit-learn.org/stable/auto_examples/calibration/plot_calibration_curve.html#sphx-glr-auto-examples-calibration-plot-calibration-curve-py
-                C[int(vi)] = self.clf_vi[vi].decision_function(X_vi[vi])
+                C[int(vi)] = self.est_u_[vi].decision_function(X_vi[vi])
                 C[int(vi)] = \
                     (C[int(vi)] - C[int(vi)].min()) / (C[int(vi)].max() - C[int(vi)].min())
         

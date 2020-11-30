@@ -3,17 +3,19 @@
 from ..utils import check_parameter_vi
 
 import numpy as np
+import warnings
 from copy import deepcopy
 
 class Discretizer():
-    def __init__(self, strategy='uniform', n_bins=None):
+    def __init__(self, strategy='uniform', n_bins=None, null_bin_width=10**(-15)):
         self.strategy = strategy
         self.n_bins = n_bins
-    
+        self.null_bin_width = null_bin_width
+        
     def fit(self, X_u):
         check_parameter_vi(X_u)
         
-        self.bins_u = {}
+        self.bins = {}
         
         for u in X_u.keys():
             X = X_u[u]
@@ -23,25 +25,28 @@ class Discretizer():
                 if self.strategy == 'quantile':  # Determine bin edges by distribution of data
                     
                     quantiles = np.linspace(0, 1, self.n_bins[u][id_feature] + 1)
-                    self.bins_u[(u, id_feature)] = np.quantile(X[:, id_feature], quantiles)
-                    self.bins_u[(u, id_feature)][-1] = self.bins_u[(u, id_feature)][-1] + 1e-8
+                    self.bins[(u, id_feature)] = np.quantile(X[:, id_feature], quantiles)
                     
-                    # monotonic correction
-                    # it is possible to have numeric approximation with negative difference (-10**-16)
+                    # remove 0 width bins
                     # first get differences x_{i+1}-x_{i}
-                    d = np.diff(self.bins_u[(u, id_feature)])
-                    # append 1 at the end to have index i+1
-                    d_before = np.append(d, 1)
+                    d = np.diff(self.bins[(u, id_feature)])
                     # append 0 at the beginning to have index i
-                    d_after = np.append(0, d)
+                    d = np.append(1, d)
                     # set the correction to get real 0 difference.
-                    self.bins_u[(u, id_feature)][d_after<0] = self.bins_u[(u, id_feature)][d_before<0]
-                    # another way could be to make positive every negative difference...
+                    self.bins[(u, id_feature)] = np.delete(self.bins[(u, id_feature)], d<self.null_bin_width)
+                    
+                    if self.bins[(u, id_feature)].size != self.n_bins[u][id_feature] + 1:
+                         warnings.warn('for the feature ('+str(u)+','+str(id_feature)+'), the required bin number is unreached. required: '+str(self.n_bins[u][id_feature])+', output: '+str(self.bins[(u, id_feature)].size-1), 
+                                    stacklevel=2)
+                    
+                    # bounds are set to infinity
+                    self.bins[(u, id_feature)][0] = -np.inf
+                    self.bins[(u, id_feature)][-1] = np.inf
                     
                     
                 elif self.strategy == 'uniform':
                     
-                    self.bins_u[(u, id_feature)] = np.linspace(0.,
+                    self.bins[(u, id_feature)] = np.linspace(0.,
                                                                  X[:, id_feature].max() + 1e-8,
                                                                  self.n_bins[u][id_feature] + 1)
             
@@ -57,8 +62,8 @@ class Discretizer():
         if not inplace:
             X_u = deepcopy(X_u)
         
-        for (u, id_feature) in self.bins_u.keys():
-            X_u[u][:, id_feature] = np.digitize(X_u[u][:, id_feature], self.bins_u[(u, id_feature)]) + 1
+        for (u, id_feature) in self.bins.keys():
+            X_u[u][:, id_feature] = np.digitize(X_u[u][:, id_feature], self.bins[(u, id_feature)])
         
         if not inplace:
             return(X_u)
