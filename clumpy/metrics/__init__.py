@@ -43,7 +43,7 @@ def brier_score_loss(y_true_vi, y_pred_vi):
         
     return(phi_BS)
 
-def log_score(v_u, P_u):
+def log_score_u(v_u, P_u):
     s = {}
     
     P_u = deepcopy(P_u)
@@ -75,6 +75,34 @@ def log_score(v_u, P_u):
         
         s[u] = b+a/n*np.sum(np.log(P_u[u][tuple(idx.T)]))
         
+    return(s)
+
+def log_score(v, P):
+    b = 1
+    
+    n = P.shape[0]
+    
+    unique_v, ni = np.unique(v,return_counts=True)
+    
+    unique_v = list(unique_v)
+    
+    fi = ni/n
+    
+    a = -1 / np.sum(fi*np.log(fi))
+    
+    i = np.zeros(v.size)
+    for m in unique_v:
+        i[v == m] = unique_v.index(m)
+    i = i.astype(int)
+    
+    idx = np.column_stack((np.arange(i.size), i))
+    
+    # on donne aux probabilités nulles une petite chance si jamais ça a eu lieu effectivement
+    # cette petite chance est égale à 0.01 de la plus petite chance
+    P[P == 0] = P[P>0].min() * 0.01
+    
+    s = b+a/n*np.sum(np.log(P[tuple(idx.T)]))
+    
     return(s)
 
 def log_loss(y_true_vi, y_pred_vi):

@@ -3,6 +3,7 @@
 from ..utils import check_list_parameters_vi
 
 from sklearn.model_selection import train_test_split as sklearn_train_test_split
+from sklearn.model_selection import StratifiedKFold as Sklearn_StratifiedKFold
 from sklearn.utils import indexable
 
 def train_test_split(*dicts, **options):
@@ -58,3 +59,33 @@ def train_test_split(*dicts, **options):
         splitted_dicts.append(sd)
         
     return(splitted_dicts)
+
+class StratifiedKFold():
+    """Stratified K folds cross-validator"""
+    def __init__(self, n_splits=5, shuffle=False, random_state=None):
+        self.n_splits = n_splits
+        self.shuffle = shuffle
+        self.random_state = random_state
+        
+    def split(self, X_u, v_u):
+        train_index_u = {}
+        test_index_u = {}
+        
+        for u in X_u.keys():
+            
+            skf = Sklearn_StratifiedKFold(n_splits = self.n_splits,
+                                          shuffle = self.shuffle,
+                                          random_state = self.random_state)
+            
+            train_index_u[u] = []
+            test_index_u[u] = []
+            
+            for train_index, test_index in skf.split(X_u[u], v_u[u]):
+                train_index_u[u].append(train_index)
+                test_index_u[u].append(test_index)
+        
+        return(train_index_u, test_index_u)
+        
+        
+        
+        
