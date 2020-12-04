@@ -99,6 +99,7 @@ def log_score(v, P):
     
     # on donne aux probabilités nulles une petite chance si jamais ça a eu lieu effectivement
     # cette petite chance est égale à 0.01 de la plus petite chance
+    # ça évite d'avoir un -inf en sortie du log...
     P[P == 0] = P[P>0].min() * 0.01
     
     s = b+a/n*np.sum(np.log(P[tuple(idx.T)]))
