@@ -9,138 +9,210 @@ The tool module of demeter
 # -*- coding: utf-8 -*-
 import numpy as np
 import pandas as pd
+from matplotlib import pyplot as plt
 
-def flat_midf(df, inplace=False):
-    if not inplace:
-        df = df.copy()
+def human_size(s):
+    units = ['B', 'KiB', 'MiB', 'GiB', 'TiB', 'PiB', 'EiB', 'ZiB', 'YiB']
+    i = 0
+    while round(s/1024) > 0:
+        s = s / 1024
+        i += 1
+    
+    return(s, units[i])
+
+def np_suitable_integer_type(a):
+    if a.min() >= 0: # if unsigned
+        t = np.uint64
+        m = a.max()
+        if m <= 4294967295:
+            t = np.uint32
+            if m <= 65535:
+                t = np.uint16
+                if m<= 255:
+                    t = np.uint8
+    else:
+        t = np.int64
+        m = np.abs(a).max()
+        if m <= 2147483647:
+            t = np.uint32
+            if m <= 32767:
+                t = np.uint16
+                if m<= 127:
+                    t = np.uint8
+                    
+    return(a.astype(t))
+
+def np_drop_duplicates_from_column(a, column_id):
+    return(a[np.unique(a[:, column_id], return_index=True)[1]])
         
-    df.columns = df.columns.to_list()
-    
-    if not inplace:
-        return(df)
+def plot_histogram(h, t='step', color=None, linestyle=None, linewidth=None, label=None):
 
-def unflat_midf(df, inplace=False):
-    if not inplace:
-        df = df.copy()
+    if t == 'step':
+        y = np.append(h[0], 0)
+        x = h[1]
+        plt.step(x=x,
+                y=y,
+                where='post',
+                color=color,
+                linestyle=linestyle,
+                linewidth=linewidth,
+                label=label)
     
-    df.columns = pd.MultiIndex.from_tuples(df.columns.to_list())
-    
-    if not inplace:
-        return(df)
-
-def divideWith0(a, b, out=0):
-    if out == 0:
-        c = np.divide(a, b, out = np.zeros_like(a), where= b!=0)
-    elif out == 'nan':
-        c = np.divide(a, b, out = np.zeros_like(a).fill(np.nan), where= b!=0)
-    return(c)
-
-def df_to_matrix(df, shape, coord_names, x_name):
-    """
-    only 2 dimensions for now...
-    """
+    elif t =='bar':
+        height = h[0]
+        x = h[1][:-1]
         
-    M = np.zeros(shape)
-    
-    df['flat_index'] = np.ravel_multi_index(df[coord_names].values.T, dims=shape)    
-    # df = df.set_index([i_name, j_name])
-    
-    M.flat[df.flat_index.values] = df[x_name].values
-    
-    df.drop('flat_index', axis=1, inplace=True)
-    
-    return(M)
-    
-def matrix_to_df(M, coord_names, x_name, drop_null=True, reset_index=True, set_index=False):
-    
-    df = pd.DataFrame(columns=coord_names+[x_name])
-    
-    df[x_name] = M.flat
-    coords = np.unravel_index(np.arange(M.size), np.shape(M))
-    df[coord_names] = np.array(coords).T
-
-    
-    if drop_null:
-        df = df.loc[df[x_name]!=0]
+        plt.bar(x=x,
+                height=height,
+                width=np.diff(h[1])*0.9,
+                align='edge',
+                color=color,
+                label=label)
         
-    if reset_index:
-        df.reset_index(inplace=True, drop=True)
-
-    if set_index:
-        df.set_index(['vi','vf'], inplace=True)
+def draw_within_histogram(bins, p, n):
+    x = np.random.choice(a=bins[:-1] + np.diff(bins)/2,
+                         size=n,
+                         replace=True,
+                         p=p)
     
-    return(df)
+    return(x)
 
-# def df_matrix_to_df(df, i_name, j_name, x_name):
-    # index = 
+def histogram_mean(h):
+    a = (h[1][:-1]+np.diff(h[1])/2)
+    return(np.average(a, weights=h[0]))
+    
 
-def generateBigNp(shape, index, values, default_value=0):
-    M = np.zeros(shape)
-    M.fill(default_value)
-    M.flat[index] = values
-    return(M)
-    
-def normalize(rawpoints, low=0.0, high=1.0):
-    mins = np.min(rawpoints, axis=None)
-    maxs = np.max(rawpoints, axis=None)
-    rng = maxs - mins
-    return high - (((high - low) * (maxs - rawpoints)) / rng)
-
-def smoothRollingMean(y, box_pts):
-    """
-    
-    """
-    box = np.ones(box_pts)/box_pts
-    y_smooth = np.convolve(y, box, mode='same')
-    return y_smooth
-
-def smooth(y, parameters, keep_sum=True):
-    """
-    smoothing function
-    :param y: series to smooth
-    :type y: numpy array
-    :param parameters: smoothing parameters. they are detailled below
-    :type parameters: dict
-    :param keep_sum: if `True`, the data sum is kept.
-    :type keep_sum: bool
-    
-    :returns: smoothed y
-    
-    smoothing parameters :
-    * `'rolling_mean'` (moving average), parameters:
-        * `'n'` box points number
+# def flat_midf(df, inplace=False):
+#     if not inplace:
+#         df = df.copy()
         
-    examples::
-        parameters={'algorithm': 'rolling_mean',
-                    'n': 2}
-    """
-    sum_y = np.sum(y)
-    if parameters['algorithm'] == 'rolling_mean':
-        y = smoothRollingMean(y, parameters['n'])
+#     df.columns = df.columns.to_list()
     
-    if keep_sum:
-        y = y/np.sum(y)*sum_y
+#     if not inplace:
+#         return(df)
+
+# def unflat_midf(df, inplace=False):
+#     if not inplace:
+#         df = df.copy()
+    
+#     df.columns = pd.MultiIndex.from_tuples(df.columns.to_list())
+    
+#     if not inplace:
+#         return(df)
+
+# def divideWith0(a, b, out=0):
+#     if out == 0:
+#         c = np.divide(a, b, out = np.zeros_like(a), where= b!=0)
+#     elif out == 'nan':
+#         c = np.divide(a, b, out = np.zeros_like(a).fill(np.nan), where= b!=0)
+#     return(c)
+
+# def df_to_matrix(df, shape, coord_names, x_name):
+#     """
+#     only 2 dimensions for now...
+#     """
+        
+#     M = np.zeros(shape)
+    
+#     df['flat_index'] = np.ravel_multi_index(df[coord_names].values.T, dims=shape)    
+#     # df = df.set_index([i_name, j_name])
+    
+#     M.flat[df.flat_index.values] = df[x_name].values
+    
+#     df.drop('flat_index', axis=1, inplace=True)
+    
+#     return(M)
+    
+# def matrix_to_df(M, coord_names, x_name, drop_null=True, reset_index=True, set_index=False):
+    
+#     df = pd.DataFrame(columns=coord_names+[x_name])
+    
+#     df[x_name] = M.flat
+#     coords = np.unravel_index(np.arange(M.size), np.shape(M))
+#     df[coord_names] = np.array(coords).T
+
+    
+#     if drop_null:
+#         df = df.loc[df[x_name]!=0]
+        
+#     if reset_index:
+#         df.reset_index(inplace=True, drop=True)
+
+#     if set_index:
+#         df.set_index(['vi','vf'], inplace=True)
+    
+#     return(df)
+
+# # def df_matrix_to_df(df, i_name, j_name, x_name):
+#     # index = 
+
+# def generateBigNp(shape, index, values, default_value=0):
+#     M = np.zeros(shape)
+#     M.fill(default_value)
+#     M.flat[index] = values
+#     return(M)
+    
+# def normalize(rawpoints, low=0.0, high=1.0):
+#     mins = np.min(rawpoints, axis=None)
+#     maxs = np.max(rawpoints, axis=None)
+#     rng = maxs - mins
+#     return high - (((high - low) * (maxs - rawpoints)) / rng)
+
+# def smoothRollingMean(y, box_pts):
+#     """
+    
+#     """
+#     box = np.ones(box_pts)/box_pts
+#     y_smooth = np.convolve(y, box, mode='same')
+#     return y_smooth
+
+# def smooth(y, parameters, keep_sum=True):
+#     """
+#     smoothing function
+#     :param y: series to smooth
+#     :type y: numpy array
+#     :param parameters: smoothing parameters. they are detailled below
+#     :type parameters: dict
+#     :param keep_sum: if `True`, the data sum is kept.
+#     :type keep_sum: bool
+    
+#     :returns: smoothed y
+    
+#     smoothing parameters :
+#     * `'rolling_mean'` (moving average), parameters:
+#         * `'n'` box points number
+        
+#     examples::
+#         parameters={'algorithm': 'rolling_mean',
+#                     'n': 2}
+#     """
+#     sum_y = np.sum(y)
+#     if parameters['algorithm'] == 'rolling_mean':
+#         y = smoothRollingMean(y, parameters['n'])
+    
+#     if keep_sum:
+#         y = y/np.sum(y)*sum_y
     
     return(y)
 
-def chi2(N,E):
-    return(np.sum(np.power(N-E,2)/E))    
+# def chi2(N,E):
+#     return(np.sum(np.power(N-E,2)/E))    
 
-def cramers_V(N,E):
+# def cramers_V(N,E):
     
-    nb = np.sum(N+E)
-    V = np.sqrt(chi2(N,E)/nb)
+#     nb = np.sum(N+E)
+#     V = np.sqrt(chi2(N,E)/nb)
     
-    return(V)
+#     return(V)
 
-def l2_distance(N,E):
-    return(np.sqrt(np.sum(np.power(N-E,2))))
+# def l2_distance(N,E):
+#     return(np.sqrt(np.sum(np.power(N-E,2))))
 
-def draw_in_histogram(bins, hist, shape):
+# def draw_in_histogram(bins, hist, shape):
     
-    # x = np.random.choice(bins)
+#     # x = np.random.choice(bins)
     
-    return(df)
+#     return(df)
     #     N = Ti.T.patchesHist.N.loc[(Ti.T.patchesHist.vi==Ti.vi) &
     #                                  (Ti.T.patchesHist.vf==Tif.vf) &
     #                                  (Ti.T.patchesHist.isl_exp == isl_exp)].values
@@ -157,7 +229,6 @@ def draw_in_histogram(bins, hist, shape):
     
     
 
-#%%
 #M=np.arange(10*10)
 #M = M.reshape((10,10))
 #M.fill(0)

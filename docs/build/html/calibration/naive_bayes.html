@@ -27,9 +27,7 @@
         <script type="text/javascript" src="../_static/underscore.js"></script>
         <script type="text/javascript" src="../_static/doctools.js"></script>
         <script type="text/javascript" src="../_static/language_data.js"></script>
-        <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
         <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
-        <script type="text/x-mathjax-config">MathJax.Hub.Config({"tex2jax": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true, "ignoreClass": "document", "processClass": "math|output_area"}})</script>
     
     <script type="text/javascript" src="../_static/js/theme.js"></script>
 
@@ -40,8 +38,8 @@
   <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="next" title="Simple Unbiased Allocation Method" href="../allocation/simple_unbiased.html" />
-    <link rel="prev" title="Discretization" href="../discretization/discretization.html" /> 
+    <link rel="next" title="K-Nearest Neighbors regressor" href="knn.html" />
+    <link rel="prev" title="Model selection" href="model_selection.html" /> 
 </head>
 
 <body class="wy-body-for-nav">
@@ -99,13 +97,16 @@
 <li class="toctree-l1"><a class="reference internal" href="../definition/layer.html">Layer</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../definition/case.html">Case</a></li>
 </ul>
-<p class="caption"><span class="caption-text">Discretization</span></p>
+<p class="caption"><span class="caption-text">Pre-processing</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="../discretization/discretization.html">Discretization</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../preprocessing/standard_scaler.html">Standard Scaler</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../preprocessing/binarizer.html">Binarizer</a></li>
 </ul>
 <p class="caption"><span class="caption-text">Calibration</span></p>
 <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="model_selection.html">Model selection</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Naive Bayes Calibration Method</a></li>
+<li class="toctree-l1"><a class="reference internal" href="knn.html">K-Nearest Neighbors regressor</a></li>
 </ul>
 <p class="caption"><span class="caption-text">Allocation</span></p>
 <ul>
@@ -176,44 +177,20 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  
-<style>
-/* CSS overrides for sphinx_rtd_theme */
-
-/* 24px margin */
-.nbinput.nblast.container,
-.nboutput.nblast.container {
-    margin-bottom: 19px;  /* padding has already 5px */
-}
-
-/* ... except between code cells! */
-.nblast.container + .nbinput.container {
-    margin-top: -19px;
-}
-
-.admonition > p:before {
-    margin-right: 4px;  /* make room for the exclamation icon */
-}
-
-/* Fix math alignment, see https://github.com/rtfd/sphinx_rtd_theme/pull/686 */
-.math {
-    text-align: unset;
-}
-</style>
-<div class="section" id="naive-bayes-calibration-method">
+  <div class="section" id="naive-bayes-calibration-method">
 <h1>Naive Bayes Calibration Method<a class="headerlink" href="#naive-bayes-calibration-method" title="Permalink to this headline">¶</a></h1>
 <dl class="class">
 <dt id="clumpy.calibration.NaiveBayes">
 <em class="property">class </em><code class="sig-prename descclassname">clumpy.calibration.</code><code class="sig-name descname">NaiveBayes</code><a class="headerlink" href="#clumpy.calibration.NaiveBayes" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">clumpy.calibration._calibration._Calibration</span></code></p>
-<p>Naive Bayes calibration method.</p>
+<p>Naive Bayes calibration.</p>
 <dl class="method">
 <dt id="clumpy.calibration.NaiveBayes.fit">
-<code class="sig-name descname">fit</code><span class="sig-paren">(</span><em class="sig-param">case: clumpy.definition._case.Case</em><span class="sig-paren">)</span><a class="headerlink" href="#clumpy.calibration.NaiveBayes.fit" title="Permalink to this definition">¶</a></dt>
-<dd><p>fit model with a discretized case</p>
+<code class="sig-name descname">fit</code><span class="sig-paren">(</span><em class="sig-param">J</em><span class="sig-paren">)</span><a class="headerlink" href="#clumpy.calibration.NaiveBayes.fit" title="Permalink to this definition">¶</a></dt>
+<dd><p>Fit the model using J as training data</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>case</strong> (<a class="reference internal" href="../definition/case.html#clumpy.definition.Case" title="clumpy.definition.Case"><em>Case</em></a>) – The case which have to be discretized.</p>
+<dd class="field-odd"><p><strong>J</strong> (<em>pandas dataframe.</em>) – A two level <code class="docutils literal notranslate"><span class="pre">z</span></code> (X) and <code class="docutils literal notranslate"><span class="pre">P_vf__vi_z</span></code> (y) columns are expected.</p>
 </dd>
 </dl>
 <p class="rubric">Notes</p>
@@ -238,21 +215,39 @@
 </dd></dl>
 
 <dl class="method">
-<dt id="clumpy.calibration.NaiveBayes.transition_probability_maps">
-<code class="sig-name descname">transition_probability_maps</code><span class="sig-paren">(</span><em class="sig-param">case: clumpy.definition._case.Case</em>, <em class="sig-param">P_vf__vi=None</em><span class="sig-paren">)</span><a class="headerlink" href="#clumpy.calibration.NaiveBayes.transition_probability_maps" title="Permalink to this definition">¶</a></dt>
-<dd><p>Infer transition probability maps</p>
+<dt id="clumpy.calibration.NaiveBayes.predict">
+<code class="sig-name descname">predict</code><span class="sig-paren">(</span><em class="sig-param">J</em><span class="sig-paren">)</span><a class="headerlink" href="#clumpy.calibration.NaiveBayes.predict" title="Permalink to this definition">¶</a></dt>
+<dd><p>Predict the target for the provided data.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>J</strong> (<em>pandas dataframe.</em>) – A two level <code class="docutils literal notranslate"><span class="pre">z</span></code> feature column is expected.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>J_predicted</strong> – Target values above the <code class="docutils literal notranslate"><span class="pre">P_vf__vi_z</span></code> column.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>pandas dataframe</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="clumpy.calibration.NaiveBayes.score">
+<code class="sig-name descname">score</code><span class="sig-paren">(</span><em class="sig-param">J</em>, <em class="sig-param">y</em><span class="sig-paren">)</span><a class="headerlink" href="#clumpy.calibration.NaiveBayes.score" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the coefficient of determination R^2 of the prediction.</p>
+<p>The coefficient R^2 is defined as (1 - u/v), where u is the residual sum of squares ((y_true - y_pred) ** 2).sum() and v is the total sum of squares ((y_true - y_true.mean()) ** 2).sum(). The best possible score is 1.0 and it can be negative (because the model can be arbitrarily worse). A constant model that always predicts the expected value of y, disregarding the input features, would get a R^2 score of 0.0. It returns the coefficient R^2 for each initial states.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>case</strong> (<a class="reference internal" href="../definition/case.html#clumpy.definition.Case" title="clumpy.definition.Case"><em>Case</em></a>) – The case which have to be discretized..</p></li>
-<li><p><strong>P_vf__vi</strong> (<em>Pandas DataFrame</em><em> (</em><em>default=None</em><em>)</em>) – The transition matrix. If <code class="docutils literal notranslate"><span class="pre">None</span></code>, the fitted <code class="docutils literal notranslate"><span class="pre">self.P_vf__vi</span></code> is used.</p></li>
+<li><p><strong>J</strong> (<em>pandas dataframe.</em>) – A two level <code class="docutils literal notranslate"><span class="pre">z</span></code> feature column is expected.</p></li>
+<li><p><strong>y</strong> (<em>numpy array.</em>) – True <code class="docutils literal notranslate"><span class="pre">P_vf__vi_z</span></code> values for J in the same order.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>
-<dd class="field-even"><p><strong>maps</strong> – The transition probability maps</p>
+<dd class="field-even"><p><strong>score</strong> – R^2 of self.predict(J) wrt. y for each <code class="docutils literal notranslate"><span class="pre">vi</span></code> in the ascending order.</p>
 </dd>
 <dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p><a class="reference internal" href="../definition/layer.html#clumpy.definition.TransitionProbabilityLayers" title="clumpy.definition.TransitionProbabilityLayers">TransitionProbabilityLayers</a></p>
+<dd class="field-odd"><p>list of floats</p>
 </dd>
 </dl>
 </dd></dl>
@@ -269,10 +264,10 @@
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
-        <a href="../allocation/simple_unbiased.html" class="btn btn-neutral float-right" title="Simple Unbiased Allocation Method" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+        <a href="knn.html" class="btn btn-neutral float-right" title="K-Nearest Neighbors regressor" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
-        <a href="../discretization/discretization.html" class="btn btn-neutral float-left" title="Discretization" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+        <a href="model_selection.html" class="btn btn-neutral float-left" title="Model selection" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
       
     </div>
   

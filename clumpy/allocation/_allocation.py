@@ -13,7 +13,7 @@ import multiprocessing as mp
 # import pandas as pd
 
 # from ..definition.data import create_J
-from ..calibration._calibration import _Calibration
+# from ..calibration._calibration import _Calibration
 
 
 class _Allocation():
@@ -23,6 +23,18 @@ class _Allocation():
         self.execution_time = {'sampling':[], 'patches_parameters_initialization':[]}
         self.tested_pixels = []
         
+    def allocate_monopixel_patches(self,
+                                   case,
+                                   tp,
+                                   sound=2,
+                                   dict_args={}):
+        
+        # map_i=dict_args.get('probability_maps', map_i)
+        # J_proba=dict_args.get('probability_maps', J_proba)
+        # sound=dict_args.get('sound', sound)
+        
+        return(self._allocate_monopixel_patches(case, tp, sound))   
+    
     def _draw_patches_parameters(self, J, list_vi_vf):
         J['S_patch'] = 0
         for key in list_vi_vf:
@@ -59,39 +71,41 @@ class _Allocation():
         
         return(N_vi_vf)
     
-    def _generalized_acceptation_rejection_test(self, J, inplace=False, accepted_only=False):
+    def _generalized_acceptation_rejection_test(self, tp, dict_vi_vf):
         """
         """
-        # cum sum columns
-        # first column creation
+        vf = {}
         
-        if not inplace:
-            J = J.copy()
+        for vi in tp.keys():
+            vf[vi] = self._generalized_acceptation_rejection_test_vi(vi,
+                                                                     tp[vi],
+                                                                     dict_vi_vf[vi])
             
-        # vf column
-        J[('v','f')] = J.v.i
+        return(vf)
+    
+    def _generalized_acceptation_rejection_test_vi(self, vi, tp_vi, list_vf):
+        tp_vi = np.nan_to_num(tp_vi)
         
-        if 'P_vf__vi_z' in J.columns:
-            list_vf = J.P_vf__vi_z.columns.to_list()
-            for vf in list_vf:
-                J[('P_vf__vi_z_cs', vf)] = 0
-            # then cum sum
-            J[[('P_vf__vi_z_cs', vf) for vf in list_vf]] = np.cumsum(J[['P_vf__vi_z']].values, axis=1)
-            # random value
-            J['gart_x'] = np.random.random(J.index.size)
+        tp_vi[tp_vi<0] = 0
         
-            # vf attribution
-            for vf in list_vf[::-1]:
-                J.loc[J.gart_x<J[('P_vf__vi_z_cs',vf)], ('v','f')] = vf
+        vf = np.zeros(tp_vi.shape[0]) + vi
+        # cum sum along axis
+        cs = np.cumsum(tp_vi, axis=1)
+        
+        # random value
+        x = np.random.random(tp_vi.shape[0])
+                                
+        for id_vf in range(tp_vi.shape[1]):
+            inv_id_vf = tp_vi.shape[1] - 1 - id_vf
+            try:
+                vf[x < cs[:, inv_id_vf]] = list_vf[inv_id_vf]
+            except ValueError:
+                print(x)
+                print(cs[:, inv_id_vf])
+                print(list_vf)
+                print(inv_id_vf)
             
-            # drop columns
-            J.drop(['P_vf__vi_z_cs', 'gart_x'], axis=1, level=0, inplace=True)
-        
-        if accepted_only:
-            J.drop(J.loc[J.v.i == J.v.f].index.values, axis=0, inplace=True)
-        
-        if not inplace:
-            return(J)
+        return(vf)
         
     def _add_P_vf__vi_z_to_J(self, J, probability_maps, inplace=False):
         if not inplace:
@@ -412,3 +426,47 @@ def compute_P_vf__vi_from_transition_probability_maps(case, probability_maps):
         P_vf__vi.loc[P_vf__vi.v.i==vi, ('P_vf__vi',vi)] = 1 - P_vf__vi.loc[P_vf__vi.v.i==vi].P_vf__vi.sum(axis=1)
 
     return(P_vf__vi.fillna(0))
+
+def update_P_vf__vi_z(P_vf__vi_z_original,
+                      P_z__vi_original=None,
+                      P_z__vi_new=None,
+                      P_vf__vi_original=None,
+                      P_vf__vi_new=None,
+                      name='P_vf__vi_z'):
+        
+    columns_to_remove = []
+    
+    # if new P_z__vi
+    if type(P_z__vi_original) != type(None):
+        P_vf__vi_z_original = P_vf__vi_z_original.merge(P_z__vi_original, how='left')
+        P_vf__vi_z_original = P_vf__vi_z_original.merge(P_z__vi_new, how='left')
+        columns_to_remove.append('P_z__vi_original')
+        columns_to_remove.append('P_z__vi_new')
+    
+    # if new P_vf__vi
+    if type(P_vf__vi_original) != type(None):
+        P_vf__vi_z_original = P_vf__vi_z_original.merge(P_vf__vi_original, how='left')
+        P_vf__vi_z_original = P_vf__vi_z_original.merge(P_vf__vi_new, how='left')
+        columns_to_remove.append('P_vf__vi_original')
+        columns_to_remove.append('P_vf__vi_new')
+        
+    # if updates P_z__vi only
+    if type(P_z__vi_original) != type(None) and type(P_vf__vi_original) == type(None):
+        for vf in P_vf__vi_z_original.P_vf__vi_z_original.columns.to_list():
+            P_vf__vi_z_original[(name, vf)] = P_vf__vi_z_original.P_vf__vi_z_original[vf] * P_vf__vi_z_original.P_z__vi_original / P_vf__vi_z_original.P_z__vi_new
+    
+    # if updates P_vf__vi only
+    if type(P_z__vi_original) == type(None) and type(P_vf__vi_original) != type(None):
+        for vf in P_vf__vi_z_original.P_vf__vi_z_original.columns.to_list():
+            P_vf__vi_z_original[(name, vf)] = P_vf__vi_z_original.P_vf__vi_z_original[vf] * P_vf__vi_z_original.P_vf__vi_new[vf] / P_vf__vi_z_original.P_vf__vi_original[vf]        
+    
+    # if updates P_z__vi and P_vf__vi
+    if type(P_z__vi_original) != type(None) and type(P_vf__vi_original) != type(None):
+        for vf in P_vf__vi_z_original.P_vf__vi_z_original.columns.to_list():
+            P_vf__vi_z_original[(name, vf)] = P_vf__vi_z_original.P_vf__vi_z_original[vf] * P_vf__vi_z_original.P_z__vi_original / P_vf__vi_z_original.P_z__vi_new * P_vf__vi_z_original.P_vf__vi_new[vf] / P_vf__vi_z_original.P_vf__vi_original[vf] 
+            
+    P_vf__vi_z_original.drop(columns_to_remove, axis=1, level=0, inplace=True)        
+    
+
+    return(P_vf__vi_z_original)
+    

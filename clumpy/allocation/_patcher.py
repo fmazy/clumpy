@@ -67,7 +67,7 @@ def _weighted_neighbors(map_i_data,
         return(0)
     
     if neighbors_structure not in ['rook', 'queen']:
-        print('ERROR: unexpected neighbors_structure in weighted_neighbors')
+        print('ERROR: unexpected neighbors_structure in weighted_neighbors, get "'+str(neighbors_structure)+'"')
         return('ERROR')
     
     queen_star = np.ones((3,3))
@@ -173,7 +173,7 @@ def _weighted_neighbors(map_i_data,
             mu_02 = (np.sum(np.power(y_allocated-yc,2)) + np.power(y_neighbors - yc,2)) / (len(j_allocated)+1)
             mu_11 = (np.sum((x_allocated-xc)*(y_allocated-yc)) + (x_neighbors - xc) * (y_neighbors - yc)) / (len(j_allocated)+1)
             
-            delta = np.power(mu_20-mu_02,2) +4 * np.power(mu_11,2)
+            delta = np.power(mu_20-mu_02,2) + 4 * np.power(mu_11,2)
             # l1 = (mu_20+mu_02 + np.sqrt(delta))/2
             # l2 = (mu_20+mu_02 - np.sqrt(delta))/2
             
@@ -205,7 +205,7 @@ def _weighted_neighbors(map_i_data,
         vf_neighbors = map_f_data.flat[last_neighbors]
         if np.sum((vi_neighbors == vi) * (vf_neighbors == vf)) > 0:
             return(0)
-        
+            
     # on peut procéder à l'allocation réelle
     map_f_data.flat[j_allocated] = vf
     return(len(j_allocated))

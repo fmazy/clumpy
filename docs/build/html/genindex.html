@@ -28,9 +28,7 @@
         <script type="text/javascript" src="_static/underscore.js"></script>
         <script type="text/javascript" src="_static/doctools.js"></script>
         <script type="text/javascript" src="_static/language_data.js"></script>
-        <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
         <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
-        <script type="text/x-mathjax-config">MathJax.Hub.Config({"tex2jax": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true, "ignoreClass": "document", "processClass": "math|output_area"}})</script>
     
     <script type="text/javascript" src="_static/js/theme.js"></script>
 
@@ -98,13 +96,16 @@
 <li class="toctree-l1"><a class="reference internal" href="definition/layer.html">Layer</a></li>
 <li class="toctree-l1"><a class="reference internal" href="definition/case.html">Case</a></li>
 </ul>
-<p class="caption"><span class="caption-text">Discretization</span></p>
+<p class="caption"><span class="caption-text">Pre-processing</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="discretization/discretization.html">Discretization</a></li>
+<li class="toctree-l1"><a class="reference internal" href="preprocessing/standard_scaler.html">Standard Scaler</a></li>
+<li class="toctree-l1"><a class="reference internal" href="preprocessing/binarizer.html">Binarizer</a></li>
 </ul>
 <p class="caption"><span class="caption-text">Calibration</span></p>
 <ul>
+<li class="toctree-l1"><a class="reference internal" href="calibration/model_selection.html">Model selection</a></li>
 <li class="toctree-l1"><a class="reference internal" href="calibration/naive_bayes.html">Naive Bayes Calibration Method</a></li>
+<li class="toctree-l1"><a class="reference internal" href="calibration/knn.html">K-Nearest Neighbors regressor</a></li>
 </ul>
 <p class="caption"><span class="caption-text">Allocation</span></p>
 <ul>
@@ -185,6 +186,7 @@
  | <a href="#F"><strong>F</strong></a>
  | <a href="#G"><strong>G</strong></a>
  | <a href="#I"><strong>I</strong></a>
+ | <a href="#K"><strong>K</strong></a>
  | <a href="#L"><strong>L</strong></a>
  | <a href="#N"><strong>N</strong></a>
  | <a href="#P"><strong>P</strong></a>
@@ -223,13 +225,17 @@
         <li><a href="allocation/simple_unbiased.html#clumpy.allocation.SimpleUnbiased.allocate_monopixel_patches">(clumpy.allocation.SimpleUnbiased method)</a>
 </li>
       </ul></li>
+      <li><a href="allocation/simple_unbiased.html#clumpy.allocation.SimpleUnbiased.allocate_monopixel_patches2">allocate_monopixel_patches2() (clumpy.allocation.SimpleUnbiased method)</a>
+</li>
+      <li><a href="allocation/simple_unbiased.html#clumpy.allocation.SimpleUnbiased.allocate_with_expansion">allocate_with_expansion() (clumpy.allocation.SimpleUnbiased method)</a>
+</li>
   </ul></td>
 </tr></table>
 
 <h2 id="B">B</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="discretization/discretization.html#clumpy.discretization.binning">binning() (in module clumpy.discretization)</a>
+      <li><a href="preprocessing/binarizer.html#clumpy.preprocessing.Binarizer">Binarizer (class in clumpy.preprocessing)</a>
 </li>
   </ul></td>
 </tr></table>
@@ -250,8 +256,6 @@
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="allocation/dinamica.html#clumpy.allocation.Dinamica">Dinamica (class in clumpy.allocation)</a>
-</li>
-      <li><a href="discretization/discretization.html#clumpy.discretization.discretize">discretize() (in module clumpy.discretization)</a>
 </li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
@@ -293,10 +297,16 @@
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="definition/layer.html#clumpy.definition.FeatureLayer">FeatureLayer (class in clumpy.definition)</a>
 </li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="calibration/naive_bayes.html#clumpy.calibration.NaiveBayes.fit">fit() (clumpy.calibration.NaiveBayes method)</a>
+      <li><a href="calibration/knn.html#clumpy.calibration.KNeighborsRegressor.fit">fit() (clumpy.calibration.KNeighborsRegressor method)</a>
+
+      <ul>
+        <li><a href="calibration/naive_bayes.html#clumpy.calibration.NaiveBayes.fit">(clumpy.calibration.NaiveBayes method)</a>
 </li>
+        <li><a href="preprocessing/binarizer.html#clumpy.preprocessing.Binarizer.fit">(clumpy.preprocessing.Binarizer method)</a>
+</li>
+        <li><a href="preprocessing/standard_scaler.html#clumpy.preprocessing.StandardScaler.fit">(clumpy.preprocessing.StandardScaler method)</a>
+</li>
+      </ul></li>
   </ul></td>
 </tr></table>
 
@@ -331,6 +341,20 @@
         <li><a href="definition/layer.html#clumpy.definition.LandUseCoverLayer.import_tiff">(clumpy.definition.LandUseCoverLayer method)</a>
 </li>
       </ul></li>
+      <li><a href="preprocessing/binarizer.html#clumpy.preprocessing.Binarizer.inverse_transform">inverse_transform() (clumpy.preprocessing.Binarizer method)</a>
+
+      <ul>
+        <li><a href="preprocessing/standard_scaler.html#clumpy.preprocessing.StandardScaler.inverse_transform">(clumpy.preprocessing.StandardScaler method)</a>
+</li>
+      </ul></li>
+  </ul></td>
+</tr></table>
+
+<h2 id="K">K</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="calibration/knn.html#clumpy.calibration.KNeighborsRegressor">KNeighborsRegressor (class in clumpy.calibration)</a>
+</li>
   </ul></td>
 </tr></table>
 
@@ -355,17 +379,33 @@
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="calibration/naive_bayes.html#clumpy.calibration.NaiveBayes.plot_P_zk__vi">plot_P_zk__vi() (clumpy.calibration.NaiveBayes method)</a>
 </li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="calibration/naive_bayes.html#clumpy.calibration.NaiveBayes.plot_P_zk__vi_vf">plot_P_zk__vi_vf() (clumpy.calibration.NaiveBayes method)</a>
 </li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="calibration/knn.html#clumpy.calibration.KNeighborsRegressor.predict">predict() (clumpy.calibration.KNeighborsRegressor method)</a>
+
+      <ul>
+        <li><a href="calibration/naive_bayes.html#clumpy.calibration.NaiveBayes.predict">(clumpy.calibration.NaiveBayes method)</a>
+</li>
+      </ul></li>
   </ul></td>
 </tr></table>
 
 <h2 id="S">S</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="calibration/knn.html#clumpy.calibration.KNeighborsRegressor.score">score() (clumpy.calibration.KNeighborsRegressor method)</a>
+
+      <ul>
+        <li><a href="calibration/naive_bayes.html#clumpy.calibration.NaiveBayes.score">(clumpy.calibration.NaiveBayes method)</a>
+</li>
+      </ul></li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="allocation/simple_unbiased.html#clumpy.allocation.SimpleUnbiased">SimpleUnbiased (class in clumpy.allocation)</a>
+</li>
+      <li><a href="preprocessing/standard_scaler.html#clumpy.preprocessing.StandardScaler">StandardScaler (class in clumpy.preprocessing)</a>
 </li>
   </ul></td>
 </tr></table>
@@ -383,8 +423,14 @@
       </ul></li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="calibration/naive_bayes.html#clumpy.calibration.NaiveBayes.transition_probability_maps">transition_probability_maps() (clumpy.calibration.NaiveBayes method)</a>
+      <li><a href="calibration/model_selection.html#clumpy.calibration.train_test_split">train_test_split() (in module clumpy.calibration)</a>
 </li>
+      <li><a href="preprocessing/binarizer.html#clumpy.preprocessing.Binarizer.transform">transform() (clumpy.preprocessing.Binarizer method)</a>
+
+      <ul>
+        <li><a href="preprocessing/standard_scaler.html#clumpy.preprocessing.StandardScaler.transform">(clumpy.preprocessing.StandardScaler method)</a>
+</li>
+      </ul></li>
       <li><a href="definition/layer.html#clumpy.definition.TransitionProbabilityLayers">TransitionProbabilityLayers (class in clumpy.definition)</a>
 </li>
   </ul></td>

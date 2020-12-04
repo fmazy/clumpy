@@ -1,0 +1,285 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Standard Scaler &mdash; clumpy 0.1.0 documentation</title>
+  
+
+  
+  
+    <link rel="shortcut icon" href="../_static/logo.ico"/>
+  
+  
+  
+
+  
+  <script type="text/javascript" src="../_static/js/modernizr.min.js"></script>
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+        <script type="text/javascript" src="../_static/jquery.js"></script>
+        <script type="text/javascript" src="../_static/underscore.js"></script>
+        <script type="text/javascript" src="../_static/doctools.js"></script>
+        <script type="text/javascript" src="../_static/language_data.js"></script>
+        <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
+
+    
+
+  
+  <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Binarizer" href="binarizer.html" />
+    <link rel="prev" title="Case" href="../definition/case.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../index.html" class="icon icon-home"> clumpy
+          
+
+          
+            
+            <img src="../_static/logo.png" class="logo" alt="Logo"/>
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Getting started</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../tutorials.html">Tutorials</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../release_notes.html">Release Notes</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Definition</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../definition/layer.html">Layer</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../definition/case.html">Case</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Pre-processing</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Standard Scaler</a></li>
+<li class="toctree-l1"><a class="reference internal" href="binarizer.html">Binarizer</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Calibration</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../calibration/model_selection.html">Model selection</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../calibration/naive_bayes.html">Naive Bayes Calibration Method</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../calibration/knn.html">K-Nearest Neighbors regressor</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Allocation</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../allocation/simple_unbiased.html">Simple Unbiased Allocation Method</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../allocation/generalized_von_neumann.html">Generalized Von Neumann Allocation Method</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../allocation/dinamica.html">Dinamica Allocation Method</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">clumpy</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../index.html">Docs</a> &raquo;</li>
+        
+      <li>Standard Scaler</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="../_sources/preprocessing/standard_scaler.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="standard-scaler">
+<h1>Standard Scaler<a class="headerlink" href="#standard-scaler" title="Permalink to this headline">¶</a></h1>
+<dl class="class">
+<dt id="clumpy.preprocessing.StandardScaler">
+<em class="property">class </em><code class="sig-prename descclassname">clumpy.preprocessing.</code><code class="sig-name descname">StandardScaler</code><a class="headerlink" href="#clumpy.preprocessing.StandardScaler" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Standardize <code class="docutils literal notranslate"><span class="pre">z</span></code> features by removing the mean and scaling to unit variance for each initial states.</p>
+<dl class="method">
+<dt id="clumpy.preprocessing.StandardScaler.fit">
+<code class="sig-name descname">fit</code><span class="sig-paren">(</span><em class="sig-param">J</em><span class="sig-paren">)</span><a class="headerlink" href="#clumpy.preprocessing.StandardScaler.fit" title="Permalink to this definition">¶</a></dt>
+<dd><p>Compute the mean and std to be used for later scaling.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>J</strong> (<em>pandas dataframe.</em>) – A two level <code class="docutils literal notranslate"><span class="pre">z</span></code> column is expected.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="clumpy.preprocessing.StandardScaler.inverse_transform">
+<code class="sig-name descname">inverse_transform</code><span class="sig-paren">(</span><em class="sig-param">J</em><span class="sig-paren">)</span><a class="headerlink" href="#clumpy.preprocessing.StandardScaler.inverse_transform" title="Permalink to this definition">¶</a></dt>
+<dd><p>Scale back the data to the original representation</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>J</strong> (<em>pandas dataframe.</em>) – A two level <code class="docutils literal notranslate"><span class="pre">z</span></code> column is expected.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p></p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>Standardized J.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="clumpy.preprocessing.StandardScaler.transform">
+<code class="sig-name descname">transform</code><span class="sig-paren">(</span><em class="sig-param">J</em><span class="sig-paren">)</span><a class="headerlink" href="#clumpy.preprocessing.StandardScaler.transform" title="Permalink to this definition">¶</a></dt>
+<dd><p>Perform standardization by centering and scaling</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>J</strong> (<em>pandas dataframe.</em>) – A two level <code class="docutils literal notranslate"><span class="pre">z</span></code> column is expected.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p></p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>Standardized J.</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="binarizer.html" class="btn btn-neutral float-right" title="Binarizer" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="../definition/case.html" class="btn btn-neutral float-left" title="Case" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2020, François-Rémi Mazy
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>
