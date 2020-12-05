@@ -10,14 +10,14 @@ import numpy as np
 
 from ._estimator import BaseEstimator
 
-class ResamplingEstimator(BaseEstimator):
+class UnderSamplingEstimator(BaseEstimator):
     """
     Resampling Estimator for classification probabilities
     """
     
     def __init__(self, estimator=None, sampler=None, beta=None, u=None):
         self.estimator = estimator
-        self. sampler = sampler
+        self.sampler = sampler
         self.beta = beta
         self.u = u
         
