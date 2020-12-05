@@ -9,27 +9,27 @@ Created on Fri Dec  4 16:54:58 2020
 import warnings
 import inspect
 
-from ..metrics import log_score
+# from ..metrics import log_score
 
 class BaseEstimator():
     
-    def score(self, X, v):
-        """
-        Return the log loss score on the given test data and labels.
-        Parameters
-        ----------
-        X : array-like of shape (n_samples, n_features)
-            Test samples.
-        v : array-like of shape (n_samples,) or (n_samples, n_outputs)
-            True labels for X.
-        Returns
-        -------
-        score : float
-            Log loss score
-        """
-        P = self.predict_proba(X)
+    # def score(self, X, v):
+    #     """
+    #     Return the log loss score on the given test data and labels.
+    #     Parameters
+    #     ----------
+    #     X : array-like of shape (n_samples, n_features)
+    #         Test samples.
+    #     v : array-like of shape (n_samples,) or (n_samples, n_outputs)
+    #         True labels for X.
+    #     Returns
+    #     -------
+    #     score : float
+    #         Log loss score
+    #     """
+    #     P = self.predict_proba(X)
         
-        return(log_score(v, P))
+    #     return(log_score(v, P))
     
     @classmethod
     def _get_param_names(cls):

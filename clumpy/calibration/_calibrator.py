@@ -20,8 +20,7 @@ def make_calibrator(estimator=None,
                      calibration_method=None,
                      cv=5,
                      scaler=None,
-                     discretizer=None,
-                     rfecv=False):
+                     discretizer=None):
     """
     make a calibrator as a scikit-learn Pipeline.
 
@@ -53,7 +52,9 @@ def make_calibrator(estimator=None,
         The scaler. If None, no scaling is made.
     discretizer : Discretizer, default=None
         The discretizer. If None, no discretizing is made.
-
+    feature_selector : FeatureSelector, default=None
+        The feature selector. If None, no feature selection is made.
+    
     Returns
     -------
     The calibrator (a scikit-learn Pipeline).
@@ -70,10 +71,8 @@ def make_calibrator(estimator=None,
     if under_sampler is not None:
         estimator = UnderSamplingEstimator(estimator=estimator,
                                            sampler=under_sampler,
-                                           beta=beta,
                                            u=u)
         
-    
     # pipeline construction
     pipe_list = []
     
@@ -82,7 +81,7 @@ def make_calibrator(estimator=None,
         
     if discretizer is not None:
         pipe_list.append(('discretizer', discretizer))
-        
+    
     pipe_list.append(('estimator', estimator))
     
     return(Pipeline(pipe_list))

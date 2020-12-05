@@ -10,17 +10,18 @@ import numpy as np
 
 from ._estimator import BaseEstimator
 
+from ..resampling import compute_sampling_strategy
+
 class UnderSamplingEstimator(BaseEstimator):
     """
     Resampling Estimator for classification probabilities
     """
     
-    def __init__(self, estimator=None, sampler=None, beta=None, u=None):
+    def __init__(self, estimator=None, sampler=None, u=None, sampling_strategy_method='max_N_v'):
         self.estimator = estimator
         self.sampler = sampler
-        self.beta = beta
         self.u = u
-        
+        self.sampling_strategy_method = sampling_strategy_method
         
     def fit(self, X, y):
         """Fit the model using X as training data and y as target values
@@ -32,6 +33,7 @@ class UnderSamplingEstimator(BaseEstimator):
         v : {array-like, sparse matrix}
             Target values of shape = [n_samples] or [n_samples, n_outputs]
         """
+        
         # under sampling initialization
         self.e_, n = np.unique(y, return_counts=True)
         
@@ -40,27 +42,22 @@ class UnderSamplingEstimator(BaseEstimator):
             self.id_u_ = list(n).index(n.max())
             self.u = self.e_[self.id_u_]
         else:
-            self.id_u = list(self.e_).index(self.u)
-        
-        sampling_strategy = {}
-        for i, e_i in enumerate(self.e_):
-            if e_i != self.u:
-                # si e_i est différent de u, on prend tous les éléments.
-                # (nécessaire pour appliquer la formule !)
-                sampling_strategy[e_i] = n[i]
-            else:
-                if self.beta is None:
-                    sampling_strategy[e_i] =  n[self.e_!=self.u].max()
-                    self.beta = sampling_strategy[self.u] / n[self.id_u_]
-                else:
-                    sampling_strategy[e_i] = n[i] * self.beta
+            self.id_u_ = list(self.e_).index(self.u)
             
+        # sampling strategy
+        if self.sampling_strategy_method == 'max_N_v':
+            self.sampler.sampling_strategy = compute_sampling_strategy(y, u=self.u)
+        
+        # get beta
+        self.beta = self.sampler.sampling_strategy[self.u] / n[self.id_u_]
+        
         # under sampling
-        self.sampler.sampling_strategy=sampling_strategy
         X_res, y_res = self.sampler.fit_resample(X, y)
         
+        
+        
         # estimation
-        self.estimator.fit(X_res, y_res)
+        self.estimator.fit(X_res, y_res)        
         
     def predict_proba(self, X):
         """Return probability estimates for the test data X.

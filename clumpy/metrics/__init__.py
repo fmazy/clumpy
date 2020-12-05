@@ -9,6 +9,8 @@ Created on Wed Nov 18 14:54:39 2020
 # from sklearn.metrics import brier_score_loss as sklearn_brier_score_loss
 # from sklearn.metrics import log_loss as sklearn_log_loss
 import numpy as np
+
+from sklearn.metrics import make_scorer
 # from copy import deepcopy
 
 # from ..utils import check_list_parameters_vi
@@ -58,6 +60,15 @@ def log_score(y_true, y_prob):
     s = b+a/n*np.sum(np.log(y_prob[tuple(idx.T)]))
     
     return(s)
+
+log_scorer = make_scorer(score_func=log_score,
+                    greater_is_better=True,
+                    needs_proba=True)
+
+# def log_scorer():
+#     return(make_scorer(score_func=log_score,
+#                     greater_is_better=True,
+#                     needs_proba=True))
 
 # def brier_score_loss(y_true_vi, y_pred_vi):
 #     """
