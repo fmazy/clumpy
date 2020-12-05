@@ -22,7 +22,7 @@ class UnderSamplingEstimator(BaseEstimator):
         self.u = u
         
         
-    def fit(self, X, v):
+    def fit(self, X, y):
         """Fit the model using X as training data and y as target values
         Parameters
         ----------
@@ -33,7 +33,7 @@ class UnderSamplingEstimator(BaseEstimator):
             Target values of shape = [n_samples] or [n_samples, n_outputs]
         """
         # under sampling initialization
-        self.e_, n = np.unique(v, return_counts=True)
+        self.e_, n = np.unique(y, return_counts=True)
         
         if self.u is None:
             # on part du principe que le majoritaire est le non changement.
@@ -57,10 +57,10 @@ class UnderSamplingEstimator(BaseEstimator):
             
         # under sampling
         self.sampler.sampling_strategy=sampling_strategy
-        X_train_res, v_train_res = self.sampler.fit_resample(X, v)
+        X_res, y_res = self.sampler.fit_resample(X, y)
         
         # estimation
-        self.estimator.fit(X_train_res, v_train_res)
+        self.estimator.fit(X_res, y_res)
         
     def predict_proba(self, X):
         """Return probability estimates for the test data X.

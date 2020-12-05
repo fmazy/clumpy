@@ -1,48 +1,29 @@
 # -*- coding: utf-8 -*-
-from ._split import StratifiedKFold
-
+from sklearn.metrics import make_scorer
+from sklearn.model_selection import StratifiedKFold
+from sklearn.model_selection import cross_val_score as sklearn_cross_val_score
+from ..metrics import log_score
 
 def cross_val_score(estimator,
-                    X_u,
-                    v_u,
+                    X,
+                    y,
                     cv=5,
+                    n_jobs=None,
                     verbose=0):
     """
     Evaluate a score by cross-validation
     """
-    
-    if type(cv) == int:
-        cv = StratifiedKFold(n_splits=cv)
         
-    elif not isinstance(cv, StratifiedKFold):
-        raise ValueError("cv type incorrect. Expected StratifiedKFold class object")
+    scoring = make_scorer(score_func=log_score,
+                    greater_is_better=True,
+                    needs_proba=True)
     
-    # stratified K fold
-    train_index_u, test_index_u = cv.split(X_u, v_u)
-    
-    scores = []
-    
-    # for each split
-    for n in range(cv.n_splits):
-        if verbose > 0:
-            print('split #'+str(n))
-        # first create train test for this split
-        X_u_train = {}
-        v_u_train = {}
-        X_u_test = {}
-        v_u_test = {}
-        
-        for u in X_u.keys():
-            X_u_train[u] = X_u[u][train_index_u[u][n],:]
-            v_u_train[u] = v_u[u][train_index_u[u][n]]
-            X_u_test[u] = X_u[u][test_index_u[u][n],:]
-            v_u_test[u] = v_u[u][test_index_u[u][n]]
-        
-        # then train estimator
-        estimator.fit(X_u_train, v_u_train)
-        
-        # get the score and append it to scores
-        scores.append(estimator.score(X_u_test, v_u_test))
-    
-    return(scores)
+    return(sklearn_cross_val_score(estimator = estimator,
+                            X = X,
+                            y = y,
+                            cv = StratifiedKFold(n_splits=cv,
+                                                 shuffle=True),
+                            scoring=scoring,
+                            verbose=verbose,
+                            n_jobs=n_jobs))
     

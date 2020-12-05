@@ -1,1 +1,1 @@
-from ._calibrators import Calibrators
+from ._calibrator import make_calibrator
