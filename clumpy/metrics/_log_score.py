@@ -1,17 +1,11 @@
-#!/usr/bin/env python3
-# -*- coding: utf-8 -*-
-"""
-Created on Tue Dec  8 10:44:36 2020
+"""log score blabla"""
 
-@author: frem
-"""
 import numpy as np
 
 from sklearn.metrics import make_scorer
 
 def log_score(y_true, y_prob, a, b=1):
-    """
-    Log score
+    """Log score
     
     Parameters
     ----------
@@ -27,6 +21,15 @@ def log_score(y_true, y_prob, a, b=1):
     -------
     score : float
         Log loss score
+    
+    See Also
+    ---------
+    :func:`clumpy.metrics.log_scorer`:
+        To create a scorer.
+    
+    :func:`clumpy.metrics.compute_a`:
+        To compute the ``a`` parameter.
+
     """
     
     y_prob = y_prob.copy()
@@ -56,8 +59,7 @@ def log_score(y_true, y_prob, a, b=1):
     return(s)
 
 def compute_a(y):
-    """
-    Computes log score parameter ``a``.
+    """Computes log score parameter ``a``.
 
     Parameters
     ----------
@@ -68,6 +70,13 @@ def compute_a(y):
     -------
     a
 
+    See Also
+    ---------
+    :func:`clumpy.metrics.log_score`:
+        To compute the log score.
+    
+    :func:`clumpy.metrics.log_scorer`:
+        To create a scorer.
     """
     n = y.shape[0]
     
@@ -80,8 +89,7 @@ def compute_a(y):
     return(-1 / np.sum(fi*np.log(fi)))
     
 def log_scorer(a, b=1):
-    """
-    make log scorer.
+    """make log scorer.
 
     Parameters
     ----------
@@ -91,6 +99,14 @@ def log_scorer(a, b=1):
     Returns
     -------
     scorer
+    
+    See Also
+    ---------
+    :func:`clumpy.metrics.log_score`:
+        To compute the log score.
+    
+    :func:`clumpy.metrics.compute_a`:
+        To compute the ``a`` parameter.
 
     """
     return(make_scorer(score_func=log_score,

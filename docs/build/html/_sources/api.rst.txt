@@ -54,8 +54,8 @@ Case
     
 .. currentmodule:: clumpy
 
-Resampling
-----------
+Under sampling
+--------------
 
 .. automodule:: clumpy.resampling.under_sampling
    :no-members:
@@ -69,5 +69,55 @@ Resampling
     
    resampling.under_sampling.compute_sampling_strategy
    resampling.under_sampling.log_scorer_corrected
+   
+:mod:`clumpy.metrics`: Metrics
+==============================
+
+.. automodule:: clumpy.metrics
+    :no-members:
+    :no-inherited-members:
+    
+.. currentmodule:: clumpy
+
+Log score
+---------
+
+.. automodule:: clumpy.metrics._log_score
+   :no-members:
+   :no-inherited-members:
+
+.. currentmodule:: clumpy
+
+.. autosummary::
+   :toctree: generated/
+   :template: function.rst
+    
+   metrics.compute_a
+   metrics.log_score
+   metrics.log_scorer
+   
+:mod:`clumpy.scenario`: Scenario
+===============================
+
+.. automodule:: clumpy.scenario
+    :no-members:
+    :no-inherited-members:
+    
+.. currentmodule:: clumpy
+
+Probabilities
+-------------
+
+.. automodule:: clumpy.scenario._probabilities
+   :no-members:
+   :no-inherited-members:
+
+.. currentmodule:: clumpy
+
+.. autosummary::
+   :toctree: generated/
+   :template: function.rst
+    
+   scenario.adjust_probabilities
 
    

@@ -1,13 +1,22 @@
-#!/usr/bin/env python3
-# -*- coding: utf-8 -*-
-"""
-Created on Tue Dec  8 14:39:35 2020
+"""probabilities blabla"""
 
-@author: frem
-"""
 import numpy as np
 
 def adjust_probabilities(P, f):
+    """adjust probabilities
+
+    Parameters
+    ----------
+    P : TYPE
+        DESCRIPTION.
+    f : TYPE
+        DESCRIPTION.
+
+    Returns
+    -------
+    None.
+
+    """
     
     if np.abs(f.sum() - 1) > 10**-10:
         raise(TypeError("Uncorrect scenario. The sum of frequencies should be equal to one."))

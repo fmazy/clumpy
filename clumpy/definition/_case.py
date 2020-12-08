@@ -68,8 +68,7 @@ class Case():
 
     
     def copy(self):
-        """
-        
+        """copy the case.
 
         Returns
         -------
@@ -79,8 +78,7 @@ class Case():
         return(deepcopy(self))
     
     def get_size(self, print_value=True, human=True, return_value=False):
-        """
-        
+        """get size
 
         Parameters
         ----------
@@ -113,8 +111,7 @@ class Case():
             return(s)
                
     def add_distance_to_v_as_feature(self, list_vi, v, name=None, scale=1):
-        """
-        add an explanatory variable as a distance to a state
+        """add an explanatory variable as a distance to a state
         
         Parameters
         ==========
@@ -137,7 +134,8 @@ class Case():
         self.add_numpy_as_feature(list_vi, distance, name, 'distance_to_v')
         
     def add_numpy_as_feature(self, list_vi, data, name, kind='static'):
-        """
+        """ add numpy as a feature
+        
         Parameters
         ----------
         list_vi : list of int
@@ -168,8 +166,7 @@ class Case():
 
             
     def add_layer_as_feature(self, list_vi, layer_EV, name=None):
-        """
-        add an explanatory variable from a layer
+        """add an explanatory variable from a layer
         
         :param list_Tif: list of Tif
         :type list_Tif: [_Transition_vi_vf]
@@ -185,9 +182,8 @@ class Case():
         self.add_numpy_as_feature(list_vi, layer_EV.data, name)
             
     def get_z_column_id(self, vi, z_name):
-        """
+        """get z column
         
-
         Parameters
         ----------
         vi : TYPE
@@ -203,8 +199,7 @@ class Case():
         return(self.Z_names[vi].index(z_name))
     
     def get_z(self, vi, z_name):
-        """
-        
+        """get z
 
         Parameters
         ----------
@@ -224,8 +219,7 @@ class Case():
         return(self.Z[vi][:,column_id])
     
     def get_z_layer(self, vi, z_name):
-        """
-        
+        """get z layer
 
         Parameters
         ----------
@@ -252,8 +246,7 @@ class Case():
         return(z_layer)
     
     def get_J(self, vi):
-        """
-        
+        """get J
 
         Parameters
         ----------
@@ -268,8 +261,7 @@ class Case():
         return(self.J[vi])
     
     def get_vf(self, vi):
-        """
-        
+        """get vf
 
         Parameters
         ----------
@@ -284,9 +276,8 @@ class Case():
         return(self.vf[vi])
     
     def remove(self, vi, condition, inplace=False):
-        """
+        """remove according to a condition
         
-
         Parameters
         ----------
         vi : TYPE
@@ -304,8 +295,7 @@ class Case():
         return(self.keep_only(vi, ~condition, inplace=inplace))
         
     def keep_only(self, vi, condition, inplace=False):
-        """
-        
+        """keep only
 
         Parameters
         ----------
@@ -336,8 +326,7 @@ class Case():
             return(case)
         
     def select_vi(self, vi, inplace=False):
-        """
-        
+        """select vi
 
         Parameters
         ----------
@@ -371,8 +360,7 @@ class Case():
             return(case)
         
     def remove_z(self, vi, z_name, inplace=False):
-        """
-        
+        """remove z
 
         Parameters
         ----------
@@ -406,8 +394,7 @@ class Case():
             return(case)
     
     def get_z_as_dataframe(self):
-        """
-        
+        """get z as dataframe
 
         Returns
         -------
@@ -422,8 +409,7 @@ class Case():
         return(z)
     
     def get_unique_z(self, output='np'):
-        """
-        
+        """get unique z
 
         Parameters
         ----------
@@ -447,8 +433,7 @@ class Case():
         return(z)
     
     def select_vf_borders(self, binarizer):
-        """
-        
+        """select vf borders
 
         Parameters
         ----------
@@ -463,8 +448,8 @@ class Case():
         for vi in self.dict_vi_vf.keys():
             c_all_vf = np.zeros(self.J[vi].shape).astype(bool)
             
-            for id_vf, vf in enumerate(case.dict_vi_vf[vi]):
-                c = case.get_z(vi=vi, z_name='distance_to_'+str(vf)) == 1
+            for id_vf, vf in enumerate(self.dict_vi_vf[vi]):
+                c = self.get_z(vi=vi, z_name='distance_to_'+str(vf)) == 1
                 tp_vi[c, id_vf] = 0
                 
                 c_all_vf = c_all_vf | c
