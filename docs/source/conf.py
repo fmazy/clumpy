@@ -78,8 +78,7 @@ extensions = [
     'sphinx.ext.intersphinx',
     'sphinx.ext.napoleon',
     'sphinx.ext.autosectionlabel',
-    'sphinx.ext.mathjax',
-    'numpydoc',
+    'sphinx.ext.mathjax'
 ]
     # 'nbsphinx',
     # 'sphinxcontrib.bibtex',
