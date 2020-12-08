@@ -10,7 +10,7 @@ import numpy as np
 
 from ._estimator import BaseEstimator
 
-from ..resampling import compute_sampling_strategy
+from ..resampling.under_sampling import compute_sampling_strategy, probability_correction
 
 class UnderSamplingEstimator(BaseEstimator):
     """
@@ -76,10 +76,11 @@ class UnderSamplingEstimator(BaseEstimator):
         P = self.estimator.predict_proba(X)
         
         # under sampling correction
+        P = probability_correction(P, self.beta, self.id_u_)
         # first columns where e_i != u
-        P[:, self.e_!=self.u] = P[:, self.e_!= self.u] * self.beta / ( self.beta + ( 1 - self.beta ) * P[:,self.id_u_][:,None] )
+        # P[:, self.e_!=self.u] = P[:, self.e_!= self.u] * self.beta / ( self.beta + ( 1 - self.beta ) * P[:,self.id_u_][:,None] )
         
         # then the closure condition
-        P[:, self.id_u_] = 1 - P[:, self.e_!=self.u].sum(axis=1)
+        # P[:, self.id_u_] = 1 - P[:, self.e_!=self.u].sum(axis=1)
         
         return(P)

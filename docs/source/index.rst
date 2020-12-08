@@ -2,9 +2,10 @@
    sphinx-quickstart on Tue Jun  2 14:31:59 2020.
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
-   
+
+################################################
 clumpy : Comprehensive Land Use Models in Python
-================================================
+################################################
 
 Clumpy is a land use and cover change (LUCC) modeler in development written in Python3. Only basic parameters are for now avaiable through python script usage. A GUI is considered as a plugin of Qgis which uses this present library.
 
@@ -13,41 +14,15 @@ Clumpy is a land use and cover change (LUCC) modeler in development written in P
    :caption: Getting started
 
    installation
-   tutorials
    release_notes
 
 .. toctree::
     :maxdepth: 1
-    :caption: Definition
+    :caption: Documentation
 
-    definition/layer
-    definition/case
+    user_guide
+    api
 
-.. toctree::
-    :maxdepth: 1
-    :caption: Pre-processing
-    
-    preprocessing/standard_scaler
-    preprocessing/binarizer
-
-.. toctree::
-    :maxdepth: 1
-    :caption: Calibration
-    
-    calibration/model_selection
-    calibration/naive_bayes
-    calibration/knn
-    
-
-.. toctree::
-    :maxdepth: 1
-    :caption: Allocation
-    
-    allocation/simple_unbiased
-    allocation/generalized_von_neumann
-    allocation/dinamica
-    
-    
    
 
 Indices and tables

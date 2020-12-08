@@ -1,13 +1,8 @@
 numpy
-pandas
 matplotlib
 scipy
 tqdm
-multiprocessing
 sklearn
 re
 copy
-PIL
-optbinning >= 0.6.1
-
-
+tifffile

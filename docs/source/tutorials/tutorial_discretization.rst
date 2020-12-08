@@ -1,4 +1,0 @@
-Tutorial : discretization
-=========================
-
-blabla

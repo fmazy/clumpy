@@ -10,3 +10,4 @@ from . import tools
 from . import estimation
 from . import metrics
 from . import model_selection
+from . import scenario

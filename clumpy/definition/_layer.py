@@ -1,8 +1,7 @@
-"""
-The definition layer of maps
-"""
+"""The definition layer of maps"""
 
-from PIL import Image  # it seems to be a bit limitation of this library
+# from PIL import Image  # it seems to be a bit limitation of this library
+from tifffile import imread, imwrite
 # from libtiff import TIFF # this one seems to be extended. see https://stackoverflow.com/questions/7569553/working-with-tiffs-import-export-in-python-using-numpy
 import numpy as np
 from scipy import ndimage
@@ -55,6 +54,10 @@ class _Layer:
         
         if sound>0:
             print("\t done, N_j=" + str(self.size))
+            
+    def _import_tiff_file(self, path):
+        self.path = path
+        self.data = imread(path)
 
     def export_tiff(self, path, mode=None):
         """
@@ -66,14 +69,16 @@ class _Layer:
         :type path: str
         """
         print("[" + self.name + "] exporting tiff file in " + path + "...")
-        img = Image.fromarray(self.data, mode=mode)
-        
+                
         # create folder if not exists
         folder_name = os.path.dirname(path)
         if not os.path.exists(folder_name) and folder_name!= '':
             os.makedirs(folder_name)
-            
-        img.save(path)
+        
+        imwrite(file=path,
+                data=self.data, 
+                dtype=self.data.dtype)
+        
         
     def export_asc(self, path):
         """
@@ -118,15 +123,11 @@ class _Layer:
         
     def copy(self):
         return(deepcopy(self))
-    # def copy(self):
-    #     c = _Layer(name=self.name, scale=self.scale)
-    #     c.data = self.data.copy()
-    #     return(c)
 
 
 class LandUseCoverLayer(_Layer):
-    """
-    Defines a Land Use Cover (LUC) layer. This layer can then used for the calibration stage or the allocation stage::
+    """Defines a Land Use Cover (LUC) layer.
+    This layer can then used for the calibration stage or the allocation stage::
     
         luc1998 = clumpy.definition.layer.LayerLUC(name='LUC-1998',scale=15,time=0)
     
@@ -157,14 +158,9 @@ class LandUseCoverLayer(_Layer):
         """
         if sound >0:
             print("importing tiff file '" + path + "'")
-        self.path = path
+                
+        self._import_tiff_file(path)
         
-        Image.MAX_IMAGE_PIXELS = None # no image size limit
-        img = Image.open(path)  # image loading
-        img.load()
-        dtype = "int32"  # "float" for EF
-        self.data = np.asarray(img, dtype=dtype)  # conversion en numpy
-
         self.id_v, self.N_v = np.unique(self.data, return_counts=True)
 
         # self.get_dimensions()
@@ -303,13 +299,8 @@ class FeatureLayer(_Layer):
         :type path: str
         """
         print("importing tiff file '" + path + "'")
-        self.path = path
-
-        img = Image.open(path)  # image loading
-        img.load()
-        dtype = "float"
-        self.data = np.asarray(img, dtype=dtype)  # conversion en numpy
-
+        self._import_tiff_file(path)
+        
         # self.get_dimensions()
         self.shape = np.shape(self.data)
         self.size = np.size(self.data)
@@ -361,155 +352,155 @@ class DistanceToVFeatureLayer(FeatureLayer):
         self.data = ndimage.distance_transform_edt(1 - v_matrix) * layer_LUC.scale
 
 
-class TransitionProbabilityLayers():
-    """
-    Defines a set of :math:`P(vf|vi,z)` layers.
+# class TransitionProbabilityLayers():
+#     """
+#     Defines a set of :math:`P(vf|vi,z)` layers.
     
-    Notes
-    -----
-        The set of layers is defined as a dictionary ``self.layers`` whose keys are :math:`(v_i,v_f)`.
-    """
+#     Notes
+#     -----
+#         The set of layers is defined as a dictionary ``self.layers`` whose keys are :math:`(v_i,v_f)`.
+#     """
     
-    def __init__(self):
-        self.layers = {}
+#     def __init__(self):
+#         self.layers = {}
     
-    def add_layer(self, vi, vf, data=None, path=None):
-        """
-        Add a layer to the set.        
+#     def add_layer(self, vi, vf, data=None, path=None):
+#         """
+#         Add a layer to the set.        
 
-        Parameters
-        ----------
-        vi : int
-            initial state.
-        vf : int
-            final state.
-        data : numpy array (default=None)
-            The :math:`P(vf|vi,z)` data layer. If None, ``path`` is expected.
-        path : string (default=None)
-            The path to :math:`P(vf|vi,z)` tiff file. If None, ``data`` is expected.
+#         Parameters
+#         ----------
+#         vi : int
+#             initial state.
+#         vf : int
+#             final state.
+#         data : numpy array (default=None)
+#             The :math:`P(vf|vi,z)` data layer. If None, ``path`` is expected.
+#         path : string (default=None)
+#             The path to :math:`P(vf|vi,z)` tiff file. If None, ``data`` is expected.
 
-        """
-        self.layers[(vi, vf)] = _TransitionProbabilityLayer(vi, vf, data, path)
+#         """
+#         self.layers[(vi, vf)] = _TransitionProbabilityLayer(vi, vf, data, path)
     
-    def copy(self):
-        """
-        Make a copy.
+#     def copy(self):
+#         """
+#         Make a copy.
 
-        Returns
-        -------
-        c : TransitionProbabilityLayers
-            A copy of the current object.
+#         Returns
+#         -------
+#         c : TransitionProbabilityLayers
+#             A copy of the current object.
 
-        """
-        return(deepcopy(self))
+#         """
+#         return(deepcopy(self))
         
-    def export_all(self, path:str):
-        """
-        Export all layers as tif files through a zip archive file.
+#     def export_all(self, path:str):
+#         """
+#         Export all layers as tif files through a zip archive file.
 
-        Parameters
-        ----------
-        path : str
-            Output zip file path. Required new folders are created without error raising.
+#         Parameters
+#         ----------
+#         path : str
+#             Output zip file path. Required new folders are created without error raising.
             
-        Notes
-        -----
-        All layer files inside the zip archive file are named as following : ``'P_vf' + str(vf) + '__vi' + str(vi) + '_z.tif'``.
-        """
-        files_names = []
-        # folder_name = os.path.dirname(path)
+#         Notes
+#         -----
+#         All layer files inside the zip archive file are named as following : ``'P_vf' + str(vf) + '__vi' + str(vi) + '_z.tif'``.
+#         """
+#         files_names = []
+#         # folder_name = os.path.dirname(path)
         
-        for layer in self.layers.values():
-            files_names.append(layer.name+'.tif')
-            layer.export_tiff(files_names[-1])
+#         for layer in self.layers.values():
+#             files_names.append(layer.name+'.tif')
+#             layer.export_tiff(files_names[-1])
         
-        command = 'zip .temp_P_vf__vi_z.zip'
-        for file_name in files_names:
-            command += ' '+file_name
-        os.system(command)
+#         command = 'zip .temp_P_vf__vi_z.zip'
+#         for file_name in files_names:
+#             command += ' '+file_name
+#         os.system(command)
         
-        command = 'rm '
-        for file_name in files_names:
-            command += ' '+file_name
-        os.system(command)
+#         command = 'rm '
+#         for file_name in files_names:
+#             command += ' '+file_name
+#         os.system(command)
         
-        # create folder if not exists
-        folder_name = os.path.dirname(path)
-        if not os.path.exists(folder_name) and folder_name!= '':
-            os.makedirs(folder_name)
+#         # create folder if not exists
+#         folder_name = os.path.dirname(path)
+#         if not os.path.exists(folder_name) and folder_name!= '':
+#             os.makedirs(folder_name)
         
-        os.system('mv .temp_P_vf__vi_z.zip '+path)
+#         os.system('mv .temp_P_vf__vi_z.zip '+path)
         
-    def import_all(self, path:str):
-        """
-        Import all layers from a zip archive file.
+#     def import_all(self, path:str):
+#         """
+#         Import all layers from a zip archive file.
 
-        Parameters
-        ----------
-        path : str
-            The zip file to import.
+#         Parameters
+#         ----------
+#         path : str
+#             The zip file to import.
             
-        Notes
-        -----
-        All layer files inside the zip archive file are expected to be named as following : ``'P_vf' + str(vf) + '__vi' + str(vi) + '_z.tif'``.
+#         Notes
+#         -----
+#         All layer files inside the zip archive file are expected to be named as following : ``'P_vf' + str(vf) + '__vi' + str(vi) + '_z.tif'``.
 
-        """
-        os.system('unzip '+path+' -d '+path+'.out')
+#         """
+#         os.system('unzip '+path+' -d '+path+'.out')
         
-        files = os.listdir(path+'.out/')
+#         files = os.listdir(path+'.out/')
         
-        self.layers = {}
-        for file in files:
-            start = 'vf'
-            end = '__'
-            vf = file[file.find(start)+len(start):file.rfind(end)]
+#         self.layers = {}
+#         for file in files:
+#             start = 'vf'
+#             end = '__'
+#             vf = file[file.find(start)+len(start):file.rfind(end)]
             
-            start = 'vi'
-            end = '_z'
-            vi = file[file.find(start)+len(start):file.rfind(end)]
+#             start = 'vi'
+#             end = '_z'
+#             vi = file[file.find(start)+len(start):file.rfind(end)]
             
             
-            self.add_layer(vi=int(vi), vf=int(vf), path=path+'.out/'+file)
+#             self.add_layer(vi=int(vi), vf=int(vf), path=path+'.out/'+file)
             
-        os.system('rm -R '+path+'.out')
+#         os.system('rm -R '+path+'.out')
             
 
-class _TransitionProbabilityLayer(_Layer):
-    """
-    Defines a P(vf|vi,z) layer. This layer can then used for the allocation stage.
-    """
+# class _TransitionProbabilityLayer(_Layer):
+#     """
+#     Defines a P(vf|vi,z) layer. This layer can then used for the allocation stage.
+#     """
 
-    def __init__(self, vi, vf, data=None, path=None):
-        super().__init__('P_vf' + str(vf) + '__vi' + str(vi) + '_z')
-        self.vi = vi
-        self.vf = vf
-        # self.Tif.layer_P_vf__vi_z = self
+#     def __init__(self, vi, vf, data=None, path=None):
+#         super().__init__('P_vf' + str(vf) + '__vi' + str(vi) + '_z')
+#         self.vi = vi
+#         self.vf = vf
+#         # self.Tif.layer_P_vf__vi_z = self
 
-        if type(data) == np.ndarray:
-            self.data = data
+#         if type(data) == np.ndarray:
+#             self.data = data
 
-        if type(path) != type(None):
-            self.import_tiff(path)
+#         if type(path) != type(None):
+#             self.import_tiff(path)
 
-    def import_tiff(self, path):
-        """
-        Imports the layer data from a `tif` or a `tiff` file. The file extension can be something else than tiff. See `Image Pillow documentation, Image.open <https://pillow.readthedocs.io/en/3.1.x/reference/Image.html#PIL.Image.open>`_.
+#     def import_tiff(self, path):
+#         """
+#         Imports the layer data from a `tif` or a `tiff` file. The file extension can be something else than tiff. See `Image Pillow documentation, Image.open <https://pillow.readthedocs.io/en/3.1.x/reference/Image.html#PIL.Image.open>`_.
         
-        :param path: path to the file
-        :type path: str
-        """
-        print("importing tiff file '" + path + "'")
-        self.path = path
+#         :param path: path to the file
+#         :type path: str
+#         """
+#         print("importing tiff file '" + path + "'")
+#         self.path = path
 
-        img = Image.open(path)  # image loading
-        img.load()
-        dtype = "float"
-        self.data = np.asarray(img, dtype=dtype)  # conversion en numpy
+#         img = Image.open(path)  # image loading
+#         img.load()
+#         dtype = "float"
+#         self.data = np.asarray(img, dtype=dtype)  # conversion en numpy
 
-        # self.get_dimensions()
-        self.shape = np.shape(self.data)
-        self.size = np.size(self.data)
+#         # self.get_dimensions()
+#         self.shape = np.shape(self.data)
+#         self.size = np.size(self.data)
 
-        print("\t done, N_j=" + str(self.size))
+#         print("\t done, N_j=" + str(self.size))
 
 
