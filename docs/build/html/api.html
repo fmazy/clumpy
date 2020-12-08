@@ -1,0 +1,187 @@
+
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta charset="utf-8" />
+    <title>Clumpy API &#8212; clumpy 0.1.0 documentation</title>
+    <link rel="stylesheet" href="_static/nature.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="_static/language_data.js"></script>
+    <link rel="shortcut icon" href="_static/logo.ico"/>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="clumpy.definition.LandUseCoverLayer" href="generated/clumpy.definition.LandUseCoverLayer.html" />
+    <link rel="prev" title="Definition" href="user_guide/definition.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="generated/clumpy.definition.LandUseCoverLayer.html" title="clumpy.definition.LandUseCoverLayer"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="user_guide/definition.html" title="Definition"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">clumpy 0.1.0 documentation</a> &#187;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="clumpy-api">
+<h1>Clumpy API<a class="headerlink" href="#clumpy-api" title="Permalink to this headline">¶</a></h1>
+<p>This is the full API documentation of the <cite>clumpy</cite> toolbox.</p>
+<div class="section" id="module-clumpy.definition">
+<span id="clumpy-definition-definition"></span><h2><a class="reference internal" href="#module-clumpy.definition" title="clumpy.definition"><code class="xref py py-mod docutils literal notranslate"><span class="pre">clumpy.definition</span></code></a>: Definition<a class="headerlink" href="#module-clumpy.definition" title="Permalink to this headline">¶</a></h2>
+<p>Elements definition</p>
+<div class="section" id="module-clumpy.definition._layer">
+<span id="layer"></span><h3>Layer<a class="headerlink" href="#module-clumpy.definition._layer" title="Permalink to this headline">¶</a></h3>
+<p>The definition layer of maps</p>
+<table class="longtable docutils align-default">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="generated/clumpy.definition.LandUseCoverLayer.html#clumpy.definition.LandUseCoverLayer" title="clumpy.definition.LandUseCoverLayer"><code class="xref py py-obj docutils literal notranslate"><span class="pre">definition.LandUseCoverLayer</span></code></a>([name, scale, …])</p></td>
+<td><p>Defines a Land Use Cover (LUC) layer.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="generated/clumpy.definition.FeatureLayer.html#clumpy.definition.FeatureLayer" title="clumpy.definition.FeatureLayer"><code class="xref py py-obj docutils literal notranslate"><span class="pre">definition.FeatureLayer</span></code></a>([name, scale, time, …])</p></td>
+<td><p>Defines an Explanatory Variable (EV) layer.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="generated/clumpy.definition.DistanceToVFeatureLayer.html#clumpy.definition.DistanceToVFeatureLayer" title="clumpy.definition.DistanceToVFeatureLayer"><code class="xref py py-obj docutils literal notranslate"><span class="pre">definition.DistanceToVFeatureLayer</span></code></a>(v, layer_LUC)</p></td>
+<td><p>Defines a distance to a state as a layer.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="section" id="module-clumpy.definition._case">
+<span id="case"></span><h3>Case<a class="headerlink" href="#module-clumpy.definition._case" title="Permalink to this headline">¶</a></h3>
+<p>Case blabla</p>
+<table class="longtable docutils align-default">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="generated/clumpy.definition.Case.html#clumpy.definition.Case" title="clumpy.definition.Case"><code class="xref py py-obj docutils literal notranslate"><span class="pre">definition.Case</span></code></a>(map_i, dict_vi_vf[, map_f, …])</p></td>
+<td><p>A land use and cover change model case.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<div class="section" id="module-clumpy.resampling">
+<span id="clumpy-resampling-resampling"></span><h2><a class="reference internal" href="#module-clumpy.resampling" title="clumpy.resampling"><code class="xref py py-mod docutils literal notranslate"><span class="pre">clumpy.resampling</span></code></a>: Resampling<a class="headerlink" href="#module-clumpy.resampling" title="Permalink to this headline">¶</a></h2>
+<p>Resampling</p>
+<div class="section" id="module-clumpy.resampling.under_sampling">
+<span id="resampling"></span><h3>Resampling<a class="headerlink" href="#module-clumpy.resampling.under_sampling" title="Permalink to this headline">¶</a></h3>
+<p>Under Sampling</p>
+<table class="longtable docutils align-default">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="generated/clumpy.resampling.under_sampling.compute_sampling_strategy.html#clumpy.resampling.under_sampling.compute_sampling_strategy" title="clumpy.resampling.under_sampling.compute_sampling_strategy"><code class="xref py py-obj docutils literal notranslate"><span class="pre">resampling.under_sampling.compute_sampling_strategy</span></code></a>(y)</p></td>
+<td><p>Compute sampling strategy</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="generated/clumpy.resampling.under_sampling.log_scorer_corrected.html#clumpy.resampling.under_sampling.log_scorer_corrected" title="clumpy.resampling.under_sampling.log_scorer_corrected"><code class="xref py py-obj docutils literal notranslate"><span class="pre">resampling.under_sampling.log_scorer_corrected</span></code></a>(…)</p></td>
+<td><p>log scorer</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="index.html">
+              <img class="logo" src="_static/logo.png" alt="Logo"/>
+            </a></p>
+  <h3><a href="index.html">Table of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Clumpy API</a><ul>
+<li><a class="reference internal" href="#module-clumpy.definition"><code class="xref py py-mod docutils literal notranslate"><span class="pre">clumpy.definition</span></code>: Definition</a><ul>
+<li><a class="reference internal" href="#module-clumpy.definition._layer">Layer</a></li>
+<li><a class="reference internal" href="#module-clumpy.definition._case">Case</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#module-clumpy.resampling"><code class="xref py py-mod docutils literal notranslate"><span class="pre">clumpy.resampling</span></code>: Resampling</a><ul>
+<li><a class="reference internal" href="#module-clumpy.resampling.under_sampling">Resampling</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="user_guide/definition.html"
+                        title="previous chapter">Definition</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="generated/clumpy.definition.LandUseCoverLayer.html"
+                        title="next chapter"><code class="xref py py-mod docutils literal notranslate"><span class="pre">clumpy.definition</span></code>.LandUseCoverLayer</a></p>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/api.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="generated/clumpy.definition.LandUseCoverLayer.html" title="clumpy.definition.LandUseCoverLayer"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="user_guide/definition.html" title="Definition"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">clumpy 0.1.0 documentation</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2020, François-Rémi Mazy.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 2.2.2.
+    </div>
+  </body>
+</html>

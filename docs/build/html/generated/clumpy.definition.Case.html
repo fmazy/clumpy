@@ -1,0 +1,567 @@
+
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta charset="utf-8" />
+    <title>clumpy.definition.Case &#8212; clumpy 0.1.0 documentation</title>
+    <link rel="stylesheet" href="../_static/nature.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <script type="text/javascript" src="../_static/language_data.js"></script>
+    <link rel="shortcut icon" href="../_static/logo.ico"/>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="clumpy.resampling.under_sampling.compute_sampling_strategy" href="clumpy.resampling.under_sampling.compute_sampling_strategy.html" />
+    <link rel="prev" title="clumpy.definition.DistanceToVFeatureLayer" href="clumpy.definition.DistanceToVFeatureLayer.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="clumpy.resampling.under_sampling.compute_sampling_strategy.html" title="clumpy.resampling.under_sampling.compute_sampling_strategy"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="clumpy.definition.DistanceToVFeatureLayer.html" title="clumpy.definition.DistanceToVFeatureLayer"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">clumpy 0.1.0 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../api.html" accesskey="U">Clumpy API</a> &#187;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="clumpy-definition-case">
+<h1><a class="reference internal" href="../api.html#module-clumpy.definition" title="clumpy.definition"><code class="xref py py-mod docutils literal notranslate"><span class="pre">clumpy.definition</span></code></a>.Case<a class="headerlink" href="#clumpy-definition-case" title="Permalink to this headline">¶</a></h1>
+<dl class="class">
+<dt id="clumpy.definition.Case">
+<em class="property">class </em><code class="sig-prename descclassname">clumpy.definition.</code><code class="sig-name descname">Case</code><span class="sig-paren">(</span><em class="sig-param">map_i</em>, <em class="sig-param">dict_vi_vf</em>, <em class="sig-param">map_f=None</em>, <em class="sig-param">restrict_vf_to_studied_ones=True</em><span class="sig-paren">)</span><a class="headerlink" href="#clumpy.definition.Case" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>A land use and cover change model case.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>map_i</strong> (<em>[</em><em>LayerLUC</em><em>]</em>) – The initial LUC map.</p></li>
+<li><p><strong>dict_vi_vf</strong> (<em>list of tuples</em>) – The list of studied transitions represented as tuples. Example : <code class="docutils literal notranslate"><span class="pre">[(3,2),</span> <span class="pre">(3,4),</span> <span class="pre">(7,2)]</span></code></p></li>
+<li><p><strong>map_f</strong> (<em>[</em><em>LayerLUC</em><em>] or </em><em>None</em><em> (</em><em>default=None</em><em>)</em>) – The final LUC map. Can be None.</p></li>
+<li><p><strong>restrict_vf_to_studied_ones</strong> (<em>Boolean</em>) – If <code class="docutils literal notranslate"><span class="pre">True</span></code>, pixels final states are restricted to the studied ones.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Attributes</dt>
+<dd class="field-even"><ul class="simple">
+<li><p><strong>J</strong> (<em>Pandas DataFrame</em>) – The studied pixels through defined layers.</p></li>
+<li><p><strong>transitions</strong> (<em>[_Transition]</em>) – The transitions definitions</p></li>
+</ul>
+</dd>
+</dl>
+<p class="rubric">Methods</p>
+<table class="longtable docutils align-default">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#clumpy.definition.Case.add_distance_to_v_as_feature" title="clumpy.definition.Case.add_distance_to_v_as_feature"><code class="xref py py-obj docutils literal notranslate"><span class="pre">add_distance_to_v_as_feature</span></code></a>(self, list_vi, v)</p></td>
+<td><p>add an explanatory variable as a distance to a state</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#clumpy.definition.Case.add_layer_as_feature" title="clumpy.definition.Case.add_layer_as_feature"><code class="xref py py-obj docutils literal notranslate"><span class="pre">add_layer_as_feature</span></code></a>(self, list_vi, layer_EV)</p></td>
+<td><p>add an explanatory variable from a layer</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#clumpy.definition.Case.add_numpy_as_feature" title="clumpy.definition.Case.add_numpy_as_feature"><code class="xref py py-obj docutils literal notranslate"><span class="pre">add_numpy_as_feature</span></code></a>(self, list_vi, data, name)</p></td>
+<td><p><dl class="field-list simple">
+<dt class="field-odd">param list_vi</dt>
+<dd class="field-odd"><p>The list of concerned initial states for this feature. Example : <code class="docutils literal notranslate"><span class="pre">[2,3]</span></code>.</p>
+</dd>
+</dl>
+</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#clumpy.definition.Case.copy" title="clumpy.definition.Case.copy"><code class="xref py py-obj docutils literal notranslate"><span class="pre">copy</span></code></a>(self)</p></td>
+<td><p><dl class="field-list simple">
+<dt class="field-odd">returns</dt>
+<dd class="field-odd"><p></p></dd>
+</dl>
+</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#clumpy.definition.Case.get_J" title="clumpy.definition.Case.get_J"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_J</span></code></a>(self, vi)</p></td>
+<td><p><dl class="field-list simple">
+<dt class="field-odd">param vi</dt>
+<dd class="field-odd"><p>DESCRIPTION.</p>
+</dd>
+</dl>
+</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#clumpy.definition.Case.get_size" title="clumpy.definition.Case.get_size"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_size</span></code></a>(self[, print_value, human, …])</p></td>
+<td><p><dl class="field-list simple">
+<dt class="field-odd">param print_value</dt>
+<dd class="field-odd"><p>DESCRIPTION. The default is True.</p>
+</dd>
+</dl>
+</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#clumpy.definition.Case.get_unique_z" title="clumpy.definition.Case.get_unique_z"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_unique_z</span></code></a>(self[, output])</p></td>
+<td><p><dl class="field-list simple">
+<dt class="field-odd">param output</dt>
+<dd class="field-odd"><p>DESCRIPTION. The default is ‘np’.</p>
+</dd>
+</dl>
+</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#clumpy.definition.Case.get_vf" title="clumpy.definition.Case.get_vf"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_vf</span></code></a>(self, vi)</p></td>
+<td><p><dl class="field-list simple">
+<dt class="field-odd">param vi</dt>
+<dd class="field-odd"><p>DESCRIPTION.</p>
+</dd>
+</dl>
+</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#clumpy.definition.Case.get_z" title="clumpy.definition.Case.get_z"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_z</span></code></a>(self, vi, z_name)</p></td>
+<td><p><dl class="field-list simple">
+<dt class="field-odd">param vi</dt>
+<dd class="field-odd"><p>DESCRIPTION.</p>
+</dd>
+</dl>
+</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#clumpy.definition.Case.get_z_as_dataframe" title="clumpy.definition.Case.get_z_as_dataframe"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_z_as_dataframe</span></code></a>(self)</p></td>
+<td><p><dl class="field-list simple">
+<dt class="field-odd">returns</dt>
+<dd class="field-odd"><p></p></dd>
+</dl>
+</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#clumpy.definition.Case.get_z_column_id" title="clumpy.definition.Case.get_z_column_id"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_z_column_id</span></code></a>(self, vi, z_name)</p></td>
+<td><p><dl class="field-list simple">
+<dt class="field-odd">param vi</dt>
+<dd class="field-odd"><p>DESCRIPTION.</p>
+</dd>
+</dl>
+</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#clumpy.definition.Case.get_z_layer" title="clumpy.definition.Case.get_z_layer"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_z_layer</span></code></a>(self, vi, z_name)</p></td>
+<td><p><dl class="field-list simple">
+<dt class="field-odd">param vi</dt>
+<dd class="field-odd"><p>DESCRIPTION.</p>
+</dd>
+</dl>
+</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#clumpy.definition.Case.keep_only" title="clumpy.definition.Case.keep_only"><code class="xref py py-obj docutils literal notranslate"><span class="pre">keep_only</span></code></a>(self, vi, condition[, inplace])</p></td>
+<td><p><dl class="field-list simple">
+<dt class="field-odd">param vi</dt>
+<dd class="field-odd"><p>DESCRIPTION.</p>
+</dd>
+</dl>
+</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#clumpy.definition.Case.remove" title="clumpy.definition.Case.remove"><code class="xref py py-obj docutils literal notranslate"><span class="pre">remove</span></code></a>(self, vi, condition[, inplace])</p></td>
+<td><p><dl class="field-list simple">
+<dt class="field-odd">param vi</dt>
+<dd class="field-odd"><p>DESCRIPTION.</p>
+</dd>
+</dl>
+</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#clumpy.definition.Case.remove_z" title="clumpy.definition.Case.remove_z"><code class="xref py py-obj docutils literal notranslate"><span class="pre">remove_z</span></code></a>(self, vi, z_name[, inplace])</p></td>
+<td><p><dl class="field-list simple">
+<dt class="field-odd">param vi</dt>
+<dd class="field-odd"><p>DESCRIPTION.</p>
+</dd>
+</dl>
+</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#clumpy.definition.Case.select_vf_borders" title="clumpy.definition.Case.select_vf_borders"><code class="xref py py-obj docutils literal notranslate"><span class="pre">select_vf_borders</span></code></a>(self, binarizer)</p></td>
+<td><p><dl class="field-list simple">
+<dt class="field-odd">param binarizer</dt>
+<dd class="field-odd"><p>DESCRIPTION.</p>
+</dd>
+</dl>
+</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#clumpy.definition.Case.select_vi" title="clumpy.definition.Case.select_vi"><code class="xref py py-obj docutils literal notranslate"><span class="pre">select_vi</span></code></a>(self, vi[, inplace])</p></td>
+<td><p><dl class="field-list simple">
+<dt class="field-odd">param vi</dt>
+<dd class="field-odd"><p>DESCRIPTION.</p>
+</dd>
+</dl>
+</p></td>
+</tr>
+</tbody>
+</table>
+<dl class="method">
+<dt id="clumpy.definition.Case.add_distance_to_v_as_feature">
+<code class="sig-name descname">add_distance_to_v_as_feature</code><span class="sig-paren">(</span><em class="sig-param">self</em>, <em class="sig-param">list_vi</em>, <em class="sig-param">v</em>, <em class="sig-param">name=None</em>, <em class="sig-param">scale=1</em><span class="sig-paren">)</span><a class="headerlink" href="#clumpy.definition.Case.add_distance_to_v_as_feature" title="Permalink to this definition">¶</a></dt>
+<dd><p>add an explanatory variable as a distance to a state</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>list_vi</strong> (<em>list of int</em>) – The list of concerned initial states for this feature. Example : <code class="docutils literal notranslate"><span class="pre">[2,3]</span></code>.</p></li>
+<li><p><strong>v</strong> (<em>int</em>) – The focused distance state.</p></li>
+<li><p><strong>name</strong> (<em>str</em><em> (</em><em>default=None</em><em>)</em>) – The feature name. If <code class="docutils literal notranslate"><span class="pre">None</span></code>, the name will be <code class="docutils literal notranslate"><span class="pre">'distance_to_'+str(v)</span></code>.</p></li>
+<li><p><strong>scale</strong> (<em>float</em><em> (</em><em>default=1</em><em>)</em>) – The pixel side length in meters.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="clumpy.definition.Case.add_layer_as_feature">
+<code class="sig-name descname">add_layer_as_feature</code><span class="sig-paren">(</span><em class="sig-param">self</em>, <em class="sig-param">list_vi</em>, <em class="sig-param">layer_EV</em>, <em class="sig-param">name=None</em><span class="sig-paren">)</span><a class="headerlink" href="#clumpy.definition.Case.add_layer_as_feature" title="Permalink to this definition">¶</a></dt>
+<dd><p>add an explanatory variable from a layer</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>list_Tif</strong> (<em>[</em><em>_Transition_vi_vf</em><em>]</em>) – list of Tif</p></li>
+<li><p><strong>layer_EV</strong> (<em>LayerEV</em>) – explanatory variable layer object</p></li>
+<li><p><strong>name</strong> (<em>string</em><em> or </em><em>None</em>) – name – default: None, ie takes the name of the EV layer</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="clumpy.definition.Case.add_numpy_as_feature">
+<code class="sig-name descname">add_numpy_as_feature</code><span class="sig-paren">(</span><em class="sig-param">self</em>, <em class="sig-param">list_vi</em>, <em class="sig-param">data</em>, <em class="sig-param">name</em>, <em class="sig-param">kind='static'</em><span class="sig-paren">)</span><a class="headerlink" href="#clumpy.definition.Case.add_numpy_as_feature" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>list_vi</strong> (<em>list of int</em>) – The list of concerned initial states for this feature. Example : <code class="docutils literal notranslate"><span class="pre">[2,3]</span></code>.</p></li>
+<li><p><strong>data</strong> (<em>numpy array</em>) – The data whose shape is like the initial LUC map one’s.</p></li>
+<li><p><strong>name</strong> (<em>str</em>) – The feature name.</p></li>
+<li><p><strong>kind</strong> (<em>{'static'</em><em>, </em><em>'dyn'</em><em>, </em><em>'distance_to_v'}</em><em>, </em><em>(</em><em>default='static'</em><em>)</em>) – <p>The kind of the feature.</p>
+<dl class="simple">
+<dt>static</dt><dd><p>Static feature.</p>
+</dd>
+<dt>dyn</dt><dd><p>Dynamic feature which should be recomputed at each allocation time step.</p>
+</dd>
+<dt>distance_to_v</dt><dd><p>The same as dyn but specific for distance to a state features.</p>
+</dd>
+</dl>
+</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="clumpy.definition.Case.copy">
+<code class="sig-name descname">copy</code><span class="sig-paren">(</span><em class="sig-param">self</em><span class="sig-paren">)</span><a class="headerlink" href="#clumpy.definition.Case.copy" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p></p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>None.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="clumpy.definition.Case.get_J">
+<code class="sig-name descname">get_J</code><span class="sig-paren">(</span><em class="sig-param">self</em>, <em class="sig-param">vi</em><span class="sig-paren">)</span><a class="headerlink" href="#clumpy.definition.Case.get_J" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>vi</strong> (<em>TYPE</em>) – DESCRIPTION.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p></p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>None.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="clumpy.definition.Case.get_size">
+<code class="sig-name descname">get_size</code><span class="sig-paren">(</span><em class="sig-param">self</em>, <em class="sig-param">print_value=True</em>, <em class="sig-param">human=True</em>, <em class="sig-param">return_value=False</em><span class="sig-paren">)</span><a class="headerlink" href="#clumpy.definition.Case.get_size" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>print_value</strong> (<em>TYPE</em><em>, </em><em>optional</em>) – DESCRIPTION. The default is True.</p></li>
+<li><p><strong>human</strong> (<em>TYPE</em><em>, </em><em>optional</em>) – DESCRIPTION. The default is True.</p></li>
+<li><p><strong>return_value</strong> (<em>TYPE</em><em>, </em><em>optional</em>) – DESCRIPTION. The default is False.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p></p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>None.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="clumpy.definition.Case.get_unique_z">
+<code class="sig-name descname">get_unique_z</code><span class="sig-paren">(</span><em class="sig-param">self</em>, <em class="sig-param">output='np'</em><span class="sig-paren">)</span><a class="headerlink" href="#clumpy.definition.Case.get_unique_z" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>output</strong> (<em>TYPE</em><em>, </em><em>optional</em>) – DESCRIPTION. The default is ‘np’.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p></p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>None.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="clumpy.definition.Case.get_vf">
+<code class="sig-name descname">get_vf</code><span class="sig-paren">(</span><em class="sig-param">self</em>, <em class="sig-param">vi</em><span class="sig-paren">)</span><a class="headerlink" href="#clumpy.definition.Case.get_vf" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>vi</strong> (<em>TYPE</em>) – DESCRIPTION.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p></p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>None.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="clumpy.definition.Case.get_z">
+<code class="sig-name descname">get_z</code><span class="sig-paren">(</span><em class="sig-param">self</em>, <em class="sig-param">vi</em>, <em class="sig-param">z_name</em><span class="sig-paren">)</span><a class="headerlink" href="#clumpy.definition.Case.get_z" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>vi</strong> (<em>TYPE</em>) – DESCRIPTION.</p></li>
+<li><p><strong>z_name</strong> (<em>TYPE</em>) – DESCRIPTION.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p></p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>None.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="clumpy.definition.Case.get_z_as_dataframe">
+<code class="sig-name descname">get_z_as_dataframe</code><span class="sig-paren">(</span><em class="sig-param">self</em><span class="sig-paren">)</span><a class="headerlink" href="#clumpy.definition.Case.get_z_as_dataframe" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p></p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>None.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="clumpy.definition.Case.get_z_column_id">
+<code class="sig-name descname">get_z_column_id</code><span class="sig-paren">(</span><em class="sig-param">self</em>, <em class="sig-param">vi</em>, <em class="sig-param">z_name</em><span class="sig-paren">)</span><a class="headerlink" href="#clumpy.definition.Case.get_z_column_id" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>vi</strong> (<em>TYPE</em>) – DESCRIPTION.</p></li>
+<li><p><strong>z_name</strong> (<em>TYPE</em>) – DESCRIPTION.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p></p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>None.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="clumpy.definition.Case.get_z_layer">
+<code class="sig-name descname">get_z_layer</code><span class="sig-paren">(</span><em class="sig-param">self</em>, <em class="sig-param">vi</em>, <em class="sig-param">z_name</em><span class="sig-paren">)</span><a class="headerlink" href="#clumpy.definition.Case.get_z_layer" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>vi</strong> (<em>TYPE</em>) – DESCRIPTION.</p></li>
+<li><p><strong>z_name</strong> (<em>TYPE</em>) – DESCRIPTION.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p></p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>None.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="clumpy.definition.Case.keep_only">
+<code class="sig-name descname">keep_only</code><span class="sig-paren">(</span><em class="sig-param">self</em>, <em class="sig-param">vi</em>, <em class="sig-param">condition</em>, <em class="sig-param">inplace=False</em><span class="sig-paren">)</span><a class="headerlink" href="#clumpy.definition.Case.keep_only" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>vi</strong> (<em>TYPE</em>) – DESCRIPTION.</p></li>
+<li><p><strong>condition</strong> (<em>TYPE</em>) – DESCRIPTION.</p></li>
+<li><p><strong>inplace</strong> (<em>TYPE</em><em>, </em><em>optional</em>) – DESCRIPTION. The default is False.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p></p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>None.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="clumpy.definition.Case.remove">
+<code class="sig-name descname">remove</code><span class="sig-paren">(</span><em class="sig-param">self</em>, <em class="sig-param">vi</em>, <em class="sig-param">condition</em>, <em class="sig-param">inplace=False</em><span class="sig-paren">)</span><a class="headerlink" href="#clumpy.definition.Case.remove" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>vi</strong> (<em>TYPE</em>) – DESCRIPTION.</p></li>
+<li><p><strong>condition</strong> (<em>TYPE</em>) – DESCRIPTION.</p></li>
+<li><p><strong>inplace</strong> (<em>TYPE</em><em>, </em><em>optional</em>) – DESCRIPTION. The default is False.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p></p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>None.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="clumpy.definition.Case.remove_z">
+<code class="sig-name descname">remove_z</code><span class="sig-paren">(</span><em class="sig-param">self</em>, <em class="sig-param">vi</em>, <em class="sig-param">z_name</em>, <em class="sig-param">inplace=False</em><span class="sig-paren">)</span><a class="headerlink" href="#clumpy.definition.Case.remove_z" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>vi</strong> (<em>TYPE</em>) – DESCRIPTION.</p></li>
+<li><p><strong>z_name</strong> (<em>TYPE</em>) – DESCRIPTION.</p></li>
+<li><p><strong>inplace</strong> (<em>TYPE</em><em>, </em><em>optional</em>) – DESCRIPTION. The default is False.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p></p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>None.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="clumpy.definition.Case.select_vf_borders">
+<code class="sig-name descname">select_vf_borders</code><span class="sig-paren">(</span><em class="sig-param">self</em>, <em class="sig-param">binarizer</em><span class="sig-paren">)</span><a class="headerlink" href="#clumpy.definition.Case.select_vf_borders" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>binarizer</strong> (<em>TYPE</em>) – DESCRIPTION.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p></p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>None.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="clumpy.definition.Case.select_vi">
+<code class="sig-name descname">select_vi</code><span class="sig-paren">(</span><em class="sig-param">self</em>, <em class="sig-param">vi</em>, <em class="sig-param">inplace=False</em><span class="sig-paren">)</span><a class="headerlink" href="#clumpy.definition.Case.select_vi" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>vi</strong> (<em>TYPE</em>) – DESCRIPTION.</p></li>
+<li><p><strong>inplace</strong> (<em>TYPE</em><em>, </em><em>optional</em>) – DESCRIPTION. The default is False.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p></p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>None.</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<div class="clearer"></div></div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="../index.html">
+              <img class="logo" src="../_static/logo.png" alt="Logo"/>
+            </a></p>
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="clumpy.definition.DistanceToVFeatureLayer.html"
+                        title="previous chapter"><code class="xref py py-mod docutils literal notranslate"><span class="pre">clumpy.definition</span></code>.DistanceToVFeatureLayer</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="clumpy.resampling.under_sampling.compute_sampling_strategy.html"
+                        title="next chapter"><code class="xref py py-mod docutils literal notranslate"><span class="pre">clumpy.resampling.under_sampling</span></code>.compute_sampling_strategy</a></p>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="../_sources/generated/clumpy.definition.Case.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="clumpy.resampling.under_sampling.compute_sampling_strategy.html" title="clumpy.resampling.under_sampling.compute_sampling_strategy"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="clumpy.definition.DistanceToVFeatureLayer.html" title="clumpy.definition.DistanceToVFeatureLayer"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">clumpy 0.1.0 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../api.html" >Clumpy API</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2020, François-Rémi Mazy.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 2.2.2.
+    </div>
+  </body>
+</html>

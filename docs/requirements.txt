@@ -1,9 +1,0 @@
-numpy
-pandas
-matplotlib
-scipy
-tqdm
-sklearn
-Pillow
-optbinning >= 0.6.1
-

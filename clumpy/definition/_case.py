@@ -1,10 +1,4 @@
-#!/usr/bin/env python3
-# -*- coding: utf-8 -*-
-"""
-Created on Wed Jun  3 09:35:47 2020
-
-@author: frem
-"""
+"""Case blabla"""
 
 # import numpy as np
 import pandas as pd
@@ -20,8 +14,7 @@ from ..tools import human_size
 from ..tools import np_suitable_integer_type
 
 class Case():
-    """
-    A land use and cover change model case.
+    """A land use and cover change model case.
     
     Parameters
     ----------
@@ -75,9 +68,34 @@ class Case():
 
     
     def copy(self):
+        """
+        
+
+        Returns
+        -------
+        None.
+
+        """
         return(deepcopy(self))
     
     def get_size(self, print_value=True, human=True, return_value=False):
+        """
+        
+
+        Parameters
+        ----------
+        print_value : TYPE, optional
+            DESCRIPTION. The default is True.
+        human : TYPE, optional
+            DESCRIPTION. The default is True.
+        return_value : TYPE, optional
+            DESCRIPTION. The default is False.
+
+        Returns
+        -------
+        None.
+
+        """
         s = 0
         for vi in self.J.keys():
             s += getsizeof(self.J[vi])
@@ -167,15 +185,60 @@ class Case():
         self.add_numpy_as_feature(list_vi, layer_EV.data, name)
             
     def get_z_column_id(self, vi, z_name):
+        """
+        
+
+        Parameters
+        ----------
+        vi : TYPE
+            DESCRIPTION.
+        z_name : TYPE
+            DESCRIPTION.
+
+        Returns
+        -------
+        None.
+
+        """
         return(self.Z_names[vi].index(z_name))
     
     def get_z(self, vi, z_name):
+        """
+        
+
+        Parameters
+        ----------
+        vi : TYPE
+            DESCRIPTION.
+        z_name : TYPE
+            DESCRIPTION.
+
+        Returns
+        -------
+        None.
+
+        """
         
         column_id = self.get_z_column_id(vi, z_name)
         
         return(self.Z[vi][:,column_id])
     
     def get_z_layer(self, vi, z_name):
+        """
+        
+
+        Parameters
+        ----------
+        vi : TYPE
+            DESCRIPTION.
+        z_name : TYPE
+            DESCRIPTION.
+
+        Returns
+        -------
+        None.
+
+        """
         z_layer = FeatureLayer(name='vi'+str(vi)+'_'+z_name,
                                scale=self.map_i.scale)
         
@@ -189,15 +252,75 @@ class Case():
         return(z_layer)
     
     def get_J(self, vi):
+        """
+        
+
+        Parameters
+        ----------
+        vi : TYPE
+            DESCRIPTION.
+
+        Returns
+        -------
+        None.
+
+        """
         return(self.J[vi])
     
     def get_vf(self, vi):
+        """
+        
+
+        Parameters
+        ----------
+        vi : TYPE
+            DESCRIPTION.
+
+        Returns
+        -------
+        None.
+
+        """
         return(self.vf[vi])
     
     def remove(self, vi, condition, inplace=False):
+        """
+        
+
+        Parameters
+        ----------
+        vi : TYPE
+            DESCRIPTION.
+        condition : TYPE
+            DESCRIPTION.
+        inplace : TYPE, optional
+            DESCRIPTION. The default is False.
+
+        Returns
+        -------
+        None.
+
+        """
         return(self.keep_only(vi, ~condition, inplace=inplace))
         
     def keep_only(self, vi, condition, inplace=False):
+        """
+        
+
+        Parameters
+        ----------
+        vi : TYPE
+            DESCRIPTION.
+        condition : TYPE
+            DESCRIPTION.
+        inplace : TYPE, optional
+            DESCRIPTION. The default is False.
+
+        Returns
+        -------
+        None.
+
+        """
         if inplace:
             case = self
         else:
@@ -213,6 +336,21 @@ class Case():
             return(case)
         
     def select_vi(self, vi, inplace=False):
+        """
+        
+
+        Parameters
+        ----------
+        vi : TYPE
+            DESCRIPTION.
+        inplace : TYPE, optional
+            DESCRIPTION. The default is False.
+
+        Returns
+        -------
+        None.
+
+        """
         if inplace:
             case = self
         else:
@@ -233,6 +371,23 @@ class Case():
             return(case)
         
     def remove_z(self, vi, z_name, inplace=False):
+        """
+        
+
+        Parameters
+        ----------
+        vi : TYPE
+            DESCRIPTION.
+        z_name : TYPE
+            DESCRIPTION.
+        inplace : TYPE, optional
+            DESCRIPTION. The default is False.
+
+        Returns
+        -------
+        None.
+
+        """
         if inplace:
             case = self
         else:
@@ -251,6 +406,14 @@ class Case():
             return(case)
     
     def get_z_as_dataframe(self):
+        """
+        
+
+        Returns
+        -------
+        None.
+
+        """
         z = {}
         for vi in self.Z.keys():
             col_names = pd.MultiIndex.from_tuples([('z',z_name) for z_name in self.Z_names[vi]])
@@ -259,6 +422,19 @@ class Case():
         return(z)
     
     def get_unique_z(self, output='np'):
+        """
+        
+
+        Parameters
+        ----------
+        output : TYPE, optional
+            DESCRIPTION. The default is 'np'.
+
+        Returns
+        -------
+        None.
+
+        """
         z = self.get_z_as_dataframe()
         
         for vi in z.keys():
@@ -271,6 +447,19 @@ class Case():
         return(z)
     
     def select_vf_borders(self, binarizer):
+        """
+        
+
+        Parameters
+        ----------
+        binarizer : TYPE
+            DESCRIPTION.
+
+        Returns
+        -------
+        None.
+
+        """
         for vi in self.dict_vi_vf.keys():
             c_all_vf = np.zeros(self.J[vi].shape).astype(bool)
             

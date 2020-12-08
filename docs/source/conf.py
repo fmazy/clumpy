@@ -77,13 +77,17 @@ extensions = [
     'sphinx.ext.doctest',
     'sphinx.ext.intersphinx',
     'sphinxcontrib.bibtex',
+    'sphinx.ext.napoleon',
+    'sphinx.ext.autosectionlabel',
+    'sphinx.ext.mathjax',
     'numpydoc',
 ]
     # 'nbsphinx',
     # 'sphinxcontrib.bibtex',
 
 # generate autosummary even if no references
-autosummary_generate = True
+autosummary_generate = ['api.rst']
+
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
@@ -99,8 +103,12 @@ exclude_patterns = []
 # The theme to use for HTML and HTML Help pages.  See the documentation for
 # a list of builtin themes.
 #
-html_theme = 'sphinx_rtd_theme'
-#html_theme = 'nature'
+#html_theme = 'sphinx_rtd_theme'
+#html_theme = 'pyramid'
+#import guzzle_sphinx_theme
+
+#html_theme_path = guzzle_sphinx_theme.html_theme_path()
+html_theme = 'nature'
 
 # The name of an image file (relative to this directory) to place at the top
 # of the sidebar.

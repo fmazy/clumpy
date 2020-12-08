@@ -15,8 +15,8 @@ from ..tools import human_size
 from copy import deepcopy
 
 class _Layer:
-    """
-    Defines a layer. It is expected to define a layer according to its type by the child classes :
+    """Defines a layer.
+    It is expected to define a layer according to its type by the child classes :
         
         * :class:`.LayerLUC`
         * :class:`.LayerEV`
@@ -39,8 +39,7 @@ class _Layer:
     #     return (self.Nx, self.Ny)
 
     def import_numpy(self, data, sound=1):
-        """
-        Set the layer data by importing a numpy matrix.
+        """Set the layer data by importing a numpy matrix.
         
         :param data: the data
         :type data: numpy array
@@ -60,8 +59,8 @@ class _Layer:
         self.data = imread(path)
 
     def export_tiff(self, path, mode=None):
-        """
-        Export the layer data as a ``tif`` or a ``tiff`` file. The file extension can be something else than tiff. See `Image Pillow documentation, Image.save <https://pillow.readthedocs.io/en/3.1.x/reference/Image.html#PIL.Image.Image.save>`_.
+        """Export the layer data as a ``tif`` or a ``tiff`` file.
+        The file extension can be something else than tiff. See `Image Pillow documentation, Image.save <https://pillow.readthedocs.io/en/3.1.x/reference/Image.html#PIL.Image.Image.save>`_.
         
         using mode="I" is required by Dinamica for LUC maps.
         
@@ -81,8 +80,7 @@ class _Layer:
         
         
     def export_asc(self, path):
-        """
-        Export the layer data as an ``asc`` file in order to use it through CLUES and CLUMondo.
+        """Export the layer data as an ``asc`` file in order to use it through CLUES and CLUMondo.
         """
         print("[" + self.name + "] exporting tiff file in " + path + "...")
         
@@ -111,6 +109,22 @@ class _Layer:
         print('done')
         
     def get_size(self, print_value=True, human=True, return_value=False):
+        """Get size
+
+        Parameters
+        ----------
+        print_value : TYPE, optional
+            DESCRIPTION. The default is True.
+        human : TYPE, optional
+            DESCRIPTION. The default is True.
+        return_value : TYPE, optional
+            DESCRIPTION. The default is False.
+
+        Returns
+        -------
+        None.
+
+        """
         s = getsizeof(self.data)
         if print_value:
             if human:
@@ -122,6 +136,13 @@ class _Layer:
             return(s)
         
     def copy(self):
+        """Copy
+
+        Returns
+        -------
+        None.
+
+        """
         return(deepcopy(self))
 
 
@@ -150,8 +171,8 @@ class LandUseCoverLayer(_Layer):
             self.import_tiff(path, sound)
 
     def import_tiff(self, path, sound=1):
-        """
-        Imports the layer data from a ``tif`` or a ``tiff`` file. The file extension can be something else than tiff. See `Image Pillow documentation, Image.open <https://pillow.readthedocs.io/en/3.1.x/reference/Image.html#PIL.Image.open>`_.
+        """Imports the layer data from a ``tif`` or a ``tiff`` file.
+        The file extension can be something else than tiff. See `Image Pillow documentation, Image.open <https://pillow.readthedocs.io/en/3.1.x/reference/Image.html#PIL.Image.open>`_.
         
         :param path: path to the file
         :type path: str
@@ -171,6 +192,18 @@ class LandUseCoverLayer(_Layer):
             print("\t done, N_j=" + str(self.size))
         
     def import_asc(self, path):
+        """ imports the layer data from a ``asc`` file.
+
+        Parameters
+        ----------
+        path : TYPE
+            DESCRIPTION.
+
+        Returns
+        -------
+        None.
+
+        """
         f = open(path, 'r')
         
         lines = f.readlines()
@@ -210,13 +243,24 @@ class LandUseCoverLayer(_Layer):
         return (txt)
     
     def set_style(self, dict_style):
+        """set display style
+
+        Parameters
+        ----------
+        dict_style : TYPE
+            DESCRIPTION.
+
+        Returns
+        -------
+        None.
+
+        """
         self.style_values = list(dict_style.keys())
         self.style_names = [dict_style[i][0] for i in dict_style.keys()]
         self.style_colors = [dict_style[i][1] for i in dict_style.keys()]
     
     def display(self, center, window):
-        """
-        Display the land use cover layer through python console with matplotlib.
+        """Display the land use cover layer through python console with matplotlib.
 
         Parameters
         ----------

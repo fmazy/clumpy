@@ -1,10 +1,4 @@
-#!/usr/bin/env python3
-# -*- coding: utf-8 -*-
-"""
-Created on Tue Dec  8 10:17:22 2020
-
-@author: frem
-"""
+"""Under Sampling"""
 
 from ..metrics import log_score
 
@@ -12,7 +6,27 @@ from sklearn.metrics import make_scorer
 import numpy as np
 
 def compute_sampling_strategy(y, gamma=1, beta=None, u=None, return_beta=False):
+    """ Compute sampling strategy
     
+
+    Parameters
+    ----------
+    y : TYPE
+        DESCRIPTION.
+    gamma : TYPE, optional
+        DESCRIPTION. The default is 1.
+    beta : TYPE, optional
+        DESCRIPTION. The default is None.
+    u : TYPE, optional
+        DESCRIPTION. The default is None.
+    return_beta : TYPE, optional
+        DESCRIPTION. The default is False.
+
+    Returns
+    -------
+    None.
+
+    """
     e_, n = np.unique(y, return_counts=True)
         
     if u is None:
@@ -61,7 +75,7 @@ def log_score_corrected(y_true, y_prob, beta, id_u, a, b=1):
                      b=b))
 
 def log_scorer_corrected(beta, id_u, a, b=1):
-    """
+    """log scorer
     
 
     Parameters
