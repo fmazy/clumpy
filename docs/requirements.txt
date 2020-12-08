@@ -1,0 +1,8 @@
+numpy
+matplotlib
+scipy
+tqdm
+sklearn
+re
+copy
+tifffile
