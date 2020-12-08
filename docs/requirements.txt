@@ -3,5 +3,4 @@ matplotlib
 scipy
 tqdm
 sklearn
-copy
 tifffile
