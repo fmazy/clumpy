@@ -1,8 +1,5 @@
 """Under Sampling"""
 
-from ..metrics import log_score
-
-from sklearn.metrics import make_scorer
 import numpy as np
 
 def compute_sampling_strategy(y, gamma=1, beta=None, u=None, return_beta=False):
@@ -54,8 +51,23 @@ def compute_sampling_strategy(y, gamma=1, beta=None, u=None, return_beta=False):
     else:
         return(sampling_strategy)
 
-def probability_correction(P, beta, id_u):
-    
+def correct_probabilities(P, beta, id_u):
+    """Correct probabilities estimated through an undersampling.
+
+    Parameters
+    ----------
+    P : TYPE
+        DESCRIPTION.
+    beta : TYPE
+        DESCRIPTION.
+    id_u : TYPE
+        DESCRIPTION.
+
+    Returns
+    -------
+    None.
+
+    """
     P = P.copy()
     
     id_e = np.arange(P.shape[1])
@@ -66,39 +78,4 @@ def probability_correction(P, beta, id_u):
     P[:, id_u] = 1 - P[:, id_e!=id_u].sum(axis=1)
     
     return(P)
-    
-def log_score_corrected(y_true, y_prob, beta, id_u, a, b=1):
-    
-    return(log_score(y_true=y_true,
-                     y_prob = probability_correction(y_prob, beta, id_u),
-                     a=a,
-                     b=b))
-
-def log_scorer_corrected(beta, id_u, a, b=1):
-    """log scorer
-    
-
-    Parameters
-    ----------
-    beta : TYPE
-        DESCRIPTION.
-    id_u : TYPE
-        DESCRIPTION.
-    a : TYPE
-        DESCRIPTION.
-    b : TYPE, optional
-        DESCRIPTION. The default is 1.
-
-    Returns
-    -------
-    None.
-
-    """
-    return(make_scorer(score_func=log_score_corrected,
-                        greater_is_better=True,
-                        needs_proba=True,
-                        beta=beta,
-                        id_u=id_u,
-                        a=a,
-                        b=b))
     

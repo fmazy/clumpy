@@ -28,7 +28,6 @@ Layer
     
    definition.LandUseCoverLayer
    definition.FeatureLayer
-   definition.DistanceToVFeatureLayer
 
 Case
 ----
@@ -44,7 +43,38 @@ Case
    :template: class.rst
     
    definition.Case
+    
+   
+   
+:mod:`clumpy.metrics`: Metrics
+==============================
 
+.. automodule:: clumpy.metrics
+    :no-members:
+    :no-inherited-members:
+    
+.. currentmodule:: clumpy
+
+Scores
+------
+
+.. autosummary::
+   :toctree: generated/
+   :template: function.rst
+    
+   metrics.compute_a
+   metrics.log_score
+   
+Scorers
+-------
+
+.. autosummary::
+   :toctree: generated/
+   :template: function.rst
+    
+   metrics.log_scorer
+   metrics.under_sampling_log_scorer
+   
 :mod:`clumpy.resampling`: Resampling
 ====================================
 
@@ -68,33 +98,7 @@ Under sampling
    :template: function.rst
     
    resampling.under_sampling.compute_sampling_strategy
-   resampling.under_sampling.log_scorer_corrected
-   
-:mod:`clumpy.metrics`: Metrics
-==============================
-
-.. automodule:: clumpy.metrics
-    :no-members:
-    :no-inherited-members:
-    
-.. currentmodule:: clumpy
-
-Log score
----------
-
-.. automodule:: clumpy.metrics._log_score
-   :no-members:
-   :no-inherited-members:
-
-.. currentmodule:: clumpy
-
-.. autosummary::
-   :toctree: generated/
-   :template: function.rst
-    
-   metrics.compute_a
-   metrics.log_score
-   metrics.log_scorer
+   resampling.under_sampling.correct_probabilities
    
 :mod:`clumpy.scenario`: Scenario
 ===============================
@@ -105,19 +109,24 @@ Log score
     
 .. currentmodule:: clumpy
 
-Probabilities
--------------
-
-.. automodule:: clumpy.scenario._probabilities
-   :no-members:
-   :no-inherited-members:
-
-.. currentmodule:: clumpy
-
 .. autosummary::
    :toctree: generated/
    :template: function.rst
     
    scenario.adjust_probabilities
 
-   
+:mod:`clumpy.resampling`: utils
+===============================
+
+.. automodule:: clumpy.utils
+    :no-members:
+    :no-inherited-members:
+    
+.. currentmodule:: clumpy
+
+.. autosummary::
+   :toctree: generated/
+   :template: function.rst
+
+   utils.human_size
+   utils.ndarray_suitable_integer_type

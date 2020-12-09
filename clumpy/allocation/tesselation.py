@@ -1,4 +1,4 @@
-from ..definition import get_pixels_coordinates
+# from ..definition import get_pixels_coordinates
 
 import numpy as np
 import pandas as pd

@@ -1,104 +1,84 @@
-"""The definition layer of maps"""
+# -*- coding: utf-8 -*-
 
-# from PIL import Image  # it seems to be a bit limitation of this library
-from tifffile import imread, imwrite
-# from libtiff import TIFF # this one seems to be extended. see https://stackoverflow.com/questions/7569553/working-with-tiffs-import-export-in-python-using-numpy
+from tifffile import TiffFile, imwrite # for tiff write and read
+
 import numpy as np
-from scipy import ndimage
 import os
 from matplotlib import pyplot as plt
 import matplotlib as mpl
 import re
-from copy import deepcopy
-from sys import getsizeof
-from ..tools import human_size
-from copy import deepcopy
+# from sys import getsizeof
+# from copy import deepcopy
+
+# from ..utils import human_size
+
+# from ..tools._validation import check_case
 
 class _Layer:
-    """Defines a layer.
-    It is expected to define a layer according to its type by the child classes :
-        
-        * :class:`.LayerLUC`
-        * :class:`.LayerEV`
+    """Layer base element
     """
 
-    def __init__(self, name=None, scale=1):
+    def __init__(self,
+                 name=None,
+                 time=0,
+                 path=None,
+                 data=None,
+                 copy_metadata=None):
+        
         self.name = name
-        self.scale = scale
-
-    # def get_dimensions(self):
-    #     """
-    #     Computes, saves and returns the layer dimension.
-        
-    #     :Returns: a int tuple of dimensions ``self.Nx, self.Ny``
-    #     """
-    #     self.Nx = len(self.data[:, 0])
-    #     self.Ny = len(self.data[0, :])
-    #     self.Nj = self.Nx * self.Ny
-
-    #     return (self.Nx, self.Ny)
-
-    def import_numpy(self, data, sound=1):
-        """Set the layer data by importing a numpy matrix.
-        
-        :param data: the data
-        :type data: numpy array
-        """
-        if sound>0:
-            print("importing numpy data")
-        self.data = data
-
-        # self.get_dimensions()
-        self.size = np.size(self.data)
-        
-        if sound>0:
-            print("\t done, N_j=" + str(self.size))
-            
-    def _import_tiff_file(self, path):
+        self.time = time
         self.path = path
-        self.data = imread(path)
-
-    def export_tiff(self, path, mode=None):
-        """Export the layer data as a ``tif`` or a ``tiff`` file.
-        The file extension can be something else than tiff. See `Image Pillow documentation, Image.save <https://pillow.readthedocs.io/en/3.1.x/reference/Image.html#PIL.Image.Image.save>`_.
-        
-        using mode="I" is required by Dinamica for LUC maps.
-        
-        :param path: output file path
-        :type path: str
-        """
-        print("[" + self.name + "] exporting tiff file in " + path + "...")
+        self.data = data
+        self.copy_metadata = copy_metadata
                 
-        # create folder if not exists
-        folder_name = os.path.dirname(path)
-        if not os.path.exists(folder_name) and folder_name!= '':
-            os.makedirs(folder_name)
+        # if path and data -> file creation
+        if path is not None and data is not None:
+            
+            extratags = []
+            
+            # if copy metadata
+            if copy_metadata is not None:
+                
+                # for each tag, append to extratags
+                for _, tag in copy_metadata.tiff.pages[0].tags.items():
+                    extratags.append((tag.code, tag.dtype, tag.count, tag.value, False))
+            
+            # create file
+            imwrite(path, data=data, shape=data.shape, extratags=extratags)
+            
+        # read file
+        self.tiff = TiffFile(path)
         
-        imwrite(file=path,
-                data=self.data, 
-                dtype=self.data.dtype)
-        
-        
-    def export_asc(self, path):
+    def export_asc(self, path, verbose=0):
         """Export the layer data as an ``asc`` file in order to use it through CLUES and CLUMondo.
+        
+        Parameters
+        ----------
+        path : str
+            path to the file.
+        verbose : int, default=0
+            level of verbosity.
         """
-        print("[" + self.name + "] exporting tiff file in " + path + "...")
+        if verbose>0:
+            print("[" + self.name + "] exporting tiff file in " + path + "...")
         
          # create folder if not exists
         folder_name = os.path.dirname(path)
         if not os.path.exists(folder_name) and folder_name!= '':
             os.makedirs(folder_name)
         
-        np.savetxt(path, self.data.astype(int), delimiter=' ', fmt='%i')
+        data = self.tiff.asarray()
+        
+        np.savetxt(path, data.astype(int), delimiter=' ', fmt='%i')
         
         f= open(path,"r")
         
         data = f.read()
         
-        entete =  "ncols        "+str(self.data.shape[0])+"\n"
-        entete += "nrows        "+str(self.data.shape[1])+"\n"
+        entete =  "ncols        "+str(data.shape[0])+"\n"
+        entete += "nrows        "+str(data.shape[1])+"\n"
         entete += "xllcorner    0.0\n"
-        entete += "yllcorner    -"+str(float(self.data.shape[1]))+"\n"
+        entete += "yllcorner    -"+str(float(data.shape[1]))+"\n"
         entete += "cellsize     1.0\n"
         
         f= open(path,"w")
@@ -106,44 +86,46 @@ class _Layer:
         f.write(entete+data)
         f.close()
         
-        print('done')
+        if verbose>0:
+            print('done')
         
-    def get_size(self, print_value=True, human=True, return_value=False):
-        """Get size
+    # def get_size(self, print_value=True, human=True, return_size=False):
+    #     """Get layer size
 
-        Parameters
-        ----------
-        print_value : TYPE, optional
-            DESCRIPTION. The default is True.
-        human : TYPE, optional
-            DESCRIPTION. The default is True.
-        return_value : TYPE, optional
-            DESCRIPTION. The default is False.
+    #     Parameters
+    #     ----------
+    #     print_value : bool, default=``True``
+    #         If ``True``, print the size.
+    #     human : bool, default=``True``
+    #         If ``True``, print the size in a readable way.
+    #     return_value : bool, ``False``
+    #         If ``True``, return the size.
 
-        Returns
-        -------
-        None.
+    #     Returns
+    #     -------
+    #     (s): int
+    #         The size in octet. Returned if ``return_size=True``.
 
-        """
-        s = getsizeof(self.data)
-        if print_value:
-            if human:
-                sh = human_size(s)
-                print(str(round(sh[0],2))+' '+sh[1])
-            else:
-                print(s)
-        if return_value:
-            return(s)
-        
-    def copy(self):
-        """Copy
+    #     """
+    #     s = getsizeof(self.data)
+    #     if print_value:
+    #         if human:
+    #             sh = human_size(s)
+    #             print(str(round(sh[0],2))+' '+sh[1])
+    #         else:
+    #             print(s)
+    #     if return_size:
+    #         return(s)
+            
+    # def copy(self):
+    #     """Copy
 
-        Returns
-        -------
-        None.
+    #     Returns
+    #     -------
+    #     None.
 
-        """
-        return(deepcopy(self))
+    #     """
+    #     return(deepcopy(self))
 
 
 class LandUseCoverLayer(_Layer):
@@ -152,127 +134,152 @@ class LandUseCoverLayer(_Layer):
     
         luc1998 = clumpy.definition.layer.LayerLUC(name='LUC-1998',scale=15,time=0)
     
-    :param name: the map name
-    :type name: string, optional
-    :param scale: the pixel side real length in meters
-    :type scale: float
-    :param time: the map time
-    :type time: time
+    Parameters
+    ----------
+    name : TYPE, optional
+        DESCRIPTION. The default is None.
+    time : TYPE, optional
+        DESCRIPTION. The default is 0.
+    path : TYPE, optional
+        DESCRIPTION. The default is None.
+    data : TYPE, optional
+        DESCRIPTION. The default is None.
+    copy_metadata : TYPE, optional
+        DESCRIPTION. The default is None.
+
+    Returns
+    -------
+    None.
+
     """
-
-    def __init__(self, name=None, scale=1, time=0, path=None, sound=1):
-        super().__init__(name, scale)
-        self.time = time
-
-        self.distance2v = []
-        self.Z = []
-
-        if path != None:
-            self.import_tiff(path, sound)
-
-    def import_tiff(self, path, sound=1):
-        """Imports the layer data from a ``tif`` or a ``tiff`` file.
-        The file extension can be something else than tiff. See `Image Pillow documentation, Image.open <https://pillow.readthedocs.io/en/3.1.x/reference/Image.html#PIL.Image.open>`_.
-        
-        :param path: path to the file
-        :type path: str
-        """
-        if sound >0:
-            print("importing tiff file '" + path + "'")
-                
-        self._import_tiff_file(path)
-        
-        self.id_v, self.N_v = np.unique(self.data, return_counts=True)
-
-        # self.get_dimensions()
-        self.shape = np.shape(self.data)
-        self.size = np.size(self.data)
-        
-        if sound > 0:
-            print("\t done, N_j=" + str(self.size))
-        
-    def import_asc(self, path):
-        """ imports the layer data from a ``asc`` file.
-
-        Parameters
-        ----------
-        path : TYPE
-            DESCRIPTION.
-
-        Returns
-        -------
-        None.
-
-        """
-        f = open(path, 'r')
-        
-        lines = f.readlines()
-        
-        entete = lines[0:6]
-        data = lines[6::]
-        
-        print(entete)
-        print(len(lines))
-        print(len(data))
-        
-        infos =  {}
-        for e in entete:
-            chunks = re.split(' +', e)
-            infos[chunks[0]] = float(chunks[1].replace('\n',''))
-            
-        data = [int(x.replace('\n','')) for x in data]
-        data = np.array(data)
-        self.data = data.reshape((int(infos['ncols']), int(infos['nrows'])))
-        
-        self.id_v, self.N_v = np.unique(self.data, return_counts=True)
-
-        # self.get_dimensions()
-        self.shape = np.shape(self.data)
-        self.size = np.size(self.data)
-
-        print("\t done, N_j=" + str(self.size))
-
-    def __str__(self):
-        txt = 'Object Map : ' + self.name + '\n'
-        txt = txt + '(Nx, Ny) = ' + str(self.shape)+ '\n'
-        txt = txt + 'mean(v) = ' + str(np.mean(self.data)) + '\n'
-        unique, counts = np.unique(self.data, return_counts=True)
-        for k in range(len(unique)):
-            txt = txt + str(unique[k]) + ' ' + str(counts[k]) + '\n'
-        txt = txt + ""
-        return (txt)
     
-    def set_style(self, dict_style):
+    def __init__(self,
+                 name=None,
+                 time=0,
+                 path=None,
+                 data=None,
+                 copy_metadata=None):
+        
+        super().__init__(name,
+                         time,
+                         path,
+                         data,
+                         copy_metadata)
+    
+
+    # def __init__(self,
+    #              name=None,
+    #              time=0,
+    #              path=None,
+    #              data=None,
+    #              copy_metadata=None):
+        
+    #     super().__init__(name, time, path, data, copy_metadata)
+        
+
+    # def import_tiff(self, path, verbose=0):
+    #     """Imports the layer data from a ``tif`` or a ``tiff`` file.
+    #     The file extension can be something else than tiff. See `Image Pillow documentation, Image.open <https://pillow.readthedocs.io/en/3.1.x/reference/Image.html#PIL.Image.open>`_.
+        
+    #     Parameters
+    #     ----------
+    #     path : str
+    #         path to the file.
+    #     verbose : int, default=0
+    #         level of verbosity.
+    #     """
+    #     if verbose >0:
+    #         print("importing tiff file '" + path + "'")
+        
+    #     self._import_tiff_file(path)
+        
+    #     self.id_v, self.N_v = np.unique(self.data, return_counts=True)
+
+    #     # self.get_dimensions()
+    #     self.shape = np.shape(self.data)
+    #     self.size = np.size(self.data)
+        
+    #     if verbose > 0:
+    #         print("\t done, N_j=" + str(self.size))
+        
+    # def import_asc(self, path, verbose=0):
+    #     """ imports the layer data from a ``asc`` file.
+
+    #     Parameters
+    #     ----------
+    #     path : str
+    #         path to the file.
+    #     verbose : int, default=0
+    #         level of verbosity.
+
+    #     """
+    #     f = open(path, 'r')
+        
+    #     lines = f.readlines()
+        
+    #     entete = lines[0:6]
+    #     data = lines[6::]
+        
+    #     if verbose>0:
+    #         print(entete)
+    #         print(len(lines))
+    #         print(len(data))
+        
+    #     infos =  {}
+    #     for e in entete:
+    #         chunks = re.split(' +', e)
+    #         infos[chunks[0]] = float(chunks[1].replace('\n',''))
+            
+    #     data = [int(x.replace('\n','')) for x in data]
+    #     data = np.array(data)
+    #     self.data = data.reshape((int(infos['ncols']), int(infos['nrows'])))
+        
+    #     self.id_v, self.N_v = np.unique(self.data, return_counts=True)
+
+    #     # self.get_dimensions()
+    #     self.shape = np.shape(self.data)
+    #     self.size = np.size(self.data)
+
+    #     if verbose>0:
+    #         print("\t done, N_j=" + str(self.size))
+
+    # def __str__(self):
+    #     txt = 'Object Map : ' + self.name + '\n'
+    #     txt = txt + '(Nx, Ny) = ' + str(self.shape)+ '\n'
+    #     txt = txt + 'mean(v) = ' + str(np.mean(self.data)) + '\n'
+    #     unique, counts = np.unique(self.data, return_counts=True)
+    #     for k in range(len(unique)):
+    #         txt = txt + str(unique[k]) + ' ' + str(counts[k]) + '\n'
+    #     txt = txt + ""
+    #     return (txt)
+    
+    def set_style(self, style):
         """set display style
 
         Parameters
         ----------
-        dict_style : TYPE
-            DESCRIPTION.
-
-        Returns
-        -------
-        None.
+        style : json
+            The style. See example and user guide.
 
         """
-        self.style_values = list(dict_style.keys())
-        self.style_names = [dict_style[i][0] for i in dict_style.keys()]
-        self.style_colors = [dict_style[i][1] for i in dict_style.keys()]
+        self.style_values = list(style.keys())
+        self.style_names = [style[i][0] for i in style.keys()]
+        self.style_colors = [style[i][1] for i in style.keys()]
     
     def display(self, center, window):
         """Display the land use cover layer through python console with matplotlib.
 
         Parameters
         ----------
-        values : [int]
+        values : list of int
             List of displayed states.
-        colors : [str]
+        colors : list of str
             List of colors in HTML format.
-        names : [str]
+        names : list of names
             List of state names.
-        center : (int,int)
+        center : tuple of two integers
             Center position as a tuple.
-        window : (int,int)
+        window : tuple of two integers
             Window dimensions as a tuple.
         """
         values = self.style_values
@@ -320,80 +327,101 @@ class FeatureLayer(_Layer):
     
         elevation = clumpy.definition.layer.LayerEV(name='elevation',time=0,scale=15)    
     
-    :param name: the map name
-    :type name: string, optional
-    :param scale: the pixel side real length in meters
-    :type scale: float
-    :param time: the map time
-    :type time: time
-    """
-
-    def __init__(self, name=None, scale=1, time=0, path=None):
-        super().__init__(name, scale)
-        self.time = time
-
-        if path != None:
-            self.import_tiff(path)
-
-    def import_tiff(self, path):
-        """
-        Imports the layer data from a `tif` or a `tiff` file. The file extension can be something else than tiff. See `Image Pillow documentation, Image.open <https://pillow.readthedocs.io/en/3.1.x/reference/Image.html#PIL.Image.open>`_.
-        
-        :param path: path to the file
-        :type path: str
-        """
-        print("importing tiff file '" + path + "'")
-        self._import_tiff_file(path)
-        
-        # self.get_dimensions()
-        self.shape = np.shape(self.data)
-        self.size = np.size(self.data)
-
-        print("\t done, N_j=" + str(self.size))
-
-    def __str__(self):
-        txt = 'Object Map : ' + self.name + '\n'
-        txt = txt + '(Nx, Ny) = ' + str(self.shape) + '\n'
-        txt = txt + 'mean(data) = ' + str(np.mean(self.data)) + '\n'
-        txt = txt + 'min(data) = ' + str(np.min(self.data)) + '\n'
-        txt = txt + 'max(data) = ' + str(np.max(self.data)) + '\n'
-        return (txt)
-
-
-class DistanceToVFeatureLayer(FeatureLayer):
-    """
-    Defines a distance to a state as a layer. This layer can then used for the calibration stage or the allocation stage::
-    
-        distance_to_2 = clumpy.definition.layer.LayerEV(name='elevation',time=0,scale=15)    
-    
-    However, it is recommended to prefer the case's method clumpy.definition.Case.add_distance_to_v_as_feature.
-    
     Parameters
     ----------
-    v : int
-        The state to compute the distance from.
-    
-    layer_LUC : LandUseCoverLayer
-        The land use cover used to compute the distance.
-        
-    name : string (default=``None``)
-        The layer name. If none, name is defined as ``'distance_to_v_'+str(v)``.
-    """
-    
-    def __init__(self, v, layer_LUC, name=None):
-        
-        if type(name)==type(None):
-            name = 'distance_to_v_'+str(v)
-        
-        super().__init__(name=name, scale=layer_LUC.scale)
-        self.v = v
-        self.layer_LUC = layer_LUC
-        self.update(layer_LUC=self.layer_LUC)
-        layer_LUC.distance2v.append(self)
+    name : TYPE, optional
+        DESCRIPTION. The default is None.
+    time : TYPE, optional
+        DESCRIPTION. The default is 0.
+    path : TYPE, optional
+        DESCRIPTION. The default is None.
+    data : TYPE, optional
+        DESCRIPTION. The default is None.
+    copy_metadata : TYPE, optional
+        DESCRIPTION. The default is None.
 
-    def update(self, layer_LUC):
-        v_matrix = (layer_LUC.data == self.v).astype(int)
-        self.data = ndimage.distance_transform_edt(1 - v_matrix) * layer_LUC.scale
+    Returns
+    -------
+    None.
+
+    """
+
+    def __init__(self,
+                 name=None,
+                 time=0,
+                 path=None,
+                 data=None,
+                 copy_metadata=None):
+        
+        super().__init__(name,
+                         time,
+                         path,
+                         data,
+                         copy_metadata)
+
+    # def import_tiff(self, path):
+    #     """
+    #     Imports the layer data from a `tif` or a `tiff` file. The file extension can be something else than tiff. See `Image Pillow documentation, Image.open <https://pillow.readthedocs.io/en/3.1.x/reference/Image.html#PIL.Image.open>`_.
+        
+    #     Parameters
+    #     ----------
+    #     path : str
+    #         path to the file.
+    #     verbose : int, default=0
+    #         level of verbosity.
+    #     """
+    #     print("importing tiff file '" + path + "'")
+    #     self._import_tiff_file(path)
+        
+    #     # self.get_dimensions()
+    #     self.shape = np.shape(self.data)
+    #     self.size = np.size(self.data)
+
+    #     print("\t done, N_j=" + str(self.size))
+
+    # def __str__(self):
+    #     txt = 'Object Map : ' + self.name + '\n'
+    #     txt = txt + '(Nx, Ny) = ' + str(self.shape) + '\n'
+    #     txt = txt + 'mean(data) = ' + str(np.mean(self.data)) + '\n'
+    #     txt = txt + 'min(data) = ' + str(np.min(self.data)) + '\n'
+    #     txt = txt + 'max(data) = ' + str(np.max(self.data)) + '\n'
+    #     return (txt)
+
+
+# class DistanceToVFeatureLayer(FeatureLayer):
+#     """
+#     Defines a distance to a state as a layer. This layer can then used for the calibration stage or the allocation stage::
+    
+#         distance_to_2 = clumpy.definition.layer.LayerEV(name='elevation',time=0,scale=15)    
+    
+#     However, it is recommended to prefer the case's method clumpy.definition.Case.add_distance_to_v_as_feature.
+    
+#     Parameters
+#     ----------
+#     v : int
+#         The state to compute the distance from.
+    
+#     layer_LUC : LandUseCoverLayer
+#         The land use cover used to compute the distance.
+        
+#     name : string (default=``None``)
+#         The layer name. If none, name is defined as ``'distance_to_v_'+str(v)``.
+#     """
+    
+#     def __init__(self, v, layer_LUC, name=None):
+        
+#         if type(name)==type(None):
+#             name = 'distance_to_v_'+str(v)
+        
+#         super().__init__(name=name, scale=layer_LUC.scale)
+#         self.v = v
+#         self.layer_LUC = layer_LUC
+#         self.update(layer_LUC=self.layer_LUC)
+#         layer_LUC.distance2v.append(self)
+
+#     def update(self, layer_LUC):
+#         v_matrix = (layer_LUC.data == self.v).astype(int)
+#         self.data = ndimage.distance_transform_edt(1 - v_matrix) * layer_LUC.scale
 
 
 # class TransitionProbabilityLayers():

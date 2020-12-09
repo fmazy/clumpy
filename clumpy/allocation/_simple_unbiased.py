@@ -3,7 +3,7 @@ from ._allocation import _Allocation, compute_P_vf__vi_from_transition_probabili
 from .. import definition
 from ._patcher import _weighted_neighbors
 # from .scenario import compute_P_vf__vi_from_transition_probabilities
-from ..tools import draw_within_histogram
+# from ..tools import draw_within_histogram
 from .. import calibration
 from tqdm import tqdm
 

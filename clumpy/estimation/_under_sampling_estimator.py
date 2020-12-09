@@ -10,7 +10,7 @@ import numpy as np
 
 from ._estimator import BaseEstimator
 
-from ..resampling.under_sampling import compute_sampling_strategy, probability_correction
+from ..resampling.under_sampling import compute_sampling_strategy, correct_probabilities
 
 class UnderSamplingEstimator(BaseEstimator):
     """

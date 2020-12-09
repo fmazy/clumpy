@@ -79,8 +79,14 @@ extensions = [
     'sphinx.ext.napoleon',
     'sphinx.ext.autosectionlabel',
     'sphinx.ext.mathjax',
+    'sphinx.ext.viewcode',
     'numpydoc',
 ]
+
+intersphinx_mapping = {'sklearn': ('https://scikit-learn.org/stable/', None),
+                       'numpy': ('https://numpy.org/doc/1.19/', None)}
+# 'python': ('https://docs.python.org/3', None),
+
     # 'nbsphinx',
     # 'sphinxcontrib.bibtex',
 

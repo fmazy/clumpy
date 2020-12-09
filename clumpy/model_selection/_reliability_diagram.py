@@ -10,7 +10,7 @@ import numpy as np
 from sklearn.calibration import CalibratedClassifierCV
 from matplotlib import pyplot as plt
 
-from ..utils import check_list_parameters_vi
+# from ..utils import check_list_parameters_vi
 from sklearn.metrics import brier_score_loss as sklearn_brier_score_loss
 
 def calibration_curve(y_true, y_prob, *, normalize=False, n_bins=5,

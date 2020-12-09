@@ -1,0 +1,257 @@
+
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta charset="utf-8" />
+    <title>clumpy.metrics._log_score &#8212; clumpy 0.1.0 documentation</title>
+    <link rel="stylesheet" href="../../../_static/nature.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="../../../" src="../../../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <script type="text/javascript" src="../../../_static/language_data.js"></script>
+    <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="shortcut icon" href="../../../_static/logo.ico"/>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../../index.html">clumpy 0.1.0 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../../index.html" accesskey="U">Module code</a> &#187;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for clumpy.metrics._log_score</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;log score blabla&quot;&quot;&quot;</span>
+
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">from</span> <span class="nn">sklearn.metrics</span> <span class="kn">import</span> <span class="n">make_scorer</span>
+
+<span class="kn">from</span> <span class="nn">..resampling</span> <span class="kn">import</span> <span class="n">under_sampling</span>
+
+<div class="viewcode-block" id="log_score"><a class="viewcode-back" href="../../../generated/clumpy.metrics.log_score.html#clumpy.metrics.log_score">[docs]</a><span class="k">def</span> <span class="nf">log_score</span><span class="p">(</span><span class="n">y_true</span><span class="p">,</span> <span class="n">y_prob</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Log score</span>
+<span class="sd">    </span>
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    y_true : array, shape (n_samples,)</span>
+<span class="sd">        True targets.</span>
+<span class="sd">    y_prob : array, shape (n_samples,)</span>
+<span class="sd">        Probabilities of the positive class.</span>
+<span class="sd">    sample_weight : ignored for now.</span>
+<span class="sd">    a : float</span>
+<span class="sd">        log score parameter, computed with :func:`compute_a`.</span>
+<span class="sd">    </span>
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    score : float</span>
+<span class="sd">        Log loss score</span>
+<span class="sd">    </span>
+<span class="sd">    See Also</span>
+<span class="sd">    ---------</span>
+<span class="sd">    :func:`clumpy.metrics.log_scorer`:</span>
+<span class="sd">        To create a scorer.</span>
+<span class="sd">    </span>
+<span class="sd">    :func:`clumpy.metrics.compute_a`:</span>
+<span class="sd">        To compute the ``a`` parameter.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    
+    <span class="n">y_prob</span> <span class="o">=</span> <span class="n">y_prob</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+    
+    <span class="n">n</span> <span class="o">=</span> <span class="n">y_prob</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+    
+    <span class="n">unique_y_true</span><span class="p">,</span> <span class="n">ni</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">unique</span><span class="p">(</span><span class="n">y_true</span><span class="p">,</span><span class="n">return_counts</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    
+    <span class="n">unique_y_true</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">unique_y_true</span><span class="p">)</span>
+    
+    <span class="n">i</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">y_true</span><span class="o">.</span><span class="n">size</span><span class="p">)</span>
+    
+    <span class="k">for</span> <span class="n">y</span> <span class="ow">in</span> <span class="n">unique_y_true</span><span class="p">:</span>
+        <span class="n">i</span><span class="p">[</span><span class="n">y_true</span> <span class="o">==</span> <span class="n">y</span><span class="p">]</span> <span class="o">=</span> <span class="n">unique_y_true</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">y</span><span class="p">)</span>
+    <span class="n">i</span> <span class="o">=</span> <span class="n">i</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">int</span><span class="p">)</span>
+    
+    <span class="n">idx</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">column_stack</span><span class="p">((</span><span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">i</span><span class="o">.</span><span class="n">size</span><span class="p">),</span> <span class="n">i</span><span class="p">))</span>
+    
+    <span class="c1"># on donne aux probabilités nulles une petite chance si jamais ça a eu lieu effectivement</span>
+    <span class="c1"># cette petite chance est égale à 0.01 de la plus petite chance</span>
+    <span class="c1"># ça évite d&#39;avoir un -inf en sortie du log...</span>
+    <span class="n">y_prob</span><span class="p">[</span><span class="n">y_prob</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">y_prob</span><span class="p">[</span><span class="n">y_prob</span><span class="o">&gt;</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">min</span><span class="p">()</span> <span class="o">*</span> <span class="mf">0.01</span>
+    
+    
+    <span class="n">s</span> <span class="o">=</span> <span class="n">b</span> <span class="o">+</span> <span class="n">a</span><span class="o">/</span><span class="n">n</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">y_prob</span><span class="p">[</span><span class="nb">tuple</span><span class="p">(</span><span class="n">idx</span><span class="o">.</span><span class="n">T</span><span class="p">)]))</span>
+    
+    <span class="k">return</span><span class="p">(</span><span class="n">s</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="compute_a"><a class="viewcode-back" href="../../../generated/clumpy.metrics.compute_a.html#clumpy.metrics.compute_a">[docs]</a><span class="k">def</span> <span class="nf">compute_a</span><span class="p">(</span><span class="n">y</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Computes log score parameter ``a``.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    y : TYPE</span>
+<span class="sd">        DESCRIPTION.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    a</span>
+
+<span class="sd">    See Also</span>
+<span class="sd">    ---------</span>
+<span class="sd">    :func:`clumpy.metrics.log_score`:</span>
+<span class="sd">        To compute the log score.</span>
+<span class="sd">    </span>
+<span class="sd">    :func:`clumpy.metrics.log_scorer`:</span>
+<span class="sd">        To create a scorer.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">n</span> <span class="o">=</span> <span class="n">y</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+    
+    <span class="n">unique_y</span><span class="p">,</span> <span class="n">ni</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">unique</span><span class="p">(</span><span class="n">y</span><span class="p">,</span><span class="n">return_counts</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    
+    <span class="n">unique_y</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">unique_y</span><span class="p">)</span>
+    
+    <span class="n">fi</span> <span class="o">=</span> <span class="n">ni</span><span class="o">/</span><span class="n">n</span>
+    
+    <span class="k">return</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">fi</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">fi</span><span class="p">)))</span></div>
+    
+<div class="viewcode-block" id="log_scorer"><a class="viewcode-back" href="../../../generated/clumpy.metrics.log_scorer.html#clumpy.metrics.log_scorer">[docs]</a><span class="k">def</span> <span class="nf">log_scorer</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;make log scorer.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    a : TYPE</span>
+<span class="sd">        DESCRIPTION.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    scorer</span>
+<span class="sd">    </span>
+<span class="sd">    See Also</span>
+<span class="sd">    ---------</span>
+<span class="sd">    :func:`clumpy.metrics.log_score`:</span>
+<span class="sd">        To compute the log score.</span>
+<span class="sd">    </span>
+<span class="sd">    :func:`clumpy.metrics.compute_a`:</span>
+<span class="sd">        To compute the ``a`` parameter.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span><span class="p">(</span><span class="n">make_scorer</span><span class="p">(</span><span class="n">score_func</span><span class="o">=</span><span class="n">log_score</span><span class="p">,</span>
+                        <span class="n">greater_is_better</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                        <span class="n">needs_proba</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                        <span class="n">a</span><span class="o">=</span><span class="n">a</span><span class="p">,</span>
+                        <span class="n">b</span><span class="o">=</span><span class="n">b</span><span class="p">))</span></div>
+
+<span class="k">def</span> <span class="nf">_undersampling_log_score</span><span class="p">(</span><span class="n">y_true</span><span class="p">,</span> <span class="n">y_prob</span><span class="p">,</span> <span class="n">beta</span><span class="p">,</span> <span class="n">id_u</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    undersampling log score</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    y_true : TYPE</span>
+<span class="sd">        DESCRIPTION.</span>
+<span class="sd">    y_prob : TYPE</span>
+<span class="sd">        DESCRIPTION.</span>
+<span class="sd">    beta : TYPE</span>
+<span class="sd">        DESCRIPTION.</span>
+<span class="sd">    id_u : TYPE</span>
+<span class="sd">        DESCRIPTION.</span>
+<span class="sd">    a : TYPE</span>
+<span class="sd">        DESCRIPTION.</span>
+<span class="sd">    b : TYPE, optional</span>
+<span class="sd">        DESCRIPTION. The default is 1.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    None.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span><span class="p">(</span><span class="n">log_score</span><span class="p">(</span><span class="n">y_true</span><span class="o">=</span><span class="n">y_true</span><span class="p">,</span>
+                     <span class="n">y_prob</span> <span class="o">=</span> <span class="n">under_sampling</span><span class="o">.</span><span class="n">correct_probabilities</span><span class="p">(</span><span class="n">y_prob</span><span class="p">,</span> <span class="n">beta</span><span class="p">,</span> <span class="n">id_u</span><span class="p">),</span>
+                     <span class="n">a</span><span class="o">=</span><span class="n">a</span><span class="p">,</span>
+                     <span class="n">b</span><span class="o">=</span><span class="n">b</span><span class="p">))</span>
+
+<div class="viewcode-block" id="under_sampling_log_scorer"><a class="viewcode-back" href="../../../generated/clumpy.metrics.under_sampling_log_scorer.html#clumpy.metrics.under_sampling_log_scorer">[docs]</a><span class="k">def</span> <span class="nf">under_sampling_log_scorer</span><span class="p">(</span><span class="n">beta</span><span class="p">,</span> <span class="n">id_u</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;log scorer</span>
+<span class="sd">    </span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    beta : TYPE</span>
+<span class="sd">        DESCRIPTION.</span>
+<span class="sd">    id_u : TYPE</span>
+<span class="sd">        DESCRIPTION.</span>
+<span class="sd">    a : TYPE</span>
+<span class="sd">        DESCRIPTION.</span>
+<span class="sd">    b : TYPE, optional</span>
+<span class="sd">        DESCRIPTION. The default is 1.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    None.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span><span class="p">(</span><span class="n">make_scorer</span><span class="p">(</span><span class="n">score_func</span><span class="o">=</span><span class="n">_undersampling_log_score</span><span class="p">,</span>
+                        <span class="n">greater_is_better</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                        <span class="n">needs_proba</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                        <span class="n">beta</span><span class="o">=</span><span class="n">beta</span><span class="p">,</span>
+                        <span class="n">id_u</span><span class="o">=</span><span class="n">id_u</span><span class="p">,</span>
+                        <span class="n">a</span><span class="o">=</span><span class="n">a</span><span class="p">,</span>
+                        <span class="n">b</span><span class="o">=</span><span class="n">b</span><span class="p">))</span></div>
+    
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="../../../index.html">
+              <img class="logo" src="../../../_static/logo.png" alt="Logo"/>
+            </a></p>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../../index.html">clumpy 0.1.0 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../../index.html" >Module code</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2020, François-Rémi Mazy.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 2.2.2.
+    </div>
+  </body>
+</html>

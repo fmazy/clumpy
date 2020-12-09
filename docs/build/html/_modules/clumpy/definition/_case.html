@@ -1,0 +1,268 @@
+
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta charset="utf-8" />
+    <title>clumpy.definition._case &#8212; clumpy 0.1.0 documentation</title>
+    <link rel="stylesheet" href="../../../_static/nature.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="../../../" src="../../../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <script type="text/javascript" src="../../../_static/language_data.js"></script>
+    <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="shortcut icon" href="../../../_static/logo.ico"/>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../../index.html">clumpy 0.1.0 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../../index.html" accesskey="U">Module code</a> &#187;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for clumpy.definition._case</h1><div class="highlight"><pre>
+<span></span><span class="c1"># -*- coding: utf-8 -*-</span>
+
+<span class="c1"># import numpy as np</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">from</span> <span class="nn">scipy</span> <span class="kn">import</span> <span class="n">ndimage</span>
+
+<span class="kn">from</span> <span class="nn">._layer</span> <span class="kn">import</span> <span class="n">FeatureLayer</span>
+<span class="kn">from</span> <span class="nn">..utils</span> <span class="kn">import</span> <span class="n">ndarray_suitable_integer_type</span>
+
+<div class="viewcode-block" id="Case"><a class="viewcode-back" href="../../../generated/clumpy.definition.Case.html#clumpy.definition.Case">[docs]</a><span class="k">class</span> <span class="nc">Case</span><span class="p">():</span>
+    <span class="sd">&quot;&quot;&quot;A land use and cover change model case.</span>
+<span class="sd">    </span>
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    params : dict</span>
+<span class="sd">        parameters, see example and user guide.</span>
+<span class="sd">        </span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">params</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">params</span> <span class="o">=</span> <span class="n">params</span>
+    
+<div class="viewcode-block" id="Case.make"><a class="viewcode-back" href="../../../generated/clumpy.definition.Case.html#clumpy.definition.Case.make">[docs]</a>    <span class="k">def</span> <span class="nf">make</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">initial_luc_layer</span><span class="p">,</span> <span class="n">final_luc_layer</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Make the case</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        initial_luc_layer : :class:`clumpy.definition.LandUseCoverLayer`</span>
+<span class="sd">            The initial LUC layer.</span>
+<span class="sd">        final_luc_layer : :class:`clumpy.definition.LandUseCoverLayer`, default=None</span>
+<span class="sd">            The final LUC layer. This parameter is optional.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        X_u : dict of :class:`numpy.ndarray` of shape (n_samples, n_features)</span>
+<span class="sd">            A dict with :math:`u` keys. Each dict values are features data, where n_samples is the number of samples and n_features is the number of features.</span>
+<span class="sd">        </span>
+<span class="sd">        (v_u) : dict of :class:`numpy.ndarray` of shape (n_samples,)</span>
+<span class="sd">            Returned if `final_luc_layer` is provided. A dict with :math:`u` keys. Each dict values are target values, *i.e.* :math:`v`, where n_samples is the number of samples.</span>
+<span class="sd">            </span>
+<span class="sd">        Examples</span>
+<span class="sd">        --------</span>
+<span class="sd">        ::</span>
+<span class="sd">            </span>
+<span class="sd">            params = {3:{&#39;v&#39;:[2,7],</span>
+<span class="sd">                         &#39;features&#39;:[(&#39;layer&#39;,dem),</span>
+<span class="sd">                                     (&#39;distance&#39;,2),</span>
+<span class="sd">                                     (&#39;distance&#39;,7)]</span>
+<span class="sd">                         },</span>
+<span class="sd">                      4:{&#39;v&#39;:[2,3],</span>
+<span class="sd">                         &#39;features&#39;:[(&#39;layer&#39;,dem),</span>
+<span class="sd">                                     (&#39;distance&#39;,2),</span>
+<span class="sd">                                     (&#39;distance&#39;,3)]}</span>
+<span class="sd">                      }</span>
+<span class="sd">            case = clumpy.definition.Case(params)</span>
+<span class="sd">            X_u, v_u = case.make(LUC1998, LUC2003)</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        
+        <span class="c1"># check the case</span>
+        <span class="n">check_case</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+        
+        <span class="c1"># first compute distances</span>
+        <span class="n">distances</span> <span class="o">=</span> <span class="p">{}</span>
+        
+        <span class="c1"># for each u</span>
+        <span class="k">for</span> <span class="n">u</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">params</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+            <span class="c1"># for each feature</span>
+            <span class="k">for</span> <span class="n">feature_type</span><span class="p">,</span> <span class="n">info</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">params</span><span class="p">[</span><span class="n">u</span><span class="p">][</span><span class="s1">&#39;features&#39;</span><span class="p">]:</span>
+                <span class="c1"># if it is a distance</span>
+                <span class="k">if</span> <span class="n">feature_type</span> <span class="o">==</span> <span class="s1">&#39;distance&#39;</span><span class="p">:</span>
+                    <span class="c1"># if this distance has not been computed yet</span>
+                    <span class="k">if</span> <span class="n">info</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">distances</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+                        <span class="c1"># make bool v matrix</span>
+                        <span class="n">v_matrix</span> <span class="o">=</span> <span class="p">(</span><span class="n">initial_luc_layer</span><span class="o">.</span><span class="n">data</span> <span class="o">==</span> <span class="n">info</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">int</span><span class="p">)</span>
+                        <span class="c1"># compute distance</span>
+                        <span class="n">distances</span><span class="p">[</span><span class="n">info</span><span class="p">]</span> <span class="o">=</span> <span class="n">ndimage</span><span class="o">.</span><span class="n">distance_transform_edt</span><span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">v_matrix</span><span class="p">)</span>\
+                                            <span class="o">*</span> <span class="n">initial_luc_layer</span><span class="o">.</span><span class="n">scale</span>
+        
+        <span class="c1"># initialize X_u                    </span>
+        <span class="n">X_u</span> <span class="o">=</span> <span class="p">{}</span>
+        
+        <span class="c1"># if final luc layer, initialize v_u</span>
+        <span class="k">if</span> <span class="n">final_luc_layer</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">v_u</span> <span class="o">=</span> <span class="p">{}</span>
+        
+        <span class="c1"># for each u</span>
+        <span class="k">for</span> <span class="n">u</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">params</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+            
+            <span class="c1"># get pixels indexes whose initial states are u</span>
+            <span class="n">J</span> <span class="o">=</span> <span class="n">ndarray_suitable_integer_type</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">initial_luc_layer</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">flat</span><span class="o">==</span><span class="n">u</span><span class="p">)[</span><span class="mi">0</span><span class="p">])</span>
+            
+            
+            <span class="c1"># create feature names</span>
+            <span class="k">for</span> <span class="n">feature_type</span><span class="p">,</span> <span class="n">info</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">params</span><span class="p">[</span><span class="n">u</span><span class="p">][</span><span class="s1">&#39;features&#39;</span><span class="p">]:</span>
+                <span class="c1"># switch according z_type</span>
+                
+                <span class="k">if</span> <span class="n">feature_type</span> <span class="o">==</span> <span class="s1">&#39;layer&#39;</span><span class="p">:</span>
+                    <span class="c1"># just get data</span>
+                    <span class="n">x</span> <span class="o">=</span> <span class="n">info</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">flat</span><span class="p">[</span><span class="n">J</span><span class="p">]</span>
+                
+                <span class="k">elif</span> <span class="n">feature_type</span> <span class="o">==</span> <span class="s1">&#39;distance&#39;</span><span class="p">:</span>
+                    <span class="c1"># get distance data</span>
+                    <span class="n">x</span> <span class="o">=</span> <span class="n">distances</span><span class="p">[</span><span class="n">info</span><span class="p">]</span><span class="o">.</span><span class="n">flat</span><span class="p">[</span><span class="n">J</span><span class="p">]</span>
+                
+                <span class="k">elif</span> <span class="n">feature_type</span> <span class="o">==</span> <span class="s1">&#39;numpy&#39;</span><span class="p">:</span>
+                    <span class="c1"># just get data</span>
+                    <span class="n">x</span> <span class="o">=</span> <span class="n">info</span>
+                    
+                <span class="c1"># if X_u is not yet defined</span>
+                <span class="k">if</span> <span class="n">u</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">X_u</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+                    <span class="n">X_u</span><span class="p">[</span><span class="n">u</span><span class="p">]</span> <span class="o">=</span> <span class="n">x</span>
+                
+                <span class="c1"># else column stack</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">X_u</span><span class="p">[</span><span class="n">u</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">column_stack</span><span class="p">((</span><span class="n">X_u</span><span class="p">[</span><span class="n">u</span><span class="p">],</span> <span class="n">x</span><span class="p">))</span>
+            
+            <span class="c1"># if final luc layer</span>
+            <span class="k">if</span> <span class="n">final_luc_layer</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="c1"># just get data</span>
+                <span class="n">v_u</span><span class="p">[</span><span class="n">u</span><span class="p">]</span> <span class="o">=</span> <span class="n">final_luc_layer</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">flat</span><span class="p">[</span><span class="n">J</span><span class="p">]</span>
+                
+                <span class="k">if</span> <span class="s1">&#39;v&#39;</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">params</span><span class="p">[</span><span class="n">u</span><span class="p">]</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+                    <span class="n">v_u</span><span class="p">[</span><span class="n">u</span><span class="p">][</span><span class="o">~</span><span class="n">np</span><span class="o">.</span><span class="n">isin</span><span class="p">(</span><span class="n">v_u</span><span class="p">[</span><span class="n">u</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">params</span><span class="p">[</span><span class="n">u</span><span class="p">][</span><span class="s1">&#39;v&#39;</span><span class="p">])]</span> <span class="o">=</span> <span class="n">u</span>
+                
+        
+        <span class="c1"># if no final luc layer</span>
+        <span class="k">if</span> <span class="n">final_luc_layer</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span><span class="p">(</span><span class="n">X_u</span><span class="p">)</span>
+        
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span><span class="p">(</span><span class="n">X_u</span><span class="p">,</span> <span class="n">v_u</span><span class="p">)</span></div></div>
+
+<span class="k">def</span> <span class="nf">check_case</span><span class="p">(</span><span class="n">case</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Raise an error if the case params are uncorrect.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    case : :class:`clumpy.definition.Case`</span>
+<span class="sd">        A clumpy case.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    
+    <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">case</span><span class="o">.</span><span class="n">params</span><span class="p">)</span> <span class="ow">is</span> <span class="ow">not</span> <span class="nb">dict</span><span class="p">:</span>
+        <span class="k">raise</span><span class="p">(</span><span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;Case params should be a dict. See documentation for examples.&quot;</span><span class="p">))</span>
+    
+    <span class="k">for</span> <span class="n">u</span> <span class="ow">in</span> <span class="n">case</span><span class="o">.</span><span class="n">params</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+        <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">u</span><span class="p">)</span> <span class="ow">is</span> <span class="ow">not</span> <span class="nb">int</span><span class="p">:</span>
+            <span class="k">raise</span><span class="p">(</span><span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;Case params keys should be integers. See documentation for examples.&quot;</span><span class="p">))</span>
+            
+        <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">case</span><span class="o">.</span><span class="n">params</span><span class="p">[</span><span class="n">u</span><span class="p">])</span> <span class="ow">is</span> <span class="ow">not</span> <span class="nb">dict</span><span class="p">:</span>
+            <span class="k">raise</span><span class="p">(</span><span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;case.params[&quot;</span><span class="o">+</span><span class="nb">str</span><span class="p">(</span><span class="n">u</span><span class="p">)</span><span class="o">+</span><span class="s2">&quot;] should be a dict. See documentation for examples.&quot;</span><span class="p">))</span>
+            
+        <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">case</span><span class="o">.</span><span class="n">params</span><span class="p">[</span><span class="n">u</span><span class="p">]</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            
+            <span class="k">if</span> <span class="n">key</span> <span class="o">==</span> <span class="s1">&#39;v&#39;</span><span class="p">:</span>
+                <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">value</span><span class="p">:</span>
+                    <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">v</span><span class="p">)</span> <span class="ow">is</span> <span class="ow">not</span> <span class="nb">int</span><span class="p">:</span>
+                        <span class="k">raise</span><span class="p">(</span><span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;case.params[&quot;</span><span class="o">+</span><span class="nb">str</span><span class="p">(</span><span class="n">u</span><span class="p">)</span><span class="o">+</span><span class="s2">&quot;][&#39;v&#39;] should be a list of integers. See documentation for examples.&quot;</span><span class="p">))</span>
+                    
+            <span class="k">elif</span> <span class="n">key</span> <span class="o">==</span> <span class="s1">&#39;features&#39;</span><span class="p">:</span>
+                <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">value</span><span class="p">)</span> <span class="ow">is</span> <span class="ow">not</span> <span class="nb">list</span><span class="p">:</span>
+                    <span class="k">raise</span><span class="p">(</span><span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;case.params[&quot;</span><span class="o">+</span><span class="nb">str</span><span class="p">(</span><span class="n">u</span><span class="p">)</span><span class="o">+</span><span class="s2">&quot;][&#39;features&#39;] should be a list of tuples. See documentation for examples.&quot;</span><span class="p">))</span>
+                
+                <span class="k">for</span> <span class="n">idx</span><span class="p">,</span> <span class="n">feature</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">value</span><span class="p">):</span>
+                    <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">feature</span><span class="p">)</span> <span class="ow">is</span> <span class="ow">not</span> <span class="nb">tuple</span><span class="p">:</span>
+                        <span class="k">raise</span><span class="p">(</span><span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;case.params[&quot;</span><span class="o">+</span><span class="nb">str</span><span class="p">(</span><span class="n">u</span><span class="p">)</span><span class="o">+</span><span class="s2">&quot;][&#39;features&#39;] should be a list of tuples. See documentation for examples.&quot;</span><span class="p">))</span>
+                    
+                    <span class="k">if</span> <span class="n">feature</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;layer&#39;</span><span class="p">:</span>
+                        <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">feature</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span> <span class="ow">is</span> <span class="ow">not</span> <span class="n">FeatureLayer</span><span class="p">:</span>
+                            <span class="k">raise</span><span class="p">(</span><span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;case.params[&quot;</span><span class="o">+</span><span class="nb">str</span><span class="p">(</span><span class="n">u</span><span class="p">)</span><span class="o">+</span><span class="s2">&quot;][&#39;features&#39;][&quot;</span><span class="o">+</span><span class="nb">str</span><span class="p">(</span><span class="n">idx</span><span class="p">)</span><span class="o">+</span><span class="s2">&quot;][1] should be a clumpy.definition.LandUseCoverLayer object. See documentation for examples.&quot;</span><span class="p">))</span>
+                            
+                    <span class="k">elif</span> <span class="n">feature</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;distance&#39;</span><span class="p">:</span>
+                        <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">feature</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span> <span class="ow">is</span> <span class="ow">not</span> <span class="nb">int</span><span class="p">:</span>
+                            <span class="k">raise</span><span class="p">(</span><span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;case.params[&quot;</span><span class="o">+</span><span class="nb">str</span><span class="p">(</span><span class="n">u</span><span class="p">)</span><span class="o">+</span><span class="s2">&quot;][&#39;features&#39;][&quot;</span><span class="o">+</span><span class="nb">str</span><span class="p">(</span><span class="n">idx</span><span class="p">)</span><span class="o">+</span><span class="s2">&quot;][1] should be an integer. See documentation for examples.&quot;</span><span class="p">))</span>
+                            
+                    <span class="k">elif</span> <span class="n">feature</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;numpy&#39;</span><span class="p">:</span>
+                        <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">feature</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span> <span class="ow">is</span> <span class="ow">not</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+                            <span class="k">raise</span><span class="p">(</span><span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;case.params[&quot;</span><span class="o">+</span><span class="nb">str</span><span class="p">(</span><span class="n">u</span><span class="p">)</span><span class="o">+</span><span class="s2">&quot;][&#39;features&#39;][&quot;</span><span class="o">+</span><span class="nb">str</span><span class="p">(</span><span class="n">idx</span><span class="p">)</span><span class="o">+</span><span class="s2">&quot;][1] should be a ndarray. See documentation for examples.&quot;</span><span class="p">))</span>
+                    
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="k">raise</span><span class="p">(</span><span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;case.params[&quot;</span><span class="o">+</span><span class="nb">str</span><span class="p">(</span><span class="n">u</span><span class="p">)</span><span class="o">+</span><span class="s2">&quot;][&#39;features&#39;][&quot;</span><span class="o">+</span><span class="nb">str</span><span class="p">(</span><span class="n">idx</span><span class="p">)</span><span class="o">+</span><span class="s2">&quot;] is expected to be {&#39;layer&#39;, &#39;distance&#39;, &#39;numpy&#39;. See documentation for examples.}&quot;</span><span class="p">))</span>
+            
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">raise</span><span class="p">(</span><span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;case.params[&quot;</span><span class="o">+</span><span class="nb">str</span><span class="p">(</span><span class="n">u</span><span class="p">)</span><span class="o">+</span><span class="s2">&quot;] keys are expected to be {&#39;v&#39;, &#39;features&#39;}. See documentation for examples.&quot;</span><span class="p">))</span>
+    
+
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="../../../index.html">
+              <img class="logo" src="../../../_static/logo.png" alt="Logo"/>
+            </a></p>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../../index.html">clumpy 0.1.0 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../../index.html" >Module code</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2020, François-Rémi Mazy.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 2.2.2.
+    </div>
+  </body>
+</html>

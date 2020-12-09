@@ -12,10 +12,11 @@
     <script type="text/javascript" src="../_static/underscore.js"></script>
     <script type="text/javascript" src="../_static/doctools.js"></script>
     <script type="text/javascript" src="../_static/language_data.js"></script>
+    <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
     <link rel="shortcut icon" href="../_static/logo.ico"/>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="next" title="clumpy.definition.DistanceToVFeatureLayer" href="clumpy.definition.DistanceToVFeatureLayer.html" />
+    <link rel="next" title="clumpy.definition.Case" href="clumpy.definition.Case.html" />
     <link rel="prev" title="clumpy.definition.LandUseCoverLayer" href="clumpy.definition.LandUseCoverLayer.html" /> 
   </head><body>
     <div class="related" role="navigation" aria-label="related navigation">
@@ -28,7 +29,7 @@
           <a href="../py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
         <li class="right" >
-          <a href="clumpy.definition.DistanceToVFeatureLayer.html" title="clumpy.definition.DistanceToVFeatureLayer"
+          <a href="clumpy.definition.Case.html" title="clumpy.definition.Case"
              accesskey="N">next</a> |</li>
         <li class="right" >
           <a href="clumpy.definition.LandUseCoverLayer.html" title="clumpy.definition.LandUseCoverLayer"
@@ -47,7 +48,7 @@
 <h1><a class="reference internal" href="../api.html#module-clumpy.definition" title="clumpy.definition"><code class="xref py py-mod docutils literal notranslate"><span class="pre">clumpy.definition</span></code></a>.FeatureLayer<a class="headerlink" href="#clumpy-definition-featurelayer" title="Permalink to this headline">¶</a></h1>
 <dl class="class">
 <dt id="clumpy.definition.FeatureLayer">
-<em class="property">class </em><code class="sig-prename descclassname">clumpy.definition.</code><code class="sig-name descname">FeatureLayer</code><span class="sig-paren">(</span><em class="sig-param">name=None</em>, <em class="sig-param">scale=1</em>, <em class="sig-param">time=0</em>, <em class="sig-param">path=None</em><span class="sig-paren">)</span><a class="headerlink" href="#clumpy.definition.FeatureLayer" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">clumpy.definition.</code><code class="sig-name descname">FeatureLayer</code><span class="sig-paren">(</span><em class="sig-param">name=None</em>, <em class="sig-param">time=0</em>, <em class="sig-param">path=None</em>, <em class="sig-param">data=None</em>, <em class="sig-param">path_copy_metadata=None</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/clumpy/definition/_layer.html#FeatureLayer"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#clumpy.definition.FeatureLayer" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">clumpy.definition._layer._Layer</span></code></p>
 <p>Defines an Explanatory Variable (EV) layer. This layer can then used for the calibration stage or the allocation stage:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">elevation</span> <span class="o">=</span> <span class="n">clumpy</span><span class="o">.</span><span class="n">definition</span><span class="o">.</span><span class="n">layer</span><span class="o">.</span><span class="n">LayerEV</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;elevation&#39;</span><span class="p">,</span><span class="n">time</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span><span class="n">scale</span><span class="o">=</span><span class="mi">15</span><span class="p">)</span>
@@ -56,82 +57,11 @@
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>name</strong> (<em>string</em><em>, </em><em>optional</em>) – the map name</p></li>
-<li><p><strong>scale</strong> (<em>float</em>) – the pixel side real length in meters</p></li>
-<li><p><strong>time</strong> (<em>time</em>) – the map time</p></li>
-</ul>
-</dd>
-</dl>
-<p class="rubric">Methods</p>
-<table class="longtable docutils align-default">
-<colgroup>
-<col style="width: 10%" />
-<col style="width: 90%" />
-</colgroup>
-<tbody>
-<tr class="row-odd"><td><p><a class="reference internal" href="#clumpy.definition.FeatureLayer.copy" title="clumpy.definition.FeatureLayer.copy"><code class="xref py py-obj docutils literal notranslate"><span class="pre">copy</span></code></a>(self)</p></td>
-<td><p>Copy</p></td>
-</tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#clumpy.definition.FeatureLayer.export_asc" title="clumpy.definition.FeatureLayer.export_asc"><code class="xref py py-obj docutils literal notranslate"><span class="pre">export_asc</span></code></a>(self, path)</p></td>
-<td><p>Export the layer data as an <code class="docutils literal notranslate"><span class="pre">asc</span></code> file in order to use it through CLUES and CLUMondo.</p></td>
-</tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#clumpy.definition.FeatureLayer.export_tiff" title="clumpy.definition.FeatureLayer.export_tiff"><code class="xref py py-obj docutils literal notranslate"><span class="pre">export_tiff</span></code></a>(self, path[, mode])</p></td>
-<td><p>Export the layer data as a <code class="docutils literal notranslate"><span class="pre">tif</span></code> or a <code class="docutils literal notranslate"><span class="pre">tiff</span></code> file.</p></td>
-</tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#clumpy.definition.FeatureLayer.get_size" title="clumpy.definition.FeatureLayer.get_size"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_size</span></code></a>(self[, print_value, human, …])</p></td>
-<td><p>Get size</p></td>
-</tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#clumpy.definition.FeatureLayer.import_numpy" title="clumpy.definition.FeatureLayer.import_numpy"><code class="xref py py-obj docutils literal notranslate"><span class="pre">import_numpy</span></code></a>(self, data[, sound])</p></td>
-<td><p>Set the layer data by importing a numpy matrix.</p></td>
-</tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#clumpy.definition.FeatureLayer.import_tiff" title="clumpy.definition.FeatureLayer.import_tiff"><code class="xref py py-obj docutils literal notranslate"><span class="pre">import_tiff</span></code></a>(self, path)</p></td>
-<td><p>Imports the layer data from a <cite>tif</cite> or a <cite>tiff</cite> file.</p></td>
-</tr>
-</tbody>
-</table>
-<dl class="method">
-<dt id="clumpy.definition.FeatureLayer.copy">
-<code class="sig-name descname">copy</code><span class="sig-paren">(</span><em class="sig-param">self</em><span class="sig-paren">)</span><a class="headerlink" href="#clumpy.definition.FeatureLayer.copy" title="Permalink to this definition">¶</a></dt>
-<dd><p>Copy</p>
-<dl class="field-list simple">
-<dt class="field-odd">Returns</dt>
-<dd class="field-odd"><p></p>
-</dd>
-<dt class="field-even">Return type</dt>
-<dd class="field-even"><p>None.</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="method">
-<dt id="clumpy.definition.FeatureLayer.export_asc">
-<code class="sig-name descname">export_asc</code><span class="sig-paren">(</span><em class="sig-param">self</em>, <em class="sig-param">path</em><span class="sig-paren">)</span><a class="headerlink" href="#clumpy.definition.FeatureLayer.export_asc" title="Permalink to this definition">¶</a></dt>
-<dd><p>Export the layer data as an <code class="docutils literal notranslate"><span class="pre">asc</span></code> file in order to use it through CLUES and CLUMondo.</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="clumpy.definition.FeatureLayer.export_tiff">
-<code class="sig-name descname">export_tiff</code><span class="sig-paren">(</span><em class="sig-param">self</em>, <em class="sig-param">path</em>, <em class="sig-param">mode=None</em><span class="sig-paren">)</span><a class="headerlink" href="#clumpy.definition.FeatureLayer.export_tiff" title="Permalink to this definition">¶</a></dt>
-<dd><p>Export the layer data as a <code class="docutils literal notranslate"><span class="pre">tif</span></code> or a <code class="docutils literal notranslate"><span class="pre">tiff</span></code> file.
-The file extension can be something else than tiff. See <a class="reference external" href="https://pillow.readthedocs.io/en/3.1.x/reference/Image.html#PIL.Image.Image.save">Image Pillow documentation, Image.save</a>.</p>
-<p>using mode=”I” is required by Dinamica for LUC maps.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>path</strong> (<em>str</em>) – output file path</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="method">
-<dt id="clumpy.definition.FeatureLayer.get_size">
-<code class="sig-name descname">get_size</code><span class="sig-paren">(</span><em class="sig-param">self</em>, <em class="sig-param">print_value=True</em>, <em class="sig-param">human=True</em>, <em class="sig-param">return_value=False</em><span class="sig-paren">)</span><a class="headerlink" href="#clumpy.definition.FeatureLayer.get_size" title="Permalink to this definition">¶</a></dt>
-<dd><p>Get size</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>print_value</strong> (<em>TYPE</em><em>, </em><em>optional</em>) – DESCRIPTION. The default is True.</p></li>
-<li><p><strong>human</strong> (<em>TYPE</em><em>, </em><em>optional</em>) – DESCRIPTION. The default is True.</p></li>
-<li><p><strong>return_value</strong> (<em>TYPE</em><em>, </em><em>optional</em>) – DESCRIPTION. The default is False.</p></li>
+<li><p><strong>name</strong> (<em>TYPE</em><em>, </em><em>optional</em>) – DESCRIPTION. The default is None.</p></li>
+<li><p><strong>time</strong> (<em>TYPE</em><em>, </em><em>optional</em>) – DESCRIPTION. The default is 0.</p></li>
+<li><p><strong>path</strong> (<em>TYPE</em><em>, </em><em>optional</em>) – DESCRIPTION. The default is None.</p></li>
+<li><p><strong>data</strong> (<em>TYPE</em><em>, </em><em>optional</em>) – DESCRIPTION. The default is None.</p></li>
+<li><p><strong>path_copy_metadata</strong> (<em>TYPE</em><em>, </em><em>optional</em>) – DESCRIPTION. The default is None.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>
@@ -141,26 +71,28 @@ The file extension can be something else than tiff. See <a class="reference exte
 <dd class="field-odd"><p>None.</p>
 </dd>
 </dl>
-</dd></dl>
-
+<p class="rubric">Methods</p>
+<table class="longtable docutils align-default">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#clumpy.definition.FeatureLayer.export_asc" title="clumpy.definition.FeatureLayer.export_asc"><code class="xref py py-obj docutils literal notranslate"><span class="pre">export_asc</span></code></a>(self, path[, verbose])</p></td>
+<td><p>Export the layer data as an <code class="docutils literal notranslate"><span class="pre">asc</span></code> file in order to use it through CLUES and CLUMondo.</p></td>
+</tr>
+</tbody>
+</table>
 <dl class="method">
-<dt id="clumpy.definition.FeatureLayer.import_numpy">
-<code class="sig-name descname">import_numpy</code><span class="sig-paren">(</span><em class="sig-param">self</em>, <em class="sig-param">data</em>, <em class="sig-param">sound=1</em><span class="sig-paren">)</span><a class="headerlink" href="#clumpy.definition.FeatureLayer.import_numpy" title="Permalink to this definition">¶</a></dt>
-<dd><p>Set the layer data by importing a numpy matrix.</p>
+<dt id="clumpy.definition.FeatureLayer.export_asc">
+<code class="sig-name descname">export_asc</code><span class="sig-paren">(</span><em class="sig-param">self</em>, <em class="sig-param">path</em>, <em class="sig-param">verbose=0</em><span class="sig-paren">)</span><a class="headerlink" href="#clumpy.definition.FeatureLayer.export_asc" title="Permalink to this definition">¶</a></dt>
+<dd><p>Export the layer data as an <code class="docutils literal notranslate"><span class="pre">asc</span></code> file in order to use it through CLUES and CLUMondo.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>data</strong> (<em>numpy array</em>) – the data</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="method">
-<dt id="clumpy.definition.FeatureLayer.import_tiff">
-<code class="sig-name descname">import_tiff</code><span class="sig-paren">(</span><em class="sig-param">self</em>, <em class="sig-param">path</em><span class="sig-paren">)</span><a class="headerlink" href="#clumpy.definition.FeatureLayer.import_tiff" title="Permalink to this definition">¶</a></dt>
-<dd><p>Imports the layer data from a <cite>tif</cite> or a <cite>tiff</cite> file. The file extension can be something else than tiff. See <a class="reference external" href="https://pillow.readthedocs.io/en/3.1.x/reference/Image.html#PIL.Image.open">Image Pillow documentation, Image.open</a>.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>path</strong> (<em>str</em>) – path to the file</p>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>path</strong> (<em>str</em>) – path to the file.</p></li>
+<li><p><strong>verbose</strong> (<em>int</em><em>, </em><em>default=0</em>) – level of verbosity.</p></li>
+</ul>
 </dd>
 </dl>
 </dd></dl>
@@ -182,8 +114,8 @@ The file extension can be something else than tiff. See <a class="reference exte
   <p class="topless"><a href="clumpy.definition.LandUseCoverLayer.html"
                         title="previous chapter"><code class="xref py py-mod docutils literal notranslate"><span class="pre">clumpy.definition</span></code>.LandUseCoverLayer</a></p>
   <h4>Next topic</h4>
-  <p class="topless"><a href="clumpy.definition.DistanceToVFeatureLayer.html"
-                        title="next chapter"><code class="xref py py-mod docutils literal notranslate"><span class="pre">clumpy.definition</span></code>.DistanceToVFeatureLayer</a></p>
+  <p class="topless"><a href="clumpy.definition.Case.html"
+                        title="next chapter"><code class="xref py py-mod docutils literal notranslate"><span class="pre">clumpy.definition</span></code>.Case</a></p>
   <div role="note" aria-label="source link">
     <h3>This Page</h3>
     <ul class="this-page-menu">
@@ -215,7 +147,7 @@ The file extension can be something else than tiff. See <a class="reference exte
           <a href="../py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
         <li class="right" >
-          <a href="clumpy.definition.DistanceToVFeatureLayer.html" title="clumpy.definition.DistanceToVFeatureLayer"
+          <a href="clumpy.definition.Case.html" title="clumpy.definition.Case"
              >next</a> |</li>
         <li class="right" >
           <a href="clumpy.definition.LandUseCoverLayer.html" title="clumpy.definition.LandUseCoverLayer"

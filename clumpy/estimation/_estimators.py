@@ -9,7 +9,7 @@ Created on Wed Nov 18 11:02:05 2020
 import numpy as np
 
 from ..metrics import log_score
-from ..utils import check_list_parameters_vi, check_parameter_vi
+# from ..utilities import check_list_parameters_vi, check_parameter_vi
 
 class Estimators():
     """Base probability estimator for a whole case.

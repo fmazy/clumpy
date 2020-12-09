@@ -1,8 +1,9 @@
 """log score blabla"""
 
 import numpy as np
-
 from sklearn.metrics import make_scorer
+
+from ..resampling import under_sampling
 
 def log_score(y_true, y_prob, a, b=1):
     """Log score
@@ -114,3 +115,61 @@ def log_scorer(a, b=1):
                         needs_proba=True,
                         a=a,
                         b=b))
+
+def _undersampling_log_score(y_true, y_prob, beta, id_u, a, b=1):
+    """
+    undersampling log score
+
+    Parameters
+    ----------
+    y_true : TYPE
+        DESCRIPTION.
+    y_prob : TYPE
+        DESCRIPTION.
+    beta : TYPE
+        DESCRIPTION.
+    id_u : TYPE
+        DESCRIPTION.
+    a : TYPE
+        DESCRIPTION.
+    b : TYPE, optional
+        DESCRIPTION. The default is 1.
+
+    Returns
+    -------
+    None.
+
+    """
+    return(log_score(y_true=y_true,
+                     y_prob = under_sampling.correct_probabilities(y_prob, beta, id_u),
+                     a=a,
+                     b=b))
+
+def under_sampling_log_scorer(beta, id_u, a, b=1):
+    """log scorer
+    
+
+    Parameters
+    ----------
+    beta : TYPE
+        DESCRIPTION.
+    id_u : TYPE
+        DESCRIPTION.
+    a : TYPE
+        DESCRIPTION.
+    b : TYPE, optional
+        DESCRIPTION. The default is 1.
+
+    Returns
+    -------
+    None.
+
+    """
+    return(make_scorer(score_func=_undersampling_log_score,
+                        greater_is_better=True,
+                        needs_proba=True,
+                        beta=beta,
+                        id_u=id_u,
+                        a=a,
+                        b=b))
+    
