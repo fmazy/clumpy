@@ -84,7 +84,8 @@ extensions = [
 ]
 
 intersphinx_mapping = {'sklearn': ('https://scikit-learn.org/stable/', None),
-                       'numpy': ('https://numpy.org/doc/1.19/', None)}
+                       'numpy': ('https://numpy.org/doc/1.19/', None),
+                       'rasterio':('https://rasterio.readthedocs.io/en/latest/', None)}
 # 'python': ('https://docs.python.org/3', None),
 
     # 'nbsphinx',

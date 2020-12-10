@@ -39,7 +39,9 @@
   <h1>Source code for clumpy.definition._layer</h1><div class="highlight"><pre>
 <span></span><span class="c1"># -*- coding: utf-8 -*-</span>
 
-<span class="kn">from</span> <span class="nn">tifffile</span> <span class="kn">import</span> <span class="n">TiffFile</span><span class="p">,</span> <span class="n">imwrite</span> <span class="c1"># for tiff write and read</span>
+<span class="c1"># from tifffile import TiffFile, imwrite # for tiff write and read</span>
+
+<span class="kn">import</span> <span class="nn">rasterio</span>
 
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 <span class="kn">import</span> <span class="nn">os</span>
@@ -62,35 +64,56 @@
                  <span class="n">time</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
                  <span class="n">path</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
                  <span class="n">data</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-                 <span class="n">path_copy_metadata</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+                 <span class="n">copy_geo</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         
         <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="n">name</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">time</span> <span class="o">=</span> <span class="n">time</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">path</span> <span class="o">=</span> <span class="n">path</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">data</span> <span class="o">=</span> <span class="n">data</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">path_copy_metadata</span> <span class="o">=</span> <span class="n">path_copy_metadata</span>
-        
-        <span class="c1"># if only path and no data</span>
-        <span class="k">if</span> <span class="n">path</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">data</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">tiff</span> <span class="o">=</span> <span class="n">TiffFile</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
-        
-        <span class="c1"># if path and data</span>
-        <span class="k">elif</span> <span class="n">path</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">data</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">copy_geo</span> <span class="o">=</span> <span class="n">copy_geo</span>
+                
+        <span class="c1"># if path and data -&gt; file creation</span>
+        <span class="k">if</span> <span class="n">path</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">data</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             
-            <span class="n">extratags</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="n">data</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+            
+            <span class="c1"># data shape preprocessing.</span>
+            <span class="c1"># len(data.shape) should be equal to 3.</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">data</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+                <span class="n">data</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="kc">None</span><span class="p">,</span><span class="kc">None</span><span class="p">,:]</span>
+        
+            <span class="k">elif</span> <span class="nb">len</span><span class="p">(</span><span class="n">data</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>
+                <span class="n">data</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="kc">None</span><span class="p">,</span> <span class="p">:,</span> <span class="p">:]</span>
+            
+            <span class="k">elif</span> <span class="nb">len</span><span class="p">(</span><span class="n">data</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">3</span><span class="p">:</span>
+                <span class="k">raise</span><span class="p">(</span><span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;len(data.shape) is expected to be lower or equal to 3.&quot;</span><span class="p">))</span>
+            
+            <span class="n">driver</span> <span class="o">=</span> <span class="kc">None</span>
+            <span class="n">crs</span> <span class="o">=</span> <span class="kc">None</span>
+            <span class="n">transform</span> <span class="o">=</span> <span class="kc">None</span>
             
             <span class="c1"># if copy metadata</span>
-            <span class="k">if</span> <span class="n">path_copy_metadata</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-                
-                <span class="c1"># get the file to copy metadata</span>
-                <span class="n">tiff_copy</span> <span class="o">=</span> <span class="n">TiffFile</span><span class="p">(</span><span class="n">path_copy_metadata</span><span class="p">)</span>
-                
-                <span class="c1"># for each tag, append to extratags</span>
-                <span class="k">for</span> <span class="n">_</span><span class="p">,</span> <span class="n">tag</span> <span class="ow">in</span> <span class="n">tiff_copy</span><span class="o">.</span><span class="n">pages</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">tags</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
-                    <span class="n">extratags</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">tag</span><span class="o">.</span><span class="n">code</span><span class="p">,</span> <span class="n">tag</span><span class="o">.</span><span class="n">dtype</span><span class="p">,</span> <span class="n">tag</span><span class="o">.</span><span class="n">count</span><span class="p">,</span> <span class="n">tag</span><span class="o">.</span><span class="n">value</span><span class="p">,</span> <span class="kc">False</span><span class="p">))</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">copy_geo</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">driver</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">copy_geo</span><span class="o">.</span><span class="n">raster</span><span class="o">.</span><span class="n">driver</span>
+                <span class="n">crs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">copy_geo</span><span class="o">.</span><span class="n">raster</span><span class="o">.</span><span class="n">crs</span>
+                <span class="n">transform</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">copy_geo</span><span class="o">.</span><span class="n">raster</span><span class="o">.</span><span class="n">transform</span>
+            
             
             <span class="c1"># create file</span>
-            <span class="n">imwrite</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="n">data</span><span class="o">=</span><span class="n">data</span><span class="p">,</span> <span class="n">extratags</span><span class="o">=</span><span class="n">extratags</span><span class="p">)</span>
+            <span class="k">with</span> <span class="n">rasterio</span><span class="o">.</span><span class="n">open</span><span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">path</span><span class="p">,</span>
+                <span class="n">mode</span><span class="o">=</span><span class="s1">&#39;w&#39;</span><span class="p">,</span>
+                <span class="n">driver</span><span class="o">=</span><span class="n">driver</span><span class="p">,</span>
+                <span class="n">height</span><span class="o">=</span><span class="n">data</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span>
+                <span class="n">width</span><span class="o">=</span><span class="n">data</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">2</span><span class="p">],</span>
+                <span class="n">count</span><span class="o">=</span><span class="n">data</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>
+                <span class="n">dtype</span><span class="o">=</span><span class="n">data</span><span class="o">.</span><span class="n">dtype</span><span class="p">,</span>
+                <span class="n">crs</span><span class="o">=</span><span class="n">crs</span><span class="p">,</span>
+                <span class="n">transform</span><span class="o">=</span><span class="n">transform</span>
+                <span class="p">)</span> <span class="k">as</span> <span class="n">dst</span><span class="p">:</span>
+                    <span class="n">dst</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+        
+        <span class="c1"># read file</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">raster_</span> <span class="o">=</span> <span class="n">rasterio</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">path</span><span class="p">)</span>
         
     <span class="k">def</span> <span class="nf">export_asc</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">path</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Export the layer data as an ``asc`` file in order to use it through CLUES and CLUMondo.</span>
@@ -110,7 +133,7 @@
         <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">folder_name</span><span class="p">)</span> <span class="ow">and</span> <span class="n">folder_name</span><span class="o">!=</span> <span class="s1">&#39;&#39;</span><span class="p">:</span>
             <span class="n">os</span><span class="o">.</span><span class="n">makedirs</span><span class="p">(</span><span class="n">folder_name</span><span class="p">)</span>
         
-        <span class="n">data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">tiff</span><span class="o">.</span><span class="n">asarray</span><span class="p">()</span>
+        <span class="n">data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">raster_</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
         
         <span class="n">np</span><span class="o">.</span><span class="n">savetxt</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="n">data</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">int</span><span class="p">),</span> <span class="n">delimiter</span><span class="o">=</span><span class="s1">&#39; &#39;</span><span class="p">,</span> <span class="n">fmt</span><span class="o">=</span><span class="s1">&#39;</span><span class="si">%i</span><span class="s1">&#39;</span><span class="p">)</span>
         
@@ -131,79 +154,58 @@
         
         <span class="k">if</span> <span class="n">verbose</span><span class="o">&gt;</span><span class="mi">0</span><span class="p">:</span>
             <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;done&#39;</span><span class="p">)</span>
-        
-    <span class="c1"># def get_size(self, print_value=True, human=True, return_size=False):</span>
-    <span class="c1">#     &quot;&quot;&quot;Get layer size</span>
 
-    <span class="c1">#     Parameters</span>
-    <span class="c1">#     ----------</span>
-    <span class="c1">#     print_value : bool, default=``True``</span>
-    <span class="c1">#         If ``True``, print the size.</span>
-    <span class="c1">#     human : bool, default=``True``</span>
-    <span class="c1">#         If ``True``, print the size in a readable way.</span>
-    <span class="c1">#     return_value : bool, ``False``</span>
-    <span class="c1">#         If ``True``, return the size.</span>
-
-    <span class="c1">#     Returns</span>
-    <span class="c1">#     -------</span>
-    <span class="c1">#     (s): int</span>
-    <span class="c1">#         The size in octet. Returned if ``return_size=True``.</span>
-
-    <span class="c1">#     &quot;&quot;&quot;</span>
-    <span class="c1">#     s = getsizeof(self.data)</span>
-    <span class="c1">#     if print_value:</span>
-    <span class="c1">#         if human:</span>
-    <span class="c1">#             sh = human_size(s)</span>
-    <span class="c1">#             print(str(round(sh[0],2))+&#39; &#39;+sh[1])</span>
-    <span class="c1">#         else:</span>
-    <span class="c1">#             print(s)</span>
-    <span class="c1">#     if return_size:</span>
-    <span class="c1">#         return(s)</span>
-            
-    <span class="c1"># def copy(self):</span>
-    <span class="c1">#     &quot;&quot;&quot;Copy</span>
-
-    <span class="c1">#     Returns</span>
-    <span class="c1">#     -------</span>
-    <span class="c1">#     None.</span>
-
-    <span class="c1">#     &quot;&quot;&quot;</span>
-    <span class="c1">#     return(deepcopy(self))</span>
 
 
 <div class="viewcode-block" id="LandUseCoverLayer"><a class="viewcode-back" href="../../../generated/clumpy.definition.LandUseCoverLayer.html#clumpy.definition.LandUseCoverLayer">[docs]</a><span class="k">class</span> <span class="nc">LandUseCoverLayer</span><span class="p">(</span><span class="n">_Layer</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Defines a Land Use Cover (LUC) layer.</span>
-<span class="sd">    This layer can then used for the calibration stage or the allocation stage::</span>
-<span class="sd">    </span>
-<span class="sd">        luc1998 = clumpy.definition.layer.LayerLUC(name=&#39;LUC-1998&#39;,scale=15,time=0)</span>
+<span class="sd">    This layer can then used for the calibration stage or the allocation stage.</span>
 <span class="sd">    </span>
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
-<span class="sd">    name : TYPE, optional</span>
-<span class="sd">        DESCRIPTION. The default is None.</span>
-<span class="sd">    time : TYPE, optional</span>
-<span class="sd">        DESCRIPTION. The default is 0.</span>
-<span class="sd">    path : TYPE, optional</span>
-<span class="sd">        DESCRIPTION. The default is None.</span>
-<span class="sd">    data : TYPE, optional</span>
-<span class="sd">        DESCRIPTION. The default is None.</span>
-<span class="sd">    path_copy_metadata : TYPE, optional</span>
-<span class="sd">        DESCRIPTION. The default is None.</span>
+<span class="sd">    name : str, default=``None``</span>
+<span class="sd">        The layer name.</span>
+<span class="sd">    time : float, default=``0``</span>
+<span class="sd">        The layer time (year unit).</span>
+<span class="sd">    path : str</span>
+<span class="sd">        The tiff file path.</span>
+<span class="sd">        If ``data`` is provided, a new tiff file will be created according to this path</span>
+<span class="sd">        and this operation overwrites the file path if exists.</span>
+<span class="sd">    data : :class:`numpy.ndarray`, defaul=None</span>
+<span class="sd">        The data to write. If ``None``, no writing is made.</span>
+<span class="sd">    copy_geo : :class:`LandUseCoverLayer`, default=None</span>
+<span class="sd">        The layer from whose geo metadata are copied.</span>
+<span class="sd">        If ``None``, geo metadata are set to ``None``.</span>
 
-<span class="sd">    Returns</span>
-<span class="sd">    -------</span>
-<span class="sd">    None.</span>
+<span class="sd">    Attributes</span>
+<span class="sd">    ----------</span>
+<span class="sd">    raster_ : :class:`rasterio.io.DatasetReader`</span>
+<span class="sd">        The unbuffered data and metadata reader object, provided by :mod:`rasterio`.</span>
 
 <span class="sd">    &quot;&quot;&quot;</span>
+    
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
+                 <span class="n">name</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                 <span class="n">time</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+                 <span class="n">path</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                 <span class="n">data</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                 <span class="n">copy_geo</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">name</span><span class="p">,</span>
+                         <span class="n">time</span><span class="p">,</span>
+                         <span class="n">path</span><span class="p">,</span>
+                         <span class="n">data</span><span class="p">,</span>
+                         <span class="n">copy_geo</span><span class="p">)</span>
+    
 
     <span class="c1"># def __init__(self,</span>
     <span class="c1">#              name=None,</span>
     <span class="c1">#              time=0,</span>
     <span class="c1">#              path=None,</span>
     <span class="c1">#              data=None,</span>
-    <span class="c1">#              path_copy_metadata=None):</span>
+    <span class="c1">#              copy_metadata=None):</span>
         
-    <span class="c1">#     super().__init__(name, time, path, data, path_copy_metadata)</span>
+    <span class="c1">#     super().__init__(name, time, path, data, copy_metadata)</span>
         
 
     <span class="c1"># def import_tiff(self, path, verbose=0):</span>
@@ -366,14 +368,56 @@
 <span class="sd">        DESCRIPTION. The default is None.</span>
 <span class="sd">    data : TYPE, optional</span>
 <span class="sd">        DESCRIPTION. The default is None.</span>
-<span class="sd">    path_copy_metadata : TYPE, optional</span>
+<span class="sd">    copy_metadata : TYPE, optional</span>
 <span class="sd">        DESCRIPTION. The default is None.</span>
 
 <span class="sd">    Returns</span>
 <span class="sd">    -------</span>
 <span class="sd">    None.</span>
 
-<span class="sd">    &quot;&quot;&quot;</span></div>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
+                 <span class="n">name</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                 <span class="n">time</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+                 <span class="n">path</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                 <span class="n">data</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                 <span class="n">copy_metadata</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">name</span><span class="p">,</span>
+                         <span class="n">time</span><span class="p">,</span>
+                         <span class="n">path</span><span class="p">,</span>
+                         <span class="n">data</span><span class="p">,</span>
+                         <span class="n">copy_metadata</span><span class="p">)</span></div>
+
+    <span class="c1"># def import_tiff(self, path):</span>
+    <span class="c1">#     &quot;&quot;&quot;</span>
+    <span class="c1">#     Imports the layer data from a `tif` or a `tiff` file. The file extension can be something else than tiff. See `Image Pillow documentation, Image.open &lt;https://pillow.readthedocs.io/en/3.1.x/reference/Image.html#PIL.Image.open&gt;`_.</span>
+        
+    <span class="c1">#     Parameters</span>
+    <span class="c1">#     ----------</span>
+    <span class="c1">#     path : str</span>
+    <span class="c1">#         path to the file.</span>
+    <span class="c1">#     verbose : int, default=0</span>
+    <span class="c1">#         level of verbosity.</span>
+    <span class="c1">#     &quot;&quot;&quot;</span>
+    <span class="c1">#     print(&quot;importing tiff file &#39;&quot; + path + &quot;&#39;&quot;)</span>
+    <span class="c1">#     self._import_tiff_file(path)</span>
+        
+    <span class="c1">#     # self.get_dimensions()</span>
+    <span class="c1">#     self.shape = np.shape(self.data)</span>
+    <span class="c1">#     self.size = np.size(self.data)</span>
+
+    <span class="c1">#     print(&quot;\t done, N_j=&quot; + str(self.size))</span>
+
+    <span class="c1"># def __str__(self):</span>
+    <span class="c1">#     txt = &#39;Object Map : &#39; + self.name + &#39;\n&#39;</span>
+    <span class="c1">#     txt = txt + &#39;(Nx, Ny) = &#39; + str(self.shape) + &#39;\n&#39;</span>
+    <span class="c1">#     txt = txt + &#39;mean(data) = &#39; + str(np.mean(self.data)) + &#39;\n&#39;</span>
+    <span class="c1">#     txt = txt + &#39;min(data) = &#39; + str(np.min(self.data)) + &#39;\n&#39;</span>
+    <span class="c1">#     txt = txt + &#39;max(data) = &#39; + str(np.max(self.data)) + &#39;\n&#39;</span>
+    <span class="c1">#     return (txt)</span>
+
 
 <span class="c1"># class DistanceToVFeatureLayer(FeatureLayer):</span>
 <span class="c1">#     &quot;&quot;&quot;</span>

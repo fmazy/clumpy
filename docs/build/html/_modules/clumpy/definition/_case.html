@@ -44,7 +44,7 @@
 <span class="kn">from</span> <span class="nn">scipy</span> <span class="kn">import</span> <span class="n">ndimage</span>
 
 <span class="kn">from</span> <span class="nn">._layer</span> <span class="kn">import</span> <span class="n">FeatureLayer</span>
-<span class="kn">from</span> <span class="nn">..utils</span> <span class="kn">import</span> <span class="n">ndarray_suitable_integer_type</span>
+<span class="c1"># from ..utils import ndarray_suitable_integer_type</span>
 
 <div class="viewcode-block" id="Case"><a class="viewcode-back" href="../../../generated/clumpy.definition.Case.html#clumpy.definition.Case">[docs]</a><span class="k">class</span> <span class="nc">Case</span><span class="p">():</span>
     <span class="sd">&quot;&quot;&quot;A land use and cover change model case.</span>
@@ -110,10 +110,10 @@
                     <span class="c1"># if this distance has not been computed yet</span>
                     <span class="k">if</span> <span class="n">info</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">distances</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
                         <span class="c1"># make bool v matrix</span>
-                        <span class="n">v_matrix</span> <span class="o">=</span> <span class="p">(</span><span class="n">initial_luc_layer</span><span class="o">.</span><span class="n">data</span> <span class="o">==</span> <span class="n">info</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">int</span><span class="p">)</span>
+                        <span class="n">v_matrix</span> <span class="o">=</span> <span class="p">(</span><span class="n">initial_luc_layer</span><span class="o">.</span><span class="n">raster_</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span> <span class="o">==</span> <span class="n">info</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">int</span><span class="p">)</span>
                         <span class="c1"># compute distance</span>
-                        <span class="n">distances</span><span class="p">[</span><span class="n">info</span><span class="p">]</span> <span class="o">=</span> <span class="n">ndimage</span><span class="o">.</span><span class="n">distance_transform_edt</span><span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">v_matrix</span><span class="p">)</span>\
-                                            <span class="o">*</span> <span class="n">initial_luc_layer</span><span class="o">.</span><span class="n">scale</span>
+                        <span class="c1"># should get scale value from the tiff file.</span>
+                        <span class="n">distances</span><span class="p">[</span><span class="n">info</span><span class="p">]</span> <span class="o">=</span> <span class="n">ndimage</span><span class="o">.</span><span class="n">distance_transform_edt</span><span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">v_matrix</span><span class="p">)</span>
         
         <span class="c1"># initialize X_u                    </span>
         <span class="n">X_u</span> <span class="o">=</span> <span class="p">{}</span>
@@ -126,7 +126,8 @@
         <span class="k">for</span> <span class="n">u</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">params</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
             
             <span class="c1"># get pixels indexes whose initial states are u</span>
-            <span class="n">J</span> <span class="o">=</span> <span class="n">ndarray_suitable_integer_type</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">initial_luc_layer</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">flat</span><span class="o">==</span><span class="n">u</span><span class="p">)[</span><span class="mi">0</span><span class="p">])</span>
+            <span class="c1"># J = ndarray_suitable_integer_type(np.where(initial_luc_layer.raster_.read(1).flat==u)[0])</span>
+            <span class="n">J</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">initial_luc_layer</span><span class="o">.</span><span class="n">raster_</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">flat</span><span class="o">==</span><span class="n">u</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
             
             
             <span class="c1"># create feature names</span>
@@ -135,7 +136,7 @@
                 
                 <span class="k">if</span> <span class="n">feature_type</span> <span class="o">==</span> <span class="s1">&#39;layer&#39;</span><span class="p">:</span>
                     <span class="c1"># just get data</span>
-                    <span class="n">x</span> <span class="o">=</span> <span class="n">info</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">flat</span><span class="p">[</span><span class="n">J</span><span class="p">]</span>
+                    <span class="n">x</span> <span class="o">=</span> <span class="n">info</span><span class="o">.</span><span class="n">raster_</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">flat</span><span class="p">[</span><span class="n">J</span><span class="p">]</span>
                 
                 <span class="k">elif</span> <span class="n">feature_type</span> <span class="o">==</span> <span class="s1">&#39;distance&#39;</span><span class="p">:</span>
                     <span class="c1"># get distance data</span>
@@ -156,7 +157,7 @@
             <span class="c1"># if final luc layer</span>
             <span class="k">if</span> <span class="n">final_luc_layer</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
                 <span class="c1"># just get data</span>
-                <span class="n">v_u</span><span class="p">[</span><span class="n">u</span><span class="p">]</span> <span class="o">=</span> <span class="n">final_luc_layer</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">flat</span><span class="p">[</span><span class="n">J</span><span class="p">]</span>
+                <span class="n">v_u</span><span class="p">[</span><span class="n">u</span><span class="p">]</span> <span class="o">=</span> <span class="n">final_luc_layer</span><span class="o">.</span><span class="n">raster_</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">flat</span><span class="p">[</span><span class="n">J</span><span class="p">]</span>
                 
                 <span class="k">if</span> <span class="s1">&#39;v&#39;</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">params</span><span class="p">[</span><span class="n">u</span><span class="p">]</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
                     <span class="n">v_u</span><span class="p">[</span><span class="n">u</span><span class="p">][</span><span class="o">~</span><span class="n">np</span><span class="o">.</span><span class="n">isin</span><span class="p">(</span><span class="n">v_u</span><span class="p">[</span><span class="n">u</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">params</span><span class="p">[</span><span class="n">u</span><span class="p">][</span><span class="s1">&#39;v&#39;</span><span class="p">])]</span> <span class="o">=</span> <span class="n">u</span>
@@ -206,7 +207,7 @@
                     
                     <span class="k">if</span> <span class="n">feature</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;layer&#39;</span><span class="p">:</span>
                         <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">feature</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span> <span class="ow">is</span> <span class="ow">not</span> <span class="n">FeatureLayer</span><span class="p">:</span>
-                            <span class="k">raise</span><span class="p">(</span><span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;case.params[&quot;</span><span class="o">+</span><span class="nb">str</span><span class="p">(</span><span class="n">u</span><span class="p">)</span><span class="o">+</span><span class="s2">&quot;][&#39;features&#39;][&quot;</span><span class="o">+</span><span class="nb">str</span><span class="p">(</span><span class="n">idx</span><span class="p">)</span><span class="o">+</span><span class="s2">&quot;][1] should be a clumpy.definition.LandUseCoverLayer object. See documentation for examples.&quot;</span><span class="p">))</span>
+                            <span class="k">raise</span><span class="p">(</span><span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;case.params[&quot;</span><span class="o">+</span><span class="nb">str</span><span class="p">(</span><span class="n">u</span><span class="p">)</span><span class="o">+</span><span class="s2">&quot;][&#39;features&#39;][&quot;</span><span class="o">+</span><span class="nb">str</span><span class="p">(</span><span class="n">idx</span><span class="p">)</span><span class="o">+</span><span class="s2">&quot;][1] should be a clumpy.definition.FeatureLayer object. See documentation for examples.&quot;</span><span class="p">))</span>
                             
                     <span class="k">elif</span> <span class="n">feature</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;distance&#39;</span><span class="p">:</span>
                         <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">feature</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span> <span class="ow">is</span> <span class="ow">not</span> <span class="nb">int</span><span class="p">:</span>

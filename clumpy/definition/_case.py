@@ -71,7 +71,7 @@ class Case():
                     # if this distance has not been computed yet
                     if info not in distances.keys():
                         # make bool v matrix
-                        v_matrix = (initial_luc_layer.tiff.asarray() == info).astype(int)
+                        v_matrix = (initial_luc_layer.raster_.read(1) == info).astype(int)
                         # compute distance
                         # should get scale value from the tiff file.
                         distances[info] = ndimage.distance_transform_edt(1 - v_matrix)
@@ -87,8 +87,8 @@ class Case():
         for u in self.params.keys():
             
             # get pixels indexes whose initial states are u
-            # J = ndarray_suitable_integer_type(np.where(initial_luc_layer.tiff.asarray().flat==u)[0])
-            J = np.where(initial_luc_layer.tiff.asarray().flat==u)[0]
+            # J = ndarray_suitable_integer_type(np.where(initial_luc_layer.raster_.read(1).flat==u)[0])
+            J = np.where(initial_luc_layer.raster_.read(1).flat==u)[0]
             
             
             # create feature names
@@ -97,7 +97,7 @@ class Case():
                 
                 if feature_type == 'layer':
                     # just get data
-                    x = info.tiff.asarray().flat[J]
+                    x = info.raster_.read(1).flat[J]
                 
                 elif feature_type == 'distance':
                     # get distance data
@@ -118,7 +118,7 @@ class Case():
             # if final luc layer
             if final_luc_layer is not None:
                 # just get data
-                v_u[u] = final_luc_layer.tiff.asarray().flat[J]
+                v_u[u] = final_luc_layer.raster_.read(1).flat[J]
                 
                 if 'v' in self.params[u].keys():
                     v_u[u][~np.isin(v_u[u], self.params[u]['v'])] = u
