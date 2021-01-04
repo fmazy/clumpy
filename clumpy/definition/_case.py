@@ -3,6 +3,7 @@
 # import numpy as np
 import numpy as np
 from scipy import ndimage
+import time
 
 from ._layer import FeatureLayer
 # from ..utils import ndarray_suitable_integer_type
@@ -19,7 +20,7 @@ class Case():
     def __init__(self, params):
         self.params = params
     
-    def make(self, initial_luc_layer, final_luc_layer=None):
+    def make(self, initial_luc_layer, final_luc_layer=None, verbose=0):
         """Make the case
 
         Parameters
@@ -56,12 +57,20 @@ class Case():
 
         """
         
+        start_time=time.time()
+        
         # check the case
+        if verbose > 0:
+            print('case checking...')
         check_case(self)
+        
         
         # first compute distances
         distances = {}
         
+        if verbose > 0:
+            print('distances computing')
+            print('===================')
         # for each u
         for u in self.params.keys():
             # for each feature
@@ -70,11 +79,17 @@ class Case():
                 if feature_type == 'distance':
                     # if this distance has not been computed yet
                     if info not in distances.keys():
+                        if verbose > 0:
+                            print('\t distance to '+str(info)+'...')
                         # make bool v matrix
                         v_matrix = (initial_luc_layer.raster_.read(1) == info).astype(int)
                         # compute distance
                         # should get scale value from the tiff file.
                         distances[info] = ndimage.distance_transform_edt(1 - v_matrix)
+        
+        if verbose > 0:
+            print('sets creating')
+            print('=============')
         
         # initialize X_u                    
         X_u = {}
@@ -85,6 +100,8 @@ class Case():
         
         # for each u
         for u in self.params.keys():
+            if verbose > 0:
+                print('\t u='+str(u)+'...')
             
             # get pixels indexes whose initial states are u
             # J = ndarray_suitable_integer_type(np.where(initial_luc_layer.raster_.read(1).flat==u)[0])
@@ -122,7 +139,12 @@ class Case():
                 
                 if 'v' in self.params[u].keys():
                     v_u[u][~np.isin(v_u[u], self.params[u]['v'])] = u
-                
+        
+        self.creating_time_ = time.time()-start_time
+        
+        if verbose > 0:
+            print('case creating is a success !')
+            print('creating time: '+str(round(self.creating_time_,2))+'s')
         
         # if no final luc layer
         if final_luc_layer is None:
