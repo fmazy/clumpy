@@ -66,7 +66,10 @@ If <code class="docutils literal notranslate"><span class="pre">None</span></cod
 </ul>
 </dd>
 <dt class="field-even">Attributes</dt>
-<dd class="field-even"><p><strong>raster_</strong> (<a class="reference external" href="https://rasterio.readthedocs.io/en/latest/api/rasterio.io.html#rasterio.io.DatasetReader" title="(in rasterio v1.2a1)"><code class="xref py py-class docutils literal notranslate"><span class="pre">rasterio.io.DatasetReader</span></code></a>) – The unbuffered data and metadata reader object, provided by <a class="reference external" href="https://rasterio.readthedocs.io/en/latest/api/rasterio.html#module-rasterio" title="(in rasterio v1.2a1)"><code class="xref py py-mod docutils literal notranslate"><span class="pre">rasterio</span></code></a>.</p>
+<dd class="field-even"><ul class="simple">
+<li><p><strong>raster_</strong> (<a class="reference external" href="https://rasterio.readthedocs.io/en/latest/api/rasterio.io.html#rasterio.io.DatasetReader" title="(in rasterio v1.2b4)"><code class="xref py py-class docutils literal notranslate"><span class="pre">rasterio.io.DatasetReader</span></code></a>) – The unbuffered data and metadata reader object, provided by <a class="reference external" href="https://rasterio.readthedocs.io/en/latest/api/rasterio.html#module-rasterio" title="(in rasterio v1.2b4)"><code class="xref py py-mod docutils literal notranslate"><span class="pre">rasterio</span></code></a>.</p></li>
+<li><p><strong>style_</strong> (<em>list of dict</em>) – The style used for displaying.</p></li>
+</ul>
 </dd>
 </dl>
 <p class="rubric">Methods</p>
@@ -76,17 +79,37 @@ If <code class="docutils literal notranslate"><span class="pre">None</span></cod
 <col style="width: 90%" />
 </colgroup>
 <tbody>
-<tr class="row-odd"><td><p><a class="reference internal" href="#clumpy.definition.LandUseCoverLayer.display" title="clumpy.definition.LandUseCoverLayer.display"><code class="xref py py-obj docutils literal notranslate"><span class="pre">display</span></code></a>(self, center, window)</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#clumpy.definition.LandUseCoverLayer.clean_style" title="clumpy.definition.LandUseCoverLayer.clean_style"><code class="xref py py-obj docutils literal notranslate"><span class="pre">clean_style</span></code></a>(self[, null])</p></td>
+<td><p>Clean the <a href="#id1"><span class="problematic" id="id2">style_</span></a> attr</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#clumpy.definition.LandUseCoverLayer.display" title="clumpy.definition.LandUseCoverLayer.display"><code class="xref py py-obj docutils literal notranslate"><span class="pre">display</span></code></a>(self, center, window)</p></td>
 <td><p>Display the land use cover layer through python console with matplotlib.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#clumpy.definition.LandUseCoverLayer.export_asc" title="clumpy.definition.LandUseCoverLayer.export_asc"><code class="xref py py-obj docutils literal notranslate"><span class="pre">export_asc</span></code></a>(self, path[, verbose])</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#clumpy.definition.LandUseCoverLayer.export_asc" title="clumpy.definition.LandUseCoverLayer.export_asc"><code class="xref py py-obj docutils literal notranslate"><span class="pre">export_asc</span></code></a>(self, path[, verbose])</p></td>
 <td><p>Export the layer data as an <code class="docutils literal notranslate"><span class="pre">asc</span></code> file in order to use it through CLUES and CLUMondo.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#clumpy.definition.LandUseCoverLayer.set_style" title="clumpy.definition.LandUseCoverLayer.set_style"><code class="xref py py-obj docutils literal notranslate"><span class="pre">set_style</span></code></a>(self, style)</p></td>
-<td><p>set display style</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#clumpy.definition.LandUseCoverLayer.import_style" title="clumpy.definition.LandUseCoverLayer.import_style"><code class="xref py py-obj docutils literal notranslate"><span class="pre">import_style</span></code></a>(self, path)</p></td>
+<td><p>Import legend through qml file provided by QGis.</p></td>
 </tr>
 </tbody>
 </table>
+<dl class="method">
+<dt id="clumpy.definition.LandUseCoverLayer.clean_style">
+<code class="sig-name descname">clean_style</code><span class="sig-paren">(</span><em class="sig-param">self</em>, <em class="sig-param">null='#ffffff'</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/clumpy/definition/_layer.html#LandUseCoverLayer.clean_style"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#clumpy.definition.LandUseCoverLayer.clean_style" title="Permalink to this definition">¶</a></dt>
+<dd><p>Clean the <a href="#id3"><span class="problematic" id="id4">style_</span></a> attr</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>null</strong> (<em>TYPE</em><em>, </em><em>optional</em>) – DESCRIPTION. The default is ‘#ffffff’.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p></p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>None.</p>
+</dd>
+</dl>
+</dd></dl>
+
 <dl class="method">
 <dt id="clumpy.definition.LandUseCoverLayer.display">
 <code class="sig-name descname">display</code><span class="sig-paren">(</span><em class="sig-param">self</em>, <em class="sig-param">center</em>, <em class="sig-param">window</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/clumpy/definition/_layer.html#LandUseCoverLayer.display"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#clumpy.definition.LandUseCoverLayer.display" title="Permalink to this definition">¶</a></dt>
@@ -119,12 +142,12 @@ If <code class="docutils literal notranslate"><span class="pre">None</span></cod
 </dd></dl>
 
 <dl class="method">
-<dt id="clumpy.definition.LandUseCoverLayer.set_style">
-<code class="sig-name descname">set_style</code><span class="sig-paren">(</span><em class="sig-param">self</em>, <em class="sig-param">style</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/clumpy/definition/_layer.html#LandUseCoverLayer.set_style"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#clumpy.definition.LandUseCoverLayer.set_style" title="Permalink to this definition">¶</a></dt>
-<dd><p>set display style</p>
+<dt id="clumpy.definition.LandUseCoverLayer.import_style">
+<code class="sig-name descname">import_style</code><span class="sig-paren">(</span><em class="sig-param">self</em>, <em class="sig-param">path</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/clumpy/definition/_layer.html#LandUseCoverLayer.import_style"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#clumpy.definition.LandUseCoverLayer.import_style" title="Permalink to this definition">¶</a></dt>
+<dd><p>Import legend through qml file provided by QGis. Alpha is not supported.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>style</strong> (<em>json</em>) – The style. See example and user guide.</p>
+<dd class="field-odd"><p><strong>path</strong> (<em>str</em>) – The qml file path</p>
 </dd>
 </dl>
 </dd></dl>

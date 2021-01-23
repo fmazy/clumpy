@@ -1,0 +1,159 @@
+
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta charset="utf-8" />
+    <title>clumpy.integer.cumulative_distribution_function &#8212; clumpy 0.1.0 documentation</title>
+    <link rel="stylesheet" href="../_static/nature.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <script type="text/javascript" src="../_static/language_data.js"></script>
+    <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="shortcut icon" href="../_static/logo.ico"/>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="clumpy.resampling.under_sampling.compute_sampling_strategy" href="clumpy.resampling.under_sampling.compute_sampling_strategy.html" />
+    <link rel="prev" title="clumpy.integer.empirical_distribution_function" href="clumpy.integer.empirical_distribution_function.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="clumpy.resampling.under_sampling.compute_sampling_strategy.html" title="clumpy.resampling.under_sampling.compute_sampling_strategy"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="clumpy.integer.empirical_distribution_function.html" title="clumpy.integer.empirical_distribution_function"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">clumpy 0.1.0 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../api.html" accesskey="U">Clumpy API</a> &#187;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="clumpy-integer-cumulative-distribution-function">
+<h1><a class="reference internal" href="../api.html#module-clumpy.integer" title="clumpy.integer"><code class="xref py py-mod docutils literal notranslate"><span class="pre">clumpy.integer</span></code></a>.cumulative_distribution_function<a class="headerlink" href="#clumpy-integer-cumulative-distribution-function" title="Permalink to this headline">¶</a></h1>
+<dl class="function">
+<dt id="clumpy.integer.cumulative_distribution_function">
+<code class="sig-prename descclassname">clumpy.integer.</code><code class="sig-name descname">cumulative_distribution_function</code><span class="sig-paren">(</span><em class="sig-param">f</em>, <em class="sig-param">X</em>, <em class="sig-param">method='quasi_monte_carlo'</em>, <em class="sig-param">n=1000</em>, <em class="sig-param">a='min'</em>, <em class="sig-param">b='max'</em>, <em class="sig-param">args={}</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/clumpy/integer/_cumulative_distribution_function.html#cumulative_distribution_function"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#clumpy.integer.cumulative_distribution_function" title="Permalink to this definition">¶</a></dt>
+<dd><p>Computes cumulative distribution function through Monte Carlo method.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>f</strong> (<em>function</em>) – A python function or method to integrate which returns an image of any <cite>X</cite>.</p></li>
+<li><p><strong>X</strong> (<em>array-like of shape</em><em> (</em><em>n_samples</em><em>, </em><em>n_features</em><em>)</em>) – The samples where the cumulative distribution function is computed.</p></li>
+<li><p><strong>method</strong> (<em>{'monte_carlo'</em><em>, </em><em>'quasi_monte_carlo'}</em><em>, </em><em>default='quasi_monte_carlo'</em>) – <p>The integration method. Possible values :</p>
+<blockquote>
+<div><ul>
+<li><p>’monte_carlo’ : the <a class="reference external" href="https://en.wikipedia.org/wiki/Monte_Carlo_integration">Monte Carlo integration</a>.</p></li>
+<li><p>’quasi_monte_carlo’ : the <a class="reference external" href="https://en.wikipedia.org/wiki/Quasi-Monte_Carlo_method">Quasi-Monte Carlo integration</a>.</p></li>
+</ul>
+</div></blockquote>
+</p></li>
+<li><p><strong>n</strong> (<em>int</em><em>, </em><em>default=1000.</em>) – The number of monte carlo samples.</p></li>
+<li><p><strong>a</strong> (<em>{'min'</em><em>, </em><em>'min-var'}</em><em> or </em><em>array-like of shape</em><em> (</em><em>n_features</em><em>)</em><em>, </em><em>default='min'</em>) – <p>The lower limit of integration. Possible values :</p>
+<blockquote>
+<div><ul>
+<li><p>’min’ : the minimum value of <code class="docutils literal notranslate"><span class="pre">X</span></code>.</p></li>
+<li><p>’min-var’ : the minimum value of <code class="docutils literal notranslate"><span class="pre">X</span></code> minus its variance.</p></li>
+<li><p>[array-like of shape (n_features)] : a choosen value.</p></li>
+</ul>
+</div></blockquote>
+</p></li>
+<li><p><strong>b</strong> (<em>{'max'</em><em>, </em><em>'max+var'}</em><em> or </em><em>array-like of shape</em><em> (</em><em>n_features</em><em>)</em><em>, </em><em>default='max'</em>) – <p>The upper limit of integration. Possible values :</p>
+<blockquote>
+<div><ul>
+<li><p>’max’ : the maximum value of <code class="docutils literal notranslate"><span class="pre">X</span></code>.</p></li>
+<li><p>’max+var’ : the maximum value of <code class="docutils literal notranslate"><span class="pre">X</span></code> plus its variance.</p></li>
+<li><p>[array-like of shape (n_features)] : a choosen value.</p></li>
+</ul>
+</div></blockquote>
+</p></li>
+<li><p><strong>args</strong> (<em>dict</em><em>, </em><em>default={}</em>) – extra arguments to pass to <code class="docutils literal notranslate"><span class="pre">f</span></code>.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>F</strong> – The cumulative distribution function values for each sample.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>array-like of shape (n_samples)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<div style='clear:both'></div></div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="../index.html">
+              <img class="logo" src="../_static/logo.png" alt="Logo"/>
+            </a></p>
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="clumpy.integer.empirical_distribution_function.html"
+                        title="previous chapter"><code class="xref py py-mod docutils literal notranslate"><span class="pre">clumpy.integer</span></code>.empirical_distribution_function</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="clumpy.resampling.under_sampling.compute_sampling_strategy.html"
+                        title="next chapter"><code class="xref py py-mod docutils literal notranslate"><span class="pre">clumpy.resampling.under_sampling</span></code>.compute_sampling_strategy</a></p>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="../_sources/generated/clumpy.integer.cumulative_distribution_function.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="clumpy.resampling.under_sampling.compute_sampling_strategy.html" title="clumpy.resampling.under_sampling.compute_sampling_strategy"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="clumpy.integer.empirical_distribution_function.html" title="clumpy.integer.empirical_distribution_function"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">clumpy 0.1.0 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../api.html" >Clumpy API</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2020, François-Rémi Mazy.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 2.2.2.
+    </div>
+  </body>
+</html>

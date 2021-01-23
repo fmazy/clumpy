@@ -4,7 +4,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
     <meta charset="utf-8" />
-    <title>clumpy.metrics.compute_a &#8212; clumpy 0.1.0 documentation</title>
+    <title>clumpy.allocation.generalized_allocation &#8212; clumpy 0.1.0 documentation</title>
     <link rel="stylesheet" href="../_static/nature.css" type="text/css" />
     <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
     <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
@@ -16,8 +16,8 @@
     <link rel="shortcut icon" href="../_static/logo.ico"/>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="next" title="clumpy.metrics.log_score" href="clumpy.metrics.log_score.html" />
-    <link rel="prev" title="clumpy.allocation.generalized_allocation" href="clumpy.allocation.generalized_allocation.html" /> 
+    <link rel="next" title="clumpy.metrics.compute_a" href="clumpy.metrics.compute_a.html" />
+    <link rel="prev" title="clumpy.definition.Case" href="clumpy.definition.Case.html" /> 
   </head><body>
     <div class="related" role="navigation" aria-label="related navigation">
       <h3>Navigation</h3>
@@ -29,10 +29,10 @@
           <a href="../py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
         <li class="right" >
-          <a href="clumpy.metrics.log_score.html" title="clumpy.metrics.log_score"
+          <a href="clumpy.metrics.compute_a.html" title="clumpy.metrics.compute_a"
              accesskey="N">next</a> |</li>
         <li class="right" >
-          <a href="clumpy.allocation.generalized_allocation.html" title="clumpy.allocation.generalized_allocation"
+          <a href="clumpy.definition.Case.html" title="clumpy.definition.Case"
              accesskey="P">previous</a> |</li>
         <li class="nav-item nav-item-0"><a href="../index.html">clumpy 0.1.0 documentation</a> &#187;</li>
           <li class="nav-item nav-item-1"><a href="../api.html" accesskey="U">Clumpy API</a> &#187;</li> 
@@ -44,32 +44,26 @@
         <div class="bodywrapper">
           <div class="body" role="main">
             
-  <div class="section" id="clumpy-metrics-compute-a">
-<h1><a class="reference internal" href="../api.html#module-clumpy.metrics" title="clumpy.metrics"><code class="xref py py-mod docutils literal notranslate"><span class="pre">clumpy.metrics</span></code></a>.compute_a<a class="headerlink" href="#clumpy-metrics-compute-a" title="Permalink to this headline">¶</a></h1>
+  <div class="section" id="clumpy-allocation-generalized-allocation">
+<h1><a class="reference internal" href="../api.html#module-clumpy.allocation" title="clumpy.allocation"><code class="xref py py-mod docutils literal notranslate"><span class="pre">clumpy.allocation</span></code></a>.generalized_allocation<a class="headerlink" href="#clumpy-allocation-generalized-allocation" title="Permalink to this headline">¶</a></h1>
 <dl class="function">
-<dt id="clumpy.metrics.compute_a">
-<code class="sig-prename descclassname">clumpy.metrics.</code><code class="sig-name descname">compute_a</code><span class="sig-paren">(</span><em class="sig-param">y</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/clumpy/metrics/_log_score.html#compute_a"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#clumpy.metrics.compute_a" title="Permalink to this definition">¶</a></dt>
-<dd><p>Computes log score parameter <code class="docutils literal notranslate"><span class="pre">a</span></code>.</p>
+<dt id="clumpy.allocation.generalized_allocation">
+<code class="sig-prename descclassname">clumpy.allocation.</code><code class="sig-name descname">generalized_allocation</code><span class="sig-paren">(</span><em class="sig-param">P</em>, <em class="sig-param">list_v</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/clumpy/allocation/_generalized_allocation.html#generalized_allocation"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#clumpy.allocation.generalized_allocation" title="Permalink to this definition">¶</a></dt>
+<dd><p>Generalized allocation rejection process.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>y</strong> (<em>TYPE</em>) – DESCRIPTION.</p>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>P</strong> (<em>array-like of shape</em><em> (</em><em>n_samples</em><em>, </em><em>n_classes</em><em>)</em>) – <code class="docutils literal notranslate"><span class="pre">P.sum(axis=1)</span></code> should be a vector of ones.</p></li>
+<li><p><strong>list_v</strong> (<em>list of int</em>) – List of final classes. The classes should be in the same order as <code class="docutils literal notranslate"><span class="pre">P</span></code> classes.</p></li>
+</ul>
 </dd>
 <dt class="field-even">Returns</dt>
-<dd class="field-even"><p></p>
+<dd class="field-even"><p><strong>y</strong> – The allocated classes.</p>
 </dd>
 <dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p>a</p>
+<dd class="field-odd"><p>array-like of shape (n_samples)</p>
 </dd>
 </dl>
-<div class="admonition seealso">
-<p class="admonition-title">See also</p>
-<dl class="simple">
-<dt><a class="reference internal" href="clumpy.metrics.log_score.html#clumpy.metrics.log_score" title="clumpy.metrics.log_score"><code class="xref py py-func docutils literal notranslate"><span class="pre">clumpy.metrics.log_score()</span></code></a></dt><dd><p>To compute the log score.</p>
-</dd>
-<dt><a class="reference internal" href="clumpy.metrics.log_scorer.html#clumpy.metrics.log_scorer" title="clumpy.metrics.log_scorer"><code class="xref py py-func docutils literal notranslate"><span class="pre">clumpy.metrics.log_scorer()</span></code></a></dt><dd><p>To create a scorer.</p>
-</dd>
-</dl>
-</div>
 </dd></dl>
 
 <div style='clear:both'></div></div>
@@ -84,15 +78,15 @@
               <img class="logo" src="../_static/logo.png" alt="Logo"/>
             </a></p>
   <h4>Previous topic</h4>
-  <p class="topless"><a href="clumpy.allocation.generalized_allocation.html"
-                        title="previous chapter"><code class="xref py py-mod docutils literal notranslate"><span class="pre">clumpy.allocation</span></code>.generalized_allocation</a></p>
+  <p class="topless"><a href="clumpy.definition.Case.html"
+                        title="previous chapter"><code class="xref py py-mod docutils literal notranslate"><span class="pre">clumpy.definition</span></code>.Case</a></p>
   <h4>Next topic</h4>
-  <p class="topless"><a href="clumpy.metrics.log_score.html"
-                        title="next chapter"><code class="xref py py-mod docutils literal notranslate"><span class="pre">clumpy.metrics</span></code>.log_score</a></p>
+  <p class="topless"><a href="clumpy.metrics.compute_a.html"
+                        title="next chapter"><code class="xref py py-mod docutils literal notranslate"><span class="pre">clumpy.metrics</span></code>.compute_a</a></p>
   <div role="note" aria-label="source link">
     <h3>This Page</h3>
     <ul class="this-page-menu">
-      <li><a href="../_sources/generated/clumpy.metrics.compute_a.rst.txt"
+      <li><a href="../_sources/generated/clumpy.allocation.generalized_allocation.rst.txt"
             rel="nofollow">Show Source</a></li>
     </ul>
    </div>
@@ -120,10 +114,10 @@
           <a href="../py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
         <li class="right" >
-          <a href="clumpy.metrics.log_score.html" title="clumpy.metrics.log_score"
+          <a href="clumpy.metrics.compute_a.html" title="clumpy.metrics.compute_a"
              >next</a> |</li>
         <li class="right" >
-          <a href="clumpy.allocation.generalized_allocation.html" title="clumpy.allocation.generalized_allocation"
+          <a href="clumpy.definition.Case.html" title="clumpy.definition.Case"
              >previous</a> |</li>
         <li class="nav-item nav-item-0"><a href="../index.html">clumpy 0.1.0 documentation</a> &#187;</li>
           <li class="nav-item nav-item-1"><a href="../api.html" >Clumpy API</a> &#187;</li> 

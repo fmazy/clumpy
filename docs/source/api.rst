@@ -43,8 +43,22 @@ Case
    :template: class.rst
     
    definition.Case
-    
    
+:mod:`clumpy.allocation`: Allocation
+====================================
+
+.. automodule:: clumpy.allocation
+    :no-members:
+    :no-inherited-members:
+    
+.. currentmodule:: clumpy
+
+.. autosummary::
+   :toctree: generated/
+   :template: function.rst
+    
+   allocation.generalized_allocation
+
    
 :mod:`clumpy.metrics`: Metrics
 ==============================
@@ -75,6 +89,22 @@ Scorers
    metrics.log_scorer
    metrics.under_sampling_log_scorer
    
+:mod:`clumpy.integer`: Integer
+==============================
+
+.. automodule:: clumpy.integer
+    :no-members:
+    :no-inherited-members:
+    
+.. currentmodule:: clumpy
+
+.. autosummary::
+   :toctree: generated/
+   :template: function.rst
+    
+   integer.empirical_distribution_function
+   integer.cumulative_distribution_function
+   
 :mod:`clumpy.resampling`: Resampling
 ====================================
 
@@ -101,7 +131,7 @@ Under sampling
    resampling.under_sampling.correct_probabilities
    
 :mod:`clumpy.scenario`: Scenario
-===============================
+================================
 
 .. automodule:: clumpy.scenario
     :no-members:

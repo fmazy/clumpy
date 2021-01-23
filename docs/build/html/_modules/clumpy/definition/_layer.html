@@ -39,21 +39,13 @@
   <h1>Source code for clumpy.definition._layer</h1><div class="highlight"><pre>
 <span></span><span class="c1"># -*- coding: utf-8 -*-</span>
 
-<span class="c1"># from tifffile import TiffFile, imwrite # for tiff write and read</span>
 
-<span class="kn">import</span> <span class="nn">rasterio</span>
 
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 <span class="kn">import</span> <span class="nn">os</span>
 <span class="kn">from</span> <span class="nn">matplotlib</span> <span class="kn">import</span> <span class="n">pyplot</span> <span class="k">as</span> <span class="n">plt</span>
-<span class="kn">import</span> <span class="nn">matplotlib</span> <span class="k">as</span> <span class="nn">mpl</span>
-<span class="kn">import</span> <span class="nn">re</span>
-<span class="c1"># from sys import getsizeof</span>
-<span class="c1"># from copy import deepcopy</span>
-
-<span class="c1"># from ..utils import human_size</span>
-
-<span class="c1"># from ..tools._validation import check_case</span>
+<span class="kn">from</span> <span class="nn">matplotlib</span> <span class="kn">import</span> <span class="n">colors</span> <span class="k">as</span> <span class="n">mpl_colors</span>
+<span class="kn">import</span> <span class="nn">rasterio</span>
 
 <span class="k">class</span> <span class="nc">_Layer</span><span class="p">:</span>
     <span class="sd">&quot;&quot;&quot;Layer base element</span>
@@ -93,9 +85,9 @@
             
             <span class="c1"># if copy metadata</span>
             <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">copy_geo</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-                <span class="n">driver</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">copy_geo</span><span class="o">.</span><span class="n">raster</span><span class="o">.</span><span class="n">driver</span>
-                <span class="n">crs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">copy_geo</span><span class="o">.</span><span class="n">raster</span><span class="o">.</span><span class="n">crs</span>
-                <span class="n">transform</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">copy_geo</span><span class="o">.</span><span class="n">raster</span><span class="o">.</span><span class="n">transform</span>
+                <span class="n">driver</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">copy_geo</span><span class="o">.</span><span class="n">raster_</span><span class="o">.</span><span class="n">driver</span>
+                <span class="n">crs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">copy_geo</span><span class="o">.</span><span class="n">raster_</span><span class="o">.</span><span class="n">crs</span>
+                <span class="n">transform</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">copy_geo</span><span class="o">.</span><span class="n">raster_</span><span class="o">.</span><span class="n">transform</span>
             
             
             <span class="c1"># create file</span>
@@ -181,7 +173,8 @@
 <span class="sd">    ----------</span>
 <span class="sd">    raster_ : :class:`rasterio.io.DatasetReader`</span>
 <span class="sd">        The unbuffered data and metadata reader object, provided by :mod:`rasterio`.</span>
-
+<span class="sd">    style_ : list of dict</span>
+<span class="sd">        The style used for displaying.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
@@ -191,111 +184,69 @@
                  <span class="n">data</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
                  <span class="n">copy_geo</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         
-        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">name</span><span class="p">,</span>
-                         <span class="n">time</span><span class="p">,</span>
-                         <span class="n">path</span><span class="p">,</span>
-                         <span class="n">data</span><span class="p">,</span>
-                         <span class="n">copy_geo</span><span class="p">)</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="n">name</span><span class="p">,</span>
+                         <span class="n">time</span><span class="o">=</span><span class="n">time</span><span class="p">,</span>
+                         <span class="n">path</span><span class="o">=</span><span class="n">path</span><span class="p">,</span>
+                         <span class="n">data</span><span class="o">=</span><span class="n">data</span><span class="p">,</span>
+                         <span class="n">copy_geo</span><span class="o">=</span><span class="n">copy_geo</span><span class="p">)</span>
     
-
-    <span class="c1"># def __init__(self,</span>
-    <span class="c1">#              name=None,</span>
-    <span class="c1">#              time=0,</span>
-    <span class="c1">#              path=None,</span>
-    <span class="c1">#              data=None,</span>
-    <span class="c1">#              copy_metadata=None):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">style_</span> <span class="o">=</span> <span class="p">{}</span>
         
-    <span class="c1">#     super().__init__(name, time, path, data, copy_metadata)</span>
-        
-
-    <span class="c1"># def import_tiff(self, path, verbose=0):</span>
-    <span class="c1">#     &quot;&quot;&quot;Imports the layer data from a ``tif`` or a ``tiff`` file.</span>
-    <span class="c1">#     The file extension can be something else than tiff. See `Image Pillow documentation, Image.open &lt;https://pillow.readthedocs.io/en/3.1.x/reference/Image.html#PIL.Image.open&gt;`_.</span>
-        
-    <span class="c1">#     Parameters</span>
-    <span class="c1">#     ----------</span>
-    <span class="c1">#     path : str</span>
-    <span class="c1">#         path to the file.</span>
-    <span class="c1">#     verbose : int, default=0</span>
-    <span class="c1">#         level of verbosity.</span>
-    <span class="c1">#     &quot;&quot;&quot;</span>
-    <span class="c1">#     if verbose &gt;0:</span>
-    <span class="c1">#         print(&quot;importing tiff file &#39;&quot; + path + &quot;&#39;&quot;)</span>
-        
-    <span class="c1">#     self._import_tiff_file(path)</span>
-        
-    <span class="c1">#     self.id_v, self.N_v = np.unique(self.data, return_counts=True)</span>
-
-    <span class="c1">#     # self.get_dimensions()</span>
-    <span class="c1">#     self.shape = np.shape(self.data)</span>
-    <span class="c1">#     self.size = np.size(self.data)</span>
-        
-    <span class="c1">#     if verbose &gt; 0:</span>
-    <span class="c1">#         print(&quot;\t done, N_j=&quot; + str(self.size))</span>
-        
-    <span class="c1"># def import_asc(self, path, verbose=0):</span>
-    <span class="c1">#     &quot;&quot;&quot; imports the layer data from a ``asc`` file.</span>
-
-    <span class="c1">#     Parameters</span>
-    <span class="c1">#     ----------</span>
-    <span class="c1">#     path : str</span>
-    <span class="c1">#         path to the file.</span>
-    <span class="c1">#     verbose : int, default=0</span>
-    <span class="c1">#         level of verbosity.</span>
-
-    <span class="c1">#     &quot;&quot;&quot;</span>
-    <span class="c1">#     f = open(path, &#39;r&#39;)</span>
-        
-    <span class="c1">#     lines = f.readlines()</span>
-        
-    <span class="c1">#     entete = lines[0:6]</span>
-    <span class="c1">#     data = lines[6::]</span>
-        
-    <span class="c1">#     if verbose&gt;0:</span>
-    <span class="c1">#         print(entete)</span>
-    <span class="c1">#         print(len(lines))</span>
-    <span class="c1">#         print(len(data))</span>
-        
-    <span class="c1">#     infos =  {}</span>
-    <span class="c1">#     for e in entete:</span>
-    <span class="c1">#         chunks = re.split(&#39; +&#39;, e)</span>
-    <span class="c1">#         infos[chunks[0]] = float(chunks[1].replace(&#39;\n&#39;,&#39;&#39;))</span>
-            
-    <span class="c1">#     data = [int(x.replace(&#39;\n&#39;,&#39;&#39;)) for x in data]</span>
-    <span class="c1">#     data = np.array(data)</span>
-    <span class="c1">#     self.data = data.reshape((int(infos[&#39;ncols&#39;]), int(infos[&#39;nrows&#39;])))</span>
-        
-    <span class="c1">#     self.id_v, self.N_v = np.unique(self.data, return_counts=True)</span>
-
-    <span class="c1">#     # self.get_dimensions()</span>
-    <span class="c1">#     self.shape = np.shape(self.data)</span>
-    <span class="c1">#     self.size = np.size(self.data)</span>
-
-    <span class="c1">#     if verbose&gt;0:</span>
-    <span class="c1">#         print(&quot;\t done, N_j=&quot; + str(self.size))</span>
-
-    <span class="c1"># def __str__(self):</span>
-    <span class="c1">#     txt = &#39;Object Map : &#39; + self.name + &#39;\n&#39;</span>
-    <span class="c1">#     txt = txt + &#39;(Nx, Ny) = &#39; + str(self.shape)+ &#39;\n&#39;</span>
-    <span class="c1">#     txt = txt + &#39;mean(v) = &#39; + str(np.mean(self.data)) + &#39;\n&#39;</span>
-    <span class="c1">#     unique, counts = np.unique(self.data, return_counts=True)</span>
-    <span class="c1">#     for k in range(len(unique)):</span>
-    <span class="c1">#         txt = txt + str(unique[k]) + &#39; &#39; + str(counts[k]) + &#39;\n&#39;</span>
-    <span class="c1">#     txt = txt + &quot;&quot;</span>
-    <span class="c1">#     return (txt)</span>
-    
-<div class="viewcode-block" id="LandUseCoverLayer.set_style"><a class="viewcode-back" href="../../../generated/clumpy.definition.LandUseCoverLayer.html#clumpy.definition.LandUseCoverLayer.set_style">[docs]</a>    <span class="k">def</span> <span class="nf">set_style</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">style</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;set display style</span>
+<div class="viewcode-block" id="LandUseCoverLayer.import_style"><a class="viewcode-back" href="../../../generated/clumpy.definition.LandUseCoverLayer.html#clumpy.definition.LandUseCoverLayer.import_style">[docs]</a>    <span class="k">def</span> <span class="nf">import_style</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
+                      <span class="n">path</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Import legend through qml file provided by QGis. Alpha is not supported.</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
-<span class="sd">        style : json</span>
-<span class="sd">            The style. See example and user guide.</span>
+<span class="sd">        path : str</span>
+<span class="sd">            The qml file path</span>
 
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">style_values</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">style</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">style_names</span> <span class="o">=</span> <span class="p">[</span><span class="n">style</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">style</span><span class="o">.</span><span class="n">keys</span><span class="p">()]</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">style_colors</span> <span class="o">=</span> <span class="p">[</span><span class="n">style</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="mi">1</span><span class="p">]</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">style</span><span class="o">.</span><span class="n">keys</span><span class="p">()]</span></div>
+        <span class="kn">from</span> <span class="nn">xml.dom</span> <span class="kn">import</span> <span class="n">minidom</span>
+
+        <span class="c1"># parse an xml file by name</span>
+        <span class="n">mydoc</span> <span class="o">=</span> <span class="n">minidom</span><span class="o">.</span><span class="n">parse</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
+        <span class="n">items</span> <span class="o">=</span> <span class="n">mydoc</span><span class="o">.</span><span class="n">getElementsByTagName</span><span class="p">(</span><span class="s1">&#39;paletteEntry&#39;</span><span class="p">)</span>
+        
+        <span class="bp">self</span><span class="o">.</span><span class="n">style_</span> <span class="o">=</span> <span class="p">[]</span>
+        
+        <span class="k">for</span> <span class="n">elem</span> <span class="ow">in</span> <span class="n">items</span><span class="p">:</span>
+            
+            <span class="bp">self</span><span class="o">.</span><span class="n">style_</span><span class="o">.</span><span class="n">append</span><span class="p">({</span><span class="s1">&#39;color&#39;</span><span class="p">:</span><span class="n">elem</span><span class="o">.</span><span class="n">attributes</span><span class="p">[</span><span class="s1">&#39;color&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">value</span><span class="p">,</span>
+                                <span class="s1">&#39;label&#39;</span><span class="p">:</span><span class="n">elem</span><span class="o">.</span><span class="n">attributes</span><span class="p">[</span><span class="s1">&#39;label&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">value</span><span class="p">,</span>
+                                <span class="s1">&#39;value&#39;</span><span class="p">:</span><span class="nb">int</span><span class="p">(</span><span class="n">elem</span><span class="o">.</span><span class="n">attributes</span><span class="p">[</span><span class="s1">&#39;value&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">value</span><span class="p">)})</span></div>
+    
+<div class="viewcode-block" id="LandUseCoverLayer.clean_style"><a class="viewcode-back" href="../../../generated/clumpy.definition.LandUseCoverLayer.html#clumpy.definition.LandUseCoverLayer.clean_style">[docs]</a>    <span class="k">def</span> <span class="nf">clean_style</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">null</span><span class="o">=</span><span class="s1">&#39;#ffffff&#39;</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Clean the style_ attr</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        null : TYPE, optional</span>
+<span class="sd">            DESCRIPTION. The default is &#39;#ffffff&#39;.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        None.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">style</span> <span class="o">=</span> <span class="p">[]</span>
+        
+        <span class="n">u_unique</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">unique</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">raster_</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="mi">1</span><span class="p">)))</span>
+        
+        <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">style_</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">s</span><span class="p">[</span><span class="s1">&#39;value&#39;</span><span class="p">]</span> <span class="ow">in</span> <span class="n">u_unique</span><span class="p">:</span>
+                <span class="n">style</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">s</span><span class="p">)</span>
+                <span class="n">u_unique</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="n">u_unique</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">s</span><span class="p">[</span><span class="s1">&#39;value&#39;</span><span class="p">]))</span>
+        
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">u_unique</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">u</span> <span class="ow">in</span> <span class="n">u_unique</span><span class="p">:</span>
+                <span class="n">style</span><span class="o">.</span><span class="n">append</span><span class="p">({</span><span class="s1">&#39;color&#39;</span><span class="p">:</span><span class="s1">&#39;#ffffff&#39;</span><span class="p">,</span>
+                              <span class="s1">&#39;label&#39;</span><span class="p">:</span><span class="s1">&#39;null&#39;</span><span class="p">,</span>
+                              <span class="s1">&#39;value&#39;</span><span class="p">:</span><span class="n">u</span><span class="p">})</span>
+        
+        <span class="bp">self</span><span class="o">.</span><span class="n">style_</span> <span class="o">=</span> <span class="n">style</span></div>
     
 <div class="viewcode-block" id="LandUseCoverLayer.display"><a class="viewcode-back" href="../../../generated/clumpy.definition.LandUseCoverLayer.html#clumpy.definition.LandUseCoverLayer.display">[docs]</a>    <span class="k">def</span> <span class="nf">display</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">center</span><span class="p">,</span> <span class="n">window</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Display the land use cover layer through python console with matplotlib.</span>
@@ -313,15 +264,23 @@
 <span class="sd">        window : tuple of two integers</span>
 <span class="sd">            Window dimensions as a tuple.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">values</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">style_values</span>
-        <span class="n">colors</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">style_colors</span>
-        <span class="n">names</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">style_names</span>
+        <span class="n">values</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">s</span><span class="p">[</span><span class="s1">&#39;value&#39;</span><span class="p">]</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">style_</span><span class="p">])</span>
+        <span class="n">colors</span> <span class="o">=</span> <span class="p">[</span><span class="n">s</span><span class="p">[</span><span class="s1">&#39;color&#39;</span><span class="p">]</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">style_</span><span class="p">]</span>
+        <span class="n">labels</span> <span class="o">=</span> <span class="p">[</span><span class="n">s</span><span class="p">[</span><span class="s1">&#39;label&#39;</span><span class="p">]</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">style_</span><span class="p">]</span>
+        
+        <span class="n">index_sorted</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">argsort</span><span class="p">(</span><span class="n">values</span><span class="p">))</span>
+        
+        <span class="n">values</span> <span class="o">=</span> <span class="p">[</span><span class="n">values</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">index_sorted</span><span class="p">]</span>
+        <span class="n">colors</span> <span class="o">=</span> <span class="p">[</span><span class="n">colors</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">index_sorted</span><span class="p">]</span>
+        <span class="n">labels</span> <span class="o">=</span> <span class="p">[</span><span class="n">labels</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">index_sorted</span><span class="p">]</span>
+        
+        <span class="n">data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">raster_</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
         
         <span class="n">colors</span> <span class="o">=</span> <span class="n">colors</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span class="p">[</span><span class="n">colors</span><span class="p">[</span><span class="o">-</span><span class="mi">2</span><span class="p">]]</span> <span class="o">+</span> <span class="p">[</span><span class="n">colors</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]]</span>
         <span class="n">bounds</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">values</span><span class="o">+</span><span class="p">[</span><span class="n">values</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">+</span><span class="mi">1</span><span class="p">])</span><span class="o">-</span><span class="mf">0.5</span>
         
-        <span class="n">cmap</span> <span class="o">=</span> <span class="n">mpl</span><span class="o">.</span><span class="n">colors</span><span class="o">.</span><span class="n">ListedColormap</span><span class="p">(</span><span class="n">colors</span><span class="p">)</span>
-        <span class="n">norm</span> <span class="o">=</span> <span class="n">mpl</span><span class="o">.</span><span class="n">colors</span><span class="o">.</span><span class="n">BoundaryNorm</span><span class="p">(</span><span class="n">bounds</span><span class="p">,</span> <span class="n">cmap</span><span class="o">.</span><span class="n">N</span><span class="p">)</span>
+        <span class="n">cmap</span> <span class="o">=</span> <span class="n">mpl_colors</span><span class="o">.</span><span class="n">ListedColormap</span><span class="p">(</span><span class="n">colors</span><span class="p">)</span>
+        <span class="n">norm</span> <span class="o">=</span> <span class="n">mpl_colors</span><span class="o">.</span><span class="n">BoundaryNorm</span><span class="p">(</span><span class="n">bounds</span><span class="p">,</span> <span class="n">cmap</span><span class="o">.</span><span class="n">N</span><span class="p">)</span>
         
         <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">window</span><span class="p">)</span> <span class="o">==</span> <span class="nb">int</span><span class="p">:</span>
             <span class="n">window</span> <span class="o">=</span> <span class="p">(</span><span class="n">window</span><span class="p">,</span> <span class="n">window</span><span class="p">)</span>
@@ -334,47 +293,48 @@
         <span class="k">if</span> <span class="n">x1</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
             <span class="n">x1</span> <span class="o">=</span> <span class="mi">0</span>
             <span class="n">x2</span> <span class="o">=</span> <span class="n">window</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
-        <span class="k">if</span> <span class="n">x2</span> <span class="o">&gt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]:</span>
-            <span class="n">x2</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+        <span class="k">if</span> <span class="n">x2</span> <span class="o">&gt;=</span> <span class="n">data</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]:</span>
+            <span class="n">x2</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">data</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
             <span class="n">x1</span> <span class="o">=</span> <span class="n">x2</span> <span class="o">-</span> <span class="n">window</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
         <span class="k">if</span> <span class="n">y1</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
             <span class="n">y1</span> <span class="o">=</span> <span class="mi">0</span>
             <span class="n">y2</span> <span class="o">=</span> <span class="n">window</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
-        <span class="k">if</span> <span class="n">y2</span> <span class="o">&gt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]:</span>
-            <span class="n">y2</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+        <span class="k">if</span> <span class="n">y2</span> <span class="o">&gt;=</span> <span class="n">data</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]:</span>
+            <span class="n">y2</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">data</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
             <span class="n">y1</span> <span class="o">=</span> <span class="n">y2</span> <span class="o">-</span> <span class="n">window</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
         
-        <span class="n">plt</span><span class="o">.</span><span class="n">imshow</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="n">x1</span><span class="p">:</span><span class="n">x2</span><span class="p">,</span> <span class="n">y1</span><span class="p">:</span><span class="n">y2</span><span class="p">],</span> <span class="n">interpolation</span><span class="o">=</span><span class="s1">&#39;none&#39;</span><span class="p">,</span> <span class="n">cmap</span><span class="o">=</span><span class="n">cmap</span><span class="p">,</span> <span class="n">norm</span><span class="o">=</span><span class="n">norm</span><span class="p">)</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">imshow</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="n">x1</span><span class="p">:</span><span class="n">x2</span><span class="p">,</span> <span class="n">y1</span><span class="p">:</span><span class="n">y2</span><span class="p">],</span> <span class="n">interpolation</span><span class="o">=</span><span class="s1">&#39;none&#39;</span><span class="p">,</span> <span class="n">cmap</span><span class="o">=</span><span class="n">cmap</span><span class="p">,</span> <span class="n">norm</span><span class="o">=</span><span class="n">norm</span><span class="p">)</span>
         <span class="n">plt</span><span class="o">.</span><span class="n">yticks</span><span class="p">([],</span> <span class="p">[])</span>
         <span class="n">plt</span><span class="o">.</span><span class="n">xticks</span><span class="p">([],</span> <span class="p">[])</span>
         <span class="n">cb</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">colorbar</span><span class="p">()</span>
         <span class="n">cb</span><span class="o">.</span><span class="n">set_ticks</span><span class="p">(</span><span class="n">values</span><span class="p">)</span>
-        <span class="n">cb</span><span class="o">.</span><span class="n">set_ticklabels</span><span class="p">(</span><span class="n">names</span><span class="p">)</span></div></div>
+        <span class="n">cb</span><span class="o">.</span><span class="n">set_ticklabels</span><span class="p">(</span><span class="n">labels</span><span class="p">)</span></div></div>
 
 
 <div class="viewcode-block" id="FeatureLayer"><a class="viewcode-back" href="../../../generated/clumpy.definition.FeatureLayer.html#clumpy.definition.FeatureLayer">[docs]</a><span class="k">class</span> <span class="nc">FeatureLayer</span><span class="p">(</span><span class="n">_Layer</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Defines an Explanatory Variable (EV) layer. This layer can then used for the calibration stage or the allocation stage::</span>
-<span class="sd">    </span>
-<span class="sd">        elevation = clumpy.definition.layer.LayerEV(name=&#39;elevation&#39;,time=0,scale=15)    </span>
+    <span class="sd">&quot;&quot;&quot;Defines a feature layer.</span>
+<span class="sd">    This layer can then used for the calibration stage or the allocation stage.</span>
 <span class="sd">    </span>
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
-<span class="sd">    name : TYPE, optional</span>
-<span class="sd">        DESCRIPTION. The default is None.</span>
-<span class="sd">    time : TYPE, optional</span>
-<span class="sd">        DESCRIPTION. The default is 0.</span>
-<span class="sd">    path : TYPE, optional</span>
-<span class="sd">        DESCRIPTION. The default is None.</span>
-<span class="sd">    data : TYPE, optional</span>
-<span class="sd">        DESCRIPTION. The default is None.</span>
-<span class="sd">    copy_metadata : TYPE, optional</span>
-<span class="sd">        DESCRIPTION. The default is None.</span>
+<span class="sd">    name : str, default=``None``</span>
+<span class="sd">        The layer name.</span>
+<span class="sd">    time : float, default=``0``</span>
+<span class="sd">        The layer time (year unit).</span>
+<span class="sd">    path : str</span>
+<span class="sd">        The tiff file path.</span>
+<span class="sd">        If ``data`` is provided, a new tiff file will be created according to this path</span>
+<span class="sd">        and this operation overwrites the file path if exists.</span>
+<span class="sd">    data : :class:`numpy.ndarray`, defaul=None</span>
+<span class="sd">        The data to write. If ``None``, no writing is made.</span>
+<span class="sd">    copy_geo : :class:`LandUseCoverLayer`, default=None</span>
+<span class="sd">        The layer from whose geo metadata are copied.</span>
+<span class="sd">        If ``None``, geo metadata are set to ``None``.</span>
 
-<span class="sd">    Returns</span>
-<span class="sd">    -------</span>
-<span class="sd">    None.</span>
-
+<span class="sd">    Attributes</span>
+<span class="sd">    ----------</span>
+<span class="sd">    raster_ : :class:`rasterio.io.DatasetReader`</span>
+<span class="sd">        The unbuffered data and metadata reader object, provided by :mod:`rasterio`.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
@@ -382,229 +342,13 @@
                  <span class="n">time</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
                  <span class="n">path</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
                  <span class="n">data</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-                 <span class="n">copy_metadata</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+                 <span class="n">copy_geo</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         
-        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">name</span><span class="p">,</span>
-                         <span class="n">time</span><span class="p">,</span>
-                         <span class="n">path</span><span class="p">,</span>
-                         <span class="n">data</span><span class="p">,</span>
-                         <span class="n">copy_metadata</span><span class="p">)</span></div>
-
-    <span class="c1"># def import_tiff(self, path):</span>
-    <span class="c1">#     &quot;&quot;&quot;</span>
-    <span class="c1">#     Imports the layer data from a `tif` or a `tiff` file. The file extension can be something else than tiff. See `Image Pillow documentation, Image.open &lt;https://pillow.readthedocs.io/en/3.1.x/reference/Image.html#PIL.Image.open&gt;`_.</span>
-        
-    <span class="c1">#     Parameters</span>
-    <span class="c1">#     ----------</span>
-    <span class="c1">#     path : str</span>
-    <span class="c1">#         path to the file.</span>
-    <span class="c1">#     verbose : int, default=0</span>
-    <span class="c1">#         level of verbosity.</span>
-    <span class="c1">#     &quot;&quot;&quot;</span>
-    <span class="c1">#     print(&quot;importing tiff file &#39;&quot; + path + &quot;&#39;&quot;)</span>
-    <span class="c1">#     self._import_tiff_file(path)</span>
-        
-    <span class="c1">#     # self.get_dimensions()</span>
-    <span class="c1">#     self.shape = np.shape(self.data)</span>
-    <span class="c1">#     self.size = np.size(self.data)</span>
-
-    <span class="c1">#     print(&quot;\t done, N_j=&quot; + str(self.size))</span>
-
-    <span class="c1"># def __str__(self):</span>
-    <span class="c1">#     txt = &#39;Object Map : &#39; + self.name + &#39;\n&#39;</span>
-    <span class="c1">#     txt = txt + &#39;(Nx, Ny) = &#39; + str(self.shape) + &#39;\n&#39;</span>
-    <span class="c1">#     txt = txt + &#39;mean(data) = &#39; + str(np.mean(self.data)) + &#39;\n&#39;</span>
-    <span class="c1">#     txt = txt + &#39;min(data) = &#39; + str(np.min(self.data)) + &#39;\n&#39;</span>
-    <span class="c1">#     txt = txt + &#39;max(data) = &#39; + str(np.max(self.data)) + &#39;\n&#39;</span>
-    <span class="c1">#     return (txt)</span>
-
-
-<span class="c1"># class DistanceToVFeatureLayer(FeatureLayer):</span>
-<span class="c1">#     &quot;&quot;&quot;</span>
-<span class="c1">#     Defines a distance to a state as a layer. This layer can then used for the calibration stage or the allocation stage::</span>
-    
-<span class="c1">#         distance_to_2 = clumpy.definition.layer.LayerEV(name=&#39;elevation&#39;,time=0,scale=15)    </span>
-    
-<span class="c1">#     However, it is recommended to prefer the case&#39;s method clumpy.definition.Case.add_distance_to_v_as_feature.</span>
-    
-<span class="c1">#     Parameters</span>
-<span class="c1">#     ----------</span>
-<span class="c1">#     v : int</span>
-<span class="c1">#         The state to compute the distance from.</span>
-    
-<span class="c1">#     layer_LUC : LandUseCoverLayer</span>
-<span class="c1">#         The land use cover used to compute the distance.</span>
-        
-<span class="c1">#     name : string (default=``None``)</span>
-<span class="c1">#         The layer name. If none, name is defined as ``&#39;distance_to_v_&#39;+str(v)``.</span>
-<span class="c1">#     &quot;&quot;&quot;</span>
-    
-<span class="c1">#     def __init__(self, v, layer_LUC, name=None):</span>
-        
-<span class="c1">#         if type(name)==type(None):</span>
-<span class="c1">#             name = &#39;distance_to_v_&#39;+str(v)</span>
-        
-<span class="c1">#         super().__init__(name=name, scale=layer_LUC.scale)</span>
-<span class="c1">#         self.v = v</span>
-<span class="c1">#         self.layer_LUC = layer_LUC</span>
-<span class="c1">#         self.update(layer_LUC=self.layer_LUC)</span>
-<span class="c1">#         layer_LUC.distance2v.append(self)</span>
-
-<span class="c1">#     def update(self, layer_LUC):</span>
-<span class="c1">#         v_matrix = (layer_LUC.data == self.v).astype(int)</span>
-<span class="c1">#         self.data = ndimage.distance_transform_edt(1 - v_matrix) * layer_LUC.scale</span>
-
-
-<span class="c1"># class TransitionProbabilityLayers():</span>
-<span class="c1">#     &quot;&quot;&quot;</span>
-<span class="c1">#     Defines a set of :math:`P(vf|vi,z)` layers.</span>
-    
-<span class="c1">#     Notes</span>
-<span class="c1">#     -----</span>
-<span class="c1">#         The set of layers is defined as a dictionary ``self.layers`` whose keys are :math:`(v_i,v_f)`.</span>
-<span class="c1">#     &quot;&quot;&quot;</span>
-    
-<span class="c1">#     def __init__(self):</span>
-<span class="c1">#         self.layers = {}</span>
-    
-<span class="c1">#     def add_layer(self, vi, vf, data=None, path=None):</span>
-<span class="c1">#         &quot;&quot;&quot;</span>
-<span class="c1">#         Add a layer to the set.        </span>
-
-<span class="c1">#         Parameters</span>
-<span class="c1">#         ----------</span>
-<span class="c1">#         vi : int</span>
-<span class="c1">#             initial state.</span>
-<span class="c1">#         vf : int</span>
-<span class="c1">#             final state.</span>
-<span class="c1">#         data : numpy array (default=None)</span>
-<span class="c1">#             The :math:`P(vf|vi,z)` data layer. If None, ``path`` is expected.</span>
-<span class="c1">#         path : string (default=None)</span>
-<span class="c1">#             The path to :math:`P(vf|vi,z)` tiff file. If None, ``data`` is expected.</span>
-
-<span class="c1">#         &quot;&quot;&quot;</span>
-<span class="c1">#         self.layers[(vi, vf)] = _TransitionProbabilityLayer(vi, vf, data, path)</span>
-    
-<span class="c1">#     def copy(self):</span>
-<span class="c1">#         &quot;&quot;&quot;</span>
-<span class="c1">#         Make a copy.</span>
-
-<span class="c1">#         Returns</span>
-<span class="c1">#         -------</span>
-<span class="c1">#         c : TransitionProbabilityLayers</span>
-<span class="c1">#             A copy of the current object.</span>
-
-<span class="c1">#         &quot;&quot;&quot;</span>
-<span class="c1">#         return(deepcopy(self))</span>
-        
-<span class="c1">#     def export_all(self, path:str):</span>
-<span class="c1">#         &quot;&quot;&quot;</span>
-<span class="c1">#         Export all layers as tif files through a zip archive file.</span>
-
-<span class="c1">#         Parameters</span>
-<span class="c1">#         ----------</span>
-<span class="c1">#         path : str</span>
-<span class="c1">#             Output zip file path. Required new folders are created without error raising.</span>
-            
-<span class="c1">#         Notes</span>
-<span class="c1">#         -----</span>
-<span class="c1">#         All layer files inside the zip archive file are named as following : ``&#39;P_vf&#39; + str(vf) + &#39;__vi&#39; + str(vi) + &#39;_z.tif&#39;``.</span>
-<span class="c1">#         &quot;&quot;&quot;</span>
-<span class="c1">#         files_names = []</span>
-<span class="c1">#         # folder_name = os.path.dirname(path)</span>
-        
-<span class="c1">#         for layer in self.layers.values():</span>
-<span class="c1">#             files_names.append(layer.name+&#39;.tif&#39;)</span>
-<span class="c1">#             layer.export_tiff(files_names[-1])</span>
-        
-<span class="c1">#         command = &#39;zip .temp_P_vf__vi_z.zip&#39;</span>
-<span class="c1">#         for file_name in files_names:</span>
-<span class="c1">#             command += &#39; &#39;+file_name</span>
-<span class="c1">#         os.system(command)</span>
-        
-<span class="c1">#         command = &#39;rm &#39;</span>
-<span class="c1">#         for file_name in files_names:</span>
-<span class="c1">#             command += &#39; &#39;+file_name</span>
-<span class="c1">#         os.system(command)</span>
-        
-<span class="c1">#         # create folder if not exists</span>
-<span class="c1">#         folder_name = os.path.dirname(path)</span>
-<span class="c1">#         if not os.path.exists(folder_name) and folder_name!= &#39;&#39;:</span>
-<span class="c1">#             os.makedirs(folder_name)</span>
-        
-<span class="c1">#         os.system(&#39;mv .temp_P_vf__vi_z.zip &#39;+path)</span>
-        
-<span class="c1">#     def import_all(self, path:str):</span>
-<span class="c1">#         &quot;&quot;&quot;</span>
-<span class="c1">#         Import all layers from a zip archive file.</span>
-
-<span class="c1">#         Parameters</span>
-<span class="c1">#         ----------</span>
-<span class="c1">#         path : str</span>
-<span class="c1">#             The zip file to import.</span>
-            
-<span class="c1">#         Notes</span>
-<span class="c1">#         -----</span>
-<span class="c1">#         All layer files inside the zip archive file are expected to be named as following : ``&#39;P_vf&#39; + str(vf) + &#39;__vi&#39; + str(vi) + &#39;_z.tif&#39;``.</span>
-
-<span class="c1">#         &quot;&quot;&quot;</span>
-<span class="c1">#         os.system(&#39;unzip &#39;+path+&#39; -d &#39;+path+&#39;.out&#39;)</span>
-        
-<span class="c1">#         files = os.listdir(path+&#39;.out/&#39;)</span>
-        
-<span class="c1">#         self.layers = {}</span>
-<span class="c1">#         for file in files:</span>
-<span class="c1">#             start = &#39;vf&#39;</span>
-<span class="c1">#             end = &#39;__&#39;</span>
-<span class="c1">#             vf = file[file.find(start)+len(start):file.rfind(end)]</span>
-            
-<span class="c1">#             start = &#39;vi&#39;</span>
-<span class="c1">#             end = &#39;_z&#39;</span>
-<span class="c1">#             vi = file[file.find(start)+len(start):file.rfind(end)]</span>
-            
-            
-<span class="c1">#             self.add_layer(vi=int(vi), vf=int(vf), path=path+&#39;.out/&#39;+file)</span>
-            
-<span class="c1">#         os.system(&#39;rm -R &#39;+path+&#39;.out&#39;)</span>
-            
-
-<span class="c1"># class _TransitionProbabilityLayer(_Layer):</span>
-<span class="c1">#     &quot;&quot;&quot;</span>
-<span class="c1">#     Defines a P(vf|vi,z) layer. This layer can then used for the allocation stage.</span>
-<span class="c1">#     &quot;&quot;&quot;</span>
-
-<span class="c1">#     def __init__(self, vi, vf, data=None, path=None):</span>
-<span class="c1">#         super().__init__(&#39;P_vf&#39; + str(vf) + &#39;__vi&#39; + str(vi) + &#39;_z&#39;)</span>
-<span class="c1">#         self.vi = vi</span>
-<span class="c1">#         self.vf = vf</span>
-<span class="c1">#         # self.Tif.layer_P_vf__vi_z = self</span>
-
-<span class="c1">#         if type(data) == np.ndarray:</span>
-<span class="c1">#             self.data = data</span>
-
-<span class="c1">#         if type(path) != type(None):</span>
-<span class="c1">#             self.import_tiff(path)</span>
-
-<span class="c1">#     def import_tiff(self, path):</span>
-<span class="c1">#         &quot;&quot;&quot;</span>
-<span class="c1">#         Imports the layer data from a `tif` or a `tiff` file. The file extension can be something else than tiff. See `Image Pillow documentation, Image.open &lt;https://pillow.readthedocs.io/en/3.1.x/reference/Image.html#PIL.Image.open&gt;`_.</span>
-        
-<span class="c1">#         :param path: path to the file</span>
-<span class="c1">#         :type path: str</span>
-<span class="c1">#         &quot;&quot;&quot;</span>
-<span class="c1">#         print(&quot;importing tiff file &#39;&quot; + path + &quot;&#39;&quot;)</span>
-<span class="c1">#         self.path = path</span>
-
-<span class="c1">#         img = Image.open(path)  # image loading</span>
-<span class="c1">#         img.load()</span>
-<span class="c1">#         dtype = &quot;float&quot;</span>
-<span class="c1">#         self.data = np.asarray(img, dtype=dtype)  # conversion en numpy</span>
-
-<span class="c1">#         # self.get_dimensions()</span>
-<span class="c1">#         self.shape = np.shape(self.data)</span>
-<span class="c1">#         self.size = np.size(self.data)</span>
-
-<span class="c1">#         print(&quot;\t done, N_j=&quot; + str(self.size))</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="n">name</span><span class="p">,</span>
+                         <span class="n">time</span><span class="o">=</span><span class="n">time</span><span class="p">,</span>
+                         <span class="n">path</span><span class="o">=</span><span class="n">path</span><span class="p">,</span>
+                         <span class="n">data</span><span class="o">=</span><span class="n">data</span><span class="p">,</span>
+                         <span class="n">copy_geo</span><span class="o">=</span><span class="n">copy_geo</span><span class="p">)</span></div>
 
 
 </pre></div>

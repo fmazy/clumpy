@@ -48,27 +48,25 @@
 <h1><a class="reference internal" href="../api.html#module-clumpy.definition" title="clumpy.definition"><code class="xref py py-mod docutils literal notranslate"><span class="pre">clumpy.definition</span></code></a>.FeatureLayer<a class="headerlink" href="#clumpy-definition-featurelayer" title="Permalink to this headline">¶</a></h1>
 <dl class="class">
 <dt id="clumpy.definition.FeatureLayer">
-<em class="property">class </em><code class="sig-prename descclassname">clumpy.definition.</code><code class="sig-name descname">FeatureLayer</code><span class="sig-paren">(</span><em class="sig-param">name=None</em>, <em class="sig-param">time=0</em>, <em class="sig-param">path=None</em>, <em class="sig-param">data=None</em>, <em class="sig-param">copy_metadata=None</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/clumpy/definition/_layer.html#FeatureLayer"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#clumpy.definition.FeatureLayer" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">clumpy.definition.</code><code class="sig-name descname">FeatureLayer</code><span class="sig-paren">(</span><em class="sig-param">name=None</em>, <em class="sig-param">time=0</em>, <em class="sig-param">path=None</em>, <em class="sig-param">data=None</em>, <em class="sig-param">copy_geo=None</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/clumpy/definition/_layer.html#FeatureLayer"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#clumpy.definition.FeatureLayer" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">clumpy.definition._layer._Layer</span></code></p>
-<p>Defines an Explanatory Variable (EV) layer. This layer can then used for the calibration stage or the allocation stage:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">elevation</span> <span class="o">=</span> <span class="n">clumpy</span><span class="o">.</span><span class="n">definition</span><span class="o">.</span><span class="n">layer</span><span class="o">.</span><span class="n">LayerEV</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;elevation&#39;</span><span class="p">,</span><span class="n">time</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span><span class="n">scale</span><span class="o">=</span><span class="mi">15</span><span class="p">)</span>
-</pre></div>
-</div>
+<p>Defines a feature layer.
+This layer can then used for the calibration stage or the allocation stage.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>name</strong> (<em>TYPE</em><em>, </em><em>optional</em>) – DESCRIPTION. The default is None.</p></li>
-<li><p><strong>time</strong> (<em>TYPE</em><em>, </em><em>optional</em>) – DESCRIPTION. The default is 0.</p></li>
-<li><p><strong>path</strong> (<em>TYPE</em><em>, </em><em>optional</em>) – DESCRIPTION. The default is None.</p></li>
-<li><p><strong>data</strong> (<em>TYPE</em><em>, </em><em>optional</em>) – DESCRIPTION. The default is None.</p></li>
-<li><p><strong>copy_metadata</strong> (<em>TYPE</em><em>, </em><em>optional</em>) – DESCRIPTION. The default is None.</p></li>
+<li><p><strong>name</strong> (<em>str</em><em>, </em><em>default=``None``</em>) – The layer name.</p></li>
+<li><p><strong>time</strong> (<em>float</em><em>, </em><em>default=``0``</em>) – The layer time (year unit).</p></li>
+<li><p><strong>path</strong> (<em>str</em>) – The tiff file path.
+If <code class="docutils literal notranslate"><span class="pre">data</span></code> is provided, a new tiff file will be created according to this path
+and this operation overwrites the file path if exists.</p></li>
+<li><p><strong>data</strong> (<a class="reference external" href="https://numpy.org/doc/1.19/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.19)"><code class="xref py py-class docutils literal notranslate"><span class="pre">numpy.ndarray</span></code></a>, defaul=None) – The data to write. If <code class="docutils literal notranslate"><span class="pre">None</span></code>, no writing is made.</p></li>
+<li><p><strong>copy_geo</strong> (<a class="reference internal" href="clumpy.definition.LandUseCoverLayer.html#clumpy.definition.LandUseCoverLayer" title="clumpy.definition.LandUseCoverLayer"><code class="xref py py-class docutils literal notranslate"><span class="pre">LandUseCoverLayer</span></code></a>, default=None) – The layer from whose geo metadata are copied.
+If <code class="docutils literal notranslate"><span class="pre">None</span></code>, geo metadata are set to <code class="docutils literal notranslate"><span class="pre">None</span></code>.</p></li>
 </ul>
 </dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p></p>
-</dd>
-<dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p>None.</p>
+<dt class="field-even">Attributes</dt>
+<dd class="field-even"><p><strong>raster_</strong> (<a class="reference external" href="https://rasterio.readthedocs.io/en/latest/api/rasterio.io.html#rasterio.io.DatasetReader" title="(in rasterio v1.2b4)"><code class="xref py py-class docutils literal notranslate"><span class="pre">rasterio.io.DatasetReader</span></code></a>) – The unbuffered data and metadata reader object, provided by <a class="reference external" href="https://rasterio.readthedocs.io/en/latest/api/rasterio.html#module-rasterio" title="(in rasterio v1.2b4)"><code class="xref py py-mod docutils literal notranslate"><span class="pre">rasterio</span></code></a>.</p>
 </dd>
 </dl>
 <p class="rubric">Methods</p>

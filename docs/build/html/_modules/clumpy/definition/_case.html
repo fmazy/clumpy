@@ -42,6 +42,7 @@
 <span class="c1"># import numpy as np</span>
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 <span class="kn">from</span> <span class="nn">scipy</span> <span class="kn">import</span> <span class="n">ndimage</span>
+<span class="kn">import</span> <span class="nn">time</span>
 
 <span class="kn">from</span> <span class="nn">._layer</span> <span class="kn">import</span> <span class="n">FeatureLayer</span>
 <span class="c1"># from ..utils import ndarray_suitable_integer_type</span>
@@ -58,7 +59,7 @@
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">params</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">params</span> <span class="o">=</span> <span class="n">params</span>
     
-<div class="viewcode-block" id="Case.make"><a class="viewcode-back" href="../../../generated/clumpy.definition.Case.html#clumpy.definition.Case.make">[docs]</a>    <span class="k">def</span> <span class="nf">make</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">initial_luc_layer</span><span class="p">,</span> <span class="n">final_luc_layer</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<div class="viewcode-block" id="Case.make"><a class="viewcode-back" href="../../../generated/clumpy.definition.Case.html#clumpy.definition.Case.make">[docs]</a>    <span class="k">def</span> <span class="nf">make</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">initial_luc_layer</span><span class="p">,</span> <span class="n">final_luc_layer</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Make the case</span>
 
 <span class="sd">        Parameters</span>
@@ -95,12 +96,20 @@
 
 <span class="sd">        &quot;&quot;&quot;</span>
         
+        <span class="n">start_time</span><span class="o">=</span><span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
+        
         <span class="c1"># check the case</span>
+        <span class="k">if</span> <span class="n">verbose</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;case checking...&#39;</span><span class="p">)</span>
         <span class="n">check_case</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+        
         
         <span class="c1"># first compute distances</span>
         <span class="n">distances</span> <span class="o">=</span> <span class="p">{}</span>
         
+        <span class="k">if</span> <span class="n">verbose</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;distances computing&#39;</span><span class="p">)</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;===================&#39;</span><span class="p">)</span>
         <span class="c1"># for each u</span>
         <span class="k">for</span> <span class="n">u</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">params</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
             <span class="c1"># for each feature</span>
@@ -109,11 +118,17 @@
                 <span class="k">if</span> <span class="n">feature_type</span> <span class="o">==</span> <span class="s1">&#39;distance&#39;</span><span class="p">:</span>
                     <span class="c1"># if this distance has not been computed yet</span>
                     <span class="k">if</span> <span class="n">info</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">distances</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+                        <span class="k">if</span> <span class="n">verbose</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+                            <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\t</span><span class="s1"> distance to &#39;</span><span class="o">+</span><span class="nb">str</span><span class="p">(</span><span class="n">info</span><span class="p">)</span><span class="o">+</span><span class="s1">&#39;...&#39;</span><span class="p">)</span>
                         <span class="c1"># make bool v matrix</span>
                         <span class="n">v_matrix</span> <span class="o">=</span> <span class="p">(</span><span class="n">initial_luc_layer</span><span class="o">.</span><span class="n">raster_</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span> <span class="o">==</span> <span class="n">info</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">int</span><span class="p">)</span>
                         <span class="c1"># compute distance</span>
                         <span class="c1"># should get scale value from the tiff file.</span>
                         <span class="n">distances</span><span class="p">[</span><span class="n">info</span><span class="p">]</span> <span class="o">=</span> <span class="n">ndimage</span><span class="o">.</span><span class="n">distance_transform_edt</span><span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">v_matrix</span><span class="p">)</span>
+        
+        <span class="k">if</span> <span class="n">verbose</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;sets creating&#39;</span><span class="p">)</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;=============&#39;</span><span class="p">)</span>
         
         <span class="c1"># initialize X_u                    </span>
         <span class="n">X_u</span> <span class="o">=</span> <span class="p">{}</span>
@@ -124,6 +139,8 @@
         
         <span class="c1"># for each u</span>
         <span class="k">for</span> <span class="n">u</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">params</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+            <span class="k">if</span> <span class="n">verbose</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\t</span><span class="s1"> u=&#39;</span><span class="o">+</span><span class="nb">str</span><span class="p">(</span><span class="n">u</span><span class="p">)</span><span class="o">+</span><span class="s1">&#39;...&#39;</span><span class="p">)</span>
             
             <span class="c1"># get pixels indexes whose initial states are u</span>
             <span class="c1"># J = ndarray_suitable_integer_type(np.where(initial_luc_layer.raster_.read(1).flat==u)[0])</span>
@@ -161,7 +178,12 @@
                 
                 <span class="k">if</span> <span class="s1">&#39;v&#39;</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">params</span><span class="p">[</span><span class="n">u</span><span class="p">]</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
                     <span class="n">v_u</span><span class="p">[</span><span class="n">u</span><span class="p">][</span><span class="o">~</span><span class="n">np</span><span class="o">.</span><span class="n">isin</span><span class="p">(</span><span class="n">v_u</span><span class="p">[</span><span class="n">u</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">params</span><span class="p">[</span><span class="n">u</span><span class="p">][</span><span class="s1">&#39;v&#39;</span><span class="p">])]</span> <span class="o">=</span> <span class="n">u</span>
-                
+        
+        <span class="bp">self</span><span class="o">.</span><span class="n">creating_time_</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span><span class="o">-</span><span class="n">start_time</span>
+        
+        <span class="k">if</span> <span class="n">verbose</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;case creating is a success !&#39;</span><span class="p">)</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;creating time: &#39;</span><span class="o">+</span><span class="nb">str</span><span class="p">(</span><span class="nb">round</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">creating_time_</span><span class="p">,</span><span class="mi">2</span><span class="p">))</span><span class="o">+</span><span class="s1">&#39;s&#39;</span><span class="p">)</span>
         
         <span class="c1"># if no final luc layer</span>
         <span class="k">if</span> <span class="n">final_luc_layer</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
