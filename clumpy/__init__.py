@@ -10,6 +10,7 @@ from . import model_selection
 from . import resampling
 from . import scenario
 from . import utils
+from . import integer
 
 
 
