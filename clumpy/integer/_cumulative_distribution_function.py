@@ -65,15 +65,17 @@ def cumulative_distribution_function(f, X, method='quasi_monte_carlo', n_mc=1000
     else:
         raise(ValueError("Invalid 'method' argument. Should be one of {'quasi_monte_carlo', 'monte_carlo'}."))
     
-    if a == 'min':
-        a = X.min(axis=0)
-    elif a == 'min-var':
-        a = X.min(axis=0) - X.var(axis=0)
+    if type(a) == str:
+        if a == 'min':
+            a = X.min(axis=0)
+        elif a == 'min-var':
+            a = X.min(axis=0) - X.var(axis=0)
     
-    if b == 'max':
-        b = X.max(axis=0)
-    elif b == 'max+var':
-        b = X.max(axis=0) + X.var(axis=0)
+    if type(b) == str:
+        if b == 'max':
+            b = X.max(axis=0)
+        elif b == 'max+var':
+            b = X.max(axis=0) + X.var(axis=0)
     
     # print(a)
     # print(b)
@@ -115,12 +117,12 @@ def cumulative_distribution_function(f, X, method='quasi_monte_carlo', n_mc=1000
         for id_F in range(B.shape[0]):
             # for each features
             for id_feature in range(B.shape[1]):
-                # if this feature in this quadrant is marked as 0 in B
+                # if this feature in this quadrant is marked as 1 in B
                 # then, the test L should be inversed
                 # its an inner operator &
-                if B[id_F, id_feature] == 0:
+                if B[id_F, id_feature] == 1:
                     A[:,id_F] = A[:,id_F] & ~L[:,id_feature]
-                # else this feature in this quadrant is marked as 1 in B
+                # else this feature in this quadrant is marked as 0 in B
                 # then, the test L should be taken as it is
                 # its an inner operator &
                 else:
