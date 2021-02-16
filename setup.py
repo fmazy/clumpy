@@ -1,4 +1,11 @@
 import setuptools
+from distutils.core import Extension, setup
+from Cython.Build import cythonize
+
+# define an extension that will be cythonized and compiled
+setup(
+      ext_modules=cythonize("clumpy/metrics/_mcdf.pyx")
+)
 
 with open("README.md", "r") as fh:
     long_description = fh.read()
