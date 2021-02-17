@@ -2,7 +2,6 @@ numpy
 matplotlib
 scipy
 tqdm
-sklearn
-re
-copy
+scikit-learn
 tifffile
+imblearn
