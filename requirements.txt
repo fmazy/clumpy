@@ -4,4 +4,6 @@ scipy
 tqdm
 scikit-learn
 tifffile
-imblearn
+imbalanced-learn
+rasterio
+ghalton
