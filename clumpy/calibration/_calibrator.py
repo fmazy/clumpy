@@ -11,7 +11,7 @@ from imblearn.pipeline import Pipeline
 from sklearn.calibration import CalibratedClassifierCV
 from sklearn.model_selection import StratifiedKFold
 
-from ..estimation import UnderSamplingEstimator
+# from ..estimation import UnderSamplingEstimator
 
 def make_calibrator(estimator=None,
                      under_sampler=None,
