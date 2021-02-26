@@ -1,6 +1,7 @@
 import numpy as np
 import itertools
-import multiprocessing as mp
+# import multiprocessing as mp
+from pathos.multiprocessing import ProcessingPool as Pool
 
 class BaseEstimator():
     def predict(self, X):
@@ -54,7 +55,7 @@ class BaseEstimator():
         d : float
             The KS distance. The weaker it is, the better it is.
         """
-        l, U = self._justel(X, n_jobs=n_jobs, verbose=verbose)
+        l, U = _justel(self, X, n_jobs=n_jobs, verbose=verbose)
 
         return(np.max([np.max(np.abs(U[i]-l[i])) for i in range(len(U))]))
 
@@ -90,63 +91,6 @@ class BaseEstimator():
 
         return(np.max(d))
 
-    def _justel(self, X, n_jobs=1, verbose=0):
-        """
-        Computes the Justel's elements lambda and U
-        """
-        n_samples = X.shape[0]
-
-        list_pi = list(itertools.permutations(np.arange(X.shape[1])))
-
-        _lambda_product = []
-        U = []
-
-        for pi in list_pi:
-            if verbose > 0:
-                print(pi)
-
-            _lambda = self._rosenblatt_transformation(X, pi, verbose=verbose)
-
-            U_n = np.zeros(n_samples)
-            for i in range(n_samples):
-                U_n[i] = np.all(_lambda <= _lambda[i, :], axis=1).sum()
-            U_n /= n_samples
-
-            _lambda_product.append(np.product(_lambda, axis=1))
-
-            print(U_n.min(), U_n.max())
-            print(_lambda_product[-1].min(), _lambda_product[-1].max())
-
-            U.append(U_n)
-
-        return(_lambda_product, U)
-
-    def _rosenblatt_transformation(self, X, pi, verbose=0):
-        """
-        Computes the rosenblatt transformation
-        according to a combination of columns pi.
-        """
-        _lambda = np.zeros_like(X)
-        observed_columns = []
-        for id_c, c in enumerate(pi):
-            observed_columns.append(c)
-
-            if len(observed_columns) == 1:
-                _lambda[:, id_c] = self._cmpdf(X=X[:, observed_columns],
-                                               column=observed_columns[0],
-                                               verbose=verbose - 1)
-
-            else:
-                _lambda[:, id_c] = self._ccpdf(X1=X[:, [observed_columns[-1]]],
-                                               X2=X[:, observed_columns[:-1]],
-                                               column_X1=observed_columns[-1],
-                                               columns_X2=observed_columns[:-1],
-                                               verbose=verbose - 1)
-
-        return(_lambda)
-
-
-
     def _pdf(self,X, verbose=0):
         raise (ValueError("The _pdf function is expected."))
 
@@ -155,3 +99,80 @@ class BaseEstimator():
 
     def _ccpdf(self, X1, X2, column_X1, columns_X2, verbose=0):
         raise (ValueError("The _ccpdf function is expected."))
+
+def _justel(estimator, X, n_jobs=1, verbose=0):
+    """
+    Computes the Justel's elements lambda and U
+    """
+    n_samples = X.shape[0]
+
+    list_pi = list(itertools.permutations(np.arange(X.shape[1])))
+
+    if n_jobs > 1:
+        p = Pool(n_jobs)
+
+        _lambda_product_U = p.map(_justel_computation,
+                                  [estimator._cmpdf for pi in list_pi],
+                                  [estimator._ccpdf for pi in list_pi],
+                                  [X for pi in list_pi],
+                                  [pi for pi in list_pi])
+
+        return(_lambda_product_U)
+
+    # ===
+    _lambda_product = []
+    U = []
+
+    for pi in list_pi:
+        if verbose > 0:
+            print(pi)
+
+        _lambda = _rosenblatt_transformation(estimator._cmpdf, estimator._ccpdf, X, pi, verbose=verbose)
+
+        U_n = np.zeros(n_samples)
+        for i in range(n_samples):
+            U_n[i] = np.all(_lambda <= _lambda[i, :], axis=1).sum()
+        U_n /= n_samples
+
+        _lambda_product.append(np.product(_lambda, axis=1))
+
+        U.append(U_n)
+
+    return(_lambda_product, U)
+
+def _justel_computation(cmpdf, ccpdf, X, pi, verbose=0):
+    if verbose > 0:
+        print(pi)
+
+    _lambda = _rosenblatt_transformation(cmpdf, ccpdf, X, pi, verbose=verbose)
+
+    U_n = np.zeros(X.shape[0])
+    for i in range(X.shape[0]):
+        U_n[i] = np.all(_lambda <= _lambda[i, :], axis=1).sum()
+    U_n /= X.shape[0]
+
+    return(np.product(_lambda, axis=1), U_n)
+
+def _rosenblatt_transformation(cmpdf, ccpdf, X, pi, verbose=0):
+    """
+    Computes the rosenblatt transformation
+    according to a combination of columns pi.
+    """
+    _lambda = np.zeros_like(X)
+    observed_columns = []
+    for id_c, c in enumerate(pi):
+        observed_columns.append(c)
+
+        if len(observed_columns) == 1:
+            _lambda[:, id_c] = cmpdf(X=X[:, observed_columns],
+                                           column=observed_columns[0],
+                                           verbose=verbose - 1)
+
+        else:
+            _lambda[:, id_c] = ccpdf(X1=X[:, [observed_columns[-1]]],
+                                           X2=X[:, observed_columns[:-1]],
+                                           column_X1=observed_columns[-1],
+                                           columns_X2=observed_columns[:-1],
+                                           verbose=verbose - 1)
+
+    return(_lambda)
