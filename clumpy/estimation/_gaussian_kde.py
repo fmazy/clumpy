@@ -1,9 +1,7 @@
 from scipy.stats import multivariate_normal
 from scipy.stats import norm
 from tqdm import tqdm
-import itertools
 import numpy as np
-import multiprocessing as mp
 
 from ._estimator import BaseEstimator
 
