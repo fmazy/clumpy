@@ -4,6 +4,7 @@
     <modules>
       <module fileurl="file://$PROJECT_DIR$/.idea/clumpy.iml" filepath="$PROJECT_DIR$/.idea/clumpy.iml" />
       <module fileurl="file://$PROJECT_DIR$/../clumpy-cases/esnet/sud_gresivaudan/clumpy2/.idea/clumpy2.iml" filepath="$PROJECT_DIR$/../clumpy-cases/esnet/sud_gresivaudan/clumpy2/.idea/clumpy2.iml" />
+      <module fileurl="file://$PROJECT_DIR$/../multistats/.idea/multistats.iml" filepath="$PROJECT_DIR$/../multistats/.idea/multistats.iml" />
     </modules>
   </component>
 </project>

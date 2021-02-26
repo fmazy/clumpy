@@ -3,18 +3,38 @@ from scipy.stats import norm
 from tqdm import tqdm
 import itertools
 import numpy as np
+import multiprocessing as mp
 
 from ._estimator import BaseEstimator
 
 class GaussianKDE(BaseEstimator):
+    """
+    Gaussian Kernel Density Estimator.
+
+    Parameters
+    ----------
+    s : array-like of shape (n_features)
+        The diagonal of the gaussian kernel covariance matrix.
+    """
     def __init__(self, s):
         self.s = s
 
     def fit(self, X):
+        """
+        fit the estimator.
+
+        Parameters
+        ----------
+        X : array-like of shape (n_samples, n_features)
+            The training data.
+        """
         self.mu_ = X
         self.sigma_ = np.diag(self.s)
 
     def _pdf(self, X, verbose=0):
+        """
+        Get the probability density function.
+        """
         p = np.zeros(X.shape[0])
 
         if verbose > 0:
@@ -28,6 +48,10 @@ class GaussianKDE(BaseEstimator):
         return (p)
 
     def _mpdf(self, X, columns, verbose=0):
+        """
+        Get the marginal probability density function according to
+        some columns.
+        """
         p = np.zeros(X.shape[0])
         if len(columns) == 1:
             cov = self.sigma_[columns[0], columns[0]]
@@ -47,7 +71,7 @@ class GaussianKDE(BaseEstimator):
 
         return(p)
 
-    def _cmpdf(self, X, column, verbose = 0):
+    def _cmpdf(self, X, column, verbose=0):
         """
         works only for one column
         """
