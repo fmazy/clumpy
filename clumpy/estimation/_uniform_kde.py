@@ -38,8 +38,9 @@ class UniformKDE(BaseEstimator):
             list_mu = self.mu
 
         for mu in list_mu:
-            p += np.all(np.abs(X - mu) <= self.sigma, axis=1)
-        p /= len(self.mu) * np.product(2*self.sigma)
+            p += np.all(np.abs(X - mu) <= self.sigma, axis=1).astype(float)
+
+        p /= self.mu.shape[0] * np.product(2*self.sigma)
         return (p)
 
     def _cdf(self, X, verbose=0):
@@ -54,13 +55,13 @@ class UniformKDE(BaseEstimator):
 
         for mu in list_mu:
             idx_inside = np.all(np.abs(X - mu) <= self.sigma, axis=1)
-            idx_after = np.all(X - mu > self.sigma, axis=1)
+            idx_after = np.all(X > mu + self.sigma, axis=1)
 
-            cdf[idx_inside] += np.product(X[idx_inside,:] - mu + self.sigma, axis=1) / V
+            cdf[idx_inside] += np.product(X[idx_inside,:] - mu + self.sigma, axis=1) / (V * self.mu.shape[0])
 
-            cdf[idx_after] += 1
+            cdf[idx_after] += 1 / self.mu.shape[0]
 
-        cdf /= len(self.mu)
+        # cdf /= len(self.mu)
 
         return(cdf)
 
