@@ -54,14 +54,15 @@ class UniformKDE(BaseEstimator):
         V = np.product(2 * self.sigma)
 
         for mu in list_mu:
-            idx_inside = np.all(np.abs(X - mu) <= self.sigma, axis=1)
-            idx_after = np.all(X > mu + self.sigma, axis=1)
+            d = X - mu + self.sigma
+            d[d<0] = 0
 
-            cdf[idx_inside] += np.product(X[idx_inside,:] - mu + self.sigma, axis=1) / (V * self.mu.shape[0])
+            for i_feature in range(d.shape[1]):
+                d[d[:,i_feature] > 2 * self.sigma[i_feature],i_feature] = 2 * self.sigma[i_feature]
 
-            cdf[idx_after] += 1 / self.mu.shape[0]
+            cdf += np.product(d, axis=1)
 
-        # cdf /= len(self.mu)
+        cdf /= self.mu.shape[0] * V
 
         return(cdf)
 
@@ -78,7 +79,7 @@ class UniformKDE(BaseEstimator):
             list_mu = self.mu
 
         for mu in list_mu:
-            p += np.all(np.abs(X[:,columns] - mu[columns]) <= self.sigma[columns], axis=1)
+            p += np.all(np.abs(X - mu[columns]) <= self.sigma[columns], axis=1)
 
         p /= len(self.mu) * np.product(2*self.sigma[columns])
 
@@ -105,21 +106,23 @@ class UniformKDE(BaseEstimator):
         else:
             list_mu = self.mu
 
+        V_X2 = np.product(2*self.sigma[columns_X2])
+
         for mu in list_mu:
-            K_x2 = np.all(np.abs(X2 - mu[columns_X2]) <= self.sigma[columns_X2], axis=1) / np.product(2*self.sigma[columns_X2])
+            K_x2 = np.all(np.abs(X2 - mu[columns_X2]) <= self.sigma[columns_X2], axis=1) / V_X2
 
-            idx_inside = np.all(np.abs(X1 - mu[column_X1]) <= self.sigma[column_X1], axis=1)
-            idx_after = np.all(X1 - mu[column_X1] > self.sigma[column_X1], axis=1)
-            cdf_K_x1 = np.zeros(X1.shape[0])
-
-            cdf_K_x1[idx_inside] += np.product(X1[idx_inside,:] - mu[column_X1] + self.sigma[column_X1], axis=1) / np.product(2*self.sigma[column_X1])
-
-            cdf_K_x1[idx_after] = 1
+            cdf_K_x1 = X1[:,0] - mu[column_X1] + self.sigma[column_X1]
+            cdf_K_x1[cdf_K_x1 < 0] = 0
+            cdf_K_x1[cdf_K_x1 > 2 * self.sigma[column_X1]] = 2 * self.sigma[column_X1]
 
             num += K_x2 * cdf_K_x1
 
             den += K_x2
+        ccpdf = np.zeros(X1.shape[0])
+        id_not_null = den > 0
 
-        return (num / den)
+        ccpdf[id_not_null] = num[id_not_null] / den[id_not_null]
+
+        return (ccpdf)
 
 

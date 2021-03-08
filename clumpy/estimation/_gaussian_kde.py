@@ -75,7 +75,7 @@ class GaussianKDE(BaseEstimator):
         """
         cdf = np.zeros(X.shape[0])
 
-        if verbose > 1:
+        if verbose > 0:
             list_mu = tqdm(self.mu_)
         else:
             list_mu = self.mu_
