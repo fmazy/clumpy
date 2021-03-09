@@ -28,8 +28,26 @@ class UniformKDE(BaseEstimator):
         X : array-like of shape (n_samples, n_features)
             The training data.
         """
-        self.mu = X
+        self.mu = X.copy()
         self.min_ = np.min(X, axis=0)
+
+        # on ajoute des noyaux sous la barre
+        idx = np.any(np.abs(self.mu[:, self.bounded_columns] - self.min_[self.bounded_columns] - self.sigma[self.bounded_columns]/ 2) <= self.sigma[self.bounded_columns] / 2, axis=1)
+
+        print(idx.sum()/idx.size)
+
+        mu_to_stack = self.mu[idx,:]
+        for i in self.bounded_columns:
+            mu_to_stack[:,i] = 2 * self.min_[i] - mu_to_stack[:,i]
+
+        self.mu = np.vstack((self.mu, mu_to_stack))
+
+        # self.V_ = np.zeros_like(X)
+        # self.V_[:,:] = 2 * self.sigma
+
+        # for i_feature in self.bounded_columns:
+        #     idx = np.abs(self.mu[:, i_feature] - self.min_[i_feature] - self.sigma[i_feature]/ 2) <= self.sigma[i_feature] / 2
+        #     self.V_[idx, i_feature] = self.mu[idx, i_feature] + self.sigma[i_feature] - self.min_[i_feature]
 
     def _pdf(self, X, verbose=0):
         """
@@ -43,9 +61,12 @@ class UniformKDE(BaseEstimator):
             list_mu = self.mu
 
         for mu in list_mu:
-            p += np.all(np.abs(X - mu) <= self.sigma, axis=1).astype(float)
+            # p += np.all(np.abs(X - mu) <= self.sigma, axis=1).astype(float)
+            p_mu = np.all(np.abs(X - mu) <= self.sigma, axis=1).astype(float)
+            p_mu /= self.mu.shape[0] * np.product(2*self.sigma)
 
-        p /= self.mu.shape[0] * np.product(2*self.sigma)
+            p += p_mu
+
         return (p)
 
     def _cdf(self, X, verbose=0):
@@ -71,16 +92,16 @@ class UniformKDE(BaseEstimator):
 
             # adjustment for bounded columns
 
-            mu_den = V
-
-            for i_feature in self.bounded_columns:
-                # is it a problematic kernel center ?
-                if np.abs(mu[i_feature] - self.min_[i_feature] - self.sigma[i_feature] / 2) <= self.sigma[i_feature] / 2:
-                    d_offset = self.min_[i_feature] - mu[i_feature] + self.sigma[i_feature]
-
-                    d[:, i_feature] -= d_offset
-
-                    den_offset += V * (d_offset) / (2 * self.sigma[i_feature])
+            # mu_den = V
+            #
+            # for i_feature in self.bounded_columns:
+            #     # is it a problematic kernel center ?
+            #     if np.abs(mu[i_feature] - self.min_[i_feature] - self.sigma[i_feature] / 2) <= self.sigma[i_feature] / 2:
+            #         d_offset = self.min_[i_feature] - mu[i_feature] + self.sigma[i_feature]
+            #
+            #         d[:, i_feature] -= d_offset
+            #
+            #         den_offset += V * (d_offset) / (2 * self.sigma[i_feature])
 
             d[d < 0] = 0
 
