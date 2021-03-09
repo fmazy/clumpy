@@ -12,7 +12,11 @@ class UniformKDE(BaseEstimator):
     s : array-like of shape (n_features)
         The distance along each direction
     """
-    def __init__(self, sigma):
+    def __init__(self,
+                 sigma,
+                 bounded_columns=[]):
+
+        super().__init__(bounded_columns=bounded_columns)
         self.sigma = sigma
 
     def fit(self, X):
@@ -25,6 +29,7 @@ class UniformKDE(BaseEstimator):
             The training data.
         """
         self.mu = X
+        self.min_ = np.min(X, axis=0)
 
     def _pdf(self, X, verbose=0):
         """
@@ -53,16 +58,35 @@ class UniformKDE(BaseEstimator):
 
         V = np.product(2 * self.sigma)
 
+        # V_offset = 0
+
+        den_offset = 0
+
         for mu in list_mu:
             d = X - mu + self.sigma
-            d[d<0] = 0
 
+            # threshold
             for i_feature in range(d.shape[1]):
                 d[d[:,i_feature] > 2 * self.sigma[i_feature],i_feature] = 2 * self.sigma[i_feature]
 
+            # adjustment for bounded columns
+
+            mu_den = V
+
+            for i_feature in self.bounded_columns:
+                # is it a problematic kernel center ?
+                if np.abs(mu[i_feature] - self.min_[i_feature] - self.sigma[i_feature] / 2) <= self.sigma[i_feature] / 2:
+                    d_offset = self.min_[i_feature] - mu[i_feature] + self.sigma[i_feature]
+
+                    d[:, i_feature] -= d_offset
+
+                    den_offset += V * (d_offset) / (2 * self.sigma[i_feature])
+
+            d[d < 0] = 0
+
             cdf += np.product(d, axis=1)
 
-        cdf /= self.mu.shape[0] * V
+        cdf /= V * self.mu.shape[0] - den_offset
 
         return(cdf)
 

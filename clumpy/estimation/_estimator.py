@@ -3,6 +3,14 @@ import itertools
 from pathos.multiprocessing import ProcessingPool as Pool
 
 class BaseEstimator():
+    """
+    warning : the bounded column should be bounded for minimum values.
+    """
+    def __init__(self,
+                 bounded_columns=[]):
+
+        self.bounded_columns = bounded_columns
+
     def predict(self, X):
         """
         Predict the probability density function according to the training.
