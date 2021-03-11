@@ -1,4 +1,7 @@
 import numpy as np
+# from pathos.multiprocessing import ProcessingPool as Pool
+import itertools
+from sklearn.neighbors import KNeighborsRegressor
 
 class Probabilities():
     def __init__(self, X, y):
@@ -88,14 +91,15 @@ class Probabilities():
     def marginal(self, features):
         """
         Get the marginal probabilities according to some features.
-
+        Warning, returns X with sorted features
         Parameters
         ----------
         features : list of int
             Features of the marginal probability.
         """
+        features = np.sort(features)
         if len(features) == self.X.shape[1]:
-            return(self.X, self.y)
+            return(self.X[:, features], self.y)
 
         features_bar = np.delete(np.arange(self.X.shape[1]), features)
 
@@ -112,19 +116,14 @@ class Probabilities():
 
     def cumulative(self):
         M_y = self.y.reshape(self.grid_shape)
-        # cumulative = np.array([np.all(self.X <= x, axis=1).sum() for x in self.X])
-        # cumulative /= self.X.shape[0]
 
-        # return(self.X, cumulative)
-
-        # def multidim_cumsum(a):
         out = M_y.cumsum(-1)
         for i in range(2,M_y.ndim+1):
             np.cumsum(out, axis=-i, out=out)
 
         out *= self._v / self.X.shape[0]
 
-        return(out)
+        return(self.X, out.flat[:])
 
     def cumulative_marginal(self, features):
         x_marginal, y_marginal = self.marginal(features=features)
@@ -140,9 +139,138 @@ class Probabilities():
 
         out *= v / n
 
-        return(x_marginal, out)
+        return(x_marginal, out.flat[:])
 
-    # def conditional(self, features_X1, features_X2):
-        
+    def conditional(self, features_X1, features_X2):
+        features_X1_X2 = np.sort(features_X1 + features_X2)
+
+        x1_x2, f_x1_x2 = self.marginal(features_X1_X2)
+        # warning, x1_x2 is column sorted according to features index
+
+        M_f_x1_x2 = f_x1_x2.reshape(np.array(self.grid_shape)[features_X1_X2])
+
+        x_2, f_x2 = self.marginal(features_X2)
+        # same here, x_2 is column sorted
+
+        grid_shape_x2 = np.array(self.grid_shape)[features_X1_X2]
+        for i in range(len(grid_shape_x2)):
+            if features_X1_X2[i] not in features_X2:
+                grid_shape_x2[i] = 1
+
+        M_f_x2 = f_x2.reshape(grid_shape_x2)
+
+        M = M_f_x1_x2 / M_f_x2
+
+        return(x1_x2, M.flat[:])
+
+    def cumulative_conditional(self, features_X1, features_X2):
+        x1_x2, y_conditional = self.conditional(features_X1, features_X2)
+        # warning, x1_x2 is sorted columns
+
+        features_X1_X2 = np.sort(features_X1 + features_X2)
+        M_conditional = y_conditional.reshape(np.array(self.grid_shape)[features_X1_X2])
+
+        id_features_X1 = []
+        for i, feature in enumerate(features_X1_X2):
+            if feature in features_X1:
+                id_features_X1.append(i)
+        # print(id_features_X1)
+
+        out = M_conditional.cumsum(-id_features_X1[0])
+        for feature in id_features_X1[1:]:
+            np.cumsum(out, axis=-feature, out=out)
+
+        v = np.product(self._dx[features_X1])
+        n = np.product(np.array(self.grid_shape)[features_X1])
+
+        out *= v / n
+
+        return(x1_x2, out.flat[:])
+
+    def ks(self, X):
+        """
+        Computes the Kolmogorov-Smirnov Statistic according to Justel (1997).
+
+        Parameters
+        ----------
+        X : array-like of shape (n_samples, n_features)
+            The data.
+        verbose : int, default=0
+            Verbosity level.
+
+        Returns
+        -------
+        d : float
+            The KS distance. The weaker it is, the better it is.
+        """
+        l, U = self._justel(X)
+
+        return(np.max([np.max(np.abs(U[i]-l[i])) for i in range(len(U))]))
+
+    def _justel(self, X):
+        """
+        Computes the Justel's elements lambda and U
+        """
+
+        list_pi = list(itertools.permutations(np.arange(self.X.shape[1])))
+
+        _lambda_product = []
+        U = []
+
+        for pi in list_pi:
+            l, u = self._justel_computation(X, pi)
+            _lambda_product.append(l)
+            U.append(u)
+
+        return(_lambda_product, U)
+
+    def _justel_computation(self, X, pi):
+
+        _lambda = self._rosenblatt_transformation(X, pi)
+
+        U_n = np.zeros(_lambda.shape[0])
+        for i in range(_lambda.shape[0]):
+            U_n[i] = np.all(_lambda <= _lambda[i, :], axis=1).sum()
+        U_n /= _lambda.shape[0]
+
+        return(np.product(_lambda, axis=1), U_n)
+
+    def _rosenblatt_transformation(self, X, pi):
+        """
+        Computes the rosenblatt transformation
+        according to a combination of columns pi.
+        """
+        _lambda = np.zeros_like(X)
+        observed_columns = []
+        for id_c, c in enumerate(pi):
+            observed_columns.append(c)
+
+            if len(observed_columns) == 1:
+                X_grid, F = self.cumulative_marginal(observed_columns)
+                # features = observed_columns
+
+                # print('lambda_0, cumulative marginal : ', observed_columns)
+
+            else:
+                X_grid, F = self.cumulative_conditional([observed_columns[-1]],
+                                                         observed_columns[:-1])
+                # features = [observed_columns[-1]] + observed_columns[:-1]
+
+                # print('lambda_'+str(id_c)+', cumulative conditional X1=', [observed_columns[-1]], ' X2=', observed_columns[:-1])
+
+            # print('F_max : ', F.max())
+            features = np.sort(observed_columns)
+            # print('features : ', features)
+
+            knr = KNeighborsRegressor(n_neighbors=1, weights='uniform')
+
+            knr.fit(X_grid, F)
+
+            _lambda[:, id_c] = knr.predict(X[:, features])
+
+        # print(_lambda.max(axis=0))
+
+        return(_lambda)
+
 
 

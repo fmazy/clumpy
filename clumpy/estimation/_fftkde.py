@@ -1,5 +1,6 @@
 from KDEpy import FFTKDE as KDEpy_FFTKDE
 import numpy as np
+from sklearn.neighbors import KNeighborsRegressor
 
 class FFTKDE(KDEpy_FFTKDE):
     def __init__(self, kernel='gaussian', bw='1', bounded_features=[]):
@@ -23,10 +24,20 @@ class FFTKDE(KDEpy_FFTKDE):
         super().fit(data=X,
                     weights=weights)
 
+    def fit_knr(self, grid_points):
+        X_grid, y = self.evaluate(grid_points)
+
+        self._knr = KNeighborsRegressor(n_neighbors=1)
+        self._knr.fit(X_grid, y)
+
+    def predict(self, X):
+        return(self._knr.predict(X))
+
     def evaluate(self, grid_points=None):
 
         X_grid, y = super().evaluate(grid_points=grid_points)
-
+        if len(X_grid.shape) == 1:
+            X_grid = X_grid[:,None]
         # Set the KDE to zero outside of the domain
         # samples are removed
         # y[np.any(X_grid[:,self.bounded_features] < self.low_bounds, axis=1)] = 0
