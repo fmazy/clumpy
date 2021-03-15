@@ -30,11 +30,10 @@ class FFTKDE(KDEpy_FFTKDE):
         self._knr = KNeighborsRegressor(n_neighbors=1)
         self._knr.fit(X_grid, y)
 
-    def predict(self, X):
-        return(self._knr.predict(X))
-
     def evaluate(self, grid_points=None):
-
+        """
+        evaluate the kde through a grid
+        """
         X_grid, y = super().evaluate(grid_points=grid_points)
         if len(X_grid.shape) == 1:
             X_grid = X_grid[:,None]
@@ -50,3 +49,69 @@ class FFTKDE(KDEpy_FFTKDE):
         y = y * 2**len(self.bounded_features)
 
         return(X_grid, y)
+
+    def predict(self, X):
+        p = self._knr.predict(X)
+
+        p[np.any(X[:, self.bounded_features] < self.low_bounds, axis=1)] = 0
+
+        return(p)
+
+    def sample(self, n, exact=False):
+        # first sample through the kernel
+        kernel_sample = self._kernel_sample(n = n*2**len(self.bounded_features), exact = exact)
+
+        # sample a mu element
+        idx = np.random.choice(a = self.data.shape[0],
+                               size = kernel_sample.shape[0],
+                               replace = True)
+
+        X = self.data[idx, :] + kernel_sample
+
+        return(X[np.all(X[:, self.bounded_features] >= self.low_bounds, axis=1)])
+
+    def _kernel_sample(self, n, exact=False):
+        """
+        kernel through the kernel with the rejection sampling method.
+        """
+        # first, get the support
+        support = self._kernel_practical_support
+
+        # get a first sample. A priori, the number of samples will be insufficient
+        X = support * (2 * np.random.random((n, self.data.shape[1])) - 1)
+        pdf_X = self.kernel.evaluate(X, bw=self.bw, norm=self.norm)
+        C = np.random.random(n) * pdf_X.max()
+
+        X = X[C < pdf_X, :]
+
+        # now, estimate the needed η
+        X_shape_for_n = X.shape[0]
+        n_needed = int((n - X.shape[0]) * n / X.shape[0])
+
+        # get new samples
+        X_new = support * (2 * np.random.random((n_needed, self.data.shape[1])) - 1)
+        pdf_X = self.kernel.evaluate(X_new, bw=self.bw, norm=self.norm)
+        C = np.random.random(n_needed) * pdf_X.max()
+
+        # X_new = X_new[C < pdf_X, :]
+        X = np.vstack((X, X_new[C < pdf_X, :]))
+
+        if exact:
+            if X.shape[0] > n:
+                return (X[:n, :])
+
+            n_needed = int((n - X.shape[0]) * n / X_shape_for_n * 2)
+
+            # get new samples
+            X_new = support * (2 * np.random.random((n_needed, self.data.shape[1])) - 1)
+            pdf_X = self.kernel.evaluate(X_new, bw=self.bw, norm=self.norm)
+            C = np.random.random(n_needed) * pdf_X.max()
+
+            # X_new = X_new[C < pdf_X, :]
+            X = np.vstack((X, X_new[C < pdf_X, :]))
+
+            return (X[:n, :])
+
+        return (X)
+
+
