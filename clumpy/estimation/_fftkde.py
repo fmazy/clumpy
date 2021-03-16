@@ -1,6 +1,10 @@
 from KDEpy import FFTKDE as KDEpy_FFTKDE
+from ..utils import Probabilities
 import numpy as np
 from sklearn.neighbors import KNeighborsRegressor
+from mahalanobis import Mahalanobis
+from pathos.multiprocessing import ProcessingPool as Pool
+from tqdm import tqdm
 
 class FFTKDE(KDEpy_FFTKDE):
     def __init__(self, kernel='gaussian', bw='1', bounded_features=[]):
@@ -30,7 +34,7 @@ class FFTKDE(KDEpy_FFTKDE):
         self._knr = KNeighborsRegressor(n_neighbors=1)
         self._knr.fit(X_grid, y)
 
-    def evaluate(self, grid_points=None):
+    def evaluate(self, grid_points=None, integral_to_1=True):
         """
         evaluate the kde through a grid
         """
@@ -47,6 +51,10 @@ class FFTKDE(KDEpy_FFTKDE):
 
         # multiply the y-values to get integral of ~1
         y = y * 2**len(self.bounded_features)
+
+        if integral_to_1:
+            proba = Probabilities(X_grid, y)
+            y /= proba.integral()
 
         return(X_grid, y)
 
@@ -114,4 +122,45 @@ class FFTKDE(KDEpy_FFTKDE):
 
         return (X)
 
+    def distance_to_train(self, n_test, n_mc, n_jobs=1):
+        # first get G for train data :
+        mah = Mahalanobis(self.data, calib_rows=-1)
+        delta = np.sort(mah.calc_distances(self.data)[:, 0])
 
+        G = _edf(delta, delta)
+
+        pool = Pool(n_jobs)
+        d_mc = pool.uimap(self._compute_distance_to_train,
+                        [n_test for pi in range(n_mc)],
+                        [mah for pi in range(n_mc)],
+                        [delta for pi in range(n_mc)],
+                        [G for pi in range(n_mc)])
+
+        # for i in tqdm(range(n_mc)):
+        #     X_test = self.data[np.random.choice(a=self.data.shape[0],
+        #                                         size=n_test,
+        #                                         replace=True)]
+
+
+
+        return(np.array(list(d_mc)))
+
+    def _compute_distance_to_train(self, n_test, mah, delta, G):
+        X_sample = self.sample(n_test, exact=False)
+
+        # mah_sigma = Mahalanobis(X_sample, calib_rows=-1)
+        delta_sigma = mah.calc_distances(X_sample)[:, 0]
+
+        # on évalue G_sigma aux mêmes points que G
+        G_sigma = _edf(delta, delta_sigma)
+
+        return(_d_func(G, G_sigma))
+
+def _edf(X_eval, X_train):
+    if len(X_train.shape) > 1:
+        return(np.array([np.all(X_train <= x, axis=1).sum() for x in X_eval])/X_train.shape[0])
+    else:
+        return(np.array([(X_train <= x).sum() for x in X_eval])/X_train.size)
+
+def _d_func(X1, X2):
+    return(np.max(np.abs(np.power(X1-X2,1))))

@@ -1,6 +1,7 @@
 import numpy as np
 # from pathos.multiprocessing import ProcessingPool as Pool
 import itertools
+from tqdm import tqdm
 from sklearn.neighbors import KNeighborsRegressor
 
 class Probabilities():
@@ -207,7 +208,7 @@ class Probabilities():
 
         return(np.max([np.max(np.abs(U[i]-l[i])) for i in range(len(U))]))
 
-    def _justel(self, X):
+    def _justel(self, X, verbose=0):
         """
         Computes the Justel's elements lambda and U
         """
@@ -218,6 +219,8 @@ class Probabilities():
         U = []
 
         for pi in list_pi:
+            if verbose>0:
+                print('permutation : ', pi)
             l, u = self._justel_computation(X, pi)
             _lambda_product.append(l)
             U.append(u)
