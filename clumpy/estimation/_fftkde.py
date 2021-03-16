@@ -122,8 +122,9 @@ class FFTKDE(KDEpy_FFTKDE):
 
         return (X)
 
-    def distance_to_train(self, n_test, n_mc, n_jobs=1):
+    def confidence(self, alpha=0.9, n_test=10**3, n_mc=10**3, n_b=10**3, n_jobs=1):
         # first get G for train data :
+        print('get model distribution')
         mah = Mahalanobis(self.data, calib_rows=-1)
         delta = np.sort(mah.calc_distances(self.data)[:, 0])
 
@@ -135,15 +136,34 @@ class FFTKDE(KDEpy_FFTKDE):
                         [mah for pi in range(n_mc)],
                         [delta for pi in range(n_mc)],
                         [G for pi in range(n_mc)])
+        d_mc = np.sort(np.array(list(d_mc)))
 
-        # for i in tqdm(range(n_mc)):
-        #     X_test = self.data[np.random.choice(a=self.data.shape[0],
-        #                                         size=n_test,
-        #                                         replace=True)]
+        print('get bootstrap distribution')
+        d_b = pool.uimap(self._compute_bootstrap_distance,
+                        [n_test for pi in range(n_b)],
+                        [mah for pi in range(n_b)],
+                        [delta for pi in range(n_b)],
+                        [G for pi in range(n_b)])
+        d_b = np.sort(np.array(list(d_b)))
 
+        print('analysing')
+        # compute p values for alpha
+        cdf = d_mc.cumsum() / d_mc.sum()
 
+        p_1 = d_mc[np.argmax(cdf >= (1 - alpha) / 2)]
+        p_2 = d_mc[np.argmax(cdf >= 1 - (1 - alpha) / 2)]
 
-        return(np.array(list(d_mc)))
+        # compute cdf for bootstraped distances
+        cdf_b = d_b.cumsum() / d_b.sum()
+
+        cdf_b_at_p_1 = cdf_b[np.argmax(d_b >= p_1)]
+        cdf_b_at_p_2 = cdf_b[np.argmax(d_b >= p_2)]
+        if d_b.max() <= p_1:
+            cdf_b_at_p_1 = 1
+        if d_b.max() <= p_2:
+            cdf_b_at_p_2 = 1
+
+        return(cdf_b_at_p_2 - cdf_b_at_p_1)
 
     def _compute_distance_to_train(self, n_test, mah, delta, G):
         X_sample = self.sample(n_test, exact=False)
@@ -155,6 +175,16 @@ class FFTKDE(KDEpy_FFTKDE):
         G_sigma = _edf(delta, delta_sigma)
 
         return(_d_func(G, G_sigma))
+
+    def _compute_bootstrap_distance(self, n_test, mah, delta, G):
+        X_b = self.data[np.random.choice(a=self.data.shape[0],
+                                        size=n_test,
+                                        replace=True)]
+
+        delta_b = np.sort(mah.calc_distances(X_b)[:, 0])
+        G_b = _edf(delta, delta_b)
+
+        return(_d_func(G, G_b))
 
 def _edf(X_eval, X_train):
     if len(X_train.shape) > 1:
