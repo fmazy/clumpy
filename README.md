@@ -18,6 +18,8 @@ François-Rémi Mazy
 
 ## Install
 
+*The software provided by pip is not up to date !*
+
 build the package :
 `python3 setup.py sdist bdist_wheel`
 
