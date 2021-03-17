@@ -2,18 +2,22 @@ from KDEpy import FFTKDE as KDEpy_FFTKDE
 from ..utils import Probabilities
 import numpy as np
 from sklearn.neighbors import KNeighborsRegressor
-from mahalanobis import Mahalanobis
-from pathos.multiprocessing import ProcessingPool as Pool
-from tqdm import tqdm
+
 
 class FFTKDE(KDEpy_FFTKDE):
-    def __init__(self, kernel='gaussian', bw='1', bounded_features=[]):
+    def __init__(self,
+                 kernel='gaussian',
+                 bw='1',
+                 bounded_features=[],
+                 grid_shape=None):
         super().__init__(kernel = kernel,
                          bw = bw)
 
         self.bounded_features = bounded_features
+        self.grid_shape = grid_shape
 
-    def fit(self, X, weights=None):
+    def fit(self, X, weights=None, fit_knr=True):
+        X = X.copy()
         # first, create data mirror in case of bounded columns
         self.low_bounds = X[:, self.bounded_features].min(axis=0)
 
@@ -28,7 +32,12 @@ class FFTKDE(KDEpy_FFTKDE):
         super().fit(data=X,
                     weights=weights)
 
-    def fit_knr(self, grid_points):
+        if fit_knr:
+            self.fit_knr()
+
+    def fit_knr(self, grid_points=None):
+        if grid_points is None:
+            grid_points = self.grid_shape
         X_grid, y = self.evaluate(grid_points)
 
         self._knr = KNeighborsRegressor(n_neighbors=1)
@@ -122,75 +131,4 @@ class FFTKDE(KDEpy_FFTKDE):
 
         return (X)
 
-    def confidence(self, alpha=0.9, n_test=10**3, n_mc=10**3, n_b=10**3, n_jobs=1):
-        # first get G for train data :
-        print('get model distribution')
-        mah = Mahalanobis(self.data, calib_rows=-1)
-        delta = np.sort(mah.calc_distances(self.data)[:, 0])
 
-        G = _edf(delta, delta)
-
-        pool = Pool(n_jobs)
-        d_mc = pool.uimap(self._compute_distance_to_train,
-                        [n_test for pi in range(n_mc)],
-                        [mah for pi in range(n_mc)],
-                        [delta for pi in range(n_mc)],
-                        [G for pi in range(n_mc)])
-        d_mc = np.sort(np.array(list(d_mc)))
-
-        print('get bootstrap distribution')
-        d_b = pool.uimap(self._compute_bootstrap_distance,
-                        [n_test for pi in range(n_b)],
-                        [mah for pi in range(n_b)],
-                        [delta for pi in range(n_b)],
-                        [G for pi in range(n_b)])
-        d_b = np.sort(np.array(list(d_b)))
-
-        print('analysing')
-        # compute p values for alpha
-        cdf = d_mc.cumsum() / d_mc.sum()
-
-        p_1 = d_mc[np.argmax(cdf >= (1 - alpha) / 2)]
-        p_2 = d_mc[np.argmax(cdf >= 1 - (1 - alpha) / 2)]
-
-        # compute cdf for bootstraped distances
-        cdf_b = d_b.cumsum() / d_b.sum()
-
-        cdf_b_at_p_1 = cdf_b[np.argmax(d_b >= p_1)]
-        cdf_b_at_p_2 = cdf_b[np.argmax(d_b >= p_2)]
-        if d_b.max() <= p_1:
-            cdf_b_at_p_1 = 1
-        if d_b.max() <= p_2:
-            cdf_b_at_p_2 = 1
-
-        return(cdf_b_at_p_2 - cdf_b_at_p_1)
-
-    def _compute_distance_to_train(self, n_test, mah, delta, G):
-        X_sample = self.sample(n_test, exact=False)
-
-        # mah_sigma = Mahalanobis(X_sample, calib_rows=-1)
-        delta_sigma = mah.calc_distances(X_sample)[:, 0]
-
-        # on évalue G_sigma aux mêmes points que G
-        G_sigma = _edf(delta, delta_sigma)
-
-        return(_d_func(G, G_sigma))
-
-    def _compute_bootstrap_distance(self, n_test, mah, delta, G):
-        X_b = self.data[np.random.choice(a=self.data.shape[0],
-                                        size=n_test,
-                                        replace=True)]
-
-        delta_b = np.sort(mah.calc_distances(X_b)[:, 0])
-        G_b = _edf(delta, delta_b)
-
-        return(_d_func(G, G_b))
-
-def _edf(X_eval, X_train):
-    if len(X_train.shape) > 1:
-        return(np.array([np.all(X_train <= x, axis=1).sum() for x in X_eval])/X_train.shape[0])
-    else:
-        return(np.array([(X_train <= x).sum() for x in X_eval])/X_train.size)
-
-def _d_func(X1, X2):
-    return(np.max(np.abs(np.power(X1-X2,1))))
