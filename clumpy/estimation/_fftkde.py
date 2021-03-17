@@ -2,19 +2,22 @@ from KDEpy import FFTKDE as KDEpy_FFTKDE
 from ..utils import Probabilities
 import numpy as np
 from sklearn.neighbors import KNeighborsRegressor
-
+from sklearn.preprocessing import StandardScaler
 
 class FFTKDE(KDEpy_FFTKDE):
     def __init__(self,
-                 kernel='gaussian',
-                 bw='1',
-                 bounded_features=[],
-                 grid_shape=None):
+                 kernel = 'gaussian',
+                 bw = '1',
+                 bounded_features = [],
+                 grid_shape = None,
+                 standard_scaler = True):
         super().__init__(kernel = kernel,
                          bw = bw)
 
         self.bounded_features = bounded_features
         self.grid_shape = grid_shape
+
+        self.standard_scaler = standard_scaler
 
     def fit(self, X, weights=None, fit_knr=True):
         X = X.copy()
@@ -29,24 +32,25 @@ class FFTKDE(KDEpy_FFTKDE):
 
             if weights is not None:
                 weights = np.vstack((weights, weights))
+
+        if self.standard_scaler:
+            self._scaler = StandardScaler()
+            self._scaler.fit(X)
+            X = self._scaler.transform(X)
+
         super().fit(data=X,
                     weights=weights)
 
         if fit_knr:
             self.fit_knr()
 
-    def fit_knr(self, grid_points=None):
-        if grid_points is None:
-            grid_points = self.grid_shape
-        X_grid, y = self.evaluate(grid_points)
-
-        self._knr = KNeighborsRegressor(n_neighbors=1)
-        self._knr.fit(X_grid, y)
-
     def evaluate(self, grid_points=None, integral_to_1=True):
         """
         evaluate the kde through a grid
         """
+        if grid_points is None:
+            grid_points = self.grid_shape
+
         X_grid, y = super().evaluate(grid_points=grid_points)
         if len(X_grid.shape) == 1:
             X_grid = X_grid[:,None]
@@ -65,7 +69,18 @@ class FFTKDE(KDEpy_FFTKDE):
             proba = Probabilities(X_grid, y)
             y /= proba.integral()
 
+        if self.standard_scaler:
+            X_grid = self._scaler.inverse_transform(X_grid)
+
         return(X_grid, y)
+
+    def fit_knr(self, grid_points=None):
+        if grid_points is None:
+            grid_points = self.grid_shape
+        X_grid, y = self.evaluate(grid_points)
+
+        self._knr = KNeighborsRegressor(n_neighbors=1)
+        self._knr.fit(X_grid, y)
 
     def predict(self, X):
         p = self._knr.predict(X)
@@ -84,6 +99,9 @@ class FFTKDE(KDEpy_FFTKDE):
                                replace = True)
 
         X = self.data[idx, :] + kernel_sample
+
+        if self.standard_scaler:
+            X = self._scaler.inverse_transform(X)
 
         return(X[np.all(X[:, self.bounded_features] >= self.low_bounds, axis=1)])
 
@@ -130,5 +148,8 @@ class FFTKDE(KDEpy_FFTKDE):
             return (X[:n, :])
 
         return (X)
+
+    def __str__(self):
+        return('FFTKDE()')
 
 
