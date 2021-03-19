@@ -3,6 +3,7 @@ from mahalanobis import Mahalanobis
 from pathos.multiprocessing import ProcessingPool as Pool
 from tqdm import tqdm
 from sklearn.model_selection import KFold
+from time import time
 
 class ParameterGrowthReject():
     def __init__(self,
@@ -46,12 +47,19 @@ class ParameterGrowthReject():
         # set attributes to estimator
         setattr(self.estimator, self.param_key, np.mean(self.param_bounds))
 
+        start_time = time()
+        self.exec_times_ = []
+        self.param_results_ = []
+        self.reject_results_ = []
 
         param_min = self.param_bounds[0]
         param_max = self.param_bounds[1]
         param_last = np.mean(self.param_bounds) + self.epsilon * 10
 
         while np.abs(param_last - getattr(self.estimator, (self.param_key))) / param_last > self.epsilon:
+            self.param_results_.append(getattr(self.estimator, (self.param_key)))
+            self.exec_times_.append(time() - start_time)
+
             if self.verbose > 0:
                 print(self.param_key + ' = ' + str(getattr(self.estimator, self.param_key)))
             r_cv = cross_reject(self.estimator,
@@ -62,6 +70,8 @@ class ParameterGrowthReject():
                                 n_mc=self.n_mc,
                                 n_jobs=self.n_jobs,
                                 verbose=self.verbose)
+
+            self.reject_results_.append(r_cv)
 
             param_last = getattr(self.estimator, self.param_key)
 
@@ -84,8 +94,14 @@ class ParameterGrowthReject():
         # if the last test is failed, the param should be param_min
         if np.any(r_cv):
             setattr(self.estimator, self.param_key, param_min)
+            self.best_param = {self.param_key : param_min}
+            self.param_results_.append(param_min)
         else: # else, it's the param_last
             setattr(self.estimator, self.param_key, param_last)
+            self.best_param = {self.param_key : param_last}
+            self.param_results_.append(param_last)
+
+        self.exec_times_.append(time() - start_time)
 
         self.estimator.fit(X)
 
@@ -174,35 +190,6 @@ def reject(estimator, X_test, alpha=0.9, distance='ks', n_mc=10**3, n_jobs=1):
         return(False)
 
     return(True)
-
-    # print('get bootstrap distribution')
-    # d_b = pool.uimap(self._compute_bootstrap_distance,
-    #                  [n_test for pi in range(n_b)],
-    #                  [mah for pi in range(n_b)],
-    #                  [delta for pi in range(n_b)],
-    #                  [G for pi in range(n_b)])
-    # d_b = np.sort(np.array(list(d_b)))
-
-    # print('analysing')
-    # # compute p values for alpha
-    # cdf = d_mc.cumsum() / d_mc.sum()
-    #
-    # p_1 = d_mc[np.argmax(cdf >= (1 - alpha) / 2)]
-    # p_2 = d_mc[np.argmax(cdf >= 1 - (1 - alpha) / 2)]
-    #
-    # # compute cdf for bootstraped distances
-    # cdf_b = d_b.cumsum() / d_b.sum()
-    #
-    # cdf_b_at_p_1 = cdf_b[np.argmax(d_b >= p_1)]
-    # cdf_b_at_p_2 = cdf_b[np.argmax(d_b >= p_2)]
-    # if d_b.max() <= p_1:
-    #     cdf_b_at_p_1 = 1
-    # if d_b.max() <= p_2:
-    #     cdf_b_at_p_2 = 1
-    #
-    # return (cdf_b_at_p_2 - cdf_b_at_p_1)
-
-
 
 def _delta_train_distribution(estimator,
                               n_test,
