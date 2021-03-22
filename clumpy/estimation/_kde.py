@@ -190,7 +190,7 @@ class KernelDensity(BaseEstimator):
 
         p = np.array(ks.kde(**args)[2])
 
-        # remove all values outside bounds
+        # set to 0 all values outside the X bounds
         idx = np.any(X[:, self.bounded_features] < self._low_bounds, axis=1)
 
         p[idx] = 0
@@ -199,6 +199,53 @@ class KernelDensity(BaseEstimator):
         p = p * 2 ** len(self.bounded_features)
 
         return(p)
+
+    def grid_density(self):
+        """
+        Get the grid density
+
+        Returns
+        -------
+        X_grid : array-like of shape (n_grid, n_features)
+            The grid.
+
+        density : array-like of shape (n_grid,)
+            The array of density evaluations.
+        """
+        if self._selected_H is not None:
+            H = self._selected_H
+        else:
+            H = self.H
+
+        args = dict(x=self._data,
+                    H=H)
+
+        if self.gridsize is not None:
+            args['gridsize'] = np.array(self.gridsize)
+
+        if self._data_weights is not None:
+            args['w'] = self._data_weights
+
+        result = ks.kde(**args)
+
+        xx = result[1]
+
+        cols = np.meshgrid(*[np.array(xxi) for xxi in xx])
+
+        X_grid = np.vstack(tuple(col.flat for col in cols)).T
+
+        p = np.array(result[2]).T.flat
+
+        # remove all values outside bounds
+        idx = np.all(X_grid[:, self.bounded_features] >= self._low_bounds, axis=1)
+
+        X_grid = X_grid[idx]
+        p = p[idx]
+
+        # multiply the y-values to get integral of ~1
+        p = p * 2 ** len(self.bounded_features)
+
+        return(X_grid, p)
 
     def save(self, path, data=False):
         """
