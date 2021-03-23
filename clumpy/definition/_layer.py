@@ -67,6 +67,12 @@ class _Layer:
         
         # read file
         self.raster_ = rasterio.open(self.path)
+
+    def get_data(self, band=1):
+        return(self.raster_.read(band))
+
+    def __repr__(self):
+        return('Layer()')
         
     def export_asc(self, path, verbose=0):
         """Export the layer data as an ``asc`` file in order to use it through CLUES and CLUMondo.
@@ -152,6 +158,9 @@ class LandUseCoverLayer(_Layer):
                          copy_geo=copy_geo)
     
         self.style_ = {}
+
+    def __repr__(self):
+        return('LandUseCoverLayer()')
         
     def import_style(self,
                       path):
@@ -209,7 +218,7 @@ class LandUseCoverLayer(_Layer):
         
         self.style_ = style
     
-    def display(self, center, window):
+    def display(self, center, window, show=True):
         """Display the land use cover layer through python console with matplotlib.
 
         Parameters
@@ -271,6 +280,9 @@ class LandUseCoverLayer(_Layer):
         cb.set_ticks(values)
         cb.set_ticklabels(labels)
 
+        if show:
+            plt.show()
+
 
 class FeatureLayer(_Layer):
     """Defines a feature layer.
@@ -311,4 +323,5 @@ class FeatureLayer(_Layer):
                          data=data,
                          copy_geo=copy_geo)
 
-
+    def __repr__(self):
+        return('FeatureLayer()')

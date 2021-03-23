@@ -133,26 +133,42 @@ class KernelDensity(BaseEstimator):
                     func = ks.Hscv_diag
                 else:
                     func = ks.Hscv
+                # if only one feature
+                if self._data.shape[1] == 1:
+                    func = ks.hscv
+
             elif self.bandwidth_selection == 'UCV':
                 if self.diag :
                     func = ks.Hlscv_diag
                 else:
                     func = ks.Hlscv
+
+                # if only one feature
+                if self._data.shape[1] == 1:
+                    func = ks.hlscv
+
             elif self.bandwidth_selection == 'Pi':
                 if self.diag :
                     func = ks.Hpi_diag
                 else:
                     func = ks.Hpi
 
+                # if only one feature
+                if self._data.shape[1] == 1:
+                    func = ks.hpi
+
             args = dict(x = self._data)
 
-            if self.H is not None:
+            if self.H is not None and self._data.shape[1] > 1:
                 args['Hstart'] = self.H
 
             if self.gridsize is not None:
                  args['bgridsize'] = np.array(self.gridsize)
 
-            self._selected_H = np.array(func(**args))
+            if self._data.shape[1] > 1:
+                self._selected_H = np.array(func(**args))
+            else:
+                self._selected_H = np.array(func(**args))[0]
 
         return(self)
 
@@ -179,8 +195,12 @@ class KernelDensity(BaseEstimator):
             H = self.H
 
         args = dict(x=self._data,
-                     H=H,
                      eval_points=X)
+
+        if self._data.shape[1] > 1:
+            args['H'] = H
+        else:
+            args['h'] = H
 
         if self.gridsize is not None:
             args['gridsize'] = np.array(self.gridsize)
@@ -217,8 +237,12 @@ class KernelDensity(BaseEstimator):
         else:
             H = self.H
 
-        args = dict(x=self._data,
-                    H=H)
+        args = dict(x=self._data)
+
+        if self._data.shape[1] > 1:
+            args['H'] = H
+        else:
+            args['h'] = H
 
         if self.gridsize is not None:
             args['gridsize'] = np.array(self.gridsize)
@@ -228,13 +252,20 @@ class KernelDensity(BaseEstimator):
 
         result = ks.kde(**args)
 
-        xx = result[1]
+        if self._data.shape[1] > 1:
+            xx = result[1]
 
-        cols = np.meshgrid(*[np.array(xxi) for xxi in xx])
+            cols = np.meshgrid(*[np.array(xxi) for xxi in xx])
 
-        X_grid = np.vstack(tuple(col.flat for col in cols)).T
+            X_grid = np.vstack(tuple(col.flat for col in cols)).T
 
-        p = np.array(result[2]).T.flat
+            p = np.array(result[2]).T.flat
+
+        else:
+            X_grid = np.array(result[1])
+            X_grid = X_grid[:,None]
+
+            p = np.array(result[2])
 
         # remove all values outside bounds
         idx = np.all(X_grid[:, self.bounded_features] >= self._low_bounds, axis=1)

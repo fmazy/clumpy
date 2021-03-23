@@ -131,6 +131,10 @@ class Case():
                 # else column stack
                 else:
                     X_u[u] = np.column_stack((X_u[u], x))
+
+            # if only one feature, reshape X as a column
+            if len(self.params[u]['features']) == 1:
+                X_u[u] = X_u[u][:,None]
             
             # if final luc layer
             if final_luc_layer is not None:
@@ -145,7 +149,7 @@ class Case():
         if verbose > 0:
             print('case creating is a success !')
             print('creating time: '+str(round(self.creating_time_,2))+'s')
-        
+
         # if no final luc layer
         if final_luc_layer is None:
             return(X_u)
