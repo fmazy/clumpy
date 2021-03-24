@@ -43,9 +43,11 @@ class KernelDensity(BaseEstimator):
     def __init__(self,
                  H=None,
                  bandwidth_selection=None,
-                 diag=False,
+                 diag=True,
                  gridsize=None,
-                 bounded_features=[]):
+                 bounded_features=[],
+                 binned=False,
+                 verbose=False):
         """
         Kernel density estimation for 1 to 6 dimensional data.
         The kernel is Gaussian.
@@ -64,7 +66,7 @@ class KernelDensity(BaseEstimator):
 
             Pi : Plug-in method. If H is not None, H is considered as the initial bandwidth matrix.
 
-        diag : boolean, default=False,
+        diag : boolean, default=True,
             If True, the bandwidth selection is constrained to diagonal matrix.
 
         gridsize : tuple of length s, default=None
@@ -73,6 +75,13 @@ class KernelDensity(BaseEstimator):
         bounded_features : list of int, default=[]
             Features indices which are bounded on low values.
 
+        binned : bool, default=False
+            If True, kernel estimation is approximated through binned data.
+            It is usefull for large cases.
+
+        verbose : bool, default=False
+            If True, print out progress information
+
         """
         self.bandwidth_selection = bandwidth_selection
         self.H = H
@@ -80,11 +89,14 @@ class KernelDensity(BaseEstimator):
         self.diag = diag
         self._selected_H = None
         self.bounded_features = bounded_features
+        self.binned = binned
+        self.verbose = verbose
 
     def fit(self,
             X,
             y=None,
-            sample_weight=None):
+            sample_weight=None,
+            bandwidth_select=True):
         """
         Fit the Kernel Density model on the data
 
@@ -98,6 +110,9 @@ class KernelDensity(BaseEstimator):
 
         sample_weight : array-like of shape (n_samples,), default=None
             List of sample weights attached to the data X.
+
+        bandwidth_select : bool, default=True
+            If True, the bandwidth selection process is made.
 
         Returns
         -------
@@ -126,7 +141,7 @@ class KernelDensity(BaseEstimator):
             self._data_weights = None
 
         # Bandwidth selection
-        if self.bandwidth_selection is not None:
+        if self.bandwidth_selection is not None and bandwidth_select:
 
             if self.bandwidth_selection == 'SCV':
                 if self.diag :
@@ -157,7 +172,9 @@ class KernelDensity(BaseEstimator):
                 if self._data.shape[1] == 1:
                     func = ks.hpi
 
-            args = dict(x = self._data)
+            args = dict(x = self._data,
+                        binned = self.binned,
+                        verbose = self.verbose)
 
             if self.H is not None and self._data.shape[1] > 1:
                 args['Hstart'] = self.H
@@ -195,7 +212,9 @@ class KernelDensity(BaseEstimator):
             H = self.H
 
         args = dict(x=self._data,
-                     eval_points=X)
+                    eval_points=X,
+                    binned = self.binned,
+                    verbose = self.verbose)
 
         if self._data.shape[1] > 1:
             args['H'] = H
@@ -237,7 +256,9 @@ class KernelDensity(BaseEstimator):
         else:
             H = self.H
 
-        args = dict(x=self._data)
+        args = dict(x = self._data,
+                    binned = self.binned,
+                    verbose = self.verbose)
 
         if self._data.shape[1] > 1:
             args['H'] = H
@@ -255,11 +276,11 @@ class KernelDensity(BaseEstimator):
         if self._data.shape[1] > 1:
             xx = result[1]
 
-            cols = np.meshgrid(*[np.array(xxi) for xxi in xx])
+            cols = np.meshgrid(*[np.array(xxi) for xxi in xx], indexing='ij')
 
             X_grid = np.vstack(tuple(col.flat for col in cols)).T
 
-            p = np.array(result[2]).T.flat
+            p = np.array(result[2]).flat
 
         else:
             X_grid = np.array(result[1])
@@ -298,7 +319,9 @@ class KernelDensity(BaseEstimator):
         params = dict(  bandwidth_selection=self.bandwidth_selection,
                         gridsize=self.gridsize,
                         diag=self.diag,
-                        bounded_features=self.bounded_features)
+                        bounded_features=self.bounded_features,
+                        binned=self.binned,
+                        _low_bounds = self._low_bounds)
 
         with open('params.json', 'w') as f:
             json.dump(params, f)
@@ -335,6 +358,9 @@ class KernelDensity(BaseEstimator):
         command = 'rm '
         for file_name in files_names:
             command += ' ' + file_name
+        os.system(command)
+
+        command = 'mkdir -p ' + folder_name
         os.system(command)
 
         os.system('mv .temp_export_file.zip ' + path)

@@ -104,7 +104,7 @@ class Probabilities():
 
         features_bar = np.delete(np.arange(self.X.shape[1]), features)
 
-        M_y = self.y.reshape(self.grid_shape).T
+        M_y = self.y.reshape(self.grid_shape)
 
         v = np.product(self._dx[features_bar])
         n = np.product(np.array(self.grid_shape)[features_bar])
