@@ -59,7 +59,7 @@ class KernelDensityFullPython(BaseEstimator):
         else:
             print('non binned not yet implemented')
 
-        ind_mat = 
+        # ind_mat =
 
         return(X_grid, 1)
 

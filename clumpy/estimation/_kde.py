@@ -44,7 +44,7 @@ class KernelDensity(BaseEstimator):
                  H=None,
                  bandwidth_selection=None,
                  diag=True,
-                 gridsize=None,
+                 grid_size=None,
                  bounded_features=[],
                  binned=False,
                  verbose=False):
@@ -69,7 +69,7 @@ class KernelDensity(BaseEstimator):
         diag : boolean, default=True,
             If True, the bandwidth selection is constrained to diagonal matrix.
 
-        gridsize : tuple of length s, default=None
+        grid_size : tuple of length s, default=None
             Grid sizes for each dimensions. If None, arbitrary grid sizes are set.
 
         bounded_features : list of int, default=[]
@@ -85,7 +85,7 @@ class KernelDensity(BaseEstimator):
         """
         self.bandwidth_selection = bandwidth_selection
         self.H = H
-        self.gridsize = gridsize
+        self.grid_size = grid_size
         self.diag = diag
         self._selected_H = None
         self.bounded_features = bounded_features
@@ -179,8 +179,8 @@ class KernelDensity(BaseEstimator):
             if self.H is not None and self._data.shape[1] > 1:
                 args['Hstart'] = self.H
 
-            if self.gridsize is not None:
-                 args['bgridsize'] = np.array(self.gridsize)
+            if self.grid_size is not None:
+                 args['bgridsize'] = np.array(self.grid_size)
 
             if self._data.shape[1] > 1:
                 self._selected_H = np.array(func(**args))
@@ -221,8 +221,8 @@ class KernelDensity(BaseEstimator):
         else:
             args['h'] = H
 
-        if self.gridsize is not None:
-            args['gridsize'] = np.array(self.gridsize)
+        if self.grid_size is not None:
+            args['gridsize'] = np.array(self.grid_size)
 
         if self._data_weights is not None:
             args['w'] = self._data_weights
@@ -265,8 +265,8 @@ class KernelDensity(BaseEstimator):
         else:
             args['h'] = H
 
-        if self.gridsize is not None:
-            args['gridsize'] = np.array(self.gridsize)
+        if self.grid_size is not None:
+            args['gridsize'] = np.array(self.grid_size)
 
         if self._data_weights is not None:
             args['w'] = self._data_weights
@@ -317,11 +317,11 @@ class KernelDensity(BaseEstimator):
         folder_name = os.path.dirname(path)
 
         params = dict(  bandwidth_selection=self.bandwidth_selection,
-                        gridsize=self.gridsize,
+                        grid_size=self.grid_size,
                         diag=self.diag,
                         bounded_features=self.bounded_features,
                         binned=self.binned,
-                        _low_bounds = self._low_bounds)
+                        _low_bounds = list(self._low_bounds))
 
         with open('params.json', 'w') as f:
             json.dump(params, f)

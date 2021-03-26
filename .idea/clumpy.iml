@@ -7,6 +7,7 @@
     <orderEntry type="module" module-name="clumpy2" />
     <orderEntry type="module" module-name="clumpy-cases" />
     <orderEntry type="module" module-name="multistats" />
+    <orderEntry type="module" module-name="kspy" />
   </component>
   <component name="PyDocumentationSettings">
     <option name="format" value="PLAIN" />
