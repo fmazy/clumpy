@@ -44,6 +44,7 @@ class KernelDensity(BaseEstimator):
                  H=None,
                  bandwidth_selection=None,
                  diag=True,
+                 dx=None,
                  grid_size=None,
                  bounded_features=[],
                  binned=False,
@@ -54,7 +55,7 @@ class KernelDensity(BaseEstimator):
 
         Parameters
         ----------
-        H : array-like of shape of shape (s,s), default=None
+        H : array-like of shape (s,s), default=None
             The bandwidth matrix. If None, the bandwidth selection cannot be None.
 
         bandwidth_selection : {None, 'SCV', 'UCV', 'Pi'}, default=None
@@ -69,8 +70,12 @@ class KernelDensity(BaseEstimator):
         diag : boolean, default=True,
             If True, the bandwidth selection is constrained to diagonal matrix.
 
+        dx : array-like of shape (n_features,), default=None
+            The expected grid step for each features. It overrides the grid_size
+
         grid_size : tuple of length s, default=None
             Grid sizes for each dimensions. If None, arbitrary grid sizes are set.
+            The grid size is overrided by dx.
 
         bounded_features : list of int, default=[]
             Features indices which are bounded on low values.
@@ -85,6 +90,7 @@ class KernelDensity(BaseEstimator):
         """
         self.bandwidth_selection = bandwidth_selection
         self.H = H
+        self.dx = dx
         self.grid_size = grid_size
         self.diag = diag
         self._selected_H = None
@@ -122,6 +128,17 @@ class KernelDensity(BaseEstimator):
 
         # mirror datas for bounded features
         X = X.copy()
+
+        # computes grid size if dx is not None:
+        if self.dx is not None:
+            X_min = X.min(axis=0)
+            X_max = X.max(axis=0)
+
+            self.grid_size = np.round((X_max - X_min) / self.dx, 0) + 1
+
+            self.grid_size[self.bounded_features] *= 2
+            self.grid_size = self.grid_size.astype(int)
+
         # first, create data mirror in case of bounded columns
         self._low_bounds = X[:, self.bounded_features].min(axis=0)
 
@@ -316,13 +333,16 @@ class KernelDensity(BaseEstimator):
         files_names = []
         folder_name = os.path.dirname(path)
 
-        params = dict(  bandwidth_selection=self.bandwidth_selection,
-                        grid_size=self.grid_size,
+        params = dict(
+                        bandwidth_selection=self.bandwidth_selection,
+                        dx=self.dx.tolist(),
+                        grid_size=self.grid_size.tolist(),
                         diag=self.diag,
                         bounded_features=self.bounded_features,
                         binned=self.binned,
-                        _low_bounds = list(self._low_bounds))
-
+                        _low_bounds = self._low_bounds.tolist(),
+                        )
+        print(params)
         with open('params.json', 'w') as f:
             json.dump(params, f)
 
