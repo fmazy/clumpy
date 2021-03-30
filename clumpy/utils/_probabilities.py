@@ -3,6 +3,7 @@ import numpy as np
 import itertools
 from tqdm import tqdm
 from sklearn.neighbors import KNeighborsRegressor
+from copy import deepcopy
 
 class Probabilities():
     def __init__(self, X, y):
@@ -35,6 +36,21 @@ class Probabilities():
         """
         I = self.y.sum() * self._v / self.y.size
         return(I)
+
+    def closure_scale(self, copy=True):
+        """
+        make closure over the integral by scaling.
+        """
+        I = self.integral()
+
+        if copy:
+            proba = deepcopy(self)
+        else:
+            proba = self
+
+        proba.y /= I
+
+        return(proba)
 
     def cut(self, features, x, method='nearest', keep_all_features=False):
         """
