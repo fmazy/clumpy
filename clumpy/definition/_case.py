@@ -111,8 +111,8 @@ class Case():
             # create feature names
             for feature_type, info in self.params[u]['features']:
                 # switch according z_type
-                
-                if feature_type == 'layer':
+
+                if feature_type == 'layer' or feature_type == 'binary_layer':
                     # just get data
                     x = info.raster_.read(1).flat[J]
                 
@@ -192,7 +192,7 @@ def check_case(case):
                     if type(feature) is not tuple:
                         raise(TypeError("case.params["+str(u)+"]['features'] should be a list of tuples. See documentation for examples."))
                     
-                    if feature[0] == 'layer':
+                    if feature[0] == 'layer' or feature[0] == 'binary_layer':
                         if type(feature[1]) is not FeatureLayer:
                             raise(TypeError("case.params["+str(u)+"]['features']["+str(idx)+"][1] should be a clumpy.definition.FeatureLayer object. See documentation for examples."))
                             
@@ -203,7 +203,7 @@ def check_case(case):
                     elif feature[0] == 'numpy':
                         if type(feature[1]) is not np.ndarray:
                             raise(TypeError("case.params["+str(u)+"]['features']["+str(idx)+"][1] should be a ndarray. See documentation for examples."))
-                    
+
                     else:
                         raise(ValueError("case.params["+str(u)+"]['features']["+str(idx)+"] is expected to be {'layer', 'distance', 'numpy'. See documentation for examples.}"))
             

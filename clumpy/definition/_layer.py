@@ -218,7 +218,7 @@ class LandUseCoverLayer(_Layer):
         
         self.style_ = style
     
-    def display(self, center, window, show=True):
+    def display(self, center, window, show=True, colorbar=True):
         """Display the land use cover layer through python console with matplotlib.
 
         Parameters
@@ -272,16 +272,19 @@ class LandUseCoverLayer(_Layer):
         if y2 >= data.shape[1]:
             y2 = int(data.shape[1])
             y1 = y2 - window[1]
-        
+
         plt.imshow(data[x1:x2, y1:y2], interpolation='none', cmap=cmap, norm=norm)
         plt.yticks([], [])
         plt.xticks([], [])
-        cb = plt.colorbar()
-        cb.set_ticks(values)
-        cb.set_ticklabels(labels)
+
+        if colorbar:
+            cb = plt.colorbar()
+            cb.set_ticks(values)
+            cb.set_ticklabels(labels)
 
         if show:
-            plt.show()
+           plt.show()
+        return(plt)
 
 
 class FeatureLayer(_Layer):
