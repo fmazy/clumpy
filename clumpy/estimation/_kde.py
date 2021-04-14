@@ -48,6 +48,7 @@ class KernelDensity(BaseEstimator):
                  grid_size=None,
                  bounded_features=[],
                  binned=False,
+                 full_symmetry=False,
                  verbose=False):
         """
         Kernel density estimation for 1 to 6 dimensional data.
@@ -96,6 +97,7 @@ class KernelDensity(BaseEstimator):
         self._selected_H = None
         self.bounded_features = bounded_features
         self.binned = binned
+        self.full_symmetry = full_symmetry
         self.verbose = verbose
 
     def fit(self,
@@ -142,6 +144,9 @@ class KernelDensity(BaseEstimator):
         # first, create data mirror in case of bounded columns
         self._low_bounds = X[:, self.bounded_features].min(axis=0)
 
+        std = np.std(X[:, self.bounded_features], axis=0)
+
+        # a full symmetry is made
         for idx, feature in enumerate(self.bounded_features):
             X_mirrored = X.copy()
             X_mirrored[:, feature] = 2 * self._low_bounds[idx] - X[:, feature]
@@ -150,6 +155,16 @@ class KernelDensity(BaseEstimator):
 
             if sample_weight is not None:
                 sample_weight = np.vstack((sample_weight, sample_weight))
+
+        if not self.full_symmetry:
+            # only a standard deviation band is kept
+            j = np.ones(X.shape[0]).astype(bool)
+            for idx, feature in enumerate(self.bounded_features):
+                j = j & (X[:,feature] >= self._low_bounds[idx] - std[idx])
+
+            X = X[j]
+
+        print('mirrored data shape: ', X.shape)
 
         self._data = X
         if sample_weight is not None:
@@ -340,6 +355,7 @@ class KernelDensity(BaseEstimator):
                         diag=self.diag,
                         bounded_features=self.bounded_features,
                         binned=self.binned,
+                        full_symmetry=self.full_symmetry,
                         _low_bounds = self._low_bounds.tolist(),
                         )
         print(params)
