@@ -266,8 +266,9 @@ class KernelDensity(BaseEstimator):
 
         p[idx] = 0
 
-        # multiply the y-values to get integral of ~1
-        p = p * 2 ** len(self.bounded_features)
+        if self.full_symmetry:
+            # multiply the y-values to get integral of ~1
+            p = p * 2 ** len(self.bounded_features)
 
         return(p)
 
@@ -326,8 +327,9 @@ class KernelDensity(BaseEstimator):
         X_grid = X_grid[idx]
         p = p[idx]
 
-        # multiply the y-values to get integral of ~1
-        p = p * 2 ** len(self.bounded_features)
+        if self.full_symmetry:
+            # multiply the y-values to get integral of ~1
+            p = p * 2 ** len(self.bounded_features)
 
         return(X_grid, p)
 
