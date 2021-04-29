@@ -14,9 +14,19 @@ from numpy import linalg
 from tqdm import tqdm
 from KDEpy.bw_selection import silvermans_rule
 from scipy import optimize
-from KDEpy.kernel_funcs import gaussian
+from KDEpy.kernel_funcs import _kernel_functions, p_norm
 from matplotlib import pyplot as plt
 import pandas as pd
+from itertools import combinations
+from KDEpy.kernel_funcs import volume_unit_ball
+
+from ._box_kde import BoxKDE
+
+_kde_class = {
+    'FFTKDE':FFTKDE,
+    'NaiveKDE':NaiveKDE,
+    'TreeKDE':TreeKDE,
+    'BoxKDE':BoxKDE}
 
 class KDE(BaseEstimator):
     def __init__(self,
@@ -25,6 +35,8 @@ class KDE(BaseEstimator):
                  grid_dx=None,
                  bounded_features=[],
                  method='FFTKDE',
+                 kernel='gaussian',
+                 norm=2,
                  bw_tol=1e-2,
                  J_tol=1e-2,
                  verbose=0):
@@ -33,17 +45,16 @@ class KDE(BaseEstimator):
         self.grid_points = grid_points
         self.grid_dx = grid_dx
         self.bounded_features = bounded_features
-        self.method= method
+        self.method = method
+        self.kernel = kernel
+        self.norm = norm
         self.bw_tol = bw_tol
         self.J_tol = J_tol
         self.verbose = verbose
         
-    def fit(self, X, y=None):
-        
+    def fit(self, X, y=None, compute_grid=False):
         if len(X.shape) == 1:
             X = X[:,None]
-        
-        
         
         if self.verbose > 0:
             print('input data shape : ', X.shape)
@@ -86,45 +97,44 @@ class KDE(BaseEstimator):
         else:
             raise(TypeError('Unexpected bandwidth type : it should be a method among {\'UCV\'} or a float scalar.'))
         
-        if self.method == 'FFTKDE':
-            KDE_class = FFTKDE
-        elif self.method == 'TreeKDE':
-            KDE_class = TreeKDE
-        elif self.method == 'NaiveKDE':
-            KDE_class = NaiveKDE
-        else:
-            raise(ValueError("Unexpected method argument. Should be {'NaiveKDE, TreeKDE, FFTKDE'}"))
-        
         # --------- COMPUTE KERNEL DENSITY ESTIMATION ON ROTATED DATA ---------
         # Compute the kernel density estimate
-        kde = KDE_class(kernel='gaussian', norm=2, bw=self._bw)
+        kde = _kde_class[self.method](kernel=self.kernel, bw=self._bw, norm=self.norm)
         grid, points = kde.fit(transformed_X).evaluate(self.grid_points)
         
-        # --------- ROTATE THE GRID BACK ---------
-        # After rotation, the grid will not be alix-aligned
-        if self._num_dims == 1:
-            grid = grid.copy()[:,None]
+        if self.method == 'BoxKDE':
+            self._knr = kde
+            
+            if compute_grid:
+                self._X_grid, self._grid_density = self._knr.evaluate(self.grid_points)
+                self._X_grid = self._inverse_transform_to_principal_component_space(self._X_grid)
         
-        grid_rot = grid / np.sqrt(self._num_obs) @ np.linalg.inv(self._V @ np.diag(1/self._s))
-        
-        # --------- RESAMPLE THE GRID ---------
-        # We pretend the data is the rotated grid, and the f(x, y) values are weights
-        # This is a re-sampling of the KDE onto an axis-aligned grid, and is needed
-        # since matplotlib requires axis-aligned grid for plotting.
-        # (The problem of plotting on an arbitrary grid is similar to density estimation)
-        kde = KDE_class(kernel='gaussian', norm=2, bw=self._bw)
-        self._X_grid, self._grid_density = kde.fit(grid_rot, weights=points).evaluate(self.grid_points)
-        
-        if self._num_dims == 1:
-            self._X_grid = self._X_grid[:,None]
-        
-        self._grid_density *= 2**len(self.bounded_features)
-        
-        self._grid_density[np.any(self._X_grid < self._low_bounds,axis=1)] = 0
-        
-        self._knr = KNeighborsRegressor(n_neighbors=2**len(self.bounded_features), weights='distance')
-        
-        self._knr.fit(self._X_grid, self._grid_density)
+        else:
+            # --------- ROTATE THE GRID BACK ---------
+            # After rotation, the grid will not be alix-aligned
+            if self._num_dims == 1:
+                grid = grid.copy()[:,None]
+            
+            grid_rot = grid / np.sqrt(self._num_obs) @ np.linalg.inv(self._V @ np.diag(1/self._s))
+            
+            # --------- RESAMPLE THE GRID ---------
+            # We pretend the data is the rotated grid, and the f(x, y) values are weights
+            # This is a re-sampling of the KDE onto an axis-aligned grid, and is needed
+            # since matplotlib requires axis-aligned grid for plotting.
+            # (The problem of plotting on an arbitrary grid is similar to density estimation)
+            
+            kde = _kde_class[self.method](kernel=self.kernel, norm=self.norm, bw=self._bw)
+            self._X_grid, self._grid_density = kde.fit(grid_rot, weights=points).evaluate(self.grid_points)
+            
+            if self._num_dims == 1:
+                self._X_grid = self._X_grid[:,None]
+            
+            if len(self.bounded_features) > 0:
+                self._grid_density *= 2**len(self.bounded_features)    
+                self._grid_density[np.any(self._X_grid[:, self.bounded_features] < self._low_bounds,axis=1)] = 0
+            
+            self._knr = KNeighborsRegressor(n_neighbors=2**len(self.bounded_features), weights='distance')
+            self._knr.fit(self._X_grid, self._grid_density)
         
     def plot_bw_opt(self):
         df = pd.DataFrame(self._opt_bw, columns=['bw'])
@@ -143,6 +153,12 @@ class KDE(BaseEstimator):
     def predict(self, X):
         if len(X.shape) == 1:
             X = X[:,None]
+        
+        if self.method == 'BoxKDE':
+            X = self._transform_to_principal_component_space(X)
+            p = self._knr.predict(X) * 2 ** len(self.bounded_features)
+            p[np.any(self._X_grid[:, self.bounded_features] < self._low_bounds,axis=1)] = 0
+            return(p)
         
         return(self._knr.predict(X))
     
@@ -170,7 +186,6 @@ class KDE(BaseEstimator):
     def _compute_bw_ucv(self, X):
         if self.verbose > 0:
             print('\n ==== \n BandWidth computing through UCV method \n ==== \n\n')
-        n = X.shape[0]
         
         bw = np.mean([silvermans_rule(X[:, [k]]) for k in range(self._num_dims)])
         
@@ -182,34 +197,52 @@ class KDE(BaseEstimator):
                            xtol=self.bw_tol,
                            ftol=self.J_tol)
         
-        self._opt_bw = np.array(self._opt_bw)
-        self._opt_J = np.array(self._opt_J)
-        
         return(float(bw[0]))
-                
-    def _compute_leave_one_out(self, X, bw):
-        n = X.shape[0]
-        s = 0
-        
-        if self.verbose > 1:
-            loop = tqdm(range(n))
-        else:
-            loop = range(n)
-        
-        s = np.sum([1 / (n-1) * gaussian(X[i]-np.delete(X, i, axis=0), bw=bw, norm=2).sum() for i in loop])
-        
-        return(s)
+    
     
     def _compute_J(self, bw, X):
-        bw = bw[0]
+        if type(bw) is list or type(bw) is np.ndarray:
+            bw = bw[0]
+        
+        if bw < 0:
+            return(np.nan)
         
         n = X.shape[0]
-        kde = FFTKDE(kernel='gaussian', norm=2, bw=bw)
-        grid, points = kde.fit(X).evaluate(self.grid_points)
+        d = X.shape[1]
         
-        integral_square = np.sum(points**2) * np.product(grid.max(axis=0)-grid.min(axis=0)) / points.size
+        kde = _kde_class[self.method](kernel=self.kernel, norm=self.norm, bw=bw)
+        kde.fit(X)
         
-        s = self._compute_leave_one_out(X, bw=bw)
+        if self.method=='BoxKDE' and 1==0:
+            c = list(combinations(np.arange(n), 2))
+            integral_square = 0
+            
+            V = volume_unit_ball(d=d, p=self.norm)
+        
+            for i, j in tqdm(c):
+                normed_x = p_norm(X[[i,j],:], self.norm)
+                d = np.abs(normed_x[0]- normed_x[1])
+                if d <= bw / 2:
+                    a = bw - d
+                    integral_square += a
+        
+            integral_square = 1 / (n**2 * (bw/2)**(2*d) * V**2) * (n * bw + 2 * integral_square)
+            
+            knr = kde
+        else:
+            grid, points = kde.evaluate(self.grid_points)
+            integral_square = np.sum(points**2) * np.product(grid.max(axis=0)-grid.min(axis=0)) / points.size
+            
+            knr = KNeighborsRegressor(n_neighbors=2**len(self.bounded_features),
+                                      weights='distance')
+            
+            if len(grid.shape) == 1:
+                grid = grid[:,None]
+            
+            knr.fit(grid, points)
+            
+        K0 = _kernel_functions[self.kernel](np.zeros((1, self._num_dims)), bw=bw, norm=self.norm)[0]
+        s = n / (n-1) * (knr.predict(X).sum() - K0)
         
         J = integral_square - 2 / n * s
         
