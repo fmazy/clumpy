@@ -8,7 +8,7 @@ Created on Fri Apr 30 09:24:01 2021
 
 import numpy as np
 from sklearn.neighbors import NearestNeighbors
-from scipy.special import gamma
+from scipy.special import gamma, betainc
 from scipy.optimize import fmin
 from itertools import combinations
 from tqdm import tqdm
@@ -46,14 +46,14 @@ class RectKDE():
         self._whitening_transformer = _WhiteningTransformer()
         X = self._whitening_transformer.fit_transform(X)
         
-        if self.hmax is None and type(self.h) is float:
-            self._hmax = self.h
+        # if self.hmax is None and type(self.h) is float:
+            # self._hmax = self.h
         
-        else:
+        # else:
             # take the silverman value times 3
-            self._hmax = 3 * (self._n * 3 / 4.0) ** (-1 / 5)
+            # self._hmax = 3 * (self._n * 3 / 4.0) ** (-1 / 5)
         
-        X = self._cut_mirror(X)
+        # X = self._cut_mirror(X)
         
         self._data = X
         
@@ -78,29 +78,29 @@ class RectKDE():
             print('...done')
         
         # mirror coefficient ?
-        if len(self.bounded_features) > 0:
-            if type(self.grid_points) is int:
-                grid_points = (np.ones(self._d) * self.grid_points).astype(int)
+        # if len(self.bounded_features) > 0:
+        #     if type(self.grid_points) is int:
+        #         grid_points = (np.ones(self._d) * self.grid_points).astype(int)
             
-            if self.verbose > 0:
-                print('\nComputing mirror coefficient')
-                print('Grid points : ', grid_points)
-                print('Estimating grid density...')
+        #     if self.verbose > 0:
+        #         print('\nComputing mirror coefficient')
+        #         print('Grid points : ', grid_points)
+        #         print('Estimating grid density...')
             
-            self._mirror_coef = None
-            X_grid, pred_grid, integral, integral_out_of_bounds = self.grid_predict(grid_points,
-                                                                                    return_integral=True,
-                                                                                    return_integral_out_of_bounds=True)
+        #     self._mirror_coef = None
+        #     X_grid, pred_grid, integral, integral_out_of_bounds = self.grid_predict(grid_points,
+        #                                                                             return_integral=True,
+        #                                                                             return_integral_out_of_bounds=True)
             
-            self._mirror_coef = 1 / (1 - integral_out_of_bounds)
+        #     self._mirror_coef = 1 / (1 - integral_out_of_bounds)
             
-            if self.verbose > 0:
-                print('...done')    
-                print('Integral : ', integral)
-                if integral < 0.99:
-                    print('/!\ WARNING /!\ The integral is low. The grid points should be increased.')
-                print('Integral out of bounds : ', integral_out_of_bounds)
-                print('Mirror coef : ', self._mirror_coef)
+        #     if self.verbose > 0:
+        #         print('...done')    
+        #         print('Integral : ', integral)
+        #         if integral < 0.99:
+        #             print('/!\ WARNING /!\ The integral is low. The grid points should be increased.')
+        #         print('Integral out of bounds : ', integral_out_of_bounds)
+        #         print('Mirror coef : ', self._mirror_coef)
             
         return(self)
     
@@ -113,13 +113,18 @@ class RectKDE():
         density = np.array([ni.size for ni in neigh_ind])
         density = density / ( self._n * self._h**self._d * volume )
         
-        if self._mirror_coef is not None:
-            density[np.any(X[:, self.bounded_features] < self._low_bounds, axis=1)] = 0
-            density *= self._mirror_coef
+        density[np.any(X[:, self.bounded_features] < self._low_bounds, axis=1)] = 0
+        
+        density = density * 2 ** len(self.bounded_features)
+        
+        
+        # if self._mirror_coef is not None:
+            # density[np.any(X[:, self.bounded_features] < self._low_bounds, axis=1)] = 0
+            # density *= self._mirror_coef
         
         return(density)
     
-    def grid_predict(self, grid_points, return_integral=False, return_integral_out_of_bounds=False):
+    def grid_predict(self, grid_points, return_integral=False):
         support_min, support_max = self._support_in_transformed_space()
         
         xk = np.meshgrid(*(np.linspace(support_min[k], support_max[k], grid_points[k]) for k in range(self._d)))
@@ -129,15 +134,23 @@ class RectKDE():
         
         pred_grid = self.predict(X_grid)
         
+        integral = pred_grid.sum() * np.product(support_max - support_min) / pred_grid.size
+        
+        print((pred_grid**2).sum() * np.product(support_max - support_min) / pred_grid.size)
+        
+        # return only within the bounds
+        # idx = np.all(X_grid[:, self.bounded_features] >= self._low_bounds, axis=1)
+        # X_grid = X_grid[idx]
+        # pred_grid = pred_grid[idx]
+        
         if return_integral:
-            integral = pred_grid.sum() * np.product(support_max - support_min) / pred_grid.size
-            
-            if return_integral_out_of_bounds:
-                idx_out_of_bounds = np.any(X_grid[:,self.bounded_features] < self._low_bounds, axis=1)
-                integral_out_of_bounds = pred_grid[idx_out_of_bounds].sum() * np.product(support_max - support_min) / pred_grid.size
-                
-                return(X_grid, pred_grid, integral, integral_out_of_bounds)
             return(X_grid, pred_grid, integral)
+        #     if return_integral_out_of_bounds:
+        #         idx_out_of_bounds = np.any(X_grid[:,self.bounded_features] < self._low_bounds, axis=1)
+        #         integral_out_of_bounds = pred_grid[idx_out_of_bounds].sum() * np.product(support_max - support_min) / pred_grid.size
+                
+        #         return(X_grid, pred_grid, integral, integral_out_of_bounds)
+        #     return(X_grid, pred_grid, integral)
         return(X_grid, pred_grid)
     
     def _mirror(self, X):
@@ -148,6 +161,8 @@ class RectKDE():
             X_mirrored[:, feature] = 2 * self._low_bounds[idx] - X[:, feature]
 
             X = np.vstack((X, X_mirrored))
+        
+        return(X)
         
         if self.verbose > 0 and len(self.bounded_features) > 0:
             print('mirrored data shape : ', X.shape)
@@ -186,18 +201,38 @@ class RectKDE():
     
     def _compute_J(self, h):
         c = list(combinations(np.arange(self._n), 2))
-        integral_square = 0
+        integral_squared = 0
         
         volume = volume_unit_ball(d=self._d, p=self.p)
         
         for i, j in tqdm(c):
-            normed_x = p_norm(self._data[[i,j],:], self.p)
-            d = np.abs(normed_x[0]- normed_x[1])
-            if d <= h:
-                a = h - d
-                integral_square += a
-                
-        integral_squared = 1 / (self._n**2 * h**(2*self._d) * volume**2) * (self._n * h + 2 * integral_square)
+            d = np.abs(p_norm(self._data[[i],:] - self._data[[j],:], p=self.p))
+            
+            if d <= h * 2:
+                integral_squared += 2 * Vn(h, d/2, self._d)
+            
+        integral_squared = 1 / (self._n * h**self._d * volume) + 2 / (self._n**2 * h**(2*self._d) * volume**2) * integral_squared
+        
+        return(integral_squared)
+    
+    def _compute_J2(self, h):
+        # c = list(combinations(np.arange(self._n), 2))
+        integral_squared = 0
+        
+        volume = volume_unit_ball(d=self._d, p=self.p)
+        
+        nn = NearestNeighbors(radius=2 * h, p=self.p)
+        nn.fit(self._data)
+        
+        neigh_dist, neigh_ind = nn.radius_neighbors(self._data, return_distance=True)
+        
+        for i, list_neighbors in tqdm(enumerate(neigh_ind)):
+            for id_j, j in enumerate(list_neighbors):
+                if i != j:
+                    d = neigh_dist[i][id_j]
+                    integral_squared += 2 * Vn(h, d/2, self._d)
+            
+        integral_squared = 1 / (self._n * h**self._d * volume) + 2 / (self._n**2 * h**(2*self._d) * volume**2) * integral_squared / 2
         
         return(integral_squared)
         
@@ -260,3 +295,33 @@ def p_norm(x, p):
     elif p == 1:
         return taxicab_norm(x)
     return np.power(np.power(np.abs(x), p).sum(axis=1), 1 / p)
+
+def euclidean_norm(x):
+    """
+    The 2 norm of an array of shape (obs, dims)
+    """
+    return np.sqrt((x * x).sum(axis=1))
+
+
+def euclidean_norm_sq(x):
+    """
+    The squared 2 norm of an array of shape (obs, dims)
+    """
+    return (x * x).sum(axis=1)
+
+
+def infinity_norm(x):
+    """
+    The infinity norm of an array of shape (obs, dims)
+    """
+    return np.abs(x).max(axis=1)
+
+
+def taxicab_norm(x):
+    """
+    The taxicab norm of an array of shape (obs, dims)
+    """
+    return np.abs(x).sum(axis=1)
+
+def Vn(r, a, n):
+    return(1/2*np.pi**(n/2)*r**2*betainc((n+1)/2, 1/2, 1-a**2/r**2)/gamma(n/2+1))
