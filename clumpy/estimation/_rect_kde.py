@@ -12,6 +12,8 @@ from scipy.special import gamma, betainc
 from scipy.optimize import fmin
 from itertools import combinations
 from tqdm import tqdm
+import pandas as pd
+from matplotlib import pyplot as plt
 
 class RectKDE():
     def __init__(self,
@@ -190,7 +192,7 @@ class RectKDE():
         # silverman rule as h start with sigma=1 (due to the isotrope transformation)
         h_start = (self._n * 3 / 4.0) ** (-1 / 5)
         
-        self._opt_bw = []
+        self._opt_h = []
         self._opt_J = []
         bw = fmin(self._compute_J,
                     h_start,
@@ -198,25 +200,11 @@ class RectKDE():
                     ftol=self.Jtol)
         
         return(float(bw[0]))
-    
+        
     def _compute_J(self, h):
-        c = list(combinations(np.arange(self._n), 2))
-        integral_squared = 0
+        if type(h) is np.ndarray:
+            h = float(h)
         
-        volume = volume_unit_ball(d=self._d, p=self.p)
-        
-        for i, j in tqdm(c):
-            d = np.abs(p_norm(self._data[[i],:] - self._data[[j],:], p=self.p))
-            
-            if d <= h * 2:
-                integral_squared += 2 * Vn(h, d/2, self._d)
-            
-        integral_squared = 1 / (self._n * h**self._d * volume) + 2 / (self._n**2 * h**(2*self._d) * volume**2) * integral_squared
-        
-        return(integral_squared)
-    
-    def _compute_J2(self, h):
-        # c = list(combinations(np.arange(self._n), 2))
         integral_squared = 0
         
         volume = volume_unit_ball(d=self._d, p=self.p)
@@ -224,17 +212,41 @@ class RectKDE():
         nn = NearestNeighbors(radius=2 * h, p=self.p)
         nn.fit(self._data)
         
-        neigh_dist, neigh_ind = nn.radius_neighbors(self._data, return_distance=True)
+        neigh_dist, neigh_ind = nn.radius_neighbors(return_distance=True)
         
-        for i, list_neighbors in tqdm(enumerate(neigh_ind)):
-            for id_j, j in enumerate(list_neighbors):
-                if i != j:
-                    d = neigh_dist[i][id_j]
-                    integral_squared += 2 * Vn(h, d/2, self._d)
+        integral_squared = 2*np.sum([Vn(h, d/2, self._d).sum() for d in neigh_dist])
             
-        integral_squared = 1 / (self._n * h**self._d * volume) + 2 / (self._n**2 * h**(2*self._d) * volume**2) * integral_squared / 2
+        integral_squared = 1 / (self._n * h**(2*self._d) * volume**2) + 2 / (self._n**2 * h**(2*self._d) * volume**2) * integral_squared / 2
         
-        return(integral_squared)
+        K0 = 1
+        
+        density_sum = np.sum([ni.size for ni in neigh_ind])
+        density_sum = density_sum / ( self._n * h**self._d * volume )
+        
+        s = self._n / (self._n-1) * (density_sum - K0 / (h**self._d * volume))
+        
+        J = integral_squared - 2 / self._n * s
+        
+        print(h, J)
+        
+        self._opt_h.append(h)
+        self._opt_J.append(J)
+        
+        return(J)
+
+    def plot_h_opt(self):
+        df = pd.DataFrame(self._opt_h, columns=['h'])
+        df['J'] = self._opt_J
+        df.sort_values(by='h', inplace=True)
+        
+        plt.plot(df.h, df.J)
+        plt.scatter(df.h, df.J, label='opt algo')
+        plt.vlines(self._h, ymin=df.J.min(), ymax=df.J.max(), color='red', label='selected value')
+        plt.xlabel('h')
+        plt.ylabel('J')
+        plt.legend()
+        
+        return(plt)
         
 class _WhiteningTransformer():
     def fit(self, X):
