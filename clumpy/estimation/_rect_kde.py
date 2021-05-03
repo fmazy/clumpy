@@ -106,10 +106,11 @@ class RectKDE():
             
         return(self)
     
-    def predict(self, X):
-        X_trans = self._whitening_transformer.transform(X)
+    def predict(self, X=None):
+        if X is not None:
+            X = self._whitening_transformer.transform(X)
         
-        neigh_ind = self._nn.radius_neighbors(X_trans, return_distance=False)
+        neigh_ind = self._nn.radius_neighbors(X, return_distance=False)
         volume = volume_unit_ball(d=self._d, p=self.p)
         
         density = np.array([ni.size for ni in neigh_ind])
@@ -190,7 +191,7 @@ class RectKDE():
         
         self._opt_h = []
         self._opt_J = []
-        h = fmin(self._compute_J2,
+        h = fmin(self._compute_J,
                     h_start,
                     xtol=self.htol,
                     ftol=self.Jtol)
@@ -198,31 +199,6 @@ class RectKDE():
         return(float(h[0]))
         
     def _compute_J(self, h):
-        if type(h) is np.ndarray:
-            h = float(h)
-        x0, x1 = np.meshgrid(*(np.linspace(-5,6, 400), np.linspace(-5, 6, 400)))
-        X_grid  = np.vstack([x0.flat, x1.flat]).T
-        
-        self._h = h
-        
-        volume = volume_unit_ball(d=self._d, p=self.p)
-        grid_density = self.predict(X_grid)
-        
-        integral_squared = (grid_density**2).sum() * np.product(X_grid.max(axis=0)-X_grid.min(axis=0)) / grid_density.size
-        
-        X = self._whitening_transformer.inverse_transform(self._data)
-        s = self._n / (self._n-1) * self.predict(X).sum() - self._n / ((self._n - 1) * self._h**self._d * volume * self._whitening_transformer._inverse_transform_det)
-        
-        J = integral_squared - 2 * s / self._n
-        
-        print(h, J)
-        
-        self._opt_h.append(h)
-        self._opt_J.append(J)
-        
-        return(J)
-        
-    def _compute_J2(self, h):
         if type(h) is np.ndarray:
             h = float(h)
         
@@ -234,18 +210,15 @@ class RectKDE():
         
         print(h, J)
         
-        self._opt_h.append(h)
-        self._opt_J.append(J)
+        # self._opt_h.append(h)
+        # self._opt_J.append(J)
         
-        return(J)
+        return(leave_one_out_esperance)
     
     def _compute_integral_squared(self, h):
         volume = volume_unit_ball(d=self._d, p=self.p)
         
-        nn = NearestNeighbors(radius=2 * h, p=self.p)
-        nn.fit(self._data)
-        
-        neigh_dist, neigh_ind = nn.radius_neighbors(return_distance=True)
+        neigh_dist, neigh_ind = self._nn.radius_neighbors(radius=2 * h, return_distance=True)
         
         hypersphere_intersection_volume = 2*np.sum([Vn(h, d/2, self._d).sum() for d in neigh_dist]) * self._whitening_transformer._inverse_transform_det
         
@@ -256,12 +229,11 @@ class RectKDE():
     def _compute_leave_one_out_esperance(self, h):
         volume = volume_unit_ball(d=self._d, p=self.p)
         
-        nn = NearestNeighbors(radius=h, p=self.p)
-        nn.fit(self._data)
-        neigh_ind = nn.radius_neighbors(return_distance=False)
-        f_minus_i_esperance = np.mean([ni.size for ni in neigh_ind]) / ( (self._n-1) * h**self._d * volume * self._whitening_transformer._inverse_transform_det )
+        neigh_ind = self._nn.radius_neighbors(radius=h, return_distance=False)
         
-        return(f_minus_i_esperance)
+        s = np.array([ni.size for ni in neigh_ind]) / ((self._n - 1) * self._h**self._d * volume * self._whitening_transformer._inverse_transform_det)
+        
+        return(np.mean(s))
 
     def plot_h_opt(self):
         df = pd.DataFrame(self._opt_h, columns=['h'])
