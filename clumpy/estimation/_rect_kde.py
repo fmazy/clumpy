@@ -113,16 +113,11 @@ class RectKDE():
         volume = volume_unit_ball(d=self._d, p=self.p)
         
         density = np.array([ni.size for ni in neigh_ind])
-        density = density / ( self._n * self._h**self._d * volume )
+        density = density / ( self._n * self._h**self._d * volume * self._whitening_transformer._inverse_transform_det )
         
         density[np.any(X[:, self.bounded_features] < self._low_bounds, axis=1)] = 0
         
         density = density * 2 ** len(self.bounded_features)
-        
-        
-        # if self._mirror_coef is not None:
-            # density[np.any(X[:, self.bounded_features] < self._low_bounds, axis=1)] = 0
-            # density *= self._mirror_coef
         
         return(density)
     
@@ -216,18 +211,21 @@ class RectKDE():
         
         integral_squared = 2*np.sum([Vn(h, d/2, self._d).sum() for d in neigh_dist])
             
-        integral_squared = 1 / (self._n * h**(2*self._d) * volume**2) + 2 / (self._n**2 * h**(2*self._d) * volume**2) * integral_squared / 2
+        integral_squared = 1 / (self._n * h**(2*self._d) * volume**2 * self._whitening_transformer._inverse_transform_det**2) + 2 / (self._n**2 * h**(2*self._d) * volume**2 * self._whitening_transformer._inverse_transform_det**2) * integral_squared / 2
         
-        K0 = 1
         
-        density_sum = np.sum([ni.size for ni in neigh_ind])
-        density_sum = density_sum / ( self._n * h**self._d * volume )
+        neigh_ind = nn.radius_neighbors(radius = h, return_distance=False)
+        s = 1 / ((self._n - 1) * self._h**self._d * volume * self._whitening_transformer._inverse_transform_det) * (np.sum([ni.size for ni in neigh_ind]))
         
-        s = self._n / (self._n-1) * (density_sum - K0 / (h**self._d * volume))
+        # K0 = 1
+        
+        # density_sum = np.sum([ni.size for ni in neigh_ind])
+        # density_sum = density_sum / ( self._n * h**self._d * volume * self._whitening_transformer._inverse_transform_det)
+        
+        # s = self._n / (self._n-1) * (density_sum - K0 / (h**self._d * volume * self._whitening_transformer._inverse_transform_det))
         
         J = integral_squared - 2 / self._n * s
         
-        print(h, J)
         
         self._opt_h.append(h)
         self._opt_J.append(J)
@@ -254,23 +252,27 @@ class _WhiteningTransformer():
         
         self._num_obs = X.shape[0]
         
-        self._U, self._s, Vt = np.linalg.svd(X - self._mean, full_matrices=False)
+        _, self._s, Vt = np.linalg.svd(X - self._mean, full_matrices=False)
         self._V = Vt.T
+        
+        self._transform_matrix = self._V @ np.diag(1 / self._s) * np.sqrt(self._num_obs-1)
+        self._inverse_transform_matrix = np.diag(self._s)  @ self._V.T / np.sqrt(self._num_obs-1)
+        
+        self._transform_det = np.linalg.det(self._transform_matrix)
+        self._inverse_transform_det = np.linalg.det(self._inverse_transform_matrix)
         
         return(self)
         
     def transform(self, X):
         X = X - self._mean
-        return(X @ self._V @ np.diag(1 / self._s) * np.sqrt(self._num_obs-1))
+        return(X @ self._transform_matrix)
     
     def inverse_transform(self, X):
-        X = X / np.sqrt(self._num_obs-1) @ np.diag(self._s)  @ self._V.T
-        X = X + self._mean
-        return(X)
+        X = X @ self._inverse_transform_matrix
+        return(X + self._mean)
     
     def fit_transform(self, X):
         self.fit(X)
-        
         return(self.transform(X))
     
 def volume_unit_ball(d, p=2):
