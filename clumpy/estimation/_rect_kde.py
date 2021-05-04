@@ -76,6 +76,8 @@ class RectKDE():
         self._nn = NearestNeighbors(radius=self._h, p=self.p)
         self._nn.fit(self._data)
         
+        self._v = volume_unit_ball(self._d, self.p) * self._whitening_transformer._inverse_transform_det
+        
         if self.verbose > 0:
             print('...done')
         
@@ -111,10 +113,9 @@ class RectKDE():
             X = self._whitening_transformer.transform(X)
         
         neigh_ind = self._nn.radius_neighbors(X, return_distance=False)
-        volume = volume_unit_ball(d=self._d, p=self.p)
         
         density = np.array([ni.size for ni in neigh_ind])
-        density = density / ( self._n * self._h**self._d * volume * self._whitening_transformer._inverse_transform_det )
+        density = density / ( self._n * self._v * self._h**self._d)
         
         density[np.any(X[:, self.bounded_features] < self._low_bounds, axis=1)] = 0
         
@@ -122,34 +123,34 @@ class RectKDE():
         
         return(density)
     
-    def grid_predict(self, grid_points, return_integral=False):
-        support_min, support_max = self._support_in_transformed_space()
+    # def grid_predict(self, grid_points, return_integral=False):
+    #     support_min, support_max = self._support_in_transformed_space()
         
-        xk = np.meshgrid(*(np.linspace(support_min[k], support_max[k], grid_points[k]) for k in range(self._d)))
-        X_grid = np.vstack([xk[k].flat for k in range(self._d)]).T
+    #     xk = np.meshgrid(*(np.linspace(support_min[k], support_max[k], grid_points[k]) for k in range(self._d)))
+    #     X_grid = np.vstack([xk[k].flat for k in range(self._d)]).T
         
-        X_grid = self._whitening_transformer.inverse_transform(X_grid)
+    #     X_grid = self._whitening_transformer.inverse_transform(X_grid)
         
-        pred_grid = self.predict(X_grid)
+    #     pred_grid = self.predict(X_grid)
         
-        integral = pred_grid.sum() * np.product(support_max - support_min) / pred_grid.size
+    #     integral = pred_grid.sum() * np.product(support_max - support_min) / pred_grid.size
         
-        print((pred_grid**2).sum() * np.product(support_max - support_min) / pred_grid.size)
+    #     print((pred_grid**2).sum() * np.product(support_max - support_min) / pred_grid.size)
         
-        # return only within the bounds
-        # idx = np.all(X_grid[:, self.bounded_features] >= self._low_bounds, axis=1)
-        # X_grid = X_grid[idx]
-        # pred_grid = pred_grid[idx]
+    #     # return only within the bounds
+    #     # idx = np.all(X_grid[:, self.bounded_features] >= self._low_bounds, axis=1)
+    #     # X_grid = X_grid[idx]
+    #     # pred_grid = pred_grid[idx]
         
-        if return_integral:
-            return(X_grid, pred_grid, integral)
-        #     if return_integral_out_of_bounds:
-        #         idx_out_of_bounds = np.any(X_grid[:,self.bounded_features] < self._low_bounds, axis=1)
-        #         integral_out_of_bounds = pred_grid[idx_out_of_bounds].sum() * np.product(support_max - support_min) / pred_grid.size
+    #     if return_integral:
+    #         return(X_grid, pred_grid, integral)
+    #     #     if return_integral_out_of_bounds:
+    #     #         idx_out_of_bounds = np.any(X_grid[:,self.bounded_features] < self._low_bounds, axis=1)
+    #     #         integral_out_of_bounds = pred_grid[idx_out_of_bounds].sum() * np.product(support_max - support_min) / pred_grid.size
                 
-        #         return(X_grid, pred_grid, integral, integral_out_of_bounds)
-        #     return(X_grid, pred_grid, integral)
-        return(X_grid, pred_grid)
+    #     #         return(X_grid, pred_grid, integral, integral_out_of_bounds)
+    #     #     return(X_grid, pred_grid, integral)
+    #     return(X_grid, pred_grid)
     
     def _mirror(self, X):
         self._low_bounds = X[:, self.bounded_features].min(axis=0)
@@ -167,22 +168,22 @@ class RectKDE():
             
         return(X)
     
-    def _cut_mirror(self, X):
+    # def _cut_mirror(self, X):
         
-        X_inv_trans = self._whitening_transformer.inverse_transform(X)
+    #     X_inv_trans = self._whitening_transformer.inverse_transform(X)
         
-        X = X[np.all(X_inv_trans[:, self.bounded_features] >= self._low_bounds - self._hmax, axis=1)]
+    #     X = X[np.all(X_inv_trans[:, self.bounded_features] >= self._low_bounds - self._hmax, axis=1)]
         
-        if self.verbose>0:
-            print('cutted mirror data shape : ', X.shape)
+    #     if self.verbose>0:
+    #         print('cutted mirror data shape : ', X.shape)
         
-        return(X)
+    #     return(X)
     
-    def _support_in_transformed_space(self):
-        support_min = self._data.min(axis=0) - self._h
-        support_max = self._data.max(axis=0) + self._h
+    # def _support_in_transformed_space(self):
+    #     support_min = self._data.min(axis=0) - self._h
+    #     support_max = self._data.max(axis=0) + self._h
         
-        return(support_min, support_max)
+    #     return(support_min, support_max)
     
     def _compute_h_through_ucv(self):
         # silverman rule as h start with sigma=1 (due to the isotrope transformation)
@@ -216,22 +217,20 @@ class RectKDE():
         return(leave_one_out_esperance)
     
     def _compute_integral_squared(self, h):
-        volume = volume_unit_ball(d=self._d, p=self.p)
+        neigh_dist, neigh_ind = self._nn.radius_neighbors(radius=2 * h,
+                                                          return_distance=True)
         
-        neigh_dist, neigh_ind = self._nn.radius_neighbors(radius=2 * h, return_distance=True)
+        hypersphere_intersection_volume = 2*np.sum([Vn(h, d/2, self._d).sum() for d in neigh_dist]) * self._whitening_transformer._inverse_transform_det / 2
         
-        hypersphere_intersection_volume = 2*np.sum([Vn(h, d/2, self._d).sum() for d in neigh_dist]) * self._whitening_transformer._inverse_transform_det
-        
-        integral_squared = 1 / (self._n * h**(self._d) * volume * self._whitening_transformer._inverse_transform_det) + 2 / (self._n**2 * h**(2*self._d) * volume**2 * self._whitening_transformer._inverse_transform_det**2) * hypersphere_intersection_volume / 2
+        integral_squared = 1 / (self._n * h**(self._d) * self._v) 
+        integral_squared += 2 / (self._n**2 * h**(2*self._d) * self._v**2) * hypersphere_intersection_volume
         
         return(integral_squared)
     
     def _compute_leave_one_out_esperance(self, h):
-        volume = volume_unit_ball(d=self._d, p=self.p)
-        
         neigh_ind = self._nn.radius_neighbors(radius=h, return_distance=False)
         
-        s = np.array([ni.size for ni in neigh_ind]) / ((self._n - 1) * self._h**self._d * volume * self._whitening_transformer._inverse_transform_det)
+        s = np.array([ni.size for ni in neigh_ind]) / ((self._n - 1) * self._h**self._d * self._v)
         
         return(np.mean(s))
 
