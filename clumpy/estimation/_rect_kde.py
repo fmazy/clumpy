@@ -15,6 +15,55 @@ from tqdm import tqdm
 import pandas as pd
 from matplotlib import pyplot as plt
 
+# class _BaseRectKDE:
+#     def __init__(self,
+#                  h,
+#                  p=2):
+#         self.h = h
+#         self.p = p
+        
+#     def fit(self, X):
+#         self._n = X.shape[0]
+#         self._d = X.shape[1]
+        
+#         self._v = volume_unit_ball(self._d, self.p)
+        
+#         self._nn = NearestNeighbors(radius=self.h, p=self.p)
+#         self._nn.fit(X)
+    
+#     def predict(self, X):
+#         neigh_ind = self._nn.radius_neighbors(X, return_distance=False)
+        
+#         density = np.array([ni.size for ni in neigh_ind])
+#         density = density / ( self._n * self._v * self._h**self._d)
+        
+#         return(density)
+    
+#     def _compute_J(self):
+        
+#         integral_squared = self._compute_integral_squared()
+#         looe = self._compute_leave_one_out_esperance()
+        
+#         return(integral_squared - 2 * looe)
+        
+#     def _compute_integral_squared(self):
+#         neigh_dist, neigh_ind = self._nn.radius_neighbors(radius=2 * self.h,
+#                                                           return_distance=True)
+        
+#         hypersphere_intersection_volume = 2*np.sum([Vn(self.h, d/2, self._d).sum() for d in neigh_dist]) / 2
+        
+#         integral_squared = 1 / (self._n * self.h**(self._d) * self._v) 
+#         integral_squared += 2 / (self._n**2 * self.h**(2*self._d) * self._v**2) * hypersphere_intersection_volume
+        
+#         return(integral_squared)
+        
+#     def _compute_leave_one_out_esperance(self):
+#         neigh_ind = self._nn.radius_neighbors(radius=self.h, return_distance=False)
+        
+#         s = np.array([ni.size for ni in neigh_ind]).sum() / (self._n * (self._n - 1) * self.h**self._d * self._v)
+        
+#         return(s)
+
 class RectKDE():
     def __init__(self,
                  h,
@@ -188,7 +237,7 @@ class RectKDE():
     def _compute_h_through_ucv(self):
         # silverman rule as h start with sigma=1 (due to the isotrope transformation)
         sigma = 1
-        h_start = sigma * (self._n * 3 / 4.0) ** (-1 / 5) * 2
+        h_start = sigma * (self._n * 3 / 4.0) ** (-1 / 5)
         
         self._opt_h = []
         self._opt_J = []
@@ -214,7 +263,7 @@ class RectKDE():
         # self._opt_h.append(h)
         # self._opt_J.append(J)
         
-        return(leave_one_out_esperance)
+        return(J)
     
     def _compute_integral_squared(self, h):
         neigh_dist, neigh_ind = self._nn.radius_neighbors(radius=2 * h,
@@ -226,13 +275,13 @@ class RectKDE():
         integral_squared += 2 / (self._n**2 * h**(2*self._d) * self._v**2) * hypersphere_intersection_volume
         
         return(integral_squared)
-    
+        
     def _compute_leave_one_out_esperance(self, h):
         neigh_ind = self._nn.radius_neighbors(radius=h, return_distance=False)
         
-        s = np.array([ni.size for ni in neigh_ind]) / ((self._n - 1) * self._h**self._d * self._v)
+        s = np.array([ni.size for ni in neigh_ind]).sum() / (self._n * (self._n - 1) * h**self._d * self._v)
         
-        return(np.mean(s))
+        return(s)
 
     def plot_h_opt(self):
         df = pd.DataFrame(self._opt_h, columns=['h'])
