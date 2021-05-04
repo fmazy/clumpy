@@ -12,75 +12,36 @@ from scipy.special import gamma, betainc
 from scipy.optimize import fmin
 from itertools import combinations
 from tqdm import tqdm
+from time import time
 import pandas as pd
 from matplotlib import pyplot as plt
-
-# class _BaseRectKDE:
-#     def __init__(self,
-#                  h,
-#                  p=2):
-#         self.h = h
-#         self.p = p
-        
-#     def fit(self, X):
-#         self._n = X.shape[0]
-#         self._d = X.shape[1]
-        
-#         self._v = volume_unit_ball(self._d, self.p)
-        
-#         self._nn = NearestNeighbors(radius=self.h, p=self.p)
-#         self._nn.fit(X)
-    
-#     def predict(self, X):
-#         neigh_ind = self._nn.radius_neighbors(X, return_distance=False)
-        
-#         density = np.array([ni.size for ni in neigh_ind])
-#         density = density / ( self._n * self._v * self._h**self._d)
-        
-#         return(density)
-    
-#     def _compute_J(self):
-        
-#         integral_squared = self._compute_integral_squared()
-#         looe = self._compute_leave_one_out_esperance()
-        
-#         return(integral_squared - 2 * looe)
-        
-#     def _compute_integral_squared(self):
-#         neigh_dist, neigh_ind = self._nn.radius_neighbors(radius=2 * self.h,
-#                                                           return_distance=True)
-        
-#         hypersphere_intersection_volume = 2*np.sum([Vn(self.h, d/2, self._d).sum() for d in neigh_dist]) / 2
-        
-#         integral_squared = 1 / (self._n * self.h**(self._d) * self._v) 
-#         integral_squared += 2 / (self._n**2 * self.h**(2*self._d) * self._v**2) * hypersphere_intersection_volume
-        
-#         return(integral_squared)
-        
-#     def _compute_leave_one_out_esperance(self):
-#         neigh_ind = self._nn.radius_neighbors(radius=self.h, return_distance=False)
-        
-#         s = np.array([ni.size for ni in neigh_ind]).sum() / (self._n * (self._n - 1) * self.h**self._d * self._v)
-        
-#         return(s)
+import noisyopt
 
 class RectKDE():
     def __init__(self,
                  h,
-                 hmax=None,
                  p=2,
                  bounded_features=[],
-                 grid_points=2**8,
-                 htol=1e-3,
-                 Jtol=1e-2,
+                 h_min = 0.1,
+                 h_max = 1,
+                 h_step = 0.01,
+                 grid_shape = 2**8,
+                 integral_tol = 1e-2,
+                 algorithm='auto',
+                 leaf_size=30,
+                 n_jobs=None,
                  verbose=0):
         self.h = h
-        self.hmax=hmax
         self.p = p
-        self.bounded_features=bounded_features
-        self.grid_points = grid_points
-        self.htol = htol
-        self.Jtol = Jtol
+        self.bounded_features = bounded_features
+        self.h_min = h_min
+        self.h_max = h_max
+        self.h_step = h_step
+        self.grid_shape = grid_shape
+        self.integral_tol = 1e-2
+        self.algorithm = algorithm
+        self.leaf_size = leaf_size
+        self.n_jobs = n_jobs
         self.verbose = verbose
     
     def fit(self, X):
@@ -92,7 +53,12 @@ class RectKDE():
                 print('\nsymetry for bounds')
                 print('bounded_features : ', self.bounded_features)
         
+        plt.scatter(X[:,0], X[:,1],s=2)
         X = self._mirror(X)
+        plt.scatter(X[:,0], X[:,1],s=2)
+        
+        self._support = [X.min(axis=0) - X.std(axis=0),
+                         X.max(axis=0) + X.std(axis=0)]
         
         self._whitening_transformer = _WhiteningTransformer()
         X = self._whitening_transformer.fit_transform(X)
@@ -111,21 +77,36 @@ class RectKDE():
         self._n = self._data.shape[0]
         self._d = self._data.shape[1]
         
+        self._v = volume_unit_ball(self._d, self.p) * self._whitening_transformer._inverse_transform_det
+        
+        if type(self.h) is float:
+            initial_radius = self.h
+        else:
+            initial_radius = (self.h_max + self.h_min) / 2
+        
+        self._nn = NearestNeighbors(radius = initial_radius,
+                                    algorithm = self.algorithm,
+                                    leaf_size = self.leaf_size,
+                                    p = self.p,
+                                    n_jobs = self.n_jobs)
+        self._nn.fit(self._data)
+        
         if type(self.h) is str:
             if self.h == 'UCV':
                 self._h = self._compute_h_through_ucv()
+            elif self.h == 'UCV_mc':
+                self._h = self._compute_h_through_ucv(montecarlo=True)
+            else:
+                raise(TypeError("Unexpected h parameter type. Should be a float or {'UCV', 'UCV_mc'}."))
         elif type(self.h) is float:
             self._h = self.h
         else:
-            raise(TypeError("Unexpected h parameter type. Should be a float or 'UCV'."))
+            raise(TypeError("Unexpected h parameter type. Should be a float or {'UCV', 'UCV_mc'}."))
         
         if self.verbose > 0:
             print('\nNearest neighbors training...')
         
-        self._nn = NearestNeighbors(radius=self._h, p=self.p)
-        self._nn.fit(self._data)
-        
-        self._v = volume_unit_ball(self._d, self.p) * self._whitening_transformer._inverse_transform_det
+        self._nn.radius = self._h
         
         if self.verbose > 0:
             print('...done')
@@ -157,13 +138,13 @@ class RectKDE():
             
         return(self)
     
-    def predict(self, X=None):
-        if X is not None:
-            X = self._whitening_transformer.transform(X)
+    def predict(self, X):
+        X = self._whitening_transformer.transform(X)
         
         neigh_ind = self._nn.radius_neighbors(X, return_distance=False)
         
         density = np.array([ni.size for ni in neigh_ind])
+        
         density = density / ( self._n * self._v * self._h**self._d)
         
         density[np.any(X[:, self.bounded_features] < self._low_bounds, axis=1)] = 0
@@ -171,6 +152,32 @@ class RectKDE():
         density = density * 2 ** len(self.bounded_features)
         
         return(density)
+    
+    def grid_predict(self):
+        X_grid = self._create_grid()
+        
+        density = self.predict(X_grid)
+        
+        integral = density.sum() * np.product(X_grid.max(axis=0)-X_grid.min(axis=0)) / X_grid.shape[0]
+        
+        if self.verbose > 0:
+            print('integral=',integral)
+        
+        _check_integral_close_to_1(integral)
+        
+        return(X_grid, density)
+        
+    def _create_grid(self):
+        if type(self.grid_shape) is int:
+            grid_shape = (np.ones(self._d) * self.grid_shape).astype(int)
+        else:
+            grid_shape = self.grid_shape
+        
+        xk = np.meshgrid(*(np.linspace(self._support[0][k],self._support[1][k], grid_shape[k]) for k in range(self._d)))
+        X_grid = np.vstack([xki.flat for xki in xk]).T
+        
+        return(X_grid)
+# new_X_grid  = np.vstack([x0.flat, x1.flat]).T
     
     # def grid_predict(self, grid_points, return_integral=False):
     #     support_min, support_max = self._support_in_transformed_space()
@@ -228,58 +235,93 @@ class RectKDE():
         
     #     return(X)
     
-    # def _support_in_transformed_space(self):
-    #     support_min = self._data.min(axis=0) - self._h
-    #     support_max = self._data.max(axis=0) + self._h
+    def _compute_h_through_ucv(self, montecarlo=False):
+        if montecarlo:
+            X_grid = self._create_grid()
+        else:
+            X_grid = None
         
-    #     return(support_min, support_max)
-    
-    def _compute_h_through_ucv(self):
-        # silverman rule as h start with sigma=1 (due to the isotrope transformation)
-        sigma = 1
-        h_start = sigma * (self._n * 3 / 4.0) ** (-1 / 5)
-        
-        self._opt_h = []
+        self._opt_h = np.arange(start = self.h_min,
+                           stop = self.h_max,
+                           step = self.h_step)
         self._opt_J = []
-        h = fmin(self._compute_J,
-                    h_start,
-                    xtol=self.htol,
-                    ftol=self.Jtol)
         
-        return(float(h[0]))
+        st = time()
+        for h in self._opt_h:
+            self._opt_J.append(self._compute_J(h, X_grid, real_scale=False))
+            
+            if self.verbose>0:
+                print(h, self._opt_J[-1])
         
-    def _compute_J(self, h):
+        self._opt_time = time() - st
+        self._opt_J = np.array(self._opt_J)
+        
+        return(self._opt_h[np.argmin(self._opt_J)])
+        
+    def _compute_J(self, h, X_grid=None, real_scale=True):
         if type(h) is np.ndarray:
             h = float(h)
         
-        integral_squared = self._compute_integral_squared(h)
+        integral_squared = self._compute_integral_squared(h, X_grid, real_scale=real_scale)
         
-        leave_one_out_esperance = self._compute_leave_one_out_esperance(h)
+        leave_one_out_esperance = self._compute_leave_one_out_esperance(h, real_scale=real_scale)
         
         J = integral_squared - 2 * leave_one_out_esperance
         
-        print(h, J)
-        
-        # self._opt_h.append(h)
-        # self._opt_J.append(J)
-        
         return(J)
     
-    def _compute_integral_squared(self, h):
-        neigh_dist, neigh_ind = self._nn.radius_neighbors(radius=2 * h,
+    def _compute_integral_squared(self, h, X_grid=None, real_scale=True):
+        if X_grid is None:
+            return(self._compute_exact_integral_squared(h, real_scale=real_scale))
+        else:
+            return(self._compute_mc_integral_squared(h, X_grid, real_scale=real_scale))
+    
+    def _compute_mc_integral_squared(self, h, X_grid, real_scale=True):
+        
+        mc_coef = np.product(X_grid.max(axis=0)-X_grid.min(axis=0)) / X_grid.shape[0]
+                
+        X_grid = self._whitening_transformer.transform(X_grid)
+             
+        neigh_ind = self._nn.radius_neighbors(X=X_grid,
+                                              radius=h,
+                                              return_distance=False)
+        
+        p_grid = np.array([ni.size for ni in neigh_ind])
+        p_grid = p_grid / ( self._n * self._v * h**self._d)
+        
+        integral = p_grid.sum() * mc_coef
+        
+        _check_integral_close_to_1(integral, eps=self.integral_tol)
+        
+        integral_squared = (p_grid**2).sum() * mc_coef
+        
+        if not real_scale:
+            integral_squared *= self._n * self._v
+        
+        return(integral_squared)
+    
+    def _compute_exact_integral_squared(self, h, real_scale=True):
+        neigh_dist, neigh_ind = self._nn.radius_neighbors(radius= 2 * h,
                                                           return_distance=True)
         
         hypersphere_intersection_volume = 2*np.sum([Vn(h, d/2, self._d).sum() for d in neigh_dist]) * self._whitening_transformer._inverse_transform_det / 2
         
-        integral_squared = 1 / (self._n * h**(self._d) * self._v) 
-        integral_squared += 2 / (self._n**2 * h**(2*self._d) * self._v**2) * hypersphere_intersection_volume
+        integral_squared = 1 / (h**self._d)
+        integral_squared += 2 / (self._n * h**(2 * self._d) * self._v) * hypersphere_intersection_volume
+        
+        if real_scale:
+            integral_squared /= self._n * h**(self._d) * self._v
         
         return(integral_squared)
         
-    def _compute_leave_one_out_esperance(self, h):
-        neigh_ind = self._nn.radius_neighbors(radius=h, return_distance=False)
+    def _compute_leave_one_out_esperance(self, h, real_scale=True):
+        neigh_ind = self._nn.radius_neighbors(radius = h,
+                                        return_distance=False)
         
-        s = np.array([ni.size for ni in neigh_ind]).sum() / (self._n * (self._n - 1) * h**self._d * self._v)
+        s = np.array([ni.size for ni in neigh_ind]).sum() / ((self._n - 1) * h**self._d)
+        
+        if real_scale:
+            s /= self._n * self._v
         
         return(s)
 
@@ -288,11 +330,11 @@ class RectKDE():
         df['J'] = self._opt_J
         df.sort_values(by='h', inplace=True)
         
-        plt.plot(df.h, df.J)
-        plt.scatter(df.h, df.J, label='opt algo')
+        plt.plot(df.h, df.J, label='opt algo')
+        # plt.scatter(df.h, df.J, label='opt algo', s=5)
         plt.vlines(self._h, ymin=df.J.min(), ymax=df.J.max(), color='red', label='selected value')
         plt.xlabel('h')
-        plt.ylabel('J')
+        plt.ylabel('$\hat{J}$')
         plt.legend()
         
         return(plt)
@@ -309,8 +351,8 @@ class _WhiteningTransformer():
         self._transform_matrix = self._V @ np.diag(1 / self._s) * np.sqrt(self._num_obs-1)
         self._inverse_transform_matrix = np.diag(self._s)  @ self._V.T / np.sqrt(self._num_obs-1)
         
-        self._transform_det = np.linalg.det(self._transform_matrix)
-        self._inverse_transform_det = np.linalg.det(self._inverse_transform_matrix)
+        self._transform_det = np.abs(np.linalg.det(self._transform_matrix))
+        self._inverse_transform_det = np.abs(np.linalg.det(self._inverse_transform_matrix))
         
         return(self)
         
@@ -390,3 +432,10 @@ def taxicab_norm(x):
 
 def Vn(r, a, n):
     return(1/2*np.pi**(n/2)*r**2*betainc((n+1)/2, 1/2, 1-a**2/r**2)/gamma(n/2+1))
+
+def _check_integral_close_to_1(integral, eps=1e-2):
+    if np.abs(1-integral) > eps:
+        print("/!\ WARNING /!\ Integral="+str(integral)+"\nwhich is too far from 1.\nThe grid density should be increased.")
+        return(False)
+    else:
+        return(True)
