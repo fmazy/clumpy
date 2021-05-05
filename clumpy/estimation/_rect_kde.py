@@ -38,7 +38,7 @@ class RectKDE():
         self.h_max = h_max
         self.h_step = h_step
         self.grid_shape = grid_shape
-        self.integral_tol = 1e-2
+        self.integral_tol = integral_tol
         self.algorithm = algorithm
         self.leaf_size = leaf_size
         self.n_jobs = n_jobs
@@ -106,25 +106,13 @@ class RectKDE():
                 # if no bandwidth selection, the h radius is enought
                 radius_ms = self.h
             else:
-                # if bandwidth selection, 2 * h radius are required
+                # if bandwidth selection, 2 * hmax radius are required
                 # for exact integral squared
-                radius_ms = self.hmax * 2
+                radius_ms = self.h_max * 2
             
-            # mirror data selection
-            # the criterion is hmax * 2 -> this distance is required by
-            # exact integral squared computing
-            # tree_ms -> nearest neighbors tree mirror selection
-            # trained through original data
-            tree_ms = KDTree(X[:self._first_mirror_id])
-            # count neighbors for mirrored data
-            count_neighbors = tree_ms.query_radius(X=X[self._first_mirror_id:],
-                                                   r=radius_ms,
-                                                   count_only=True)
-            # only pixels with neighbors are kept
-            ind_to_keep = self._first_mirror_id + np.arange(len(count_neighbors))[count_neighbors > 0]
-            # selected mirrored data
-            X = np.vstack((X[:self._first_mirror_id],
-                            X[ind_to_keep]))
+            X = _mirror_data_selection(X=X,
+                                       first_mirror_id=self._first_mirror_id,
+                                       radius=radius_ms)
             
             if self.verbose > 0:
                 print('selected mirrored data shape : ', X.shape)
@@ -139,28 +127,11 @@ class RectKDE():
         # 2. First Nearest Neighbors setting
         #============================================================
         
-        # The KDE nearest neighbors should be set a first time
-        # It will be used in the bandwidth selection
-        # and it is more efficient to train the Nearest Neighbors
-        # one time only.
-        
-        # Set the radius for this first setting
-        if type(self.h) is float:
-            initial_radius = self.h
-        else:
-            initial_radius = (self.h_max + self.h_min) / 2
-        
-        # Nearest Neighbors creation
-        self._tree = KDTree(self._data)
-        self._nn = NearestNeighbors(radius = initial_radius,
-                                    algorithm = self.algorithm,
-                                    leaf_size = self.leaf_size,
-                                    p = self.p,
-                                    n_jobs = self.n_jobs)
-        # Nearest Neighbors training
+        # The KDE nearest neighbors tree is set a first time
         if self.verbose > 0:
-            print('\nNearest neighbors training...')
-        self._nn.fit(self._data)
+            print('\nNearest neighbors tree training...')
+        # Nearest Neighbors tree
+        self._tree = KDTree(self._data)
         if self.verbose > 0:
             print('...done')
         
@@ -179,11 +150,7 @@ class RectKDE():
             self._h = self.h
         else:
             raise(TypeError("Unexpected h parameter type. Should be a float or {'UCV', 'UCV_mc'}."))
-        
-        # if any bandwidth selection has been made,
-        # the nearest neighbors radius setting should be right :
-        self._nn.radius = self._h
-        
+                
         #============================================================
         # 4. Final training
         #============================================================
@@ -191,198 +158,187 @@ class RectKDE():
         # training data should be adujsted to the new bandwidth
         # then, radius neighbors are searched for mirrored data
         if len(self.bounded_features) > 0 and type(self.h) is not float:
-            neigh_ind_ms = nn_ms.radius_neighbors(X= self._data[self._first_mirror_id:],
-                                                  radius=self._h,
-                                                  return_distance=False)
-            # only pixels with neighbors are kept
-            ind_to_keep = self._first_mirror_id + np.arange(len(neigh_ind_ms))[[ni.size > 0 for ni in neigh_ind_ms]]
-            self._data = np.vstack((self._data[:self._first_mirror_id],
-                                    self._data[ind_to_keep]))
+            self._data = _mirror_data_selection(X=self._data,
+                                                first_mirror_id=self._first_mirror_id,
+                                                radius=self._h)
             
-            # Nearest Neighbors training
+            # The KDE nearest neighbors tree is set a first time
             if self.verbose > 0:
-                print('\nFinal nearest neighbors training...')
-            self._nn.fit(self._data)
+                print('\nFinal nearest neighbors tree training...')
+            # Nearest Neighbors tree
+            self._tree = KDTree(self._data)
             if self.verbose > 0:
                 print('...done')
         
         return(self)
     
-    def predict(self, X):
-        # get out of bounds indices
+    def predict(self, X, h=None):
+        if h is None:
+            h = self._h
+        
+        # get out_of_bounds indices
         out_of_bounds_ind = np.any(X[:, self.bounded_features] < self._low_bounds, axis=1)
         
         # transform X to whitening space
         X = self._whitening_transformer.transform(X)
         
-        # get neighbors
-        neigh_ind = self._nn.radius_neighbors(X, return_distance=False)
-        
         # count neighbors
-        density = np.array([ni.size for ni in neigh_ind])
+        density = self._tree.query_radius(X=X,
+                                          r=h,
+                                          count_only=True)
         
-        density = density / ( self._n * self._v * self._h**self._d)
+        # divide for integral closure
+        density = density / ( self._n * self._v * h**self._d)
         
+        # scale in case of mirrors
         density[out_of_bounds_ind] = 0
-        
         density = density * 2 ** len(self.bounded_features)
         
         return(density)
     
     def grid_predict(self):
+        # create a grid
         X_grid = self._create_grid()
         
+        # get grid density
         density = self.predict(X_grid)
         
+        # compute integral
         integral = density.sum() * np.product(X_grid.max(axis=0)-X_grid.min(axis=0)) / X_grid.shape[0]
         
         if self.verbose > 0:
             print('integral=',integral)
         
-        _check_integral_close_to_1(integral)
+        # check integral validity
+        _check_integral_close_to_1(integral, eps=self.integral_tol)
         
         return(X_grid, density)
-        
+    
     def _create_grid(self):
+        # if grid_shape is int, use this value for all dimensions
         if type(self.grid_shape) is int:
             grid_shape = (np.ones(self._d) * self.grid_shape).astype(int)
         else:
             grid_shape = self.grid_shape
         
+        # create linear mesh grid
         xk = np.meshgrid(*(np.linspace(self._support[0][k],self._support[1][k], grid_shape[k]) for k in range(self._d)))
         X_grid = np.vstack([xki.flat for xki in xk]).T
         
         return(X_grid)
-# new_X_grid  = np.vstack([x0.flat, x1.flat]).T
-    
-    # def grid_predict(self, grid_points, return_integral=False):
-    #     support_min, support_max = self._support_in_transformed_space()
-        
-    #     xk = np.meshgrid(*(np.linspace(support_min[k], support_max[k], grid_points[k]) for k in range(self._d)))
-    #     X_grid = np.vstack([xk[k].flat for k in range(self._d)]).T
-        
-    #     X_grid = self._whitening_transformer.inverse_transform(X_grid)
-        
-    #     pred_grid = self.predict(X_grid)
-        
-    #     integral = pred_grid.sum() * np.product(support_max - support_min) / pred_grid.size
-        
-    #     print((pred_grid**2).sum() * np.product(support_max - support_min) / pred_grid.size)
-        
-    #     # return only within the bounds
-    #     # idx = np.all(X_grid[:, self.bounded_features] >= self._low_bounds, axis=1)
-    #     # X_grid = X_grid[idx]
-    #     # pred_grid = pred_grid[idx]
-        
-    #     if return_integral:
-    #         return(X_grid, pred_grid, integral)
-    #     #     if return_integral_out_of_bounds:
-    #     #         idx_out_of_bounds = np.any(X_grid[:,self.bounded_features] < self._low_bounds, axis=1)
-    #     #         integral_out_of_bounds = pred_grid[idx_out_of_bounds].sum() * np.product(support_max - support_min) / pred_grid.size
-                
-    #     #         return(X_grid, pred_grid, integral, integral_out_of_bounds)
-    #     #     return(X_grid, pred_grid, integral)
-    #     return(X_grid, pred_grid)
-    
-
-    
-    # def _cut_mirror(self, X):
-        
-    #     X_inv_trans = self._whitening_transformer.inverse_transform(X)
-        
-    #     X = X[np.all(X_inv_trans[:, self.bounded_features] >= self._low_bounds - self._hmax, axis=1)]
-        
-    #     if self.verbose>0:
-    #         print('cutted mirror data shape : ', X.shape)
-        
-    #     return(X)
     
     def _compute_h_through_ucv(self, montecarlo=False):
         if montecarlo:
+            # if montecarlo, create a grid.
+            # the grid is thus created only one time.
             X_grid = self._create_grid()
         else:
             X_grid = None
         
+        # linear bandwidth variation 
         self._opt_h = np.arange(start = self.h_min,
                            stop = self.h_max,
                            step = self.h_step)
         self._opt_J = []
         
+        # start time for execution time
         st = time()
         for h in self._opt_h:
+            # compute J and append it to _opt_J
+            # the real scale is set to False. The real value of J is not
+            # required. Comparisons are enought
             self._opt_J.append(self._compute_J(h, X_grid, real_scale=False))
             
             if self.verbose>0:
                 print(h, self._opt_J[-1])
         
+        # execution time
         self._opt_time = time() - st
+        
+        # opt_J as a numpy array
         self._opt_J = np.array(self._opt_J)
         
         return(self._opt_h[np.argmin(self._opt_J)])
         
     def _compute_J(self, h, X_grid=None, real_scale=True):
-        if type(h) is np.ndarray:
-            h = float(h)
-        
+        # compute integral squared. If montecarlo, X_grid is not None
         integral_squared = self._compute_integral_squared(h, X_grid, real_scale=real_scale)
         
+        # compute leave one out esperance
         leave_one_out_esperance = self._compute_leave_one_out_esperance(h, real_scale=real_scale)
         
+        # compute J
         J = integral_squared - 2 * leave_one_out_esperance
         
         return(J)
     
     def _compute_integral_squared(self, h, X_grid=None, real_scale=True):
+        # montecarlo switch
         if X_grid is None:
             return(self._compute_exact_integral_squared(h, real_scale=real_scale))
         else:
             return(self._compute_mc_integral_squared(h, X_grid, real_scale=real_scale))
     
     def _compute_mc_integral_squared(self, h, X_grid, real_scale=True):
-        
+        # montecarlo coefficient according to the original space
         mc_coef = np.product(X_grid.max(axis=0)-X_grid.min(axis=0)) / X_grid.shape[0]
                 
-        X_grid = self._whitening_transformer.transform(X_grid)
-             
-        neigh_ind = self._nn.radius_neighbors(X=X_grid,
-                                              radius=h,
-                                              return_distance=False)
+        # count neighbors through the predict function with set h
+        p_grid = self.predict(X_grid, h=h)
         
-        p_grid = np.array([ni.size for ni in neigh_ind])
-        p_grid = p_grid / ( self._n * self._v * h**self._d)
-        
+        # compute integral
         integral = p_grid.sum() * mc_coef
         
+        # integral check
+        # a warning message can be displayed but it is not considered as
+        # an error
         _check_integral_close_to_1(integral, eps=self.integral_tol)
         
+        # compute integral squared
         integral_squared = (p_grid**2).sum() * mc_coef
         
         if not real_scale:
+            # in case of no real scale, some scaling are required
             integral_squared *= self._n * self._v
         
         return(integral_squared)
     
     def _compute_exact_integral_squared(self, h, real_scale=True):
-        neigh_dist, neigh_ind = self._nn.radius_neighbors(radius= 2 * h,
-                                                          return_distance=True)
+        # get neighbors distances
+        indices, distances = self._tree.query_radius(X = self._data[:self._first_mirror_id],
+                                                     r = 2 * h,
+                                                     return_distance=True)
         
-        hypersphere_intersection_volume = 2*np.sum([Vn(h, d/2, self._d).sum() for d in neigh_dist]) * self._whitening_transformer._inverse_transform_det / 2
+        # compute hypersphere intersection volume
+        hypersphere_intersection_volume = 2*np.sum([Vn(h, dist/2, self._d).sum() for dist in distances]) * self._whitening_transformer._inverse_transform_det / 2
+        # scale returned volume for mirrors considerations
+        hypersphere_intersection_volume *= 2**len(self.bounded_features)
         
+        # compute integral squared
         integral_squared = 1 / (h**self._d)
         integral_squared += 2 / (self._n * h**(2 * self._d) * self._v) * hypersphere_intersection_volume
         
         if real_scale:
+            # if real scale, some divisions are required
             integral_squared /= self._n * h**(self._d) * self._v
         
         return(integral_squared)
         
     def _compute_leave_one_out_esperance(self, h, real_scale=True):
-        neigh_ind = self._nn.radius_neighbors(radius = h,
-                                        return_distance=False)
+        # count neighbors
+        s = self._tree.query_radius(X=self._data[:self._first_mirror_id],
+                                         r=h,
+                                         count_only=True)
+        # sum
+        s = s.sum()
         
-        s = np.array([ni.size for ni in neigh_ind]).sum() / ((self._n - 1) * h**self._d)
+        # mirror considerations
+        s *= 2**len(self.bounded_features)
+        
+        s = s / ((self._n - 1) * h**self._d)
         
         if real_scale:
+            # if real scale, some divisions are required
             s /= self._n * self._v
         
         return(s)
@@ -411,6 +367,24 @@ def _mirror(X, bounded_features):
         X = np.vstack((X, X_mirrored))
     
     return(X, low_bounds)
+
+def _mirror_data_selection(X, first_mirror_id, radius):
+    # mirror data selection
+    
+    # tree_ms -> nearest neighbors tree mirror selection
+    # trained through original data
+    tree_ms = KDTree(X[:first_mirror_id])
+    # count neighbors for mirrored data
+    count_neighbors = tree_ms.query_radius(X=X[first_mirror_id:],
+                                           r=radius,
+                                           count_only=True)
+    # only pixels with neighbors are kept
+    ind_to_keep = first_mirror_id + np.arange(len(count_neighbors))[count_neighbors > 0]
+    # selected mirrored data
+    X = np.vstack((X[:first_mirror_id],
+                    X[ind_to_keep]))
+    
+    return(X)
         
 class _WhiteningTransformer():
     def fit(self, X):
