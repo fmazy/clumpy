@@ -7,7 +7,7 @@ Created on Fri Apr 30 09:24:01 2021
 """
 
 import numpy as np
-from sklearn.neighbors import KDTree, BallTree
+from sklearn.neighbors import KDTree, BallTree, NearestNeighbors
 from scipy.special import gamma, betainc
 from scipy.optimize import fmin
 from itertools import combinations
@@ -16,6 +16,11 @@ from time import time
 import pandas as pd
 from matplotlib import pyplot as plt
 import noisyopt
+
+_algorithm_class = {
+    'kd_tree':KDTree,
+    'ball_tree':BallTree
+    }
 
 class RectKDE():
     def __init__(self,
@@ -27,9 +32,9 @@ class RectKDE():
                  h_step = 0.01,
                  grid_shape = 2**8,
                  integral_tol = 1e-2,
-                 algorithm='auto',
+                 algorithm='kd_tree',
                  leaf_size=30,
-                 n_jobs=None,
+                 dualtree=False,
                  verbose=0):
         self.h = h
         self.p = p
@@ -41,7 +46,7 @@ class RectKDE():
         self.integral_tol = integral_tol
         self.algorithm = algorithm
         self.leaf_size = leaf_size
-        self.n_jobs = n_jobs
+        self.dualtree = dualtree
         self.verbose = verbose
     
     def fit(self, X):
@@ -77,6 +82,7 @@ class RectKDE():
         # (notably in 'UCV_mc' h selection method)
         self._support = [X.min(axis=0) - X.std(axis=0),
                          X.max(axis=0) + X.std(axis=0)]
+        self._support[0][self.bounded_features] = self._low_bounds - X[:, self.bounded_features].std(axis=0)/2
         
         # --------------------------------
         # 1.3. Whitening transformation
@@ -111,6 +117,8 @@ class RectKDE():
                 radius_ms = self.h_max * 2
             
             X = _mirror_data_selection(X=X,
+                                       algorithm=self.algorithm,
+                                       leaf_size=self.leaf_size,
                                        first_mirror_id=self._first_mirror_id,
                                        radius=radius_ms)
             
@@ -131,7 +139,10 @@ class RectKDE():
         if self.verbose > 0:
             print('\nNearest neighbors tree training...')
         # Nearest Neighbors tree
-        self._tree = KDTree(self._data)
+        if self.algorithm not in _algorithm_class.keys():
+            raise(ValueError("Unexpected algorithm parameter '"+str(self.algorithm)+"'. It should belong to {'kd_tree', 'ball_tree'}."))
+        self._tree = _algorithm_class[self.algorithm](self._data,
+                                                      leaf_size=self.leaf_size)
         if self.verbose > 0:
             print('...done')
         
@@ -159,6 +170,8 @@ class RectKDE():
         # then, radius neighbors are searched for mirrored data
         if len(self.bounded_features) > 0 and type(self.h) is not float:
             self._data = _mirror_data_selection(X=self._data,
+                                                algorithm=self.algorithm,
+                                                leaf_size=self.leaf_size,
                                                 first_mirror_id=self._first_mirror_id,
                                                 radius=self._h)
             
@@ -166,7 +179,8 @@ class RectKDE():
             if self.verbose > 0:
                 print('\nFinal nearest neighbors tree training...')
             # Nearest Neighbors tree
-            self._tree = KDTree(self._data)
+            self._tree = _algorithm_class[self.algorithm](self._data,
+                                                          leaf_size=self.leaf_size)
             if self.verbose > 0:
                 print('...done')
         
@@ -196,12 +210,18 @@ class RectKDE():
         
         return(density)
     
-    def grid_predict(self):
+    def grid_predict(self, h=None, grid_shape=None):
+        if h is None:
+            h = self._h
+        
+        if grid_shape is None:
+            grid_shape = self.grid_shape
+        
         # create a grid
-        X_grid = self._create_grid()
+        X_grid = self._create_grid(grid_shape = grid_shape)
         
         # get grid density
-        density = self.predict(X_grid)
+        density = self.predict(X_grid, h=h)
         
         # compute integral
         integral = density.sum() * np.product(X_grid.max(axis=0)-X_grid.min(axis=0)) / X_grid.shape[0]
@@ -214,12 +234,13 @@ class RectKDE():
         
         return(X_grid, density)
     
-    def _create_grid(self):
-        # if grid_shape is int, use this value for all dimensions
-        if type(self.grid_shape) is int:
-            grid_shape = (np.ones(self._d) * self.grid_shape).astype(int)
-        else:
+    def _create_grid(self, grid_shape=None):
+        if grid_shape is None:
             grid_shape = self.grid_shape
+        
+        # if grid_shape is int, use this value for all dimensions
+        if type(grid_shape) is int:
+            grid_shape = (np.ones(self._d) * grid_shape).astype(int)
         
         # create linear mesh grid
         xk = np.meshgrid(*(np.linspace(self._support[0][k],self._support[1][k], grid_shape[k]) for k in range(self._d)))
@@ -227,7 +248,7 @@ class RectKDE():
         
         return(X_grid)
     
-    def _compute_h_through_ucv(self, montecarlo=False):
+    def _compute_h_through_ucv(self, montecarlo=False, real_scale=False):
         if montecarlo:
             # if montecarlo, create a grid.
             # the grid is thus created only one time.
@@ -247,7 +268,7 @@ class RectKDE():
             # compute J and append it to _opt_J
             # the real scale is set to False. The real value of J is not
             # required. Comparisons are enought
-            self._opt_J.append(self._compute_J(h, X_grid, real_scale=False))
+            self._opt_J.append(self._compute_J(h, X_grid, real_scale=real_scale))
             
             if self.verbose>0:
                 print(h, self._opt_J[-1])
@@ -297,6 +318,14 @@ class RectKDE():
         # compute integral squared
         integral_squared = (p_grid**2).sum() * mc_coef
         
+        # mirrors consideration
+        # the p_grid has already been scaled for mirror considerations
+        # It have to been then downscaled according to formulas.
+        # indeed, the integral is made on the whole support
+        # without mirror considerations.
+        integral_squared /= 2**len(self.bounded_features)
+        
+        
         if not real_scale:
             # in case of no real scale, some scaling are required
             integral_squared *= self._n * self._v
@@ -306,35 +335,39 @@ class RectKDE():
     def _compute_exact_integral_squared(self, h, real_scale=True):
         # get neighbors distances
         indices, distances = self._tree.query_radius(X = self._data[:self._first_mirror_id],
-                                                     r = 2 * h,
-                                                     return_distance=True)
+                                                      r = 2 * h,
+                                                      return_distance=True)
         
         # compute hypersphere intersection volume
-        hypersphere_intersection_volume = 2*np.sum([Vn(h, dist/2, self._d).sum() for dist in distances]) * self._whitening_transformer._inverse_transform_det / 2
+        # see https://math.stackexchange.com/questions/162250/how-to-compute-the-volume-of-intersection-between-two-hyperspheres
+        # all pairs of points are taken 2 times. it is in accordance
+        # with the integral squared formula
+        hypersphere_intersection_volume = 2*np.sum([Vn(h, dist/2, self._d).sum() for dist in distances]) * self._whitening_transformer._inverse_transform_det
         # scale returned volume for mirrors considerations
         hypersphere_intersection_volume *= 2**len(self.bounded_features)
         
-        # compute integral squared
-        integral_squared = 1 / (h**self._d)
-        integral_squared += 2 / (self._n * h**(2 * self._d) * self._v) * hypersphere_intersection_volume
+        # integral closure
+        integral_squared = 1 / (self._n * h**(2 * self._d) * self._v) * hypersphere_intersection_volume
         
         if real_scale:
             # if real scale, some divisions are required
-            integral_squared /= self._n * h**(self._d) * self._v
+            integral_squared /= self._n * self._v
         
         return(integral_squared)
         
     def _compute_leave_one_out_esperance(self, h, real_scale=True):
-        # count neighbors
-        s = self._tree.query_radius(X=self._data[:self._first_mirror_id],
-                                         r=h,
-                                         count_only=True)
-        # sum
-        s = s.sum()
+        # count pairs of points
+        s = self._tree.two_point_correlation(X=self._data[:self._first_mirror_id],
+                                             r=h,
+                                             dualtree=self.dualtree)[0]
+        # one should remove auto-paired points since the data and the training
+        # set are the same
+        s -= self._first_mirror_id
         
         # mirror considerations
         s *= 2**len(self.bounded_features)
         
+        # integral closure
         s = s / ((self._n - 1) * h**self._d)
         
         if real_scale:
@@ -368,12 +401,13 @@ def _mirror(X, bounded_features):
     
     return(X, low_bounds)
 
-def _mirror_data_selection(X, first_mirror_id, radius):
+def _mirror_data_selection(X, algorithm, leaf_size, first_mirror_id, radius):
     # mirror data selection
     
     # tree_ms -> nearest neighbors tree mirror selection
     # trained through original data
-    tree_ms = KDTree(X[:first_mirror_id])
+    tree_ms = _algorithm_class[algorithm](X[:first_mirror_id],
+                                          leaf_size=leaf_size)
     # count neighbors for mirrored data
     count_neighbors = tree_ms.query_radius(X=X[first_mirror_id:],
                                            r=radius,
@@ -486,3 +520,4 @@ def _check_integral_close_to_1(integral, eps=1e-2):
         return(False)
     else:
         return(True)
+
