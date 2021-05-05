@@ -7,7 +7,7 @@ Created on Fri Apr 30 09:24:01 2021
 """
 
 import numpy as np
-from sklearn.neighbors import NearestNeighbors
+from sklearn.neighbors import KDTree, BallTree
 from scipy.special import gamma, betainc
 from scipy.optimize import fmin
 from itertools import combinations
@@ -53,43 +53,120 @@ class RectKDE():
                 print('\nsymetry for bounds')
                 print('bounded_features : ', self.bounded_features)
         
-        plt.scatter(X[:,0], X[:,1],s=2)
-        X = self._mirror(X)
-        plt.scatter(X[:,0], X[:,1],s=2)
+        #============================================================
+        # 1. Data operations
+        #============================================================
         
+        # --------------------------------
+        # 1.1. Mirror
+        # --------------------------------
+        
+        # mirror the data is case of bounded features
+        # for now, it is a full symetry
+        self._first_mirror_id = X.shape[0]
+        X, self._low_bounds = _mirror(X, bounded_features=self.bounded_features)
+        
+        if self.verbose > 0 and len(self.bounded_features) > 0:
+            print('mirrored data shape : ', X.shape)
+        
+        # --------------------------------
+        # 1.2. Support
+        # --------------------------------
+        
+        # the support is used for grid creating
+        # (notably in 'UCV_mc' h selection method)
         self._support = [X.min(axis=0) - X.std(axis=0),
                          X.max(axis=0) + X.std(axis=0)]
         
+        # --------------------------------
+        # 1.3. Whitening transformation
+        # --------------------------------
+        
+        # whitening transformation
         self._whitening_transformer = _WhiteningTransformer()
+        # X is ereased
         X = self._whitening_transformer.fit_transform(X)
         
-        # if self.hmax is None and type(self.h) is float:
-            # self._hmax = self.h
+        # n and d are set here
+        # n is not equal to self._data.shape[0] is case of mirror
+        # due to mirror data selection
+        self._n = X.shape[0]
+        self._d = X.shape[1]
         
-        # else:
-            # take the silverman value times 3
-            # self._hmax = 3 * (self._n * 3 / 4.0) ** (-1 / 5)
+        # volume to apply to KDE according to the whitening transformation
+        self._v = volume_unit_ball(self._d, self.p) * self._whitening_transformer._inverse_transform_det
+                
+        # --------------------------------
+        # 1.4. Mirror data selection
+        # --------------------------------
         
-        # X = self._cut_mirror(X)
+        if len(self.bounded_features) > 0:
+            # get hmax if h is given
+            if type(self.h) is float:
+                # if no bandwidth selection, the h radius is enought
+                radius_ms = self.h
+            else:
+                # if bandwidth selection, 2 * h radius are required
+                # for exact integral squared
+                radius_ms = self.hmax * 2
+            
+            # mirror data selection
+            # the criterion is hmax * 2 -> this distance is required by
+            # exact integral squared computing
+            # tree_ms -> nearest neighbors tree mirror selection
+            # trained through original data
+            tree_ms = KDTree(X[:self._first_mirror_id])
+            # count neighbors for mirrored data
+            count_neighbors = tree_ms.query_radius(X=X[self._first_mirror_id:],
+                                                   r=radius_ms,
+                                                   count_only=True)
+            # only pixels with neighbors are kept
+            ind_to_keep = self._first_mirror_id + np.arange(len(count_neighbors))[count_neighbors > 0]
+            # selected mirrored data
+            X = np.vstack((X[:self._first_mirror_id],
+                            X[ind_to_keep]))
+            
+            if self.verbose > 0:
+                print('selected mirrored data shape : ', X.shape)
         
+        # --------------------------------
+        # 1.5. Data conclusion
+        # --------------------------------
+        # all data operations are made
         self._data = X
         
-        self._n = self._data.shape[0]
-        self._d = self._data.shape[1]
+        #============================================================
+        # 2. First Nearest Neighbors setting
+        #============================================================
         
-        self._v = volume_unit_ball(self._d, self.p) * self._whitening_transformer._inverse_transform_det
+        # The KDE nearest neighbors should be set a first time
+        # It will be used in the bandwidth selection
+        # and it is more efficient to train the Nearest Neighbors
+        # one time only.
         
+        # Set the radius for this first setting
         if type(self.h) is float:
             initial_radius = self.h
         else:
             initial_radius = (self.h_max + self.h_min) / 2
         
+        # Nearest Neighbors creation
+        self._tree = KDTree(self._data)
         self._nn = NearestNeighbors(radius = initial_radius,
                                     algorithm = self.algorithm,
                                     leaf_size = self.leaf_size,
                                     p = self.p,
                                     n_jobs = self.n_jobs)
+        # Nearest Neighbors training
+        if self.verbose > 0:
+            print('\nNearest neighbors training...')
         self._nn.fit(self._data)
+        if self.verbose > 0:
+            print('...done')
+        
+        #============================================================
+        # 3. Bandwidth selection
+        #============================================================
         
         if type(self.h) is str:
             if self.h == 'UCV':
@@ -103,51 +180,50 @@ class RectKDE():
         else:
             raise(TypeError("Unexpected h parameter type. Should be a float or {'UCV', 'UCV_mc'}."))
         
-        if self.verbose > 0:
-            print('\nNearest neighbors training...')
-        
+        # if any bandwidth selection has been made,
+        # the nearest neighbors radius setting should be right :
         self._nn.radius = self._h
         
-        if self.verbose > 0:
-            print('...done')
+        #============================================================
+        # 4. Final training
+        #============================================================
+        # If their are mirrored data and the bandwidth has been selected,
+        # training data should be adujsted to the new bandwidth
+        # then, radius neighbors are searched for mirrored data
+        if len(self.bounded_features) > 0 and type(self.h) is not float:
+            neigh_ind_ms = nn_ms.radius_neighbors(X= self._data[self._first_mirror_id:],
+                                                  radius=self._h,
+                                                  return_distance=False)
+            # only pixels with neighbors are kept
+            ind_to_keep = self._first_mirror_id + np.arange(len(neigh_ind_ms))[[ni.size > 0 for ni in neigh_ind_ms]]
+            self._data = np.vstack((self._data[:self._first_mirror_id],
+                                    self._data[ind_to_keep]))
+            
+            # Nearest Neighbors training
+            if self.verbose > 0:
+                print('\nFinal nearest neighbors training...')
+            self._nn.fit(self._data)
+            if self.verbose > 0:
+                print('...done')
         
-        # mirror coefficient ?
-        # if len(self.bounded_features) > 0:
-        #     if type(self.grid_points) is int:
-        #         grid_points = (np.ones(self._d) * self.grid_points).astype(int)
-            
-        #     if self.verbose > 0:
-        #         print('\nComputing mirror coefficient')
-        #         print('Grid points : ', grid_points)
-        #         print('Estimating grid density...')
-            
-        #     self._mirror_coef = None
-        #     X_grid, pred_grid, integral, integral_out_of_bounds = self.grid_predict(grid_points,
-        #                                                                             return_integral=True,
-        #                                                                             return_integral_out_of_bounds=True)
-            
-        #     self._mirror_coef = 1 / (1 - integral_out_of_bounds)
-            
-        #     if self.verbose > 0:
-        #         print('...done')    
-        #         print('Integral : ', integral)
-        #         if integral < 0.99:
-        #             print('/!\ WARNING /!\ The integral is low. The grid points should be increased.')
-        #         print('Integral out of bounds : ', integral_out_of_bounds)
-        #         print('Mirror coef : ', self._mirror_coef)
-            
         return(self)
     
     def predict(self, X):
+        # get out of bounds indices
+        out_of_bounds_ind = np.any(X[:, self.bounded_features] < self._low_bounds, axis=1)
+        
+        # transform X to whitening space
         X = self._whitening_transformer.transform(X)
         
+        # get neighbors
         neigh_ind = self._nn.radius_neighbors(X, return_distance=False)
         
+        # count neighbors
         density = np.array([ni.size for ni in neigh_ind])
         
         density = density / ( self._n * self._v * self._h**self._d)
         
-        density[np.any(X[:, self.bounded_features] < self._low_bounds, axis=1)] = 0
+        density[out_of_bounds_ind] = 0
         
         density = density * 2 ** len(self.bounded_features)
         
@@ -208,21 +284,7 @@ class RectKDE():
     #     #     return(X_grid, pred_grid, integral)
     #     return(X_grid, pred_grid)
     
-    def _mirror(self, X):
-        self._low_bounds = X[:, self.bounded_features].min(axis=0)
-        
-        for idx, feature in enumerate(self.bounded_features):
-            X_mirrored = X.copy()
-            X_mirrored[:, feature] = 2 * self._low_bounds[idx] - X[:, feature]
 
-            X = np.vstack((X, X_mirrored))
-        
-        return(X)
-        
-        if self.verbose > 0 and len(self.bounded_features) > 0:
-            print('mirrored data shape : ', X.shape)
-            
-        return(X)
     
     # def _cut_mirror(self, X):
         
@@ -338,6 +400,17 @@ class RectKDE():
         plt.legend()
         
         return(plt)
+    
+def _mirror(X, bounded_features):
+    low_bounds = X[:, bounded_features].min(axis=0)
+    
+    for idx, feature in enumerate(bounded_features):
+        X_mirrored = X.copy()
+        X_mirrored[:, feature] = 2 * low_bounds[idx] - X[:, feature]
+
+        X = np.vstack((X, X_mirrored))
+    
+    return(X, low_bounds)
         
 class _WhiteningTransformer():
     def fit(self, X):
