@@ -16,6 +16,8 @@ from time import time
 import pandas as pd
 from matplotlib import pyplot as plt
 import noisyopt
+import os
+import json
 
 _algorithm_class = {
     'kd_tree':KDTree,
@@ -25,11 +27,11 @@ _algorithm_class = {
 class RectKDE():
     def __init__(self,
                  h,
-                 p=2,
                  bounded_features=[],
                  h_min = 0.1,
                  h_max = 1,
                  h_step = 0.01,
+                 h_n_increasing = 10,
                  grid_shape = 2**8,
                  integral_tol = 1e-2,
                  algorithm='kd_tree',
@@ -37,11 +39,12 @@ class RectKDE():
                  dualtree=False,
                  verbose=0):
         self.h = h
-        self.p = p
+        self.p = 2 # no choice for this parameter
         self.bounded_features = bounded_features
         self.h_min = h_min
         self.h_max = h_max
         self.h_step = h_step
+        self.h_n_increasing = h_n_increasing
         self.grid_shape = grid_shape
         self.integral_tol = integral_tol
         self.algorithm = algorithm
@@ -80,9 +83,9 @@ class RectKDE():
         
         # the support is used for grid creating
         # (notably in 'UCV_mc' h selection method)
-        self._support = [X.min(axis=0) - X.std(axis=0),
-                         X.max(axis=0) + X.std(axis=0)]
-        self._support[0][self.bounded_features] = self._low_bounds - X[:, self.bounded_features].std(axis=0)/2
+        self._support_min = X.min(axis=0) - X.std(axis=0)
+        self._support_max = X.max(axis=0) + X.std(axis=0)
+        self._support_min[self.bounded_features] = self._low_bounds - X[:, self.bounded_features].std(axis=0)/2
         
         # --------------------------------
         # 1.3. Whitening transformation
@@ -242,13 +245,26 @@ class RectKDE():
         if type(grid_shape) is int:
             grid_shape = (np.ones(self._d) * grid_shape).astype(int)
         
+        if np.product(grid_shape) > 10*10**6:
+            raise(ValueError("The grid shape is to large ! Decrease some dimension size or use another un-montecarlo method for bandwidth selection such as 'UCV'"))
+        
         # create linear mesh grid
-        xk = np.meshgrid(*(np.linspace(self._support[0][k],self._support[1][k], grid_shape[k]) for k in range(self._d)))
+        xk = np.meshgrid(*(np.linspace(self._support_min[k],self._support_max[k], grid_shape[k]) for k in range(self._d)))
         X_grid = np.vstack([xki.flat for xki in xk]).T
         
         return(X_grid)
     
     def _compute_h_through_ucv(self, montecarlo=False, real_scale=False):
+        if self.verbose > 0:
+            print("\nComputing optimal h through UCV")
+            print("montecarlo method : ", montecarlo)
+            print("real scale : ", real_scale)
+            print("h min : ", self.h_min)
+            print("h max : ", self.h_max)
+            print("h step : ", self.h_step)
+            print("num. of increasing J to break the research : ", self.h_n_increasing)
+            print("\nstart\n")
+            print("h | J | n_increasing")
         if montecarlo:
             # if montecarlo, create a grid.
             # the grid is thus created only one time.
@@ -262,6 +278,9 @@ class RectKDE():
                            step = self.h_step)
         self._opt_J = []
         
+        # n increasing counting initialization
+        n_increasing = 0
+        
         # start time for execution time
         st = time()
         for h in self._opt_h:
@@ -270,14 +289,34 @@ class RectKDE():
             # required. Comparisons are enought
             self._opt_J.append(self._compute_J(h, X_grid, real_scale=real_scale))
             
+            # n increasing counting. it counts the number of steps whose
+            # J values after the minimum are greater than the minimum
+            min_ind = np.argmin(self._opt_J)
+            min_value = np.min(self._opt_J)
+            n_increasing = np.sum(np.array(self._opt_J)[min_ind:]>min_value)
+            
             if self.verbose>0:
-                print(h, self._opt_J[-1])
+                print(h, self._opt_J[-1], n_increasing)
+            
+            # if the number of consecutively increasing J is triggered
+            # break the for loop.
+            # two possibilities : 1/ the hmin was to high
+            # 2/ the optimal h has been observed and is the argmin of J
+            if n_increasing >= self.h_n_increasing:
+                if self.verbose > 0:
+                    print('num. of J increasing reached. Break the research.')
+                break
+        
+        self._opt_h = self._opt_h[:len(self._opt_J)]
         
         # execution time
         self._opt_time = time() - st
         
         # opt_J as a numpy array
         self._opt_J = np.array(self._opt_J)
+        
+        if self.verbose > 0:
+            print('Optimal h computing through UCV done.\n')
         
         return(self._opt_h[np.argmin(self._opt_J)])
         
@@ -382,14 +421,97 @@ class RectKDE():
         df.sort_values(by='h', inplace=True)
         
         plt.plot(df.h, df.J, label='opt algo')
-        # plt.scatter(df.h, df.J, label='opt algo', s=5)
         plt.vlines(self._h, ymin=df.J.min(), ymax=df.J.max(), color='red', label='selected value')
         plt.xlabel('h')
         plt.ylabel('$\hat{J}$')
         plt.legend()
         
         return(plt)
+
+    def save(self, path):
+        folder_name = os.path.dirname(path)
+        files_names = []
+                
+        files_names.append('kde.zip')
+        _save_object(self, 'kde.zip')
+        
+        files_names.append('whitening_transformer.zip')
+        _save_object(self._whitening_transformer, 'whitening_transformer.zip')
+        
+        # create output directory if needed
+        if folder_name != "":
+            os.system('mkdir -p ' + folder_name)
+        
+        # zip file
+        command = 'zip '+path
+        for file_name in files_names:
+            command += ' ' + file_name
+        os.system(command)
+        
+        # remove files        
+        command = 'rm '
+        for file_name in files_names:
+            command += ' ' + file_name
+        os.system(command)
+        
+        return(True)
+
+def _save_object(obj, path, excluded_keys=[]):
+    """
+    Export the estimation model in json format for parameters and in csv format for data, and bandwidth matrix.
+
+    Parameters
+    ----------
+    path : str
+        file path. Should be a zip file.
+
+    data : bool, default=False
+        if True, the data is also exported.
+    """
     
+    attributes_file_name = 'attributes.json'
+    
+    # params
+    files_names = []
+    folder_name = os.path.dirname(path)
+    
+    json_params = {}
+    
+    for key, value in obj.__dict__.items():
+        if key not in excluded_keys:
+            if type(value) in _list_save_json_types:
+                json_params[key] = value
+            
+            if type(value) is np.ndarray:
+                np.save(key, value)
+                files_names.append(key+'.npy')
+    
+    print(json_params)
+    with open(attributes_file_name, 'w') as f:
+        json.dump(json_params, f)
+    
+    files_names.append(attributes_file_name)
+    
+    # create output directory if needed
+    if folder_name != "":
+        os.system('mkdir -p ' + folder_name)
+    
+    # zip file
+    command = 'zip '+path+' '
+    for file_name in files_names:
+        command += ' ' + file_name
+    os.system(command)
+    
+    # remove files        
+    command = 'rm '
+    for file_name in files_names:
+        command += ' ' + file_name
+    os.system(command)
+    
+    return(True)
+
+_list_save_json_types = [str, int, list, float]
+
 def _mirror(X, bounded_features):
     low_bounds = X[:, bounded_features].min(axis=0)
     
