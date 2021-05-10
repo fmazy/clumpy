@@ -10,7 +10,7 @@ import os
 import json
 import numpy as np
 
-_list_save_json_types = [str, int, list, float]
+_list_save_json_types = [str, int, list, float, np.float64]
 
 def _save_object(obj, path, excluded_keys=[]):
     attributes_file_name = 'attributes.json'

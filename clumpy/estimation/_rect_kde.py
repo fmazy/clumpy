@@ -13,6 +13,7 @@ from time import time
 import pandas as pd
 from matplotlib import pyplot as plt
 import os
+import itertools
 
 from ._whitening_transformer import _WhiteningTransformer
 from ..tools import _save_object, _load_object
@@ -192,7 +193,7 @@ class RectKDE():
         
         # volume to apply to KDE according to the whitening transformation
         self._v = volume_unit_ball(self._d, self.p) * self._whitening_transformer._inverse_transform_det
-                
+        
         # --------------------------------
         # 1.4. Mirror data selection
         # --------------------------------
@@ -221,6 +222,8 @@ class RectKDE():
         # --------------------------------
         # all data operations are made
         self._data = X
+        print(X.shape)
+        print(self._data.shape)
         
         #============================================================
         # 2. First Nearest Neighbors setting
@@ -322,6 +325,23 @@ class RectKDE():
         density = density * 2 ** len(self.bounded_features)
         
         return(density)
+    
+    def nearest_grid_density(self, X, h=None, dx=None):
+        print(X.shape)
+        min_X = np.min(X, axis=0)
+        
+        xs = np.round((X - min_X) / dx) * dx + min_X
+        xs = np.unique(xs, axis=0)
+        
+        print(xs.shape)
+        
+        density_xs = self.density(xs, h=h) 
+        
+        
+        
+        # z = np.vstack([X_sides[0], X_sides[1][~np.isin(X_sides[1],X_sides[0])]])
+        
+        return(1)
     
     def grid_density(self, h=None, grid_shape=None):
         """
@@ -478,6 +498,7 @@ class RectKDE():
         # compute J
         J = integral_squared - 2 * leave_one_out_esperance
         
+        
         return(J)
     
     def _compute_integral_squared(self, h, X_grid=None, real_scale=True):
@@ -530,6 +551,7 @@ class RectKDE():
         """
         compute integral squared through exact formulas.
         """
+        
         # get neighbors distances
         indices, distances = self._tree.query_radius(X = self._data[:self._first_mirror_id],
                                                       r = 2 * h,
@@ -638,7 +660,7 @@ class RectKDE():
             command += ' ' + file_name
         os.system(command)
         
-        return(True)
+        return(self)
     
     def load(self, path):
         """
@@ -671,7 +693,20 @@ class RectKDE():
                 
         os.system('rm -R ' + path + '.kde_out')
         
-        return(True)
+        # if not hasattr(self, '_h') and hasattr(self, '_opt_h') and hasattr(self, '_opt_J'):
+        #     self._h = self._opt_h[np.argmin(self._opt_J)]
+        
+        self._tree = _algorithm_class[self.algorithm](self._data,
+                                                      leaf_size=self.leaf_size)
+        
+        # if not hasattr(self._whitening_transformer, '_transform_det'):
+        #     self._whitening_transformer._transform_det = np.abs(np.linalg.det(self._whitening_transformer._transform_matrix))
+        # self._whitening_transformer._inverse_transform_det = np.abs(np.linalg.det(self._whitening_transformer._inverse_transform_matrix))
+        
+        # if not hasattr(self, '_v') and hasattr(self, '_n') and hasattr(self, '_d'):
+        #     self._v = volume_unit_ball(self._d, self.p) * self._whitening_transformer._inverse_transform_det
+        
+        return(self)
 
 def _mirror(X, bounded_features):
     """
