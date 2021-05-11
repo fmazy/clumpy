@@ -93,6 +93,7 @@ class Case():
         
         # initialize X_u                    
         X_u = {}
+        J_u = {}
         
         # if final luc layer, initialize v_u
         if final_luc_layer is not None:
@@ -106,7 +107,7 @@ class Case():
             # get pixels indexes whose initial states are u
             # J = ndarray_suitable_integer_type(np.where(initial_luc_layer.raster_.read(1).flat==u)[0])
             J = np.where(initial_luc_layer.raster_.read(1).flat==u)[0]
-            
+            J_u[u] = J
             
             # create feature names
             for feature_type, info in self.params[u]['features']:
@@ -152,10 +153,10 @@ class Case():
 
         # if no final luc layer
         if final_luc_layer is None:
-            return(X_u)
+            return(X_u, J_u)
         
         else:
-            return(X_u, v_u)
+            return(X_u, v_u, J_u)
 
 def check_case(case):
     """
