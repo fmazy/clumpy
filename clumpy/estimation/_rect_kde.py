@@ -14,6 +14,8 @@ import pandas as pd
 from matplotlib import pyplot as plt
 import os
 import itertools
+from multiprocessing import Pool
+
 
 from ._whitening_transformer import _WhiteningTransformer
 from ..tools import _save_object, _load_object
@@ -36,6 +38,7 @@ class RectKDE():
                  algorithm='kd_tree',
                  leaf_size=40,
                  dualtree=False,
+                 n_jobs=None,
                  verbose=0):
         """
         Kernel Density Estimation (KDE) through rectangle kernel function.
@@ -126,6 +129,7 @@ class RectKDE():
         self.algorithm = algorithm
         self.leaf_size = leaf_size
         self.dualtree = dualtree
+        self.n_jobs=n_jobs
         self.verbose = verbose
     
     def fit(self, X):
@@ -312,10 +316,20 @@ class RectKDE():
         # transform X to whitening space
         X = self._whitening_transformer.transform(X)
         
+        if self.n_jobs is None:
+            n_jobs = 1
+        else:
+            n_jobs = self.n_jobs
+        
         # count neighbors
-        density = self._tree.query_radius(X=X,
-                                          r=h,
-                                          count_only=True)
+        if n_jobs == 1:
+            density = self._tree.query_radius(X=X,
+                                              r=h,
+                                              count_only=True)
+        else:
+            pool = Pool(n_jobs)
+            density = pool.imap(self._tree.query_radius, )
+            density = np.array(density)
         
         # divide for integral closure
         density = density / ( self._n * self._v * h**self._d)

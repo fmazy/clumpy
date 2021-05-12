@@ -17,10 +17,11 @@ class Case():
         parameters, see example and user guide.
         
     """
-    def __init__(self, params):
+    def __init__(self, params, region=None):
         self.params = params
+        self.region = region
     
-    def make(self, initial_luc_layer, final_luc_layer=None, verbose=0):
+    def make(self, initial_luc_layer, final_luc_layer=None, region=None, verbose=0):
         """Make the case
 
         Parameters
@@ -64,6 +65,13 @@ class Case():
             print('case checking...')
         check_case(self)
         
+        # set region if any
+        if self.region is not None and region is None:
+            region = self.region
+        
+        # initial data
+        # the region is selected after the distance computation
+        initial_luc_data = initial_luc_layer.get_data()
         
         # first compute distances
         distances = {}
@@ -82,10 +90,16 @@ class Case():
                         if verbose > 0:
                             print('\t distance to '+str(info)+'...')
                         # make bool v matrix
-                        v_matrix = (initial_luc_layer.raster_.read(1) == info).astype(int)
+                        v_matrix = (initial_luc_data == info).astype(int)
                         # compute distance
                         # should get scale value from the tiff file.
                         distances[info] = ndimage.distance_transform_edt(1 - v_matrix)
+        
+        # the distance computation is made
+        # the region is now selected
+        if region is not None:
+            # set luc 0 for pixels out of the region
+            initial_luc_data[region.get_data() == 0] = 0
         
         if verbose > 0:
             print('sets creating')
@@ -106,7 +120,7 @@ class Case():
             
             # get pixels indexes whose initial states are u
             # J = ndarray_suitable_integer_type(np.where(initial_luc_layer.raster_.read(1).flat==u)[0])
-            J = np.where(initial_luc_layer.raster_.read(1).flat==u)[0]
+            J = np.where(initial_luc_data.flat == u)[0]
             J_u[u] = J
             
             # create feature names
@@ -115,7 +129,7 @@ class Case():
 
                 if feature_type == 'layer' or feature_type == 'binary_layer':
                     # just get data
-                    x = info.raster_.read(1).flat[J]
+                    x = info.get_data().flat[J]
                 
                 elif feature_type == 'distance':
                     # get distance data
@@ -139,8 +153,8 @@ class Case():
             
             # if final luc layer
             if final_luc_layer is not None:
-                # just get data
-                v_u[u] = final_luc_layer.raster_.read(1).flat[J]
+                # just get data inside the region (because J is already inside)
+                v_u[u] = final_luc_layer.get_data().flat[J]
                 
                 if 'v' in self.params[u].keys():
                     v_u[u][~np.isin(v_u[u], self.params[u]['v'])] = u
@@ -153,10 +167,10 @@ class Case():
 
         # if no final luc layer
         if final_luc_layer is None:
-            return(X_u, J_u)
+            return(J_u, X_u)
         
         else:
-            return(X_u, v_u, J_u)
+            return(J_u, X_u, v_u)
 
 def check_case(case):
     """
