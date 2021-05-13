@@ -30,7 +30,7 @@ def _save_object(obj, path, excluded_keys=[]):
                 np.save(key, value)
                 files_names.append(key+'.npy')
     
-    print(json_params)
+    # print(json_params)
     with open(attributes_file_name, 'w') as f:
         json.dump(json_params, f)
     

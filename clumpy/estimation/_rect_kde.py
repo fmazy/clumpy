@@ -8,6 +8,7 @@ Created on Fri Apr 30 09:24:01 2021
 
 import numpy as np
 from sklearn.neighbors import KDTree, BallTree
+from sklearn.neighbors import NearestNeighbors
 from scipy.special import gamma, betainc
 from time import time
 import pandas as pd
@@ -36,8 +37,7 @@ class RectKDE():
                  grid_shape = 2**8,
                  integral_tol = 0.01,
                  algorithm='kd_tree',
-                 leaf_size=40,
-                 dualtree=False,
+                 leaf_size=30,
                  n_jobs=None,
                  verbose=0):
         """
@@ -128,7 +128,6 @@ class RectKDE():
         self.integral_tol = integral_tol
         self.algorithm = algorithm
         self.leaf_size = leaf_size
-        self.dualtree = dualtree
         self.n_jobs=n_jobs
         self.verbose = verbose
     
@@ -216,7 +215,8 @@ class RectKDE():
                                        algorithm=self.algorithm,
                                        leaf_size=self.leaf_size,
                                        first_mirror_id=self._first_mirror_id,
-                                       radius=radius_ms)
+                                       radius=radius_ms,
+                                       n_jobs=self.n_jobs)
             
             if self.verbose > 0:
                 print('selected mirrored data shape : ', X.shape)
@@ -226,8 +226,6 @@ class RectKDE():
         # --------------------------------
         # all data operations are made
         self._data = X
-        print(X.shape)
-        print(self._data.shape)
         
         #============================================================
         # 2. First Nearest Neighbors setting
@@ -240,7 +238,13 @@ class RectKDE():
         if self.algorithm not in _algorithm_class.keys():
             raise(ValueError("Unexpected algorithm parameter '"+str(self.algorithm)+"'. It should belong to {'kd_tree', 'ball_tree'}."))
         self._tree = _algorithm_class[self.algorithm](self._data,
-                                                      leaf_size=self.leaf_size)
+                                                       leaf_size=self.leaf_size)
+        
+        self._nn = NearestNeighbors(algorithm=self.algorithm,
+                                    leaf_size=self.leaf_size,
+                                    n_jobs=self.n_jobs)
+        self._nn.fit(self._data)
+                
         if self.verbose > 0:
             print('...done')
         
@@ -251,8 +255,6 @@ class RectKDE():
         if type(self.h) is str:
             if self.h == 'UCV':
                 self._h = self._compute_h_through_ucv()
-            elif self.h == 'UCV_mc':
-                self._h = self._compute_h_through_ucv(montecarlo=True)
             else:
                 raise(TypeError("Unexpected h parameter type. Should be a float or {'UCV', 'UCV_mc'}."))
         elif type(self.h) is float:
@@ -271,14 +273,17 @@ class RectKDE():
                                                 algorithm=self.algorithm,
                                                 leaf_size=self.leaf_size,
                                                 first_mirror_id=self._first_mirror_id,
-                                                radius=self._h)
+                                                radius=self._h,
+                                                n_jobs=self.n_jobs)
             
             # The KDE nearest neighbors tree is set a first time
             if self.verbose > 0:
                 print('\nFinal nearest neighbors tree training...')
             # Nearest Neighbors tree
-            self._tree = _algorithm_class[self.algorithm](self._data,
-                                                          leaf_size=self.leaf_size)
+            # self._tree = _algorithm_class[self.algorithm](self._data,
+                                                          # leaf_size=self.leaf_size)
+            self._nn.fit(self._data)
+            
             if self.verbose > 0:
                 print('...done')
         
@@ -316,20 +321,24 @@ class RectKDE():
         # transform X to whitening space
         X = self._whitening_transformer.transform(X)
         
-        if self.n_jobs is None:
-            n_jobs = 1
-        else:
-            n_jobs = self.n_jobs
+        # if self.n_jobs is None:
+        #     n_jobs = 1
+        # else:
+        #     n_jobs = self.n_jobs
         
         # count neighbors
-        if n_jobs == 1:
-            density = self._tree.query_radius(X=X,
-                                              r=h,
-                                              count_only=True)
-        else:
-            pool = Pool(n_jobs)
-            density = pool.imap(self._tree.query_radius, )
-            density = np.array(density)
+        density = self._nn.radius_neighbors(X=X,
+                                            radius=h,
+                                            return_distance=False)
+        density = np.array([d.size for d in density])
+        # if n_jobs == 1:
+        #     density = self._tree.query_radius(X=X,
+        #                                       r=h,
+        #                                       count_only=True)
+        # else:
+        #     pool = Pool(n_jobs)
+        #     density = pool.imap(self._tree.query_radius, )
+        #     density = np.array(density)
         
         # divide for integral closure
         density = density / ( self._n * self._v * h**self._d)
@@ -428,190 +437,268 @@ class RectKDE():
         
         return(X_grid)
     
-    def _compute_h_through_ucv(self, montecarlo=False, real_scale=False):
-        """
-        UCV for loop method.
-        compute J for several bandwidth and return the optimal bandwidth
-        which minimize J.
-        """
-        if self.verbose > 0:
-            print("\nComputing optimal h through UCV")
-            print("montecarlo method : ", montecarlo)
-            print("real scale : ", real_scale)
-            print("h min : ", self.h_min)
-            print("h max : ", self.h_max)
-            print("h step : ", self.h_step)
-            print("num. of increasing J to break the research : ", self.h_n_increasing)
-            print("\nstart\n")
-            print("h | J | n_increasing")
-        if montecarlo:
-            # if montecarlo, create a grid.
-            # the grid is thus created only one time.
-            X_grid = self._create_grid()
-        else:
-            X_grid = None
-        
-        # linear bandwidth variation 
-        self._opt_h = np.arange(start = self.h_min,
-                           stop = self.h_max,
-                           step = self.h_step)
-        self._opt_J = []
-        
-        # n increasing counting initialization
-        n_increasing = 0
-        
-        # start time for execution time
+    def _compute_h_through_ucv(self, real_scale=False):
+        # get neighbors for J construction
+        # use hmax
         st = time()
-        for h in self._opt_h:
-            # compute J and append it to _opt_J
-            # the real scale is set to False. The real value of J is not
-            # required. Comparisons are enought
-            self._opt_J.append(self._compute_J(h, X_grid, real_scale=real_scale))
+        X_real = self._data[:self._first_mirror_id]
+        
+        # integral squared
+        if self.verbose > 0:
+            print('computing distances to 2 * h_max for real data of shape '+str(X_real.shape)+'...')
+        distances_2hmax, _ = self._nn.radius_neighbors(X = X_real,
+                                                       radius = 2 * self.h_max,
+                                                       return_distance = True)
+        if self.verbose > 0:
+            print('...done')
+        
+        self._opt_J = []
+        self._opt_h = []
+        
+        if self.verbose > 0:
+            print('starting while loop...')
+        
+        n_increasing = 0
+        h = self.h_max + self.h_step
+        while n_increasing < self.h_n_increasing and h >= self.h_min:
+            h -= self.h_step
             
-            # n increasing counting. it counts the number of steps whose
-            # J values after the minimum are greater than the minimum
+            # integral squared
+            distances = [d[d <= 2 * h] for d in distances_2hmax]
+            # return(distances)
+            
+            # hyper sphere intersection volume
+            # see https://math.stackexchange.com/questions/162250/how-to-compute-the-volume-of-intersection-between-two-hyperspheres
+            
+            hsiv = np.sum([np.sum(1 - betainc(1/2, (self._d+1)/2, delta**2 / 4 / h**2)) for delta in distances])
+            hsiv *= np.pi**(self._d/2) * h**self._d / gamma(self._d/2+1)
+            hsiv *= self._whitening_transformer._inverse_transform_det                                                             
+            # scale returned volume for mirrors considerations
+            hsiv *= 2**len(self.bounded_features)
+            
+            # integral closure
+            integral_squared = 1 / (self._n * h**(2 * self._d) * self._v) * hsiv
+            
+            if real_scale:
+                # if real scale, some divisions are required
+                integral_squared /= self._n * self._v
+                
+            # leave one out esperance
+            s = np.sum([(d <= h).sum() for d in distances_2hmax])
+            # one should remove auto-paired points since the data and the training
+            # set are the same
+            s -= self._first_mirror_id
+            
+            # mirror considerations
+            s *= 2**len(self.bounded_features)
+            
+            # integral closure
+            s = s / ((self._n - 1) * h**self._d)
+            
+            if real_scale:
+                # if real scale, some divisions are required
+                s /= self._n * self._v
+            
+            J = integral_squared - 2 * s
+            
+            self._opt_J.append(J)
+            self._opt_h.append(h)
+            
             min_ind = np.argmin(self._opt_J)
             min_value = np.min(self._opt_J)
             n_increasing = np.sum(np.array(self._opt_J)[min_ind:]>min_value)
             
-            if self.verbose>0:
-                print(h, self._opt_J[-1], n_increasing)
-            
-            # if the number of consecutively increasing J is triggered
-            # break the for loop.
-            # two possibilities : 1/ the hmin was to high
-            # 2/ the optimal h has been observed and is the argmin of J
-            if n_increasing >= self.h_n_increasing:
-                if self.verbose > 0:
-                    print('num. of J increasing reached. Break the research.')
-                break
+            if self.verbose > 0:
+                print(self._opt_h[-1], self._opt_J[-1], n_increasing)
         
-        self._opt_h = self._opt_h[:len(self._opt_J)]
-        
-        # execution time
-        self._opt_time = time() - st
-        
-        # opt_J as a numpy array
-        self._opt_J = np.array(self._opt_J)
-        
-        if self.verbose > 0:
-            print('Optimal h computing through UCV done.\n')
+        self._opt_time = time()-st
         
         return(self._opt_h[np.argmin(self._opt_J)])
-        
-    def _compute_J(self, h, X_grid=None, real_scale=True):
-        """
-        UCV method. Compute an estimation of J 
-        """
-        # compute integral squared. If montecarlo, X_grid is not None
-        integral_squared = self._compute_integral_squared(h, X_grid, real_scale=real_scale)
-        
-        # compute leave one out esperance
-        leave_one_out_esperance = self._compute_leave_one_out_esperance(h, real_scale=real_scale)
-        
-        # compute J
-        J = integral_squared - 2 * leave_one_out_esperance
-        
-        
-        return(J)
     
-    def _compute_integral_squared(self, h, X_grid=None, real_scale=True):
-        """
-        compute integral squared. switch to 2 different methods :
-        with montecarlo approximation or not.
-        """
-        # montecarlo switch
-        if X_grid is None:
-            return(self._compute_exact_integral_squared(h, real_scale=real_scale))
-        else:
-            return(self._compute_mc_integral_squared(h, X_grid, real_scale=real_scale))
+    # def _compute_h_through_ucv2(self, montecarlo=False, real_scale=False):
+    #     """
+    #     UCV for loop method.
+    #     compute J for several bandwidth and return the optimal bandwidth
+    #     which minimize J.
+    #     """
+    #     if self.verbose > 0:
+    #         print("\nComputing optimal h through UCV")
+    #         print("montecarlo method : ", montecarlo)
+    #         print("real scale : ", real_scale)
+    #         print("h min : ", self.h_min)
+    #         print("h max : ", self.h_max)
+    #         print("h step : ", self.h_step)
+    #         print("num. of increasing J to break the research : ", self.h_n_increasing)
+    #         print("\nstart\n")
+    #         print("h | J | n_increasing")
+    #     if montecarlo:
+    #         # if montecarlo, create a grid.
+    #         # the grid is thus created only one time.
+    #         X_grid = self._create_grid()
+    #     else:
+    #         X_grid = None
+        
+    #     # linear bandwidth variation 
+    #     self._opt_h = np.arange(start = self.h_min,
+    #                        stop = self.h_max,
+    #                        step = self.h_step)
+    #     self._opt_J = []
+        
+    #     # n increasing counting initialization
+    #     n_increasing = 0
+        
+    #     # start time for execution time
+    #     st = time()
+    #     for h in self._opt_h:
+    #         # compute J and append it to _opt_J
+    #         # the real scale is set to False. The real value of J is not
+    #         # required. Comparisons are enought
+    #         self._opt_J.append(self._compute_J(h, X_grid, real_scale=real_scale))
+            
+    #         # n increasing counting. it counts the number of steps whose
+    #         # J values after the minimum are greater than the minimum
+    #         min_ind = np.argmin(self._opt_J)
+    #         min_value = np.min(self._opt_J)
+    #         n_increasing = np.sum(np.array(self._opt_J)[min_ind:]>min_value)
+            
+    #         if self.verbose>0:
+    #             print(h, self._opt_J[-1], n_increasing)
+            
+    #         # if the number of consecutively increasing J is triggered
+    #         # break the for loop.
+    #         # two possibilities : 1/ the hmin was to high
+    #         # 2/ the optimal h has been observed and is the argmin of J
+    #         if n_increasing >= self.h_n_increasing:
+    #             if self.verbose > 0:
+    #                 print('num. of J increasing reached. Break the research.')
+    #             break
+        
+    #     self._opt_h = self._opt_h[:len(self._opt_J)]
+        
+    #     # execution time
+    #     self._opt_time = time() - st
+        
+    #     # opt_J as a numpy array
+    #     self._opt_J = np.array(self._opt_J)
+        
+    #     if self.verbose > 0:
+    #         print('Optimal h computing through UCV done.\n')
+        
+    #     return(self._opt_h[np.argmin(self._opt_J)])
+        
+    # def _compute_J(self, h, X_grid=None, real_scale=True):
+    #     """
+    #     UCV method. Compute an estimation of J 
+    #     """
+    #     # compute integral squared. If montecarlo, X_grid is not None
+    #     integral_squared = self._compute_integral_squared(h, X_grid, real_scale=real_scale)
+        
+    #     # compute leave one out esperance
+    #     leave_one_out_esperance = self._compute_leave_one_out_esperance(h, real_scale=real_scale)
+        
+    #     # compute J
+    #     J = integral_squared - 2 * leave_one_out_esperance
+        
+        
+    #     return(J)
     
-    def _compute_mc_integral_squared(self, h, X_grid, real_scale=True):
-        """
-        compute integral squared through monte carlo approximation
-        """
-        # montecarlo coefficient according to the original space
-        mc_coef = np.product(X_grid.max(axis=0)-X_grid.min(axis=0)) / X_grid.shape[0]
+    # def _compute_integral_squared(self, h, X_grid=None, real_scale=True):
+    #     """
+    #     compute integral squared. switch to 2 different methods :
+    #     with montecarlo approximation or not.
+    #     """
+    #     # montecarlo switch
+    #     if X_grid is None:
+    #         return(self._compute_exact_integral_squared(h, real_scale=real_scale))
+    #     else:
+    #         return(self._compute_mc_integral_squared(h, X_grid, real_scale=real_scale))
+    
+    # def _compute_mc_integral_squared(self, h, X_grid, real_scale=True):
+    #     """
+    #     compute integral squared through monte carlo approximation
+    #     """
+    #     # montecarlo coefficient according to the original space
+    #     mc_coef = np.product(X_grid.max(axis=0)-X_grid.min(axis=0)) / X_grid.shape[0]
                 
-        # count neighbors through the density function with set h
-        p_grid = self.density(X_grid, h=h)
+    #     # count neighbors through the density function with set h
+    #     p_grid = self.density(X_grid, h=h)
         
-        # compute integral
-        integral = p_grid.sum() * mc_coef
+    #     # compute integral
+    #     integral = p_grid.sum() * mc_coef
         
-        # integral check
-        # a warning message can be displayed but it is not considered as
-        # an error
-        _check_integral_close_to_1(integral, eps=self.integral_tol)
+    #     # integral check
+    #     # a warning message can be displayed but it is not considered as
+    #     # an error
+    #     _check_integral_close_to_1(integral, eps=self.integral_tol)
         
-        # compute integral squared
-        integral_squared = (p_grid**2).sum() * mc_coef
+    #     # compute integral squared
+    #     integral_squared = (p_grid**2).sum() * mc_coef
         
-        # mirrors consideration
-        # the p_grid has already been scaled for mirror considerations
-        # It have to been then downscaled according to formulas.
-        # indeed, the integral is made on the whole support
-        # without mirror considerations.
-        integral_squared /= 2**len(self.bounded_features)
+    #     # mirrors consideration
+    #     # the p_grid has already been scaled for mirror considerations
+    #     # It have to been then downscaled according to formulas.
+    #     # indeed, the integral is made on the whole support
+    #     # without mirror considerations.
+    #     integral_squared /= 2**len(self.bounded_features)
         
         
-        if not real_scale:
-            # in case of no real scale, some scaling are required
-            integral_squared *= self._n * self._v
+    #     if not real_scale:
+    #         # in case of no real scale, some scaling are required
+    #         integral_squared *= self._n * self._v
         
-        return(integral_squared)
+    #     return(integral_squared)
     
-    def _compute_exact_integral_squared(self, h, real_scale=True):
-        """
-        compute integral squared through exact formulas.
-        """
+    # def _compute_exact_integral_squared(self, h, real_scale=True):
+    #     """
+    #     compute integral squared through exact formulas.
+    #     """
         
-        # get neighbors distances
-        indices, distances = self._tree.query_radius(X = self._data[:self._first_mirror_id],
-                                                      r = 2 * h,
-                                                      return_distance=True)
+    #     # get neighbors distances
+    #     indices, distances = self._tree.query_radius(X = self._data[:self._first_mirror_id],
+    #                                                   r = 2 * h,
+    #                                                   return_distance=True)
         
-        # compute hypersphere intersection volume
-        # all pairs of points are taken 2 times. it is in accordance
-        # with the integral squared formula
-        hypersphere_intersection_volume = hyperspheres_inter_volume(distances=distances,
-                                                                    radius=h,
-                                                                    n_dims=self._d) * self._whitening_transformer._inverse_transform_det
-        # scale returned volume for mirrors considerations
-        hypersphere_intersection_volume *= 2**len(self.bounded_features)
+    #     # compute hypersphere intersection volume
+    #     # all pairs of points are taken 2 times. it is in accordance
+    #     # with the integral squared formula
+    #     hypersphere_intersection_volume = hyperspheres_inter_volume(distances=distances,
+    #                                                                 radius=h,
+    #                                                                 n_dims=self._d) * self._whitening_transformer._inverse_transform_det
+    #     # scale returned volume for mirrors considerations
+    #     hypersphere_intersection_volume *= 2**len(self.bounded_features)
         
-        # integral closure
-        integral_squared = 1 / (self._n * h**(2 * self._d) * self._v) * hypersphere_intersection_volume
+    #     # integral closure
+    #     integral_squared = 1 / (self._n * h**(2 * self._d) * self._v) * hypersphere_intersection_volume
         
-        if real_scale:
-            # if real scale, some divisions are required
-            integral_squared /= self._n * self._v
+    #     if real_scale:
+    #         # if real scale, some divisions are required
+    #         integral_squared /= self._n * self._v
         
-        return(integral_squared)
+    #     return(integral_squared)
         
-    def _compute_leave_one_out_esperance(self, h, real_scale=True):
-        """
-        compute leave one out esperance which is used to estimate J.
-        """
-        # count pairs of points
-        s = self._tree.two_point_correlation(X=self._data[:self._first_mirror_id],
-                                             r=h,
-                                             dualtree=self.dualtree)[0]
-        # one should remove auto-paired points since the data and the training
-        # set are the same
-        s -= self._first_mirror_id
+    # def _compute_leave_one_out_esperance(self, h, real_scale=True):
+    #     """
+    #     compute leave one out esperance which is used to estimate J.
+    #     """
+    #     # count pairs of points
+    #     s = self._tree.two_point_correlation(X=self._data[:self._first_mirror_id],
+    #                                          r=h,
+    #                                          dualtree=self.dualtree)[0]
+    #     # one should remove auto-paired points since the data and the training
+    #     # set are the same
+    #     s -= self._first_mirror_id
         
-        # mirror considerations
-        s *= 2**len(self.bounded_features)
+    #     # mirror considerations
+    #     s *= 2**len(self.bounded_features)
         
-        # integral closure
-        s = s / ((self._n - 1) * h**self._d)
+    #     # integral closure
+    #     s = s / ((self._n - 1) * h**self._d)
         
-        if real_scale:
-            # if real scale, some divisions are required
-            s /= self._n * self._v
+    #     if real_scale:
+    #         # if real scale, some divisions are required
+    #         s /= self._n * self._v
         
-        return(s)
+    #     return(s)
 
     def plot_h_opt(self):
         """
@@ -736,7 +823,7 @@ def _mirror(X, bounded_features):
     
     return(X, low_bounds)
 
-def _mirror_data_selection(X, algorithm, leaf_size, first_mirror_id, radius):
+def _mirror_data_selection(X, algorithm, leaf_size, first_mirror_id, radius, n_jobs):
     """
     select mirrored data set according to rhe bandwidth.
     only close enought mirrored data are kept.
@@ -745,12 +832,23 @@ def _mirror_data_selection(X, algorithm, leaf_size, first_mirror_id, radius):
     
     # tree_ms -> nearest neighbors tree mirror selection
     # trained through original data
-    tree_ms = _algorithm_class[algorithm](X[:first_mirror_id],
-                                          leaf_size=leaf_size)
+    # tree_ms = _algorithm_class[algorithm](X[:first_mirror_id],
+                                          # leaf_size=leaf_size)
+    nn = NearestNeighbors(radius = radius,
+                          algorithm = algorithm,
+                          leaf_size = leaf_size,
+                          n_jobs = n_jobs)
+    # train through real data
+    nn.fit(X[:first_mirror_id])
     # count neighbors for mirrored data
-    count_neighbors = tree_ms.query_radius(X=X[first_mirror_id:],
-                                           r=radius,
-                                           count_only=True)
+    count_neighbors = nn.radius_neighbors(X=X[first_mirror_id:],
+                                          radius=radius,
+                                          return_distance=False)
+    count_neighbors = np.array([cn.size for cn in count_neighbors])
+    # count_neighbors = tree_ms.query_radius(X=X[first_mirror_id:],
+                                           # r=radius,
+                                           # count_only=True)
+    
     # only pixels with neighbors are kept
     ind_to_keep = first_mirror_id + np.arange(len(count_neighbors))[count_neighbors > 0]
     # selected mirrored data
@@ -775,6 +873,9 @@ def volume_unit_ball(d, p=2):
     """
     return 2.0 ** d * gamma(1 + 1 / p) ** d / gamma(1 + d / p)
 
+def hyperspheres_inter_volume_part(distances, radius, n_dims):
+    return(2*np.array([Vn(radius, dist/2, n_dims) for dist in distances]))
+
 def hyperspheres_inter_volume(distances, radius, n_dims):
     """
     compute the total hypersphere intersection volume of a list of distances.
@@ -788,7 +889,7 @@ def Vn(r, a, n):
     function used in the hypersphere intersection volume.
     see https://math.stackexchange.com/questions/162250/how-to-compute-the-volume-of-intersection-between-two-hyperspheres
     """
-    return(1/2*np.pi**(n/2)*r**2*betainc((n+1)/2, 1/2, 1-a**2/r**2)/gamma(n/2+1))
+    return(1/2*np.pi**(n/2)*r**n*betainc((n+1)/2, 1/2, 1-a**2/r**2)/gamma(n/2+1))
 
 def _check_integral_close_to_1(integral, eps=1e-2):
     """
