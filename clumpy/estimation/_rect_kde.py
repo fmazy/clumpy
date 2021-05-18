@@ -471,6 +471,7 @@ class RectKDE():
             # see https://math.stackexchange.com/questions/162250/how-to-compute-the-volume-of-intersection-between-two-hyperspheres
             
             hsiv = np.sum([np.sum(1 - betainc(1/2, (self._d+1)/2, delta**2 / 4 / h**2)) for delta in distances])
+            # warning ! h**d normaly !
             hsiv *= np.pi**(self._d/2) * h**self._d / gamma(self._d/2+1)
             hsiv *= self._whitening_transformer._inverse_transform_det                                                             
             # scale returned volume for mirrors considerations
@@ -485,7 +486,7 @@ class RectKDE():
                 
             # leave one out esperance
             s = np.sum([(d <= h).sum() for d in distances_2hmax])
-            # one should remove auto-paired points since the data and the training
+            # one removes auto-paired points since the data and the training
             # set are the same
             s -= self._first_mirror_id
             
