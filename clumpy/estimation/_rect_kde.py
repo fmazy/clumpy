@@ -50,16 +50,13 @@ class RectKDE():
             
             float
                 set the bandwidth value
+                
+            'silverman'
+                Silverman's rule of thumb.
             
             'UCV'
                 Select the bandwidth through Unbiased Cross Validation method.
                 This method is recommanded for large data set.
-            
-            'UCV_mc'
-                Select the bandwidth through Unbiased Cross Validation
-                with Monte-Carlo method. This method may imply heavy computation
-                requirements due to the grid shape used for monte carlo
-                approximation.
         
         bounded_features : list of int, default=`[]`
             List of bounded features indices. Bounded features imply some
@@ -201,22 +198,23 @@ class RectKDE():
         # 1.4. Mirror data selection
         # --------------------------------
         
-        if len(self.bounded_features) > 0:
+        if len(self.bounded_features) > 0 and self.h == 'UCV':
             # get hmax if h is given
-            if type(self.h) is float:
-                # if no bandwidth selection, the h radius is enought
-                radius_ms = self.h
-            else:
+            
+            # if no bandwidth selection, the h radius is enought
+            radius_ms = self.h
+                
+            if self.h == 'UCV':
                 # if bandwidth selection, 2 * hmax radius are required
                 # for exact integral squared
                 radius_ms = self.h_max * 2
             
             X = _mirror_data_selection(X=X,
-                                       algorithm=self.algorithm,
-                                       leaf_size=self.leaf_size,
-                                       first_mirror_id=self._first_mirror_id,
-                                       radius=radius_ms,
-                                       n_jobs=self.n_jobs)
+                                        algorithm=self.algorithm,
+                                        leaf_size=self.leaf_size,
+                                        first_mirror_id=self._first_mirror_id,
+                                        radius=radius_ms,
+                                        n_jobs=self.n_jobs)
             
             if self.verbose > 0:
                 print('selected mirrored data shape : ', X.shape)
@@ -237,13 +235,17 @@ class RectKDE():
         # Nearest Neighbors tree
         if self.algorithm not in _algorithm_class.keys():
             raise(ValueError("Unexpected algorithm parameter '"+str(self.algorithm)+"'. It should belong to {'kd_tree', 'ball_tree'}."))
-        self._tree = _algorithm_class[self.algorithm](self._data,
-                                                       leaf_size=self.leaf_size)
+        # self._tree = _algorithm_class[self.algorithm](self._data,
+                                                       # leaf_size=self.leaf_size)
+        
+        
         
         self._nn = NearestNeighbors(algorithm=self.algorithm,
                                     leaf_size=self.leaf_size,
                                     n_jobs=self.n_jobs)
-        self._nn.fit(self._data)
+        
+        if self.h == 'UCV':
+            self._nn.fit(self._data)
                 
         if self.verbose > 0:
             print('...done')
@@ -255,8 +257,12 @@ class RectKDE():
         if type(self.h) is str:
             if self.h == 'UCV':
                 self._h = self._compute_h_through_ucv()
+            elif self.h == 'silverman':
+                self._h = (4 / (self._d + 2))**(1/(self._d + 4)) * self._n **(-1/(self._d + 4)) * 2
+            elif self.h == 'scott':
+                self._h = self._n ** (-1 / (self._d + 4))
             else:
-                raise(TypeError("Unexpected h parameter type. Should be a float or {'UCV', 'UCV_mc'}."))
+                raise(TypeError("Unexpected h parameter type. Should be a float or {'UCV', 'silverman', 'scott'}."))
         elif type(self.h) is float:
             self._h = self.h
         else:
@@ -268,7 +274,7 @@ class RectKDE():
         # If their are mirrored data and the bandwidth has been selected,
         # training data should be adujsted to the new bandwidth
         # then, radius neighbors are searched for mirrored data
-        if len(self.bounded_features) > 0 and type(self.h) is not float:
+        if len(self.bounded_features) > 0 and self.h == 'UCV':
             self._data = _mirror_data_selection(X=self._data,
                                                 algorithm=self.algorithm,
                                                 leaf_size=self.leaf_size,
@@ -795,11 +801,16 @@ class RectKDE():
                 
         os.system('rm -R ' + path + '.kde_out')
         
+        self._nn = NearestNeighbors(algorithm=self.algorithm,
+                                    leaf_size=self.leaf_size,
+                                    n_jobs=self.n_jobs)
+        self._nn.fit(self._data)
+        
         # if not hasattr(self, '_h') and hasattr(self, '_opt_h') and hasattr(self, '_opt_J'):
         #     self._h = self._opt_h[np.argmin(self._opt_J)]
         
-        self._tree = _algorithm_class[self.algorithm](self._data,
-                                                      leaf_size=self.leaf_size)
+        # self._tree = _algorithm_class[self.algorithm](self._data,
+                                                      # leaf_size=self.leaf_size)
         
         # if not hasattr(self._whitening_transformer, '_transform_det'):
         #     self._whitening_transformer._transform_det = np.abs(np.linalg.det(self._whitening_transformer._transform_matrix))
