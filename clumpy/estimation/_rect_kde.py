@@ -260,7 +260,7 @@ class RectKDE():
             elif self.h == 'silverman':
                 self._h = (4 / (self._d + 2))**(1/(self._d + 4)) * self._n **(-1/(self._d + 4)) * 2
             elif self.h == 'scott':
-                self._h = self._n ** (-1 / (self._d + 4))
+                self._h = self._n ** (-1 / (self._d + 4)) * 2
             else:
                 raise(TypeError("Unexpected h parameter type. Should be a float or {'UCV', 'silverman', 'scott'}."))
         elif type(self.h) is float:
