@@ -13,6 +13,7 @@ from multiprocessing import Pool
 from sklearn.base import BaseEstimator
 from matplotlib import pyplot as plt
 from sklearn.preprocessing import StandardScaler
+from time import time
 
 class GKDE(BaseEstimator):
     def __init__(self,
@@ -61,11 +62,16 @@ class GKDE(BaseEstimator):
         return(self)
         
     def predict(self, X):
+        st = time()
         if self.standard_scaler:
             X = self._standard_scaler.transform(X)
+        print('ss', time()-st)
         
+        st = time()
         distances, _ = self._nn.radius_neighbors(X, radius=self.h * self.support_factor, return_distance=True)
+        print('neighbors', time()-st)
         
+        st = time()
         if self.n_jobs == 1:
             f = np.array([_gaussian(dist/self.h) for dist in distances])
         else:
@@ -73,21 +79,27 @@ class GKDE(BaseEstimator):
             f = pool.starmap(_gaussian, [(dist/self.h,) for dist in distances])
             f = np.array(f)
         f *= self._normalization / self._n
+        print('gaussian', time()-st)
         
+        st = time()
         # boundary bias correction
         for id_k, k in enumerate(self.low_bounded_features):
             f /= 1 / 2 * (1 + erf((X[:,k] - self._low_bounds[id_k]) / self.h / np.sqrt(2)))
                     
         for id_k, k in enumerate(self.high_bounded_features):
             f /= 1 / 2 * (1 + erf((self._high_bounds[id_k] - X[:,k]) / self.h / np.sqrt(2)))
+        print('correction', time()-st)
         
+        st = time()
         # boundary cutting if necessary
         f[np.any(X[:, self.low_bounded_features] < self._low_bounds, axis=1)] = 0
         f[np.any(X[:, self.high_bounded_features] > self._high_bounds, axis=1)] = 0
+        print('cutting', time()-st)
         
+        st = time()
         if self.standard_scaler:
             f /= np.product(self._standard_scaler.scale_)
-        
+        print('ss correction', time()-st)
         return(f)
 
     def J(self):
