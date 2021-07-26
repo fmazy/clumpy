@@ -20,17 +20,23 @@ class GKDE(BaseEstimator):
                  h=1.0,
                  low_bounded_features=[],
                  high_bounded_features=[],
+                 low_bounds = None,
+                 high_bounds = None,
                  algorithm='kd_tree',
                  leaf_size=30,
                  support_factor=3,
-                 standard_scaler=True,
+                 adaptative = False,
+                 standard_scaler = True,
                  n_jobs=1):
         self.h = h
         self.low_bounded_features = low_bounded_features
         self.high_bounded_features = high_bounded_features
+        self.low_bounds = low_bounds
+        self.high_bounds = high_bounds
         self.algorithm = algorithm
         self.leaf_size = leaf_size
         self.support_factor = support_factor
+        self.adaptative = adaptative
         self.standard_scaler = standard_scaler
         self.n_jobs=n_jobs
         
@@ -39,19 +45,40 @@ class GKDE(BaseEstimator):
     
     def fit(self, X, y=None):
         
+        
+        
         if self.standard_scaler:
             self._standard_scaler = StandardScaler()
             self._data = self._standard_scaler.fit_transform(X)
         else:
             self._data = X
             
-        self._low_bounds = self._data[:, self.low_bounded_features].min(axis=0)
-        self._high_bounds = self._data[:, self.high_bounded_features].max(axis=0)
-        
         self._n = self._data.shape[0]
         self._d = self._data.shape[1]
         
-        self._normalization = 1 / ((2*np.pi)**(self._d/2) * np.sqrt((self.h**2)**self._d))
+        if self.low_bounds is None:
+            self._low_bounds = self._data[:, self.low_bounded_features].min(axis=0)
+        else:
+            if self.standard_scaler:
+                lb = np.zeros(self._d)
+                lb[self.low_bounded_features] = self.low_bounds
+                self._low_bounds = self._standard_scaler.transform(lb[None, :])
+            else:
+                self._low_bounds = self.low_bounds
+        
+        if self.high_bounds is None:
+            self._high_bounds = self._data[:, self.high_bounded_features].max(axis=0)
+        else:
+            if self.standard_scaler:
+                hb = np.zeros(self._d)
+                hb[self.high_bounded_features] = self.high_bounds
+                self._high_bounds = self._standard_scaler.transform(hb[None, :])
+            else:
+                self._high_bounds = self.high_bounds
+        
+        
+        
+        self._normalization = 1 / ((2*np.pi)**(self._d/2) * self.h**self._d)
         
         self._nn = NearestNeighbors(radius = self.h * self.support_factor,
                                    algorithm = self.algorithm,
@@ -62,33 +89,72 @@ class GKDE(BaseEstimator):
         return(self)
         
     def predict(self, X):
-        st = time()
-        if self.standard_scaler:
-            X = self._standard_scaler.transform(X)
-        print('ss', time()-st)
         
+        if self.standard_scaler:
+            st = time()
+            X = self._standard_scaler.transform(X)
+            print('ss', time()-st)
+        
+        if self.adaptative:
+            f_pilot = self._predict_with_bandwidth(X, self.h)
+            h = self.h / f_pilot
+            print('h, (shape, min, mean, max) :', h.shape, np.min(h), np.mean(h), np.max(h))
+        else:
+            h = self.h
+        
+        return(self._predict_with_bandwidth(X, h), h)
+    
+    def _predict_with_bandwidth(self, X, h, scaling=True):
         st = time()
-        distances, _ = self._nn.radius_neighbors(X, radius=self.h * self.support_factor, return_distance=True)
+        distances, neighbors_id = self._nn.radius_neighbors(X, radius=np.max(h) * self.support_factor, return_distance=True)
         print('neighbors', time()-st)
         
+        boundary_bias_method = 'old'
+                
         st = time()
-        if self.n_jobs == 1:
-            f = np.array([_gaussian(dist/self.h) for dist in distances])
+        if type(h) is float or type(h) is int:
+            if self.n_jobs == 1:
+                if boundary_bias_method == 'old':
+                    f = np.array([_gaussian(dist/h) for dist in distances])
+                else:
+                    boundary_correction = np.product(0.5 * (1+erf((self._data[:, self.low_bounded_features] - self._low_bounds) / (h * np.sqrt(2)))), axis=1) * np.product(0.5 * (1+erf((self._high_bounds - self._data[:, self.high_bounded_features]) / (h * np.sqrt(2)))), axis=1)
+                    
+                    # return(boundary_correction)
+                    print('coor:', boundary_correction)
+                    # print(boundary_correction[neighbors_id[0]])
+                    f = np.array([np.sum(np.exp(-0.5 * (dist / h)**2) / boundary_correction[neighbors_id[idx]]) for idx, dist in enumerate(distances)])
+                
+            else:
+                pool = Pool(self.n_jobs)
+                f = pool.starmap(_gaussian, [(dist/h) for dist in distances])
+                f = np.array(f)
+            
+            f *= self._normalization / self._n
+            
         else:
-            pool = Pool(self.n_jobs)
-            f = pool.starmap(_gaussian, [(dist/self.h,) for dist in distances])
-            f = np.array(f)
-        f *= self._normalization / self._n
+            if self.n_jobs == 1:
+                f = np.array([_gaussian(dist/h[idx]) for idx, dist in enumerate(distances)])
+                # f = np.array([_gaussian(dist[dist <= h * self.support_factor]/h[dist <= h * self.support_factor]) for dist in distances])
+                # f = np.array([np.sum(1 / ((2*np.pi)**(self._d/2) * h[neighbors_id[idx]]**self._d) * np.exp(-0.5 * (dist/h[neighbors_id[idx]])**2)) for idx, dist in enumerate(distances)])
+                f /= h**self._d * self._n
+        
         print('gaussian', time()-st)
         
-        st = time()
-        # boundary bias correction
-        for id_k, k in enumerate(self.low_bounded_features):
-            f /= 1 / 2 * (1 + erf((X[:,k] - self._low_bounds[id_k]) / self.h / np.sqrt(2)))
-                    
-        for id_k, k in enumerate(self.high_bounded_features):
-            f /= 1 / 2 * (1 + erf((self._high_bounds[id_k] - X[:,k]) / self.h / np.sqrt(2)))
-        print('correction', time()-st)
+        if boundary_bias_method == 'old':
+            st = time()
+            # boundary bias correction
+            for id_k, k in enumerate(self.low_bounded_features):
+                if type(h) is float or type(h) is int:
+                    h_bounds = h
+                else:
+                    f_xbounds = h
+                f /= 1 / 2 * (1 + erf((X[:,k] - self._low_bounds[id_k]) / h / np.sqrt(2)))
+                        
+            for id_k, k in enumerate(self.high_bounded_features):
+                if type(h) is float or type(h) is int:
+                    h_bounds = h
+                f /= 1 / 2 * (1 + erf((self._high_bounds[id_k] - X[:,k]) / h / np.sqrt(2)))
+            print('correction', time()-st)
         
         st = time()
         # boundary cutting if necessary
