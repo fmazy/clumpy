@@ -25,8 +25,8 @@ class GKDE(BaseEstimator):
                  algorithm='kd_tree',
                  leaf_size=30,
                  support_factor=3,
-                 adaptative = False,
                  standard_scaler = True,
+                 forbid_null_value = False,
                  n_jobs=1):
         self.h = h
         self.low_bounded_features = low_bounded_features
@@ -36,17 +36,14 @@ class GKDE(BaseEstimator):
         self.algorithm = algorithm
         self.leaf_size = leaf_size
         self.support_factor = support_factor
-        self.adaptative = adaptative
         self.standard_scaler = standard_scaler
+        self.forbid_null_value = forbid_null_value
         self.n_jobs=n_jobs
         
     def __repr__(self):
         return('GKDE(h='+str(self.h)+')')
     
     def fit(self, X, y=None):
-        
-        
-        
         if self.standard_scaler:
             self._standard_scaler = StandardScaler()
             self._data = self._standard_scaler.fit_transform(X)
@@ -94,67 +91,50 @@ class GKDE(BaseEstimator):
             st = time()
             X = self._standard_scaler.transform(X)
             print('ss', time()-st)
+                
+        pdf = self._predict_with_bandwidth(X, self.h)
         
-        if self.adaptative:
-            f_pilot = self._predict_with_bandwidth(X, self.h)
-            h = self.h / f_pilot
-            print('h, (shape, min, mean, max) :', h.shape, np.min(h), np.mean(h), np.max(h))
-        else:
-            h = self.h
+        # if null value is forbiden
+        if self.forbid_null_value:
+            idx = pdf == 0.0
+            
+            new_n = self._n + idx.sum()
+            
+            pdf = pdf * self._n / new_n
+            
+            min_value = 1 / new_n / self._normalization * _gaussian(0)
+            pdf[pdf == 0.0] = min_value
         
-        return(self._predict_with_bandwidth(X, h), h)
+        return(pdf)
     
     def _predict_with_bandwidth(self, X, h, scaling=True):
         st = time()
         distances, neighbors_id = self._nn.radius_neighbors(X, radius=np.max(h) * self.support_factor, return_distance=True)
         print('neighbors', time()-st)
         
-        boundary_bias_method = 'old'
                 
         st = time()
-        if type(h) is float or type(h) is int:
-            if self.n_jobs == 1:
-                if boundary_bias_method == 'old':
-                    f = np.array([_gaussian(dist/h) for dist in distances])
-                else:
-                    boundary_correction = np.product(0.5 * (1+erf((self._data[:, self.low_bounded_features] - self._low_bounds) / (h * np.sqrt(2)))), axis=1) * np.product(0.5 * (1+erf((self._high_bounds - self._data[:, self.high_bounded_features]) / (h * np.sqrt(2)))), axis=1)
-                    
-                    # return(boundary_correction)
-                    print('coor:', boundary_correction)
-                    # print(boundary_correction[neighbors_id[0]])
-                    f = np.array([np.sum(np.exp(-0.5 * (dist / h)**2) / boundary_correction[neighbors_id[idx]]) for idx, dist in enumerate(distances)])
-                
-            else:
-                pool = Pool(self.n_jobs)
-                f = pool.starmap(_gaussian, [(dist/h) for dist in distances])
-                f = np.array(f)
-            
-            f *= self._normalization / self._n
+        if self.n_jobs == 1:
+            f = np.array([_gaussian(dist/h) for dist in distances])
             
         else:
-            if self.n_jobs == 1:
-                f = np.array([_gaussian(dist/h[idx]) for idx, dist in enumerate(distances)])
-                # f = np.array([_gaussian(dist[dist <= h * self.support_factor]/h[dist <= h * self.support_factor]) for dist in distances])
-                # f = np.array([np.sum(1 / ((2*np.pi)**(self._d/2) * h[neighbors_id[idx]]**self._d) * np.exp(-0.5 * (dist/h[neighbors_id[idx]])**2)) for idx, dist in enumerate(distances)])
-                f /= h**self._d * self._n
+            pool = Pool(self.n_jobs)
+            f = pool.starmap(_gaussian, [(dist/h,) for dist in distances])
+            f = np.array(f)
+            
+        f *= self._normalization / self._n
+            
         
         print('gaussian', time()-st)
         
-        if boundary_bias_method == 'old':
-            st = time()
-            # boundary bias correction
-            for id_k, k in enumerate(self.low_bounded_features):
-                if type(h) is float or type(h) is int:
-                    h_bounds = h
-                else:
-                    f_xbounds = h
-                f /= 1 / 2 * (1 + erf((X[:,k] - self._low_bounds[id_k]) / h / np.sqrt(2)))
-                        
-            for id_k, k in enumerate(self.high_bounded_features):
-                if type(h) is float or type(h) is int:
-                    h_bounds = h
-                f /= 1 / 2 * (1 + erf((self._high_bounds[id_k] - X[:,k]) / h / np.sqrt(2)))
-            print('correction', time()-st)
+        st = time()
+        # boundary bias correction
+        for id_k, k in enumerate(self.low_bounded_features):
+            f /= 1 / 2 * (1 + erf((X[:,k] - self._low_bounds[id_k]) / h / np.sqrt(2)))
+                    
+        for id_k, k in enumerate(self.high_bounded_features):
+            f /= 1 / 2 * (1 + erf((self._high_bounds[id_k] - X[:,k]) / h / np.sqrt(2)))
+        print('correction', time()-st)
         
         st = time()
         # boundary cutting if necessary
