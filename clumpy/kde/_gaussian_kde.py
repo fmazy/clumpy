@@ -14,6 +14,7 @@ from sklearn.base import BaseEstimator
 from matplotlib import pyplot as plt
 from sklearn.preprocessing import StandardScaler
 from time import time
+from . import bandwidth_selection
 
 class GKDE(BaseEstimator):
     def __init__(self,
@@ -27,7 +28,8 @@ class GKDE(BaseEstimator):
                  support_factor=3,
                  standard_scaler = True,
                  forbid_null_value = False,
-                 n_jobs=1):
+                 n_jobs=1,
+                 verbose=0):
         self.h = h
         self.low_bounded_features = low_bounded_features
         self.high_bounded_features = high_bounded_features
@@ -38,10 +40,11 @@ class GKDE(BaseEstimator):
         self.support_factor = support_factor
         self.standard_scaler = standard_scaler
         self.forbid_null_value = forbid_null_value
-        self.n_jobs=n_jobs
+        self.n_jobs = n_jobs
+        self.verbose = verbose
         
     def __repr__(self):
-        return('GKDE(h='+str(self.h)+')')
+        return('GKDE(h='+str(self._h)+')')
     
     def fit(self, X, y=None):
         if self.standard_scaler:
@@ -73,11 +76,21 @@ class GKDE(BaseEstimator):
             else:
                 self._high_bounds = self.high_bounds
         
+        # bandwidth selection
+        if type(self.h) is int or type(self.h) is float:
+            self._h = float(self.h)
         
+        elif type(self.h) is str:
+            if self.h == 'scott':
+                self._h = bandwidth_selection.scotts_rule(X)
+            else:
+                raise(ValueError("Unexpected bandwidth selection method."))
+        else:
+            raise(TypeError("Unexpected bandwidth type."))
         
-        self._normalization = 1 / ((2*np.pi)**(self._d/2) * self.h**self._d)
+        self._normalization = 1 / ((2*np.pi)**(self._d/2) * self._h**self._d)
         
-        self._nn = NearestNeighbors(radius = self.h * self.support_factor,
+        self._nn = NearestNeighbors(radius = self._h * self.support_factor,
                                    algorithm = self.algorithm,
                                    leaf_size = self.leaf_size,
                                    n_jobs = self.n_jobs)
@@ -90,9 +103,10 @@ class GKDE(BaseEstimator):
         if self.standard_scaler:
             st = time()
             X = self._standard_scaler.transform(X)
-            print('ss', time()-st)
+            if self.verbose > 0:
+                print('ss', time()-st)
                 
-        pdf = self._predict_with_bandwidth(X, self.h)
+        pdf = self._predict_with_bandwidth(X, self._h)
         
         # if null value is forbiden
         if self.forbid_null_value:
@@ -108,11 +122,13 @@ class GKDE(BaseEstimator):
         return(pdf)
     
     def _predict_with_bandwidth(self, X, h, scaling=True):
-        st = time()
-        distances, neighbors_id = self._nn.radius_neighbors(X, radius=np.max(h) * self.support_factor, return_distance=True)
-        print('neighbors', time()-st)
         
-                
+        st = time()
+        distances, neighbors_id = self._nn.radius_neighbors(X, radius=h * self.support_factor, return_distance=True)
+        if self.verbose > 0:
+            print('neighbors', time()-st)
+        
+        
         st = time()
         if self.n_jobs == 1:
             f = np.array([_gaussian(dist/h) for dist in distances])
@@ -124,8 +140,8 @@ class GKDE(BaseEstimator):
             
         f *= self._normalization / self._n
             
-        
-        print('gaussian', time()-st)
+        if self.verbose > 0:
+            print('gaussian', time()-st)
         
         st = time()
         # boundary bias correction
@@ -134,18 +150,22 @@ class GKDE(BaseEstimator):
                     
         for id_k, k in enumerate(self.high_bounded_features):
             f /= 1 / 2 * (1 + erf((self._high_bounds[id_k] - X[:,k]) / h / np.sqrt(2)))
-        print('correction', time()-st)
+        
+        if self.verbose > 0:
+            print('correction', time()-st)
         
         st = time()
         # boundary cutting if necessary
         f[np.any(X[:, self.low_bounded_features] < self._low_bounds, axis=1)] = 0
         f[np.any(X[:, self.high_bounded_features] > self._high_bounds, axis=1)] = 0
-        print('cutting', time()-st)
+        if self.verbose > 0:
+            print('cutting', time()-st)
         
         st = time()
         if self.standard_scaler:
             f /= np.product(self._standard_scaler.scale_)
-        print('ss correction', time()-st)
+        if self.verbose > 0:
+            print('ss correction', time()-st)
         return(f)
 
     def J(self):
@@ -153,9 +173,9 @@ class GKDE(BaseEstimator):
         # on mutualise le calcul de distances.
         # on regarde donc d'abord dans un rayon de 3h puis on prend ce que l'on
         # veut ensuite.
-        distances, _ = self._nn.radius_neighbors(self._data, radius=self.h * self.support_factor, return_distance=True)
+        distances, _ = self._nn.radius_neighbors(self._data, radius=self._h * self.support_factor, return_distance=True)
         
-        J = self._normalization * (np.sum([1 / self._n**2 / 2**(self._d/2) * np.sum(np.exp(-1 / 2 * self.h**2 * dist[dist<=self.h * self.support_factor / np.sqrt(2)]**2)) - 2 / (self._n -1) / self._n * np.sum(np.exp(-0.5 * dist**2 / self.h**2)) for dist in distances]) + 2 / (self._n-1) * np.exp(0))
+        J = self._normalization * (np.sum([1 / self._n**2 / 2**(self._d/2) * np.sum(np.exp(-1 / 2 * self._h**2 * dist[dist<=self._h * self.support_factor / np.sqrt(2)]**2)) - 2 / (self._n -1) / self._n * np.sum(np.exp(-0.5 * dist**2 / self._h**2)) for dist in distances]) + 2 / (self._n-1) * np.exp(0))
         
         return(J)
     
@@ -170,27 +190,27 @@ class GKDE(BaseEstimator):
             X = self._standard_scaler.transform(X)
         x = X[:, k]
         
-        nn = NearestNeighbors(radius=self.h * self.support_factor,
+        nn = NearestNeighbors(radius=self._h * self.support_factor,
                               algorithm = self.algorithm,
                               leaf_size=self.leaf_size,
                               n_jobs = self.n_jobs)
         nn.fit(self._data[:,[k]])
         
         distances, _ = nn.radius_neighbors(x[:,None],
-                                           radius= self.h * self.support_factor,
+                                           radius= self._h * self.support_factor,
                                            return_distance=True)
         
-        f = 1 / (2 * np.pi)**(1/2) / self.h / self._n * np.array([_gaussian(dist / self.h) for dist in distances])
+        f = 1 / (2 * np.pi)**(1/2) / self._h / self._n * np.array([_gaussian(dist / self._h) for dist in distances])
         
         if k in self.low_bounded_features:
             id_k = self.low_bounded_features.index(k)
-            f /= 1 / 2 * (1 + erf((x - self._low_bounds[id_k]) / self.h / np.sqrt(2)))
+            f /= 1 / 2 * (1 + erf((x - self._low_bounds[id_k]) / self._h / np.sqrt(2)))
             
             f[x < self._low_bounds[id_k]] = 0
         
         if k in self.high_bounded_features:
             id_k = self.high_bounded_features.index(k)
-            f /= 1 / 2 * (1 + erf((self._high_bounds[id_k] - x) / self.h / np.sqrt(2)))
+            f /= 1 / 2 * (1 + erf((self._high_bounds[id_k] - x) / self._h / np.sqrt(2)))
             
             f[x > self._high_bounds[id_k]] = 0
         
@@ -248,12 +268,12 @@ class GKDE(BaseEstimator):
         if k in self.low_bounded_features:
             a = self._low_bounds[self.low_bounded_features.index(k)]
         else:
-            a = self._data[:,k].min() - self.support_factor * self.h
+            a = self._data[:,k].min() - self.support_factor * self._h
         
         if k in self.high_bounded_features:
             b = self._high_bounds[self.high_bounded_features.index(k)]
         else:
-            b = self._data[:,k].max() + self.support_factor * self.h
+            b = self._data[:,k].max() + self.support_factor * self._h
         
         X_eval[:, k] = np.linspace(a, b, n_eval)
        

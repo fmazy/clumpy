@@ -1,87 +1,102 @@
-#!/usr/bin/env python3
-# -*- coding: utf-8 -*-
-"""
-Created on Wed Nov 18 10:48:12 2020
+# from ..estimation import RectKDE
 
-@author: frem
-"""
+import numpy as np
 
-from imblearn.pipeline import Pipeline 
+# _estimators = {'rect_kde':RectKDE}
 
-from sklearn.calibration import CalibratedClassifierCV
-from sklearn.model_selection import StratifiedKFold
-
-# from ..estimation import UnderSamplingEstimator
-
-def make_calibrator(estimator=None,
-                     under_sampler=None,
-                     beta=None,
-                     u=None,
-                     calibration_method=None,
-                     cv=5,
-                     scaler=None,
-                     discretizer=None):
-    """
-    make a calibrator as a scikit-learn Pipeline.
-
-    Parameters
-    ----------
-    estimator : Estimator, required
-        The estimator.
-    under_sampler : Undersampler, default=None
-        The under sampler. The sampling strategy is computed according beta and u.
-        Only the majority class (u) is undersampled.
-        If None, no resampling is made.
-    beta : float in ]0,1], default=None.
-        beta under sampling parameter. If None, beta is equal to max(N_v)/N_u where v neq u.
-    u : integer, default=None
-        The majority class. In LUCC, it corresponds to the initial state.
-    calibration_method : 'sigmoid' or 'isotonic', default=None
-        The method to use for calibration. Can be 'sigmoid' which
-        corresponds to Platt's method (i.e. a logistic regression model) or
-        'isotonic' which is a non-parametric approach. It is not advised to
-        use isotonic calibration with too few calibration samples
-        ``(<<1000)`` since it tends to overfit. If None, no calibration is made.
-    cv : integer
-        Determines the cross-validation StratifiedKFold splitting strategy.
-        Possible inputs for cv are:
-
-        - None, to use the default 5-fold cross-validation,
-        - integer, to specify the number of folds.
-    scaler : Scaler, default=None
-        The scaler. If None, no scaling is made.
-    discretizer : Discretizer, default=None
-        The discretizer. If None, no discretizing is made.
-    feature_selector : FeatureSelector, default=None
-        The feature selector. If None, no feature selection is made.
+class Calibrator():
+    def __init__(self,
+                 estimator='rect_kde',
+                 h = 'silverman',
+                 p_min = 0.5*10**-4,
+                 n_min = 500,
+                 h_min = 0.1,
+                 h_max = 1.0,
+                 h_step = 0.01,
+                 h_n_increasing = 10,
+                 algorithm = 'kd_tree',
+                 leaf_size = 30,
+                 n_jobs = None,
+                 verbose = 0):
+        self.estimator = estimator
+        self.h = h
+        self.p_min = p_min
+        self.n_min = n_min
+        self.h_min = h_min
+        self.h_max = h_max
+        self.h_step = h_step
+        self.h_n_increasing = h_n_increasing
+        self.algorithm = algorithm
+        self.leaf_size = leaf_size
+        self.n_jobs=n_jobs
+        self.verbose = verbose
     
-    Returns
-    -------
-    The calibrator (a scikit-learn Pipeline).
-
-    """
+    def fit_save(self,
+                 X_u,
+                 v_u=None,
+                 bounded_features_u=[],
+                 path_prefix=None):
         
-    # estimator construction
-    if calibration_method is not None:
-        estimator = CalibratedClassifierCV(estimator,
-                                           cv=StratifiedKFold(n_splits=cv,
-                                                              shuffle=True),
-                                           method=calibration_method)
-    
-    if under_sampler is not None:
-        estimator = UnderSamplingEstimator(estimator=estimator,
-                                           sampler=under_sampler,
-                                           u=u)
+        if type(path_prefix) is not str:
+            raise(ValueError('Unexpected path prefix.'))
         
-    # pipeline construction
-    pipe_list = []
+        if self.verbose > 0:
+            print('Calibrator fitting')
+            print('Estimator :',self.estimator)
+            print('\n')
+        for u in X_u.keys():    
+            if v_u is not None:
+                for e in np.unique(v_u[u]):
+                    if e != u:
+                        if self.verbose > 0:
+                            print('=========')
+                            print('Transition u='+str(u)+', v='+str(e))
+                        X = X_u[u][v_u[u] == e]
+                        
+                        if X.shape[0]>0:
+                            if X.shape[0] /  v_u[u].size > self.p_min and X.shape[0] >= self.n_min:
+                                print('Estimation...')
+                                kde = _estimators[self.estimator](h = self.h,
+                                                                h_min = self.h_min,
+                                                                h_max = self.h_max,
+                                                                h_step = self.h_step,
+                                                                h_n_increasing=self.h_n_increasing,
+                                                                bounded_features=bounded_features_u[u],
+                                                                algorithm=self.algorithm,
+                                                                leaf_size=self.leaf_size,
+                                                                n_jobs=self.n_jobs,
+                                                                verbose=self.verbose-1)
+                                kde.fit(X)
+                                
+                                kde.save(path_prefix+'kde_u'+str(u)+'_v'+str(e)+'.zip')
+                            else:
+                                if self.verbose>0:
+                                    print('not enough observations for this transition')
+                        else:
+                            if self.verbose>0:
+                                print('no observation for this transition')
+            else:
+                if X_u[u].shape[0] >= self.n_min:
+                    print('Estimation')
+                    
+                    if self.verbose > 0:
+                        print('=========')
+                        print('state u='+str(u))
+                    
+                    kde = _estimators[self.estimator](h = self.h,
+                                                    h_min = self.h_min,
+                                                    h_max = self.h_max,
+                                                    h_step = self.h_step,
+                                                    h_n_increasing=self.h_n_increasing,
+                                                    bounded_features=bounded_features_u[u],
+                                                    algorithm=self.algorithm,
+                                                    leaf_size=self.leaf_size,
+                                                    n_jobs=self.n_jobs,
+                                                    verbose=self.verbose-1)
+                    kde.fit(X_u[u])
     
-    if scaler is not None:
-        pipe_list.append(('scaler', scaler))
-        
-    if discretizer is not None:
-        pipe_list.append(('discretizer', discretizer))
-    
-    pipe_list.append(('estimator', estimator))
-    
-    return(Pipeline(pipe_list))
+                    kde.save(path_prefix+'kde_u'+str(u)+'.zip')
+                else:
+                    if self.verbose>0:
+                        print('not enough observations for this transition')
+

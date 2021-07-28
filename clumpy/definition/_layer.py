@@ -318,6 +318,8 @@ class FeatureLayer(_Layer):
                  time=0,
                  path=None,
                  data=None,
+                 low_bounded=False,
+                 high_bounded=False,
                  copy_geo=None):
         
         super().__init__(name=name,
@@ -325,6 +327,9 @@ class FeatureLayer(_Layer):
                          path=path,
                          data=data,
                          copy_geo=copy_geo)
+        
+        self.low_bounded = low_bounded
+        self.high_bounded = high_bounded
 
     def __repr__(self):
         return('FeatureLayer()')
