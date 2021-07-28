@@ -15,6 +15,7 @@ from matplotlib import pyplot as plt
 from sklearn.preprocessing import StandardScaler
 from time import time
 from . import bandwidth_selection
+from tqdm import tqdm
 
 class GKDE(BaseEstimator):
     def __init__(self,
@@ -28,6 +29,7 @@ class GKDE(BaseEstimator):
                  support_factor=3,
                  standard_scaler = True,
                  forbid_null_value = False,
+                 n_predict_max = 2*10**4,
                  n_jobs=1,
                  verbose=0):
         self.h = h
@@ -40,6 +42,7 @@ class GKDE(BaseEstimator):
         self.support_factor = support_factor
         self.standard_scaler = standard_scaler
         self.forbid_null_value = forbid_null_value
+        self.n_predict_max = n_predict_max
         self.n_jobs = n_jobs
         self.verbose = verbose
         
@@ -103,46 +106,45 @@ class GKDE(BaseEstimator):
         if self.standard_scaler:
             st = time()
             X = self._standard_scaler.transform(X)
-            if self.verbose > 0:
+            if self.verbose > 1:
                 print('ss', time()-st)
                 
         pdf = self._predict_with_bandwidth(X, self._h)
-        
-        # if null value is forbiden
-        if self.forbid_null_value:
-            idx = pdf == 0.0
-            
-            new_n = self._n + idx.sum()
-            
-            pdf = pdf * self._n / new_n
-            
-            min_value = 1 / new_n / self._normalization * _gaussian(0)
-            pdf[pdf == 0.0] = min_value
         
         return(pdf)
     
     def _predict_with_bandwidth(self, X, h, scaling=True):
         
-        st = time()
-        distances, neighbors_id = self._nn.radius_neighbors(X, radius=h * self.support_factor, return_distance=True)
+        f = np.zeros(X.shape[0])
+        
+        steps = np.arange(0, X.shape[0], self.n_predict_max)
         if self.verbose > 0:
-            print('neighbors', time()-st)
+            steps = tqdm(np.arange(0, X.shape[0], self.n_predict_max))
         
-        
-        st = time()
-        if self.n_jobs == 1:
-            f = np.array([_gaussian(dist/h) for dist in distances])
+        for i in steps:
+            st = time()
+            distances, neighbors_id = self._nn.radius_neighbors(X[i:i+self.n_predict_max], radius=h * self.support_factor, return_distance=True)
+            if self.verbose > 1:
+                print('neighbors', time()-st)
             
-        else:
-            pool = Pool(self.n_jobs)
-            f = pool.starmap(_gaussian, [(dist/h,) for dist in distances])
-            f = np.array(f)
+            st = time()
+            if self.n_jobs == 1:
+                f[i:i+self.n_predict_max] = np.array([_gaussian(dist/h) for dist in distances])
+                
+            else:
+                pool = Pool(self.n_jobs)
+                f[i:i+self.n_predict_max] = np.array(pool.starmap(_gaussian, [(dist/h,) for dist in distances]))
+        
+        if self.verbose > 1:
+            print('normalization')
             
         f *= self._normalization / self._n
             
-        if self.verbose > 0:
+        if self.verbose > 1:
             print('gaussian', time()-st)
         
+        if self.verbose > 1:
+            print('boundary bias correction')
         st = time()
         # boundary bias correction
         for id_k, k in enumerate(self.low_bounded_features):
@@ -151,23 +153,45 @@ class GKDE(BaseEstimator):
         for id_k, k in enumerate(self.high_bounded_features):
             f /= 1 / 2 * (1 + erf((self._high_bounds[id_k] - X[:,k]) / h / np.sqrt(2)))
         
-        if self.verbose > 0:
+        if self.verbose > 1:
             print('correction', time()-st)
-        
+    
+        if self.verbose > 1:
+            print('boundary cutting')
         st = time()
         # boundary cutting if necessary
         f[np.any(X[:, self.low_bounded_features] < self._low_bounds, axis=1)] = 0
         f[np.any(X[:, self.high_bounded_features] > self._high_bounds, axis=1)] = 0
-        if self.verbose > 0:
+        if self.verbose > 1:
             print('cutting', time()-st)
         
+        if self.verbose > 1:
+            print('standard scaler correction')
         st = time()
         if self.standard_scaler:
             f /= np.product(self._standard_scaler.scale_)
-        if self.verbose > 0:
+        if self.verbose > 1:
             print('ss correction', time()-st)
-        return(f)
+        
+        
+        # if null value is forbiden
+        if self.forbid_null_value:
+            if self.verbose > 1:
+                print('forbid null values correction')
+            st = time()
+            idx = f == 0.0
+            
+            new_n = self._n + idx.sum()
+            
+            f = f * self._n / new_n
+            
+            min_value = 1 / new_n / self._normalization * _gaussian(0)
+            f[f == 0.0] = min_value
+            if self.verbose > 1:
+                print('null value correction', time()-st)
 
+        return(f)
+        
     def J(self):
         
         # on mutualise le calcul de distances.
