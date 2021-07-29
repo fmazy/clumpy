@@ -3,6 +3,7 @@
 import numpy as np
 
 from ..kde import GKDE
+from . import patches
 
 class Calibrator():
     def __init__(self,
@@ -35,6 +36,29 @@ class Calibrator():
         self._estimate_P_y__u_v(self._X_u, self._v_u, self._Y_u)
         
         self._estimate_P_y__u(self._Y_u)
+        
+        return(self)
+        
+    def fit_patches(self, initial_luc_layer, final_luc_layer):
+        
+        self._patches = patches.analyse(self.case,
+                                       initial_luc_layer,
+                                       final_luc_layer)
+        
+        self._patches_isl_ratio = patches.compute_isl_ratio(self._patches)
+        
+        return(self._patches)
+        # J = make_J(initial_luc_layer = initial_luc_layer,
+               # u = u,
+               # region = self.case.region)
+        # J = make_J(initial_luc_layer = initial_luc_layer,
+        #        u = u,
+        #        final_luc_layer = final_luc_layer,
+        #        v = v,
+        #        region = self.case.region)
+        
+        # return(J)
+        
     
     def transition_matrix(self):
         

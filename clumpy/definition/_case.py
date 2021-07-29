@@ -17,11 +17,12 @@ class Case():
         parameters, see example and user guide.
         
     """
-    def __init__(self, params, region=None):
+    def __init__(self, params, region=None, verbose=0):
         self.params = params
         self.region = region
+        self.verbose = verbose
     
-    def make(self, initial_luc_layer, final_luc_layer=None, region=None, verbose=0):
+    def make(self, initial_luc_layer, final_luc_layer=None, region=None):
         """Make the case
 
         Parameters
@@ -61,7 +62,7 @@ class Case():
         start_time=time.time()
         
         # check the case
-        if verbose > 0:
+        if self.verbose > 0:
             print('case checking...')
         check_case(self)
         
@@ -76,7 +77,7 @@ class Case():
         # first compute distances
         distances = {}
         
-        if verbose > 0:
+        if self.verbose > 0:
             print('distances computing')
             print('===================')
         # for each u
@@ -87,7 +88,7 @@ class Case():
                 if feature_type == 'distance':
                     # if this distance has not been computed yet
                     if info not in distances.keys():
-                        if verbose > 0:
+                        if self.verbose > 0:
                             print('\t distance to '+str(info)+'...')
                         # make bool v matrix
                         v_matrix = (initial_luc_data == info).astype(int)
@@ -101,7 +102,7 @@ class Case():
             # set luc 0 for pixels out of the region
             initial_luc_data[region.get_data() == 0] = 0
         
-        if verbose > 0:
+        if self.verbose > 0:
             print('sets creating')
             print('=============')
         
@@ -115,7 +116,7 @@ class Case():
         
         # for each u
         for u in self.params.keys():
-            if verbose > 0:
+            if self.verbose > 0:
                 print('\t u='+str(u)+'...')
             
             # get pixels indexes whose initial states are u
@@ -161,7 +162,7 @@ class Case():
         
         self.creating_time_ = time.time()-start_time
         
-        if verbose > 0:
+        if self.verbose > 0:
             print('case creating is a success !')
             print('creating time: '+str(round(self.creating_time_,2))+'s')
 
@@ -171,6 +172,32 @@ class Case():
         
         else:
             return(J_u, X_u, v_u)
+        
+def make_J(initial_luc_layer,
+            u,
+            final_luc_layer=None,
+            v=None,
+            region=None):
+        
+    initial_luc_data = initial_luc_layer.get_data()
+    
+    
+    if region is not None:
+        # set luc 0 for pixels out of the region
+        # only necessary for initial data set
+        initial_luc_data[region.get_data() == 0] = 0
+    
+    if final_luc_layer is None:
+        # get pixels indexes whose initial states are u
+        J = np.where(initial_luc_data.flat == u)[0]
+    
+    else:
+        final_luc_data = final_luc_layer.get_data()
+        # get pixels indexes whose final states are u
+        J = np.where((initial_luc_data.flat == u) & (final_luc_data.flat == v))[0]
+    
+    return(J)
+        
 
 def check_case(case):
     """
