@@ -69,6 +69,9 @@ class Calibrator():
         return(M, list_u, list_v)
     
     def transition_probabilities(self, M, list_u, list_v):
+        P_v__u_y = {}
+        list_v__u = {}
+        
         for id_u, u in enumerate(list_u):
             if self.verbose > 0:
                 print('u='+str(u))
@@ -82,15 +85,19 @@ class Calibrator():
                     else:
                         id_v_to_estimate.append(id_v)
             
+            list_v__u[u] = list(np.array(list_v)[id_v_to_estimate])
+            
             if self.verbose > 0:
                 print('\tFirst P(y|u,v) computation')
             
             P_v__u = M[id_u, id_v_to_estimate]
             
-            P_v__u_y = self._P_y__u_v[u] / self._P_y__u[u]
-            P_v__u_y *= P_v__u / P_v__u_y.mean(axis=0)
             
-            s = P_v__u_y.sum(axis=1)
+            
+            P_v__u_y[u] = self._P_y__u_v[u] / self._P_y__u[u]
+            P_v__u_y[u] *= P_v__u / P_v__u_y[u].mean(axis=0)
+            
+            s = P_v__u_y[u].sum(axis=1)
                         
             if np.sum(s > 1) > 0:
                 if self.verbose > 0:
@@ -104,15 +111,16 @@ class Calibrator():
                 while np.sum(s > 1) > 0 and n_corrections < n_corrections_max:
                     id_anomalies = s > 1
                     
-                    P_v__u_y[id_anomalies] = P_v__u_y[id_anomalies] / s[id_anomalies][:, None]
-                    P_v__u_y *= P_v__u / P_v__u_y.mean(axis=0)
+                    P_v__u_y[u][id_anomalies] = P_v__u_y[u][id_anomalies] / s[id_anomalies][:, None]
+                    P_v__u_y[u] *= P_v__u / P_v__u_y[u].mean(axis=0)
                     
                     n_corrections += 1
-                    s = np.sum(P_v__u_y, axis=1)
+                    s = np.sum(P_v__u_y[u], axis=1)
                 
                 if self.verbose > 0:
                     print('\tCorrections done in '+str(n_corrections)+' iterations.')
-            
+        
+        return(P_v__u_y, list_v__u)
         
     def _make_case(self,
                    initial_luc_layer,
