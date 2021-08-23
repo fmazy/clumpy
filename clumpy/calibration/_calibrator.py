@@ -39,13 +39,19 @@ class Calibrator():
         
         return(self)
         
-    def fit_patches(self, initial_luc_layer, final_luc_layer):
+    def fit_patches(self, initial_luc_layer, final_luc_layer, isl_exp = False):
         
-        self._patches = patches.analyse(self.case,
-                                       initial_luc_layer,
-                                       final_luc_layer)
+        if isl_exp:
+            self._patches = patches.analyse_isl_exp(self.case,
+                                                    initial_luc_layer,
+                                                    final_luc_layer)
         
-        self._patches_isl_ratio = patches.compute_isl_ratio(self._patches)
+            self._patches_isl_ratio = patches.compute_isl_ratio(self._patches)
+            
+        else:
+            self._patches = patches.analyse(self.case,
+                                            initial_luc_layer,
+                                            final_luc_layer)
         
         return(self._patches)
         # J = make_J(initial_luc_layer = initial_luc_layer,

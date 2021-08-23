@@ -22,7 +22,7 @@ class Case():
         self.region = region
         self.verbose = verbose
     
-    def make(self, initial_luc_layer, final_luc_layer=None, region=None):
+    def make(self, initial_luc_layer, final_luc_layer=None, region=None, explanatory_variables=True):
         """Make the case
 
         Parameters
@@ -74,27 +74,28 @@ class Case():
         # the region is selected after the distance computation
         initial_luc_data = initial_luc_layer.get_data()
         
-        # first compute distances
-        distances = {}
-        
-        if self.verbose > 0:
-            print('distances computing')
-            print('===================')
-        # for each u
-        for u in self.params.keys():
-            # for each feature
-            for feature_type, info in self.params[u]['features']:
-                # if it is a distance
-                if feature_type == 'distance':
-                    # if this distance has not been computed yet
-                    if info not in distances.keys():
-                        if self.verbose > 0:
-                            print('\t distance to '+str(info)+'...')
-                        # make bool v matrix
-                        v_matrix = (initial_luc_data == info).astype(int)
-                        # compute distance
-                        # should get scale value from the tiff file.
-                        distances[info] = ndimage.distance_transform_edt(1 - v_matrix)
+        if explanatory_variables:
+            # first compute distances
+            distances = {}
+            
+            if self.verbose > 0:
+                print('distances computing')
+                print('===================')
+            # for each u
+            for u in self.params.keys():
+                # for each feature
+                for feature_type, info in self.params[u]['features']:
+                    # if it is a distance
+                    if feature_type == 'distance':
+                        # if this distance has not been computed yet
+                        if info not in distances.keys():
+                            if self.verbose > 0:
+                                print('\t distance to '+str(info)+'...')
+                            # make bool v matrix
+                            v_matrix = (initial_luc_data == info).astype(int)
+                            # compute distance
+                            # should get scale value from the tiff file.
+                            distances[info] = ndimage.distance_transform_edt(1 - v_matrix)
         
         # the distance computation is made
         # the region is now selected
@@ -124,33 +125,34 @@ class Case():
             J = np.where(initial_luc_data.flat == u)[0]
             J_u[u] = J
             
-            # create feature names
-            for feature_type, info in self.params[u]['features']:
-                # switch according z_type
-
-                if feature_type == 'layer' or feature_type == 'binary_layer':
-                    # just get data
-                    x = info.get_data().flat[J]
-                
-                elif feature_type == 'distance':
-                    # get distance data
-                    x = distances[info].flat[J]
-                
-                elif feature_type == 'numpy':
-                    # just get data
-                    x = info
+            if explanatory_variables:
+                # create feature names
+                for feature_type, info in self.params[u]['features']:
+                    # switch according z_type
+    
+                    if feature_type == 'layer' or feature_type == 'binary_layer':
+                        # just get data
+                        x = info.get_data().flat[J]
                     
-                # if X_u is not yet defined
-                if u not in X_u.keys():
-                    X_u[u] = x
-                
-                # else column stack
-                else:
-                    X_u[u] = np.column_stack((X_u[u], x))
-
-            # if only one feature, reshape X as a column
-            if len(self.params[u]['features']) == 1:
-                X_u[u] = X_u[u][:,None]
+                    elif feature_type == 'distance':
+                        # get distance data
+                        x = distances[info].flat[J]
+                    
+                    elif feature_type == 'numpy':
+                        # just get data
+                        x = info
+                        
+                    # if X_u is not yet defined
+                    if u not in X_u.keys():
+                        X_u[u] = x
+                    
+                    # else column stack
+                    else:
+                        X_u[u] = np.column_stack((X_u[u], x))
+    
+                # if only one feature, reshape X as a column
+                if len(self.params[u]['features']) == 1:
+                    X_u[u] = X_u[u][:,None]
             
             # if final luc layer
             if final_luc_layer is not None:
@@ -166,12 +168,19 @@ class Case():
             print('case creating is a success !')
             print('creating time: '+str(round(self.creating_time_,2))+'s')
 
-        # if no final luc layer
-        if final_luc_layer is None:
-            return(J_u, X_u)
-        
+        if explanatory_variables:
+            # if no final luc layer
+            if final_luc_layer is None:
+                return(J_u, X_u)
+            
+            else:
+                return(J_u, X_u, v_u)
         else:
-            return(J_u, X_u, v_u)
+            if final_luc_layer is None:
+                return(J_u)
+            
+            else:
+                return(J_u, v_u)
         
 def make_J(initial_luc_layer,
             u,

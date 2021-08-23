@@ -14,7 +14,70 @@ from ...definition import make_J
 from ...tools import np_drop_duplicates_from_column
 
 
-def analyse(case, initial_luc_layer, final_luc_layer, neighbors_structure='queen'):
+def analyse(case,
+            initial_luc_layer,
+            final_luc_layer,
+            neighbors_structure='queen'):
+    
+    if neighbors_structure == 'queen':
+        structure = np.ones((3,3))
+    elif neighbors_structure == 'rook':
+        structure = np.array([[0,1,0],
+                              [1,1,1],
+                              [0,1,0]])
+    else:
+        raise(ValueError('ERROR : unexpected neighbors_structure value'))
+    
+    M_shape = initial_luc_layer.get_data().shape
+    
+    patches = {}
+    
+    for u in case.params.keys():
+        patches[u] = {}
+        
+        J_u, v_u = case.make(initial_luc_layer = initial_luc_layer,
+                                 final_luc_layer = final_luc_layer,
+                                 explanatory_variables = False)
+        
+        for v in case.params[u]['v']:
+            if u != v:
+                patches[u][v] = {}
+                
+                print(str(u)+' -> '+str(v))
+                
+                M = np.zeros(M_shape)
+                M.flat[J_u[u][v_u[u] == v]] = 1
+                
+                lw, _ = ndimage.measurements.label(M, structure=structure)
+                patch_id = lw.flat[J_u[u]]
+                
+                # unique pixel for a patch
+                one_pixel_from_patch = np.column_stack((J_u[u], patch_id))
+                one_pixel_from_patch = np_drop_duplicates_from_column(one_pixel_from_patch, 1)
+                
+                one_pixel_from_patch = one_pixel_from_patch[1:, :]
+                one_pixel_from_patch[:,1] -= 1
+                
+                patches[u][v]['J'] = one_pixel_from_patch[:,0]
+                patches[u][v]['patch_id'] = one_pixel_from_patch[:,1]
+                
+                rpt = measure.regionprops_table(lw, properties=['area',
+                                                                'inertia_tensor_eigvals'])
+                            
+                patches[u][v]['area'] = np.array(rpt['area'])
+                
+                # return(patches, rpt)
+                l1_patch = np.array(rpt['inertia_tensor_eigvals-0'])[patches[u][v]['patch_id']]
+                l2_patch = np.array(rpt['inertia_tensor_eigvals-1'])[patches[u][v]['patch_id']]
+                
+                patches[u][v]['eccentricity'] = np.zeros(patches[u][v]['area'].shape)
+                id_none_mono_pixel_patches = patches[u][v]['area'] > 1
+                
+                patches[u][v]['eccentricity'][id_none_mono_pixel_patches] = 1 - np.sqrt(l2_patch[id_none_mono_pixel_patches] / l1_patch[id_none_mono_pixel_patches])
+            
+    return(patches)
+        
+def analyse_isl_exp(case, initial_luc_layer, final_luc_layer, neighbors_structure='queen'):
     
     if neighbors_structure == 'queen':
         structure = np.ones((3,3))
@@ -36,8 +99,6 @@ def analyse(case, initial_luc_layer, final_luc_layer, neighbors_structure='queen
     J_v = {}
     patch_id_v = {}
     area_v = {}
-    
-    
     
     for v in list_unique_v:
         print('v=', v)
