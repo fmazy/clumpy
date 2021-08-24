@@ -234,6 +234,9 @@ class LandUseCoverLayer(_Layer):
         window : tuple of two integers
             Window dimensions as a tuple.
         """
+        if type(center) is int:
+            center = np.unravel_index(center, self.get_data().shape)
+        
         values = np.array([s['value'] for s in self.style_])
         colors = [s['color'] for s in self.style_]
         labels = [s['label'] for s in self.style_]
@@ -244,7 +247,7 @@ class LandUseCoverLayer(_Layer):
         colors = [colors[i] for i in index_sorted]
         labels = [labels[i] for i in index_sorted]
         
-        data = self.raster_.read(1)
+        data = self.get_data()
         
         colors = colors[:-1] + [colors[-2]] + [colors[-1]]
         bounds = np.array(values+[values[-1]+1])-0.5

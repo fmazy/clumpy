@@ -62,9 +62,12 @@ def _weighted_neighbors(map_i_data,
                            avoid_aggregation = True,
                            nb_of_neighbors_to_fill = 3,
                            proceed_even_if_no_probability=True):
+    
+    j_allocated = [j_kernel]
+    
     # if the kernel pixel is already transited or if the surface is negative
     if (map_f_data.flat[j_kernel] != vi) or (patch_S <= 0):
-        return(0)
+        return(0, j_allocated)
     
     if neighbors_structure not in ['rook', 'queen']:
         print('ERROR: unexpected neighbors_structure in weighted_neighbors, get "'+str(neighbors_structure)+'"')
@@ -76,8 +79,6 @@ def _weighted_neighbors(map_i_data,
     rook_star = np.array([[0,1,0],
                           [1,0,1],
                           [0,1,0]])
-    
-    j_allocated = [j_kernel]
         
     while len(j_allocated) < patch_S:
         x_allocated, y_allocated = np.unravel_index(j_allocated, map_f_data.shape)
@@ -133,16 +134,16 @@ def _weighted_neighbors(map_i_data,
         # si on veut éviter les aggrégations
         if (avoid_aggregation) and (np.sum((vi_neighbors == vi) * (vf_neighbors == vf)) > 0):
             # si un voisin a déja subi la transition, il fait échouer la tache
-            print('aggrégation')
-            return(0)
+            # print('aggrégation')
+            return(0, j_allocated)
         
         # on ne garde que les voisins dont l'état initial et l'état final sont à vi
         id_j_neighbors_to_keep = np.arange(j_neighbors.size)[(vi_neighbors == vi) * (vf_neighbors == vi)]
         
         # si aucun des voisins n'est convenable, on annule 
         if id_j_neighbors_to_keep.size == 0:
-            print('trou')
-            return(0)
+            # print('trou')
+            return(0, j_allocated)
         
         j_neighbors_box = j_neighbors_box[id_j_neighbors_to_keep]
         b_neighbors = B.flat[j_neighbors_box]
@@ -154,18 +155,18 @@ def _weighted_neighbors(map_i_data,
         if nb_of_neighbors_to_fill > 0:
             j_hollows = j_neighbors[b_neighbors >= nb_of_neighbors_to_fill]
             if j_hollows.size > 0:
-                j_allocated.append(np.random.choice(j_hollows, size=1))
+                j_allocated.append(np.random.choice(j_hollows))
                 continue
         
         # on attribue une probabilité à chaque voisin
         P = map_P_vf__vi_z.flat[j_neighbors]
         
         # si les probas sont nulles, on les met à 1            
-        if P.sum() <= 0:
+        if np.isclose(P.sum(), 0):
             if proceed_even_if_no_probability:
                 P.fill(1)
             else:
-                return(0)
+                return(0, j_allocated)
                 
         if type(eccentricity_mean) != type(None):                        
             xc = np.sum(x_allocated) / len(j_allocated)
@@ -182,21 +183,28 @@ def _weighted_neighbors(map_i_data,
             # e = 1 - minor axis length / major axis length
             e = 1-np.sqrt((mu_20+mu_02 - np.sqrt(delta))/(mu_20+mu_02 + np.sqrt(delta)))
             
+            if eccentricity_std == 0:
+                eccentricity_std = eccentricity_mean * 0.1
+            
             eccentricity_coef = scipy.stats.norm.pdf(e, loc=eccentricity_mean, scale=eccentricity_std)
             
             if eccentricity_coef.sum() <= 0:
                 eccentricity_coef.fill(1)
             
             P *= eccentricity_coef
-            
-        if P.sum() <= 0:
+        
+        
+        if np.isclose(P.sum(), 0):
             if proceed_even_if_no_probability:
                 P.fill(1)
             else:
-                return(0)
+                return(0, j_allocated)
         
         # sum(P) = 1
         P /= P.sum()
+        
+        # security to avoid unexpectec nan values
+        P = np.nan_to_num(P)
         
         j_allocated.append(np.random.choice(j_neighbors, p=P))
     
@@ -206,10 +214,10 @@ def _weighted_neighbors(map_i_data,
         vi_neighbors = map_i_data.flat[last_neighbors]
         vf_neighbors = map_f_data.flat[last_neighbors]
         if np.sum((vi_neighbors == vi) * (vf_neighbors == vf)) > 0:
-            print('aggrégation finale')
-            return(0)
+            # print('aggrégation finale')
+            return(0, j_allocated)
             
     # on peut procéder à l'allocation réelle
     map_f_data.flat[j_allocated] = vf
-    return(len(j_allocated))
+    return(len(j_allocated), j_allocated)
  

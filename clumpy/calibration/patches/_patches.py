@@ -74,7 +74,13 @@ def analyse(case,
                 id_none_mono_pixel_patches = patches[u][v]['area'] > 1
                 
                 patches[u][v]['eccentricity'][id_none_mono_pixel_patches] = 1 - np.sqrt(l2_patch[id_none_mono_pixel_patches] / l1_patch[id_none_mono_pixel_patches])
-            
+                
+                # mono pixel patches are removed
+                patches[u][v]['J'] = patches[u][v]['J'][id_none_mono_pixel_patches]
+                patches[u][v]['patch_id'] = patches[u][v]['patch_id'][id_none_mono_pixel_patches]
+                patches[u][v]['area'] = patches[u][v]['area'][id_none_mono_pixel_patches]
+                patches[u][v]['eccentricity'] = patches[u][v]['eccentricity'][id_none_mono_pixel_patches]
+                
     return(patches)
         
 def analyse_isl_exp(case, initial_luc_layer, final_luc_layer, neighbors_structure='queen'):
