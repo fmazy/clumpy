@@ -133,6 +133,7 @@ def _weighted_neighbors(map_i_data,
         # si on veut éviter les aggrégations
         if (avoid_aggregation) and (np.sum((vi_neighbors == vi) * (vf_neighbors == vf)) > 0):
             # si un voisin a déja subi la transition, il fait échouer la tache
+            print('aggrégation')
             return(0)
         
         # on ne garde que les voisins dont l'état initial et l'état final sont à vi
@@ -140,6 +141,7 @@ def _weighted_neighbors(map_i_data,
         
         # si aucun des voisins n'est convenable, on annule 
         if id_j_neighbors_to_keep.size == 0:
+            print('trou')
             return(0)
         
         j_neighbors_box = j_neighbors_box[id_j_neighbors_to_keep]
@@ -204,6 +206,7 @@ def _weighted_neighbors(map_i_data,
         vi_neighbors = map_i_data.flat[last_neighbors]
         vf_neighbors = map_f_data.flat[last_neighbors]
         if np.sum((vi_neighbors == vi) * (vf_neighbors == vf)) > 0:
+            print('aggrégation finale')
             return(0)
             
     # on peut procéder à l'allocation réelle

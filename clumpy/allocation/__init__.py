@@ -8,4 +8,5 @@ from ._simple_unbiased import SimpleUnbiased
 from ._dinamica import Dinamica
 # from ._voronoi import Voronoi
 from . import tesselation
-from ._generalized_allocation import generalized_allocation
+from ._generalized_allocation import generalized_allocation_rejection_test
+from ._generic import generic_allocator

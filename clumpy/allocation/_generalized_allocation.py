@@ -8,7 +8,7 @@ Created on Sat Jan 23 12:25:38 2021
 
 import numpy as np
 
-def generalized_allocation(P, list_v):
+def generalized_allocation_rejection_test(P, list_v):
     """
     Generalized allocation rejection process.
 

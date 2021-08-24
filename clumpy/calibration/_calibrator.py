@@ -27,43 +27,42 @@ class Calibrator():
             final_luc_layer,
             start_luc_layer):
         
+        self.start_luc_layer = start_luc_layer
+        
+        
+        
         self._make_case(initial_luc_layer,
                         final_luc_layer,
                         start_luc_layer)
         
         self._get_low_high_bounded_features()
         
+        # c'est dommage, on ne conserve pas le choix du bandwidth
+        # pour gagner du temps si on fait du multisteps
+        # à ajouter !
         self._estimate_P_y__u_v(self._X_u, self._v_u, self._Y_u)
         
         self._estimate_P_y__u(self._Y_u)
         
         return(self)
         
-    def fit_patches(self, initial_luc_layer, final_luc_layer, isl_exp = False):
+    def fit_patches(self, initial_luc_layer, final_luc_layer, isl_exp = False, neighbors_structure='queen'):
         
         if isl_exp:
             self._patches = patches.analyse_isl_exp(self.case,
                                                     initial_luc_layer,
-                                                    final_luc_layer)
+                                                    final_luc_layer,
+                                                    neighbors_structure = neighbors_structure)
         
             self._patches_isl_ratio = patches.compute_isl_ratio(self._patches)
             
         else:
             self._patches = patches.analyse(self.case,
                                             initial_luc_layer,
-                                            final_luc_layer)
+                                            final_luc_layer,
+                                            neighbors_structure = neighbors_structure)
         
         return(self._patches)
-        # J = make_J(initial_luc_layer = initial_luc_layer,
-               # u = u,
-               # region = self.case.region)
-        # J = make_J(initial_luc_layer = initial_luc_layer,
-        #        u = u,
-        #        final_luc_layer = final_luc_layer,
-        #        v = v,
-        #        region = self.case.region)
-        
-        # return(J)
         
     
     def transition_matrix(self):
@@ -150,6 +149,8 @@ class Calibrator():
                 if self.verbose > 0:
                     print('\tCorrections done in '+str(n_corrections)+' iterations.')
         
+        self._P_v__u_y = P_v__u_y
+        self._list_v__u = list_v__u
         return(P_v__u_y, list_v__u)
         
     def _make_case(self,
@@ -184,6 +185,72 @@ class Calibrator():
             
             self._low_bounded_features_u[u] = low_bounded_features
             self._high_bounded_features_u[u] = high_bounded_features
+    
+    def _fit_P_y__u_v(self, X_u=None, v_u=None, Y_u=None):
+        
+        if X_u is None:
+            X_u = self._X_u
+        if v_u is None:
+            v_u = self._v_u
+        if Y_u is None:
+            Y_u = self._Y_u
+        
+        if self.verbose > 0:
+            print('estimating P(y|u,v)')
+        
+        self._P_y__u_v = {}
+        self._calibrated_transitions_u = {}
+        
+        for u in X_u.keys():
+            
+            self._calibrated_transitions_u[u] = []
+            
+            for idv, v in enumerate(self.case.params[u]['v']):
+                if v != u:
+                    if self.verbose > 0:
+                        print('\tu='+str(u)+', v='+str(v))
+                    
+                    X_u_v = X_u[u][v_u[u] == v] 
+                    
+                    if X_u_v.shape[0] >= self.n_min and \
+                        X_u_v.shape[0] / v_u[u].shape[0] > self.p_min:
+                            
+                            gkde = GKDE(
+                                    h = 'scott',
+                                    low_bounded_features = self._low_bounded_features_u[u],
+                                    high_bounded_features = self._high_bounded_features_u[u],
+                                    n_predict_max = self.n_predict_max,
+                                    n_jobs = self.n_jobs,
+                                    verbose = self.verbose - 1)
+                            
+                            if self.verbose > 0:
+                                print('\tX_u_v shape : '+str(X_u_v.shape))
+                                print('\tKDE fitting according to X_u_v')
+                            
+                            gkde.fit(X_u_v)
+                            
+                            if self.verbose > 0:
+                                print('\th='+str(gkde._h))
+                                print('\tP(y|u,v) estimation')
+                                print('\tY shape : '+str(Y_u[u].shape))
+                            
+                            pdf = gkde.predict(Y_u[u])
+                            if u in self._P_y__u_v.keys():
+                                self._P_y__u_v[u] = np.hstack((self._P_y__u_v[u], pdf[:,None]))
+                            else:
+                                self._P_y__u_v[u] = pdf[:,None]
+                                
+                            self._calibrated_transitions_u[u].append(v)
+                            
+                    else:
+                        if self.verbose > 0:
+                            print('\tnot enough samples according to n_min and p_min.')
+            
+                if self.verbose > 0:
+                    print('\t----------------')
+            
+        if self.verbose > 0:
+            print('estimating P(y|u,v) done\n============================')
     
     def _estimate_P_y__u_v(self, X_u=None, v_u=None, Y_u=None):
         
@@ -250,7 +317,7 @@ class Calibrator():
             
         if self.verbose > 0:
             print('estimating P(y|u,v) done\n============================')
-                    
+    
     def _estimate_P_y__u(self, Y_u):
         if self.verbose > 0:
             print('estimating P(y|u)')

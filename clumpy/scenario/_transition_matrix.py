@@ -48,12 +48,13 @@ def multisteps_transition_matrix(M, list_u, list_v, n):
 
 def patches_transition_matrix(M, list_u, list_v, patches):
     M_p = np.zeros_like(M)
-    M_p.fill(1.0)
     
     for id_u, u in enumerate(list_u):
+        M_p[id_u, list_v.index(u)] = 1.0
         for id_v, v in enumerate(list_v):
             if u != v:
-                M_p[id_u, id_v] = M[id_u, id_v] / patches[u][v]['area'].mean()
-                M_p[id_u, list_v.index(u)] -= M_p[id_u, id_v]
+                if patches[u][v]['area'].size > 0 and M[id_u, id_v] > 0:
+                    M_p[id_u, id_v] = M[id_u, id_v] / patches[u][v]['area'].mean()
+                    M_p[id_u, list_v.index(u)] -= M_p[id_u, id_v]
     
     return(M_p)
