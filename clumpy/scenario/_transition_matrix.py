@@ -45,6 +45,11 @@ class TransitionMatrix():
         
         return(TransitionMatrix(M, [u], self.list_v))
     
+    def P_v(self, u):
+        p = self.M[self.list_u.index(u), :].copy()
+        
+        return(p, self.list_v)
+    
     def __repr__(self):
         return('TransitionMatrix()')
     
