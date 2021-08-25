@@ -27,13 +27,17 @@ class Calibrator():
     def fit(self,
             initial_luc_layer,
             final_luc_layer,
-            start_luc_layer):
+            start_luc_layer,
+            region_train=None,
+            region_eval=None):
 
         self.start_luc_layer = start_luc_layer
 
         self._make_case(initial_luc_layer,
                         final_luc_layer,
-                        start_luc_layer)
+                        start_luc_layer,
+                        region_train,
+                        region_eval)
 
         self._get_low_high_bounded_features()
 
@@ -97,13 +101,17 @@ class Calibrator():
     def _make_case(self,
                    initial_luc_layer,
                    final_luc_layer,
-                   start_luc_layer):
+                   start_luc_layer,
+                   region_train=None,
+                   region_eval=None):
         if self.verbose > 0:
             print('Make case...')
 
-        self._J_X_u, self._X_u, self._v_u = self.case.make(
-            initial_luc_layer, final_luc_layer)
-        self._J_Y_u, self._Y_u = self.case.make(start_luc_layer)
+        self._J_X_u, self._X_u, self._v_u = self.case.make(initial_luc_layer,
+                                                           final_luc_layer,
+                                                           region=region_train)
+        self._J_Y_u, self._Y_u = self.case.make(start_luc_layer,
+                                                region=region_eval)
 
         if self.verbose > 0:
             print('done')
@@ -235,7 +243,7 @@ class Calibrator():
                                         n_predict_max=self.n_predict_max,
                                         n_jobs=self.n_jobs,
                                         verbose=self.verbose - 1)
-
+            print(Y_train.shape)
             self._gkde_P_y__u[u].fit(Y_train)
 
             if self.verbose > 0:

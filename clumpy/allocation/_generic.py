@@ -90,6 +90,10 @@ def _generic_allocator_region_process_u_fixed(calibrator,
     
     print('target', N_v)
     
+    # if no allocations are expected
+    if np.isclose(N_v.sum(), 0):
+        return(allocated_map)
+    
     # compute P(Y|v, u) (u is omitted)
     # it is computed only one time
     P_Y__v, list_v__P_Y__v = calibrator._estimate_P_Y__v(Y, u)
@@ -146,7 +150,6 @@ def _generic_allocator_region_process_u_fixed(calibrator,
             j = V_pivot == v
             
             N_j  = j.sum()
-            print(v, N_j)
             
             if N_j > 0:
                 n_try = 0
@@ -173,6 +176,8 @@ def _generic_allocator_region_process_u_fixed(calibrator,
                 
                 eccentricity_mean[v] = np.mean(calibrator._patches[u][v]['eccentricity'])
                 eccentricity_std[v] = np.std(calibrator._patches[u][v]['eccentricity'])
+                
+            print(str(u)+'->'+str(v)+', N_j='+str(N_j)+', target='+str(N_v[id_v])+', expected area='+str(areas[j].sum()))
         
         # initialize probabilities maps
         map_P_v__Y = {}

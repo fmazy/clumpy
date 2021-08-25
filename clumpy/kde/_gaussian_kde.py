@@ -148,10 +148,12 @@ class GKDE(BaseEstimator):
         st = time()
         # boundary bias correction
         for id_k, k in enumerate(self.low_bounded_features):
-            f /= 1 / 2 * (1 + erf((X[:,k] - self._low_bounds[id_k]) / h / np.sqrt(2)))
+            id_inside_bounds = X[:,k] >= self._low_bounds[id_k]
+            f[id_inside_bounds] /= 1 / 2 * (1 + erf((X[id_inside_bounds,k] - self._low_bounds[id_k]) / h / np.sqrt(2)))
                     
         for id_k, k in enumerate(self.high_bounded_features):
-            f /= 1 / 2 * (1 + erf((self._high_bounds[id_k] - X[:,k]) / h / np.sqrt(2)))
+            id_inside_bounds = X[:,k] <= self._high_bounds[id_k]
+            f[id_inside_bounds] /= 1 / 2 * (1 + erf((self._high_bounds[id_k] - X[id_inside_bounds,k]) / h / np.sqrt(2)))
         
         if self.verbose > 1:
             print('correction', time()-st)

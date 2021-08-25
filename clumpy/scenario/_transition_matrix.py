@@ -99,6 +99,25 @@ class TransitionMatrix():
         
         return(TransitionMatrix(M_p, self.list_u, self.list_v))
 
+def compute_transition_matrix(V_u, list_u, list_v):
+    M = np.zeros((len(list_u), len(list_v)))
+    
+    for id_u, u in enumerate(list_u):
+        for id_v, v in enumerate(list_v):
+            M[id_u, id_v] = np.mean(V_u[u] == v)
+    
+    return(TransitionMatrix(M, list_u, list_v))
+
+def load_transition_matrix(path):
+    data = np.genfromtxt(path, delimiter=',')
+    
+    list_u = list(data[1:,0].astype(int))
+    list_v = list(data[0,1:].astype(int))
+    
+    M = data[1:,1:]
+    
+    return(TransitionMatrix(M, list_u, list_v))
+
 def _compact_transition_matrix(full_M, list_u=None, list_v=None):
     if list_u is None or list_v is None:
         list_u = []
