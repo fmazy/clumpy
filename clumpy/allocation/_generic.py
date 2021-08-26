@@ -69,14 +69,15 @@ def _generic_allocator_region_process_u_fixed(calibrator,
     
     # set the sub starting map
     # it will be used to check allocated patches
-    region_start_map = allocated_map.copy()
+    # the region is applied to not allocate beyond it
+    region_start_map = allocated_map.copy() * calibrator.region_eval.get_data()
     
     # get global transition probabilities
     P_v, list_v__P_v = tm.P_v(u=u)
     
     # size reduction to calibrated transition probabilities
-    list_v = calibrator._calibrated_transitions_u[u]
-    P_v = np.array([P_v[list_v__P_v.index(v)] for v in list_v])
+    list_v__u = calibrator._calibrated_transitions_u[u]
+    P_v = np.array([P_v[list_v__P_v.index(v)] for v in list_v__u])
     
     # get elements of the initial state
     J_Y = calibrator._J_Y_u[u].copy()
@@ -88,15 +89,18 @@ def _generic_allocator_region_process_u_fixed(calibrator,
     
     N_v_allocated = np.zeros(N_v.size)
     
-    print('target', N_v)
+    print('target for u='+str(u), N_v)
     
     # if no allocations are expected
     if np.isclose(N_v.sum(), 0):
+        print('no allocations expected.')
         return(allocated_map)
     
     # compute P(Y|v, u) (u is omitted)
     # it is computed only one time
     P_Y__v, list_v__P_Y__v = calibrator._estimate_P_Y__v(Y, u)
+    
+    print(P_Y__v.mean(axis=0))
     
     id_J_to_eval = np.ones(P_Y__v.shape[0]).astype(bool)
     
@@ -125,20 +129,14 @@ def _generic_allocator_region_process_u_fixed(calibrator,
         P_v = N_v / N
         
         # the P_v is deduced by patch areas mean
-        P_v_patches = P_v / np.array([calibrator._patches[u][v]['area'].mean() for v in list_v])
+        P_v_patches = P_v / np.array([calibrator._patches[u][v]['area'].mean() for v in list_v__u])
         
-        P_v__Y = _compute_P_v__Y(P_v_patches, P_Y, P_Y__v[id_J_to_eval], list_v)
+        P_v__Y = _compute_P_v__Y(P_v_patches, P_Y, P_Y__v[id_J_to_eval], list_v__u)
         
         # GART
         # the probabilities of no-transition are stacked to P
         # to allow no-transition through the GART
-        V_pivot = generalized_allocation_rejection_test(np.hstack((P_v__Y, 1 - P_v__Y.sum(axis=1)[:, None])),
-                                                  list_v + [u])
-        
-        id_pivot = V_pivot != u
-        
-        J_pivot = J_Y[id_J_to_eval][id_pivot]
-        V_pivot = V_pivot[id_pivot]
+        J_pivot, V_pivot = _gart(J_Y, id_J_to_eval, P_v__Y, list_v__u, u)
         
         # patch parameters
         
@@ -146,7 +144,7 @@ def _generic_allocator_region_process_u_fixed(calibrator,
         eccentricity_mean = {}
         eccentricity_std = {}
         
-        for id_v, v in enumerate(list_v):
+        for id_v, v in enumerate(list_v__u):
             j = V_pivot == v
             
             N_j  = j.sum()
@@ -181,14 +179,14 @@ def _generic_allocator_region_process_u_fixed(calibrator,
         
         # initialize probabilities maps
         map_P_v__Y = {}
-        for id_v, v in enumerate(list_v):
+        for id_v, v in enumerate(list_v__u):
             map_P_v__Y[v] = np.zeros(allocated_map.shape)
             map_P_v__Y[v].flat[J_Y] = P_v__Y[:, id_v]
         
         # patcher
         S = 0
         
-        n_g = {v:0 for v in list_v}
+        n_g = {v:0 for v in list_v__u}
         
         j_to_exclude = []
         
@@ -217,15 +215,15 @@ def _generic_allocator_region_process_u_fixed(calibrator,
             if s == 0:
                 n_g[v] += 1
             
-            N_v[list_v.index(v)] -= s
-            N_v_allocated[list_v.index(v)] += s
+            N_v[list_v__u.index(v)] -= s
+            N_v_allocated[list_v__u.index(v)] += s
         
         # patching over
         # now check if one transition is a total success
         # if yes, this transition is excluded
-        for v in list_v:
+        for v in list_v__u:
             if n_g[v] == 0:
-                N_v[list_v.index(v)] = 0
+                N_v[list_v__u.index(v)] = 0
         
         # check if all transitions are realized
         if np.all(N_v == 0):
@@ -238,8 +236,20 @@ def _generic_allocator_region_process_u_fixed(calibrator,
             id_J_to_eval = ~np.isin(J_Y, j_to_exclude)
         
         print(N_v)
+        print(np.unique(allocated_map.flat[J_Y], return_counts=True))
         
         # loop=False
     
     print('allocated :', N_v_allocated)
     return(allocated_map)
+
+def _gart(J_Y, id_J_to_eval, P_v__Y, list_v__u, u):
+    V_pivot = generalized_allocation_rejection_test(np.hstack((P_v__Y, 1 - P_v__Y.sum(axis=1)[:, None])),
+                                                  list_v__u + [u])
+        
+    id_pivot = V_pivot != u
+    
+    J_pivot = J_Y[id_J_to_eval][id_pivot]
+    V_pivot = V_pivot[id_pivot]
+    
+    return(J_pivot, V_pivot)

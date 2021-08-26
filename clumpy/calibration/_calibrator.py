@@ -32,7 +32,9 @@ class Calibrator():
             region_eval=None):
 
         self.start_luc_layer = start_luc_layer
-
+        
+        self.region_eval = region_eval
+        
         self._make_case(initial_luc_layer,
                         final_luc_layer,
                         start_luc_layer,
@@ -261,11 +263,16 @@ class Calibrator():
 
 
 def _compute_P_v__Y(P_v, P_Y, P_Y__v, list_v, verbose=0):
-    P_v__Y = {}
-
+        
     P_v__Y = P_Y__v / P_Y
-    P_v__Y *= P_v / P_v__Y.mean(axis=0)
-
+    P_v__Y *= P_v
+    
+    # dividing by P_v__Y.mean(axis=0)
+    # only for columns where P_v__Y.mean(axis=0) is not null
+    P_v__Y /= P_v__Y.mean(axis=0)
+    # columns_not_null = P_v__Y.mean(axis=0) != 0
+    # P_v__Y[:, columns_not_null] = P_v__Y[:, columns_not_null] / P_v__Y[:, columns_not_null].mean(axis=0)
+    
     s = P_v__Y.sum(axis=1)
 
     if np.sum(s > 1) > 0:
@@ -282,8 +289,13 @@ def _compute_P_v__Y(P_v, P_Y, P_Y__v, list_v, verbose=0):
 
             P_v__Y[id_anomalies] = P_v__Y[id_anomalies] / \
                 s[id_anomalies][:, None]
-            P_v__Y *= P_v / P_v__Y.mean(axis=0)
-
+            
+            P_v__Y *= P_v
+            # dividing by P_v__Y.mean()
+            P_v__Y /= P_v__Y.mean(axis=0)
+            # columns_not_null = P_v__Y.mean(axis=0) != 0
+            # P_v__Y[:, columns_not_null] = P_v__Y[:, columns_not_null] / P_v__Y[:, columns_not_null].mean(axis=0)
+            
             n_corrections += 1
             s = np.sum(P_v__Y, axis=1)
 
