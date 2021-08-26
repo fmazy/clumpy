@@ -5,7 +5,7 @@ import numpy as np
 from ..kde import GKDE
 from . import patches
 from ..scenario import TransitionMatrix
-
+import pandas as pd
 
 class Calibrator():
     def __init__(self,
@@ -28,8 +28,8 @@ class Calibrator():
             initial_luc_layer,
             final_luc_layer,
             start_luc_layer,
-            region_train=None,
-            region_eval=None):
+            region_train,
+            region_eval):
 
         self.start_luc_layer = start_luc_layer
         
@@ -49,7 +49,11 @@ class Calibrator():
 
         return(self)
 
-    def fit_patches(self, initial_luc_layer, final_luc_layer, isl_exp=False, neighbors_structure='queen'):
+    def fit_patches(self,
+                    initial_luc_layer,
+                    final_luc_layer,
+                    isl_exp=False,
+                    neighbors_structure='queen'):
 
         if isl_exp:
             self._patches = patches.analyse_isl_exp(self.case,
@@ -99,6 +103,30 @@ class Calibrator():
                         unique_v__u[u]).index(v)]
 
         return(TransitionMatrix(M, list_u, list_v))
+    
+    def export_marginals(self, path_prefix, n=300):
+        for u in self._calibrated_transitions_u.keys():
+            for k, feature in enumerate(self.case.params[u]['features']):
+                
+                if feature[0] == 'layer':
+                    name = feature[1].name
+                elif feature[0] == 'distance':
+                    name = 'distance_to_'+str(feature[1])
+                
+                x = np.linspace(self._X_u[u][:,k].min(), self._X_u[u][:,k].max(), n)
+                
+                df = pd.DataFrame(x, columns=[name])
+                
+                gkde = self._gkde_P_y__u[u]
+                df['P(x|u'+str(u)+')'] = gkde.marginal(x, k)
+                
+                for id_v, v in enumerate(self._calibrated_transitions_u[u]):
+                    
+                    gkde = self._gkde_P_x__u_v[(u, v)]
+                    df['P(x|u'+str(u)+',v'+str(v)+')'] = gkde.marginal(x, k)
+                
+                df.to_csv(path_prefix+'_u'+str(u)+'_'+name+'.csv', index=False)
+                
 
     def _make_case(self,
                    initial_luc_layer,
@@ -195,7 +223,7 @@ class Calibrator():
         if self.verbose > 0:
             print('fitting GKDE P(x|u,v) done\n============================')
 
-    def _estimate_P_Y__v(self, Y, u):
+    def _estimate_P_Y__v(self, Y, u, log_return=False):
 
         P_Y__v = None
 
@@ -211,8 +239,11 @@ class Calibrator():
                     P_Y__v = pdf[:, None]
                 else:
                     P_Y__v = np.hstack((P_Y__v, pdf[:, None]))
-
-        return(P_Y__v, list_v)
+        
+        if log_return:
+            return(_log(P_Y__v), list_v)
+        else:
+            return(P_Y__v, list_v)
 
     def _fit_P_y__u(self, Y_u=None):
         if Y_u is None:
@@ -256,24 +287,22 @@ class Calibrator():
         if self.verbose > 0:
             print('fitting GKDE P(y|u) done\n============================')
 
-    def _estimate_P_Y(self, Y, u):
+    def _estimate_P_Y(self, Y, u, log_return=False):
         P_Y = self._gkde_P_y__u[u].predict(Y)[:, None]
-
-        return(P_Y)
+        
+        if log_return:
+            return(_log(P_Y))
+        else:
+            return(P_Y)
 
 
 def _compute_P_v__Y(P_v, P_Y, P_Y__v, list_v, verbose=0):
+    
+    # log is better near 0 for divions
+    log_P_v__Y = _log(P_Y__v) - _log(P_Y)
+    log_P_v__Y += _log(P_v) - _log(np.exp(log_P_v__Y).mean(axis=0))
         
-    P_v__Y = P_Y__v / P_Y
-    P_v__Y *= P_v
-    
-    # dividing by P_v__Y.mean(axis=0)
-    # only for columns where P_v__Y.mean(axis=0) is not null
-    P_v__Y /= P_v__Y.mean(axis=0)
-    # columns_not_null = P_v__Y.mean(axis=0) != 0
-    # P_v__Y[:, columns_not_null] = P_v__Y[:, columns_not_null] / P_v__Y[:, columns_not_null].mean(axis=0)
-    
-    s = P_v__Y.sum(axis=1)
+    s = np.exp(log_P_v__Y).sum(axis=1)
 
     if np.sum(s > 1) > 0:
         if verbose > 0:
@@ -287,25 +316,23 @@ def _compute_P_v__Y(P_v, P_Y, P_Y__v, list_v, verbose=0):
         while np.sum(s > 1) > 0 and n_corrections < n_corrections_max:
             id_anomalies = s > 1
 
-            P_v__Y[id_anomalies] = P_v__Y[id_anomalies] / \
-                s[id_anomalies][:, None]
+            log_P_v__Y[id_anomalies] = log_P_v__Y[id_anomalies] - \
+                _log(s[id_anomalies])[:, None]
             
-            P_v__Y *= P_v
-            # dividing by P_v__Y.mean()
-            P_v__Y /= P_v__Y.mean(axis=0)
-            # columns_not_null = P_v__Y.mean(axis=0) != 0
-            # P_v__Y[:, columns_not_null] = P_v__Y[:, columns_not_null] / P_v__Y[:, columns_not_null].mean(axis=0)
+            log_P_v__Y += _log(P_v) - _log(np.exp(log_P_v__Y).mean(axis=0))
             
             n_corrections += 1
-            s = np.sum(P_v__Y, axis=1)
+            s = np.sum(log_P_v__Y, axis=1)
 
         if verbose > 0:
             print('\tCorrections done in '+str(n_corrections)+' iterations.')
 
     # avoid nan values
-    P_v__Y = np.nan_to_num(P_v__Y)
+    P_v__Y = np.nan_to_num(np.exp(log_P_v__Y))
 
     return(P_v__Y)
 
-
-
+def _log(x):
+    return(np.log(x,
+                  out = np.zeros_like(x).fill(-np.inf),
+                  where = x > 0))

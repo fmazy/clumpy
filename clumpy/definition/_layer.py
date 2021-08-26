@@ -7,6 +7,7 @@ import os
 from matplotlib import pyplot as plt
 from matplotlib import colors as mpl_colors
 import rasterio
+from ..tools import ndarray_suitable_integer_type
 
 class _Layer:
     """Layer base element
@@ -40,6 +41,8 @@ class _Layer:
             elif len(data.shape) > 3:
                 raise(ValueError("len(data.shape) is expected to be lower or equal to 3."))
             
+            data = ndarray_suitable_integer_type(data)
+            print(data.dtype)
             driver = None
             crs = None
             transform = None

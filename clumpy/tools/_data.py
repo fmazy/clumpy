@@ -36,7 +36,7 @@ def ndarray_suitable_integer_type(a):
     Returns
     -------
     a_converted : ndarray
-        The numpy array converted (it's a copy')
+        The numpy array converted (it's a copy)
 
     """
     if a.min() >= 0: # if unsigned
@@ -57,7 +57,6 @@ def ndarray_suitable_integer_type(a):
                 t = np.uint16
                 if m<= 127:
                     t = np.uint8
-                    
     return(a.astype(t))
 
 def np_drop_duplicates_from_column(a, column_id):

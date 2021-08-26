@@ -9,14 +9,15 @@ Created on Mon Aug 23 13:51:30 2021
 import numpy as np
 from ._generalized_allocation import generalized_allocation_rejection_test
 from ._patcher import _weighted_neighbors
-from ..definition import LandUseCoverLayer
+from ..definition import LandUseCoverLayer, FeatureLayer
 from ..calibration._calibrator import _compute_P_v__Y
 
 def generic_allocator(calibrators,
                       tms,
                       path,
-                      n_patches_tries=10**3,
-                      update_P_Y=True):
+                      n_patches_tries = 10**3,
+                      update_P_Y = True,
+                      path_prefix_proba_map = None):
     
     start_luc_layer = calibrators[0].start_luc_layer
     allocated_map = start_luc_layer.get_data().copy()
@@ -32,7 +33,8 @@ def generic_allocator(calibrators,
                                                         allocated_map,
                                                         tm,
                                                         n_patches_tries = n_patches_tries,
-                                                        update_P_Y = update_P_Y)
+                                                        update_P_Y = update_P_Y,
+                                                        path_prefix_proba_map = path_prefix_proba_map+'_A'+str(id_calibrator))
             
     map_f = LandUseCoverLayer(name="allocated map",
                               path = path, 
@@ -45,7 +47,8 @@ def _generic_allocator_region_process(calibrator,
                                       allocated_map,
                                       tm,
                                       n_patches_tries = 10**3,
-                                      update_P_Y=True):
+                                      update_P_Y=True,
+                                      path_prefix_proba_map=None):
     
     for u in calibrator._calibrated_transitions_u.keys():
         print('----------------')
@@ -56,7 +59,8 @@ def _generic_allocator_region_process(calibrator,
                                               tm = tm,
                                               u = u,
                                               n_patches_tries = n_patches_tries,
-                                              update_P_Y = update_P_Y)
+                                              update_P_Y = update_P_Y,
+                                              path_prefix_proba_map = path_prefix_proba_map+'_u'+str(u))
 
     return(allocated_map)
 
@@ -65,13 +69,14 @@ def _generic_allocator_region_process_u_fixed(calibrator,
                                               tm,
                                               u,
                                               n_patches_tries = 10**3,
-                                              update_P_Y=True):
+                                              update_P_Y=True,
+                                              cnt_loop_max=500,
+                                              path_prefix_proba_map=None):
     
     # set the sub starting map
     # it will be used to check allocated patches
-    # the region is applied to not allocate beyond it
     region_start_map = allocated_map.copy() * calibrator.region_eval.get_data()
-    
+        
     # get global transition probabilities
     P_v, list_v__P_v = tm.P_v(u=u)
     
@@ -98,16 +103,14 @@ def _generic_allocator_region_process_u_fixed(calibrator,
     
     # compute P(Y|v, u) (u is omitted)
     # it is computed only one time
-    P_Y__v, list_v__P_Y__v = calibrator._estimate_P_Y__v(Y, u)
-    
-    print(P_Y__v.mean(axis=0))
+    P_Y__v, list_v__P_Y__v = calibrator._estimate_P_Y__v(Y, u, log_return=False)
     
     id_J_to_eval = np.ones(P_Y__v.shape[0]).astype(bool)
     
     # start main loop
     cnt_loop = 0
     loop = True
-    while loop:
+    while loop and cnt_loop < cnt_loop_max:
         cnt_loop += 1
         
         # compute P(Y|u)
@@ -115,7 +118,7 @@ def _generic_allocator_region_process_u_fixed(calibrator,
         # or at least at the first loop is the parameter
         # update_P_Y is False
         if update_P_Y or cnt_loop == 1:
-            P_Y = calibrator._estimate_P_Y(Y[id_J_to_eval], u)
+            P_Y = calibrator._estimate_P_Y(Y[id_J_to_eval], u, log_return=False)
             
             if not update_P_Y:
                 P_Y_full = P_Y.copy()
@@ -130,7 +133,7 @@ def _generic_allocator_region_process_u_fixed(calibrator,
         
         # the P_v is deduced by patch areas mean
         P_v_patches = P_v / np.array([calibrator._patches[u][v]['area'].mean() for v in list_v__u])
-        
+                
         P_v__Y = _compute_P_v__Y(P_v_patches, P_Y, P_Y__v[id_J_to_eval], list_v__u)
         
         # GART
@@ -182,6 +185,19 @@ def _generic_allocator_region_process_u_fixed(calibrator,
         for id_v, v in enumerate(list_v__u):
             map_P_v__Y[v] = np.zeros(allocated_map.shape)
             map_P_v__Y[v].flat[J_Y] = P_v__Y[:, id_v]
+            
+            # if it is the first loop, and it is asked to
+            # save a probability map for each transition
+            if cnt_loop == 1 and path_prefix_proba_map is not None:
+                # the probability is re-computed with no patches considerations
+                # i.e. mono pixel patches (mmp)
+                P_v__Y_mmp = _compute_P_v__Y(P_v, P_Y, P_Y__v[id_J_to_eval], list_v__u)
+                map_P_v__Y_mmp = np.zeros(allocated_map.shape)
+                map_P_v__Y_mmp.flat[J_Y] = P_v__Y_mmp[:, id_v]
+                
+                FeatureLayer(data = map_P_v__Y_mmp,
+                             copy_geo = calibrator.start_luc_layer,
+                             path = path_prefix_proba_map+'_v'+str(v)+'.tif')
         
         # patcher
         S = 0
@@ -235,7 +251,7 @@ def _generic_allocator_region_process_u_fixed(calibrator,
             # i.e. allocated elements are removed
             id_J_to_eval = ~np.isin(J_Y, j_to_exclude)
         
-        print(N_v)
+        print('target_rest', N_v)
         print(np.unique(allocated_map.flat[J_Y], return_counts=True))
         
         # loop=False
@@ -253,3 +269,8 @@ def _gart(J_Y, id_J_to_eval, P_v__Y, list_v__u, u):
     V_pivot = V_pivot[id_pivot]
     
     return(J_pivot, V_pivot)
+
+def _log(x):
+    return(np.log(x,
+                  out = np.zeros_like(x).fill(-np.inf),
+                  where = x > 0))

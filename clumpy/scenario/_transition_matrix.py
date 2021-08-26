@@ -104,7 +104,7 @@ def compute_transition_matrix(V_u, list_u, list_v):
     
     for id_u, u in enumerate(list_u):
         for id_v, v in enumerate(list_v):
-            M[id_u, id_v] = np.sum(V_u[u] == v)
+            M[id_u, id_v] = np.mean(V_u[u] == v)
     
     return(TransitionMatrix(M, list_u, list_v))
 
