@@ -41,7 +41,7 @@ class _Layer:
             elif len(data.shape) > 3:
                 raise(ValueError("len(data.shape) is expected to be lower or equal to 3."))
             
-            data = ndarray_suitable_integer_type(data)
+            # data = ndarray_suitable_integer_type(data)
             print(data.dtype)
             driver = None
             crs = None

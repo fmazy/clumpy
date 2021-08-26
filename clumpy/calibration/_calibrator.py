@@ -299,6 +299,42 @@ class Calibrator():
 def _compute_P_v__Y(P_v, P_Y, P_Y__v, list_v, verbose=0):
     
     # log is better near 0 for divions
+    P_v__Y = P_Y__v / P_Y
+    P_v__Y *= P_v / P_v__Y.mean(axis=0)
+        
+    s = P_v__Y.sum(axis=1)
+
+    if np.sum(s > 1) > 0:
+        if verbose > 0:
+            print('\tWarning, uncorrect probabilities have been detected.')
+            print('\tSome global probabilities may be to high.')
+            print('\tFor now, some corrections are made.')
+
+        n_corrections_max = 100
+        n_corrections = 0
+
+        while np.sum(s > 1) > 0 and n_corrections < n_corrections_max:
+            id_anomalies = s > 1
+
+            P_v__Y[id_anomalies] = P_v__Y[id_anomalies] / \
+                s[id_anomalies][:, None]
+            
+            P_v__Y += P_v - P_v__Y.mean(axis=0)
+            
+            n_corrections += 1
+            s = np.sum(P_v__Y, axis=1)
+
+        if verbose > 0:
+            print('\tCorrections done in '+str(n_corrections)+' iterations.')
+
+    # avoid nan values
+    P_v__Y = np.nan_to_num(P_v__Y)
+
+    return(P_v__Y)
+
+def _compute_P_v__Y_through_log(P_v, P_Y, P_Y__v, list_v, verbose=0):
+    
+    # log is better near 0 for divions
     log_P_v__Y = _log(P_Y__v) - _log(P_Y)
     log_P_v__Y += _log(P_v) - _log(np.exp(log_P_v__Y).mean(axis=0))
         
