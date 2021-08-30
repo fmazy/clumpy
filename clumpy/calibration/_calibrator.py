@@ -319,14 +319,19 @@ def _compute_P_v__Y(P_v, P_Y, P_Y__v, list_v, verbose=0):
             P_v__Y[id_anomalies] = P_v__Y[id_anomalies] / \
                 s[id_anomalies][:, None]
             
-            P_v__Y += P_v - P_v__Y.mean(axis=0)
+            P_v__Y *= P_v / P_v__Y.mean(axis=0)
             
             n_corrections += 1
             s = np.sum(P_v__Y, axis=1)
 
         if verbose > 0:
             print('\tCorrections done in '+str(n_corrections)+' iterations.')
-
+    
+    # last control to have s <= 1
+    id_anomalies = s > 1
+    P_v__Y[id_anomalies] = P_v__Y[id_anomalies] / \
+        s[id_anomalies][:, None]
+    
     # avoid nan values
     P_v__Y = np.nan_to_num(P_v__Y)
 

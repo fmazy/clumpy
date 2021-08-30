@@ -186,6 +186,11 @@ def _generic_allocator_region_process_u_fixed(calibrator,
             map_P_v__Y[v] = np.zeros(allocated_map.shape)
             map_P_v__Y[v].flat[J_Y] = P_v__Y[:, id_v]
             
+            if 'homogen_proba' in calibrator._patches[u][v].keys():
+                if calibrator._patches[u][v]['homogen_proba']:
+                    map_P_v__Y[v].fill(1)
+                
+            
             # if it is the first loop, and it is asked to
             # save a probability map for each transition
             if cnt_loop == 1 and path_prefix_proba_map is not None:
@@ -260,6 +265,9 @@ def _generic_allocator_region_process_u_fixed(calibrator,
     return(allocated_map)
 
 def _gart(J_Y, id_J_to_eval, P_v__Y, list_v__u, u):
+    
+    # security
+    
     V_pivot = generalized_allocation_rejection_test(np.hstack((P_v__Y, 1 - P_v__Y.sum(axis=1)[:, None])),
                                                   list_v__u + [u])
         

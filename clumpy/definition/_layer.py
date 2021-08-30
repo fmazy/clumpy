@@ -339,3 +339,15 @@ class FeatureLayer(_Layer):
 
     def __repr__(self):
         return('FeatureLayer()')
+
+    def display(self, colorbar = True, show=True):
+        data = self.get_data()
+        data[data <= -10**3] = np.nan
+        plt.yticks([], [])
+        plt.xticks([], [])
+        plt.imshow(data)
+        if colorbar:
+            plt.colorbar()
+        if show:
+            plt.show()
+        return(plt)
