@@ -17,7 +17,8 @@ def generic_allocator(calibrators,
                       path,
                       n_patches_tries = 10**3,
                       update_P_Y = True,
-                      path_prefix_proba_map = None):
+                      path_prefix_proba_map = None,
+                      patcher_params = None):
     
     start_luc_layer = calibrators[0].start_luc_layer
     allocated_map = start_luc_layer.get_data().copy()
@@ -34,7 +35,8 @@ def generic_allocator(calibrators,
                                                         tm,
                                                         n_patches_tries = n_patches_tries,
                                                         update_P_Y = update_P_Y,
-                                                        path_prefix_proba_map = path_prefix_proba_map+'_A'+str(id_calibrator))
+                                                        path_prefix_proba_map = path_prefix_proba_map+'_A'+str(id_calibrator),
+                                                        patcher_params = patcher_params)
             
     map_f = LandUseCoverLayer(name="allocated map",
                               path = path, 
@@ -48,7 +50,8 @@ def _generic_allocator_region_process(calibrator,
                                       tm,
                                       n_patches_tries = 10**3,
                                       update_P_Y=True,
-                                      path_prefix_proba_map=None):
+                                      path_prefix_proba_map=None,
+                                      patcher_params = None):
     
     for u in calibrator._calibrated_transitions_u.keys():
         print('----------------')
@@ -60,7 +63,8 @@ def _generic_allocator_region_process(calibrator,
                                               u = u,
                                               n_patches_tries = n_patches_tries,
                                               update_P_Y = update_P_Y,
-                                              path_prefix_proba_map = path_prefix_proba_map+'_u'+str(u))
+                                              path_prefix_proba_map = path_prefix_proba_map+'_u'+str(u),
+                                              patcher_params = patcher_params)
 
     return(allocated_map)
 
@@ -71,7 +75,20 @@ def _generic_allocator_region_process_u_fixed(calibrator,
                                               n_patches_tries = 10**3,
                                               update_P_Y=True,
                                               cnt_loop_max=500,
-                                              path_prefix_proba_map=None):
+                                              path_prefix_proba_map=None,
+                                              patcher_params = None):
+    
+    if patcher_params is not None:
+        neighbors_structure = patcher_params['neighbors_structure']
+        avoid_aggregation = patcher_params['avoid_aggregation']
+        nb_of_neighbors_to_fill = patcher_params['nb_of_neighbors_to_fill']
+        proceed_even_if_no_probability = patcher_params['proceed_even_if_no_probability']
+    
+    else:
+        neighbors_structure = 'rook'
+        avoid_aggregation = True
+        nb_of_neighbors_to_fill = 3
+        proceed_even_if_no_probability = True
     
     # set the sub starting map
     # it will be used to check allocated patches
@@ -223,10 +240,10 @@ def _generic_allocator_region_process_u_fixed(calibrator,
                                                 patch_S = areas[id_j],
                                                 eccentricity_mean = eccentricity_mean[v],
                                                 eccentricity_std = eccentricity_std[v],
-                                                neighbors_structure = 'rook',
-                                                avoid_aggregation = True,
-                                                nb_of_neighbors_to_fill = 3,
-                                                proceed_even_if_no_probability = True)
+                                                neighbors_structure = neighbors_structure,
+                                                avoid_aggregation = avoid_aggregation,
+                                                nb_of_neighbors_to_fill = nb_of_neighbors_to_fill,
+                                                proceed_even_if_no_probability = proceed_even_if_no_probability)
             
             j_to_exclude += j_allocated
             
