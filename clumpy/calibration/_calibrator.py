@@ -305,7 +305,7 @@ def _compute_P_v__Y(P_v, P_Y, P_Y__v, list_v, verbose=0):
     s = P_v__Y.sum(axis=1)
 
     if np.sum(s > 1) > 0:
-        if verbose > 0:
+        if verbose > 0 or 1==1:
             print('\tWarning, uncorrect probabilities have been detected.')
             print('\tSome global probabilities may be to high.')
             print('\tFor now, some corrections are made.')
