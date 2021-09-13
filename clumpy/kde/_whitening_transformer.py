@@ -17,6 +17,9 @@ class _WhiteningTransformer():
         self._transform_det = np.abs(np.linalg.det(self._transform_matrix))
         self._inverse_transform_det = np.abs(np.linalg.det(self._inverse_transform_matrix))
         
+        # for compatibility with other preprocessing methods
+        self.scale_ = self._inverse_transform_det
+        
         return(self)
         
     def transform(self, X):

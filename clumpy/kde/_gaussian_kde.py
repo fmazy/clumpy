@@ -16,21 +16,22 @@ from sklearn.preprocessing import StandardScaler
 from time import time
 from . import bandwidth_selection
 from tqdm import tqdm
+from ._whitening_transformer import _WhiteningTransformer
 
 class GKDE(BaseEstimator):
     def __init__(self,
                  h=1.0,
                  low_bounded_features=[],
                  high_bounded_features=[],
-                 low_bounds = None,
-                 high_bounds = None,
+                 low_bounds = [],
+                 high_bounds = [],
                  algorithm='kd_tree',
                  leaf_size=30,
                  support_factor=3,
-                 standard_scaler = True,
                  forbid_null_value = False,
                  n_predict_max = 2*10**4,
                  n_jobs=1,
+                 preprocessing='whitening',
                  verbose=0):
         self.h = h
         self.low_bounded_features = low_bounded_features
@@ -40,10 +41,10 @@ class GKDE(BaseEstimator):
         self.algorithm = algorithm
         self.leaf_size = leaf_size
         self.support_factor = support_factor
-        self.standard_scaler = standard_scaler
         self.forbid_null_value = forbid_null_value
         self.n_predict_max = n_predict_max
         self.n_jobs = n_jobs
+        self.preprocessing = preprocessing
         self.verbose = verbose
         
         
@@ -51,50 +52,97 @@ class GKDE(BaseEstimator):
         return('GKDE(h='+str(self._h)+')')
     
     def fit(self, X, y=None):
-        if self.standard_scaler:
-            self._standard_scaler = StandardScaler()
-            self._data = self._standard_scaler.fit_transform(X)
+        
+        # preprocessing
+        if self.preprocessing == 'standard':
+            self._preprocessor = StandardScaler()
+            self._data = self._preprocessor.fit_transform(X)
+        
+        elif self.preprocessing == 'whitening':
+            self._preprocessor = _WhiteningTransformer()
+            self._data = self._preprocessor.fit_transform(X)
+        
         else:
             self._data = X
-            
+        
+        # get data dimensions
         self._n = self._data.shape[0]
         self._d = self._data.shape[1]
         
+        # BOUNDARIES INFORMATIONS
+        # low bounds
+        if self.low_bounds is None or len(self.low_bounds) != len(self.low_bounded_features):
+            raise(ValueError("unexpected low bounds value"))
         
-        if self.low_bounds is None:
-            self._low_bounds = self._data[:, self.low_bounded_features].min(axis=0)
-        else:
-            if self.standard_scaler:
-                lb = np.zeros(self._d)
-                lb[self.low_bounded_features] = self.low_bounds
-                self._low_bounds = self._standard_scaler.transform(lb[None, :])
-            else:
-                self._low_bounds = self.low_bounds
+        self._low_bounds_b = []
+        self._low_bounds_w = []
         
-        if self.high_bounds is None:
-            self._high_bounds = self._data[:, self.high_bounded_features].max(axis=0)
-        else:
-            if self.standard_scaler:
-                hb = np.zeros(self._d)
-                hb[self.high_bounded_features] = self.high_bounds
-                self._high_bounds = self._standard_scaler.transform(hb[None, :])
-            else:
-                self._high_bounds = self.high_bounds
+        for id_k, k in enumerate(self.low_bounded_features):
+            # set a point within the hyperplane.
+            # it is simple : it is defined with one axis vector
+            # A = np.zeros((1,self._d))
+            # A[0, id_k] = self.low_bounds[id_k]
+            
+            # w = np.zeros((1,2))
+            # w[0,id_k] = 1
+            
+            A = np.diag(np.ones(2))
+            A[:,id_k] = self.low_bounds[id_k]
+            
+            A_wt = self._preprocessor.transform(A)
+            
+            w_wt = np.linalg.solve(A_wt.T, np.ones(2))
+                        
+            b = - np.dot(w_wt, A_wt[0])
+            print('A_wt', A_wt, 'w_wt', w_wt)
+            print('b', b)
+            
+            self._low_bounds_b.append(b)
+            self._low_bounds_w.append(w_wt)
         
-        # bandwidth selection
+        # high bounds
+        if self.high_bounds is None or len(self.high_bounds) != len(self.high_bounded_features):
+            raise(ValueError("unexpected low bounds value"))
+        
+        self._high_bounds_b = []
+        self._high_bounds_w = []
+        for id_k, k in enumerate(self.high_bounded_features):
+            # set a point within the hyperplane.
+            # it is simple : it is defined with one axis vector
+            # A = np.zeros((1,self._d))
+            # A[0, id_k] = self.high_bounds[id_k]
+            
+            # w = np.zeros((1,2))
+            # w[0,id_k] = 1
+            A = np.diag(np.ones(2))
+            A[:,id_k] = self.high_bounds[id_k]
+            
+            # w_wt = self._preprocessor.transform(w)[0]
+            A_wt = self._preprocessor.transform(A)
+            
+            w_wt = np.linalg.solve(A_wt.T, np.ones(2))
+            
+            b = - np.dot(w_wt, A_wt)
+            
+            self._high_bounds_b.append(b)
+            self._high_bounds_w.append(w_wt)
+        
+        # BANDWIDTH SELECTION
         if type(self.h) is int or type(self.h) is float:
             self._h = float(self.h)
         
         elif type(self.h) is str:
-            if self.h == 'scott':
+            if self.h == 'scott' or self.h == 'silverman':
                 self._h = bandwidth_selection.scotts_rule(X)
             else:
                 raise(ValueError("Unexpected bandwidth selection method."))
         else:
             raise(TypeError("Unexpected bandwidth type."))
         
+        # NORMALIZATION FACTOR
         self._normalization = 1 / ((2*np.pi)**(self._d/2) * self._h**self._d)
         
+        # NEAREST NEIGHBOR FITTING
         self._nn = NearestNeighbors(radius = self._h * self.support_factor,
                                    algorithm = self.algorithm,
                                    leaf_size = self.leaf_size,
@@ -104,32 +152,31 @@ class GKDE(BaseEstimator):
         return(self)
         
     def predict(self, X):
-        
-        if self.standard_scaler:
-            st = time()
-            X = self._standard_scaler.transform(X)
-            if self.verbose > 1:
-                print('ss', time()-st)
-                
         pdf = self._predict_with_bandwidth(X, self._h)
-        
         return(pdf)
     
     def _predict_with_bandwidth(self, X, h, scaling=True):
         
+        id_out_of_low_bounds = np.any(X[:, self.low_bounded_features] < self.low_bounds)
+        id_out_of_high_bounds = np.any(X[:, self.high_bounded_features] > self.high_bounds)
+        
+        if self.preprocessing != 'none':
+            X = self._preprocessor.transform(X)
+        
         f = np.zeros(X.shape[0])
         
+        # STEPS INITIALIZATION
+        # requested elements are not estimated alltogether in order to
+        # improve numerical computations.
+        # the limit is given by n_predict_max
         steps = np.arange(0, X.shape[0], self.n_predict_max)
         if self.verbose > 0:
-            steps = tqdm(np.arange(0, X.shape[0], self.n_predict_max))
+            steps = tqdm(steps)
         
+        # for each set of n_predict_max elements
         for i in steps:
-            st = time()
             distances, neighbors_id = self._nn.radius_neighbors(X[i:i+self.n_predict_max], radius=h * self.support_factor, return_distance=True)
-            if self.verbose > 1:
-                print('neighbors', time()-st)
             
-            st = time()
             if self.n_jobs == 1:
                 f[i:i+self.n_predict_max] = np.array([_gaussian(dist/h) for dist in distances])
                 
@@ -137,52 +184,57 @@ class GKDE(BaseEstimator):
                 pool = Pool(self.n_jobs)
                 f[i:i+self.n_predict_max] = np.array(pool.starmap(_gaussian, [(dist/h,) for dist in distances]))
         
-        if self.verbose > 1:
-            print('normalization')
-            
+        # Normalization
         f *= self._normalization / self._n
-            
-        if self.verbose > 1:
-            print('gaussian', time()-st)
         
-        if self.verbose > 1:
-            print('boundary bias correction')
-        st = time()
         # boundary bias correction
         for id_k, k in enumerate(self.low_bounded_features):
-            id_inside_bounds = X[:,k] >= self._low_bounds[id_k]
-            f[id_inside_bounds] /= 1 / 2 * (1 + erf((X[id_inside_bounds,k] - self._low_bounds[id_k]) / h / np.sqrt(2)))
-                    
-        for id_k, k in enumerate(self.high_bounded_features):
-            id_inside_bounds = X[:,k] <= self._high_bounds[id_k]
-            f[id_inside_bounds] /= 1 / 2 * (1 + erf((self._high_bounds[id_k] - X[id_inside_bounds,k]) / h / np.sqrt(2)))
+            dist = np.abs(np.dot(X, self._low_bounds_w[id_k]) + self._low_bounds_b[id_k]) / np.linalg.norm(self._low_bounds_w[id_k])
+            
+            omega = np.array([1.5, -1])
+            plt.plot([omega[0], (omega+self._low_bounds_w[id_k])[0]], [omega[1], (omega+self._low_bounds_w[id_k])[1]], c='red')
+            plt.scatter(X[:,0], X[:,1], s=2, c=dist)
+            plt.show()
+            
+            f /= 1 / 2 * (1 + erf(dist / h / np.sqrt(2)))
+            
+        # outside bounds : equal to 0
+        f[id_out_of_low_bounds] = 0
+        f[id_out_of_high_bounds] = 0
+            
+        # if self.preprocessing == 'standard':
+        #     for id_k, k in enumerate(self.low_bounded_features):
+        #         id_inside_bounds = X[:,k] >= self._low_bounds[id_k]
+        #         f[id_inside_bounds] /= 1 / 2 * (1 + erf((X[id_inside_bounds,k] - self._low_bounds[id_k]) / h / np.sqrt(2)))
+                        
+        #     for id_k, k in enumerate(self.high_bounded_features):
+        #         id_inside_bounds = X[:,k] <= self._high_bounds[id_k]
+        #         f[id_inside_bounds] /= 1 / 2 * (1 + erf((self._high_bounds[id_k] - X[id_inside_bounds,k]) / h / np.sqrt(2)))
+                
+        # elif self.preprocessing == 'whitening':
+        #     for id_k, k in enumerate(self.low_bounded_features):
+                
+        #         a = np.zeros(self._d)
+        #         # a[k]
+        #         b = np.zeros(self._d)
+        #         print(self._low_bounds)
+        #         id_inside_bounds = X[:,k] >= self._low_bounds[id_k]
+        #         f[id_inside_bounds] /= 1 / 2 * (1 + erf((X[id_inside_bounds,k] - self._low_bounds[id_k]) / h / np.sqrt(2)))
+                        
+        #     for id_k, k in enumerate(self.high_bounded_features):
+        #         id_inside_bounds = X[:,k] <= self._high_bounds[id_k]
+        #         f[id_inside_bounds] /= 1 / 2 * (1 + erf((self._high_bounds[id_k] - X[id_inside_bounds,k]) / h / np.sqrt(2)))
         
-        if self.verbose > 1:
-            print('correction', time()-st)
-    
-        if self.verbose > 1:
-            print('boundary cutting')
-        st = time()
         # boundary cutting if necessary
-        f[np.any(X[:, self.low_bounded_features] < self._low_bounds, axis=1)] = 0
-        f[np.any(X[:, self.high_bounded_features] > self._high_bounds, axis=1)] = 0
-        if self.verbose > 1:
-            print('cutting', time()-st)
+        # f[np.any(X[:, self.low_bounded_features] < self._low_bounds, axis=1)] = 0
+        # f[np.any(X[:, self.high_bounded_features] > self._high_bounds, axis=1)] = 0
         
-        if self.verbose > 1:
-            print('standard scaler correction')
-        st = time()
-        if self.standard_scaler:
-            f /= np.product(self._standard_scaler.scale_)
-        if self.verbose > 1:
-            print('ss correction', time()-st)
-        
+        # Preprocessing correction
+        if self.preprocessing != 'none':
+            f /= np.product(self._preprocessor.scale_)
         
         # if null value is forbiden
         if self.forbid_null_value:
-            if self.verbose > 1:
-                print('forbid null values correction')
-            st = time()
             idx = f == 0.0
             
             new_n = self._n + idx.sum()
@@ -191,9 +243,7 @@ class GKDE(BaseEstimator):
             
             min_value = 1 / new_n / self._normalization * _gaussian(0)
             f[f == 0.0] = min_value
-            if self.verbose > 1:
-                print('null value correction', time()-st)
-
+        
         return(f)
         
     def J(self):
@@ -214,8 +264,8 @@ class GKDE(BaseEstimator):
         X = np.zeros((x.size, self._d))
         X[:,k] = x
         
-        if self.standard_scaler:
-            X = self._standard_scaler.transform(X)
+        if self.preprocessing != 'none':
+            X = self._preprocessor.transform(X)
         x = X[:, k]
         
         nn = NearestNeighbors(radius=self._h * self.support_factor,
@@ -242,8 +292,8 @@ class GKDE(BaseEstimator):
             
             f[x > self._high_bounds[id_k]] = 0
         
-        if self.standard_scaler:
-            f /= np.product(self._standard_scaler.scale_[k])
+        if self.preprocessing != 'none':
+            f /= np.product(self._preprocessor.scale_[k])
         
         return(f)
     
@@ -267,7 +317,7 @@ class GKDE(BaseEstimator):
             k = x.index(None)
             k_bar = np.delete(np.arange(len(x)), k)
             
-            x = self._standard_scaler.transform(np.array([x]))[0]
+            x = self._preprocessor.transform(np.array([x]))[0]
             x[k] = None
             
             
@@ -305,7 +355,7 @@ class GKDE(BaseEstimator):
         
         X_eval[:, k] = np.linspace(a, b, n_eval)
        
-        X_eval = self._standard_scaler.inverse_transform(X_eval)
+        X_eval = self._preprocessor.inverse_transform(X_eval)
        
         pred = self.predict(X_eval)
         
@@ -318,3 +368,8 @@ class GKDE(BaseEstimator):
     
 def _gaussian(x):
     return(np.sum(np.exp(-0.5 * x**2)))
+
+def hyper(X):
+   k=np.ones((X.shape[0],1))
+   a=np.dot(np.linalg.inv(X), k)
+   return(a.T[0])
