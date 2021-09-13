@@ -46,6 +46,7 @@ class GKDE(BaseEstimator):
         self.n_jobs = n_jobs
         self.verbose = verbose
         
+        
     def __repr__(self):
         return('GKDE(h='+str(self._h)+')')
     
@@ -58,6 +59,7 @@ class GKDE(BaseEstimator):
             
         self._n = self._data.shape[0]
         self._d = self._data.shape[1]
+        
         
         if self.low_bounds is None:
             self._low_bounds = self._data[:, self.low_bounded_features].min(axis=0)

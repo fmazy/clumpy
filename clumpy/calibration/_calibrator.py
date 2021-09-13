@@ -162,7 +162,7 @@ class Calibrator():
                         low_bounded_features.append(k)
                     if info.high_bounded:
                         high_bounded_features.append(k)
-
+            
             self._low_bounded_features_u[u] = low_bounded_features
             self._high_bounded_features_u[u] = high_bounded_features
 
@@ -192,14 +192,14 @@ class Calibrator():
 
                     if X_u_v.shape[0] >= self.n_min and \
                             X_u_v.shape[0] / v_u[u].shape[0] > self.p_min:
-
+                            
                         self._gkde_P_x__u_v[(u, v)] = GKDE(
-                            h='scott',
-                            low_bounded_features=self._low_bounded_features_u[u],
-                            high_bounded_features=self._high_bounded_features_u[u],
-                            n_predict_max=self.n_predict_max,
-                            n_jobs=self.n_jobs,
-                            verbose=self.verbose - 1)
+                                h='scott',
+                                low_bounded_features=self._low_bounded_features_u[u],
+                                high_bounded_features=self._high_bounded_features_u[u],
+                                n_predict_max=self.n_predict_max,
+                                n_jobs=self.n_jobs,
+                                verbose=self.verbose - 1)
 
                         if self.verbose > 0:
                             print('\tX_u_v shape : '+str(X_u_v.shape))
