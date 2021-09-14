@@ -75,7 +75,7 @@ class _Layer:
         return(self.raster_.read(band))
 
     def __repr__(self):
-        return('Layer()')
+        return(self.name)
         
     def export_asc(self, path, verbose=0):
         """Export the layer data as an ``asc`` file in order to use it through CLUES and CLUMondo.
@@ -343,9 +343,6 @@ class FeatureLayer(_Layer):
         
         self.low_bound = low_bound
         self.high_bound = high_bound
-
-    def __repr__(self):
-        return(self.name)
 
     def display(self, colorbar = True, show=True):
         data = self.get_data()

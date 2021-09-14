@@ -3,3 +3,5 @@
 from ._layer import LandUseCoverLayer, FeatureLayer
 from ._case import Case, check_case
 from ._case import make_J
+from ._region import Region
+from ._state import State, Palette
