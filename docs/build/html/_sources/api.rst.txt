@@ -44,6 +44,21 @@ Case
     
    definition.Case
    
+:mod:`clumpy.kde`: Kernel Density Estimation
+============================================
+
+.. automodule:: clumpy.kde
+    :no-members:
+        :no-inherited-members:
+
+.. currentmodule:: clumpy
+
+.. autosummary::
+   :toctree: generated/
+   :template: class.rst
+    
+   kde.GKDE
+   
 :mod:`clumpy.allocation`: Allocation
 ====================================
 
@@ -58,53 +73,7 @@ Case
    :template: function.rst
     
    allocation.generalized_allocation
-
-   
-:mod:`clumpy.metrics`: Metrics
-==============================
-
-.. automodule:: clumpy.metrics
-    :no-members:
-    :no-inherited-members:
-    
-.. currentmodule:: clumpy
-
-Scores
-------
-
-.. autosummary::
-   :toctree: generated/
-   :template: function.rst
-    
-   metrics.compute_a
-   metrics.log_score
-   
-Scorers
--------
-
-.. autosummary::
-   :toctree: generated/
-   :template: function.rst
-    
-   metrics.log_scorer
-   metrics.under_sampling_log_scorer
-   
-:mod:`clumpy.integer`: Integer
-==============================
-
-.. automodule:: clumpy.integer
-    :no-members:
-    :no-inherited-members:
-    
-.. currentmodule:: clumpy
-
-.. autosummary::
-   :toctree: generated/
-   :template: function.rst
-    
-   integer.empirical_distribution_function
-   integer.cumulative_distribution_function
-   
+  
 :mod:`clumpy.resampling`: Resampling
 ====================================
 

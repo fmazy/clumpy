@@ -1,22 +1,23 @@
 
 <!DOCTYPE html>
 
-<html xmlns="http://www.w3.org/1999/xhtml">
+<html>
   <head>
     <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
     <title>clumpy.definition.Case &#8212; clumpy 0.1.0 documentation</title>
-    <link rel="stylesheet" href="../_static/nature.css" type="text/css" />
-    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
-    <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
-    <script type="text/javascript" src="../_static/jquery.js"></script>
-    <script type="text/javascript" src="../_static/underscore.js"></script>
-    <script type="text/javascript" src="../_static/doctools.js"></script>
-    <script type="text/javascript" src="../_static/language_data.js"></script>
-    <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/nature.css" />
+    <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+    <script src="../_static/jquery.js"></script>
+    <script src="../_static/underscore.js"></script>
+    <script src="../_static/doctools.js"></script>
+    <script async="async" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
     <link rel="shortcut icon" href="../_static/logo.ico"/>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="next" title="clumpy.allocation.generalized_allocation" href="clumpy.allocation.generalized_allocation.html" />
+    <link rel="next" title="clumpy.kde.GKDE" href="clumpy.kde.GKDE.html" />
     <link rel="prev" title="clumpy.definition.FeatureLayer" href="clumpy.definition.FeatureLayer.html" /> 
   </head><body>
     <div class="related" role="navigation" aria-label="related navigation">
@@ -29,13 +30,14 @@
           <a href="../py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
         <li class="right" >
-          <a href="clumpy.allocation.generalized_allocation.html" title="clumpy.allocation.generalized_allocation"
+          <a href="clumpy.kde.GKDE.html" title="clumpy.kde.GKDE"
              accesskey="N">next</a> |</li>
         <li class="right" >
           <a href="clumpy.definition.FeatureLayer.html" title="clumpy.definition.FeatureLayer"
              accesskey="P">previous</a> |</li>
         <li class="nav-item nav-item-0"><a href="../index.html">clumpy 0.1.0 documentation</a> &#187;</li>
-          <li class="nav-item nav-item-1"><a href="../api.html" accesskey="U">Clumpy API</a> &#187;</li> 
+          <li class="nav-item nav-item-1"><a href="../api.html" accesskey="U">Clumpy API</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href=""><code class="xref py py-mod docutils literal notranslate"><span class="pre">clumpy.definition</span></code>.Case</a></li> 
       </ul>
     </div>  
 
@@ -44,11 +46,11 @@
         <div class="bodywrapper">
           <div class="body" role="main">
             
-  <div class="section" id="clumpy-definition-case">
+  <section id="clumpy-definition-case">
 <h1><a class="reference internal" href="../api.html#module-clumpy.definition" title="clumpy.definition"><code class="xref py py-mod docutils literal notranslate"><span class="pre">clumpy.definition</span></code></a>.Case<a class="headerlink" href="#clumpy-definition-case" title="Permalink to this headline">¶</a></h1>
-<dl class="class">
-<dt id="clumpy.definition.Case">
-<em class="property">class </em><code class="sig-prename descclassname">clumpy.definition.</code><code class="sig-name descname">Case</code><span class="sig-paren">(</span><em class="sig-param">params</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/clumpy/definition/_case.html#Case"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#clumpy.definition.Case" title="Permalink to this definition">¶</a></dt>
+<dl class="py class">
+<dt class="sig sig-object py" id="clumpy.definition.Case">
+<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">clumpy.definition.</span></span><span class="sig-name descname"><span class="pre">Case</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">params</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">region</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">verbose</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/clumpy/definition/_case.html#Case"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#clumpy.definition.Case" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
 <p>A land use and cover change model case.</p>
 <dl class="field-list simple">
@@ -63,14 +65,14 @@
 <col style="width: 90%" />
 </colgroup>
 <tbody>
-<tr class="row-odd"><td><p><a class="reference internal" href="#clumpy.definition.Case.make" title="clumpy.definition.Case.make"><code class="xref py py-obj docutils literal notranslate"><span class="pre">make</span></code></a>(self, initial_luc_layer[, …])</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#clumpy.definition.Case.make" title="clumpy.definition.Case.make"><code class="xref py py-obj docutils literal notranslate"><span class="pre">make</span></code></a>(initial_luc_layer[, final_luc_layer, …])</p></td>
 <td><p>Make the case</p></td>
 </tr>
 </tbody>
 </table>
-<dl class="method">
-<dt id="clumpy.definition.Case.make">
-<code class="sig-name descname">make</code><span class="sig-paren">(</span><em class="sig-param">self</em>, <em class="sig-param">initial_luc_layer</em>, <em class="sig-param">final_luc_layer=None</em>, <em class="sig-param">verbose=0</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/clumpy/definition/_case.html#Case.make"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#clumpy.definition.Case.make" title="Permalink to this definition">¶</a></dt>
+<dl class="py method">
+<dt class="sig sig-object py" id="clumpy.definition.Case.make">
+<span class="sig-name descname"><span class="pre">make</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">initial_luc_layer</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">final_luc_layer</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">region</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">explanatory_variables</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/clumpy/definition/_case.html#Case.make"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#clumpy.definition.Case.make" title="Permalink to this definition">¶</a></dt>
 <dd><p>Make the case</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -106,9 +108,10 @@
 
 </dd></dl>
 
-<div class="clearer"></div></div>
+<div class="clearer"></div></section>
 
 
+            <div class="clearer"></div>
           </div>
         </div>
       </div>
@@ -121,8 +124,8 @@
   <p class="topless"><a href="clumpy.definition.FeatureLayer.html"
                         title="previous chapter"><code class="xref py py-mod docutils literal notranslate"><span class="pre">clumpy.definition</span></code>.FeatureLayer</a></p>
   <h4>Next topic</h4>
-  <p class="topless"><a href="clumpy.allocation.generalized_allocation.html"
-                        title="next chapter"><code class="xref py py-mod docutils literal notranslate"><span class="pre">clumpy.allocation</span></code>.generalized_allocation</a></p>
+  <p class="topless"><a href="clumpy.kde.GKDE.html"
+                        title="next chapter"><code class="xref py py-mod docutils literal notranslate"><span class="pre">clumpy.kde</span></code>.GKDE</a></p>
   <div role="note" aria-label="source link">
     <h3>This Page</h3>
     <ul class="this-page-menu">
@@ -139,7 +142,7 @@
     </form>
     </div>
 </div>
-<script type="text/javascript">$('#searchbox').show(0);</script>
+<script>$('#searchbox').show(0);</script>
         </div>
       </div>
       <div class="clearer"></div>
@@ -154,18 +157,19 @@
           <a href="../py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
         <li class="right" >
-          <a href="clumpy.allocation.generalized_allocation.html" title="clumpy.allocation.generalized_allocation"
+          <a href="clumpy.kde.GKDE.html" title="clumpy.kde.GKDE"
              >next</a> |</li>
         <li class="right" >
           <a href="clumpy.definition.FeatureLayer.html" title="clumpy.definition.FeatureLayer"
              >previous</a> |</li>
         <li class="nav-item nav-item-0"><a href="../index.html">clumpy 0.1.0 documentation</a> &#187;</li>
-          <li class="nav-item nav-item-1"><a href="../api.html" >Clumpy API</a> &#187;</li> 
+          <li class="nav-item nav-item-1"><a href="../api.html" >Clumpy API</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href=""><code class="xref py py-mod docutils literal notranslate"><span class="pre">clumpy.definition</span></code>.Case</a></li> 
       </ul>
     </div>
     <div class="footer" role="contentinfo">
         &#169; Copyright 2020, François-Rémi Mazy.
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 2.2.2.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 4.0.2.
     </div>
   </body>
 </html>

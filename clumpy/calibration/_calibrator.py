@@ -2,7 +2,7 @@
 
 import numpy as np
 
-from ..kde import GKDE
+# from ..kde import GKDE
 from . import patches
 from ..scenario import TransitionMatrix
 import pandas as pd
@@ -14,14 +14,16 @@ class Calibrator():
                  n_min=500,
                  n_kde_max=10**4,
                  n_predict_max=2*10**4,
-                 n_jobs=1,
+                 n_jobs_neighbors=1,
+                 n_jobs_predict=1,
                  verbose=0):
         self.case = case
         self.p_min = p_min
         self.n_min = n_min
         self.n_kde_max = n_kde_max
         self.n_predict_max = n_predict_max
-        self.n_jobs = n_jobs
+        self.n_jobs_neighbors = n_jobs_neighbors
+        self.n_jobs_predict = n_jobs_predict
         self.verbose = verbose
 
     def fit(self,
@@ -149,22 +151,35 @@ class Calibrator():
     def _get_low_high_bounded_features(self):
         self._low_bounded_features_u = {}
         self._high_bounded_features_u = {}
+        
+        self._low_bounds_u = {}
+        self._high_bounds_u = {}
 
         for u, params in self.case.params.items():
             low_bounded_features = []
             high_bounded_features = []
+            
+            low_bounds = []
+            high_bounds = []
 
             for k, (feature_type, info) in enumerate(params['features']):
                 if feature_type == 'distance':
                     low_bounded_features.append(k)
+                    low_bounds.append(0)
+                    
                 elif feature_type == 'layer':
-                    if info.low_bounded:
+                    if info.low_bound is not None:
                         low_bounded_features.append(k)
-                    if info.high_bounded:
+                        low_bounds.append(info.low_bound)
+                    if info.high_bound is not None:
                         high_bounded_features.append(k)
+                        high_bounds.append(info.high_bound)
             
             self._low_bounded_features_u[u] = low_bounded_features
             self._high_bounded_features_u[u] = high_bounded_features
+            
+            self._low_bounds_u[u] = low_bounds
+            self._high_bounds_u[u] = high_bounds
 
     def _fit_P_x__u_v(self, X_u=None, v_u=None):
 
@@ -195,11 +210,18 @@ class Calibrator():
                             
                         self._gkde_P_x__u_v[(u, v)] = GKDE(
                                 h='scott',
-                                low_bounded_features=self._low_bounded_features_u[u],
-                                high_bounded_features=self._high_bounded_features_u[u],
-                                n_predict_max=self.n_predict_max,
-                                n_jobs=self.n_jobs,
-                                verbose=self.verbose - 1)
+                                low_bounded_features = self._low_bounded_features_u[u],
+                                high_bounded_features = self._high_bounded_features_u[u],
+                                low_bounds = self._low_bounds_u[u],
+                                high_bounds = self._high_bounds_u[u],
+                                preprocessing = 'whitening',
+                                algorithm='kd_tree',
+                                leaf_size=30,
+                                support_factor=3,
+                                n_predict_max = self.n_predict_max,
+                                n_jobs_neighbors = self.n_jobs_neighbors,
+                                n_jobs_predict = self.n_jobs_predict,
+                                verbose = self.verbose - 1)
 
                         if self.verbose > 0:
                             print('\tX_u_v shape : '+str(X_u_v.shape))
@@ -272,9 +294,12 @@ class Calibrator():
             self._gkde_P_y__u[u] = GKDE(h='scott',
                                         low_bounded_features=self._low_bounded_features_u[u],
                                         high_bounded_features=self._high_bounded_features_u[u],
+                                        low_bounds = self._low_bounds_u[u],
+                                        high_bounds = self._high_bounds_u[u],
                                         forbid_null_value=True,
                                         n_predict_max=self.n_predict_max,
-                                        n_jobs=self.n_jobs,
+                                        n_jobs_neighbors=self.n_jobs_neighbors,
+                                        n_jobs_predict = self.n_jobs_predict,
                                         verbose=self.verbose - 1)
             print(Y_train.shape)
             self._gkde_P_y__u[u].fit(Y_train)
@@ -297,7 +322,6 @@ class Calibrator():
 
 
 def _compute_P_v__Y(P_v, P_Y, P_Y__v, list_v, verbose=0):
-    
     # log is better near 0 for divions
     P_v__Y = P_Y__v / P_Y
     P_v__Y *= P_v / P_v__Y.mean(axis=0)

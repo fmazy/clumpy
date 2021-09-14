@@ -1,18 +1,18 @@
 
 <!DOCTYPE html>
 
-<html xmlns="http://www.w3.org/1999/xhtml">
+<html>
   <head>
     <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
     <title>Clumpy API &#8212; clumpy 0.1.0 documentation</title>
-    <link rel="stylesheet" href="_static/nature.css" type="text/css" />
-    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
-    <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
-    <script type="text/javascript" src="_static/jquery.js"></script>
-    <script type="text/javascript" src="_static/underscore.js"></script>
-    <script type="text/javascript" src="_static/doctools.js"></script>
-    <script type="text/javascript" src="_static/language_data.js"></script>
-    <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="_static/nature.css" />
+    <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+    <script src="_static/jquery.js"></script>
+    <script src="_static/underscore.js"></script>
+    <script src="_static/doctools.js"></script>
     <link rel="shortcut icon" href="_static/logo.ico"/>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
@@ -34,7 +34,8 @@
         <li class="right" >
           <a href="user_guide/definition.html" title="Definition"
              accesskey="P">previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">clumpy 0.1.0 documentation</a> &#187;</li> 
+        <li class="nav-item nav-item-0"><a href="index.html">clumpy 0.1.0 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">Clumpy API</a></li> 
       </ul>
     </div>  
 
@@ -43,13 +44,13 @@
         <div class="bodywrapper">
           <div class="body" role="main">
             
-  <div class="section" id="clumpy-api">
+  <section id="clumpy-api">
 <h1>Clumpy API<a class="headerlink" href="#clumpy-api" title="Permalink to this headline">¶</a></h1>
 <p>This is the full API documentation of the <cite>clumpy</cite> toolbox.</p>
-<div class="section" id="module-clumpy.definition">
+<section id="module-clumpy.definition">
 <span id="clumpy-definition-definition"></span><h2><a class="reference internal" href="#module-clumpy.definition" title="clumpy.definition"><code class="xref py py-mod docutils literal notranslate"><span class="pre">clumpy.definition</span></code></a>: Definition<a class="headerlink" href="#module-clumpy.definition" title="Permalink to this headline">¶</a></h2>
 <p>Elements definition</p>
-<div class="section" id="module-clumpy.definition._layer">
+<section id="module-clumpy.definition._layer">
 <span id="layer"></span><h3>Layer<a class="headerlink" href="#module-clumpy.definition._layer" title="Permalink to this headline">¶</a></h3>
 <table class="longtable docutils align-default">
 <colgroup>
@@ -65,8 +66,8 @@
 </tr>
 </tbody>
 </table>
-</div>
-<div class="section" id="module-clumpy.definition._case">
+</section>
+<section id="module-clumpy.definition._case">
 <span id="case"></span><h3>Case<a class="headerlink" href="#module-clumpy.definition._case" title="Permalink to this headline">¶</a></h3>
 <table class="longtable docutils align-default">
 <colgroup>
@@ -74,14 +75,29 @@
 <col style="width: 90%" />
 </colgroup>
 <tbody>
-<tr class="row-odd"><td><p><a class="reference internal" href="generated/clumpy.definition.Case.html#clumpy.definition.Case" title="clumpy.definition.Case"><code class="xref py py-obj docutils literal notranslate"><span class="pre">definition.Case</span></code></a>(params)</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="generated/clumpy.definition.Case.html#clumpy.definition.Case" title="clumpy.definition.Case"><code class="xref py py-obj docutils literal notranslate"><span class="pre">definition.Case</span></code></a>(params[, region, verbose])</p></td>
 <td><p>A land use and cover change model case.</p></td>
 </tr>
 </tbody>
 </table>
-</div>
-</div>
-<div class="section" id="module-clumpy.allocation">
+</section>
+</section>
+<section id="module-clumpy.kde">
+<span id="clumpy-kde-kernel-density-estimation"></span><h2><a class="reference internal" href="#module-clumpy.kde" title="clumpy.kde"><code class="xref py py-mod docutils literal notranslate"><span class="pre">clumpy.kde</span></code></a>: Kernel Density Estimation<a class="headerlink" href="#module-clumpy.kde" title="Permalink to this headline">¶</a></h2>
+<p>Kernel Density Estimation Methods</p>
+<table class="longtable docutils align-default">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="generated/clumpy.kde.GKDE.html#clumpy.kde.GKDE" title="clumpy.kde.GKDE"><code class="xref py py-obj docutils literal notranslate"><span class="pre">kde.GKDE</span></code></a>([h, low_bounded_features, …])</p></td>
+<td><p>Gaussian Kernel Density Estimator.</p></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="module-clumpy.allocation">
 <span id="clumpy-allocation-allocation"></span><h2><a class="reference internal" href="#module-clumpy.allocation" title="clumpy.allocation"><code class="xref py py-mod docutils literal notranslate"><span class="pre">clumpy.allocation</span></code></a>: Allocation<a class="headerlink" href="#module-clumpy.allocation" title="Permalink to this headline">¶</a></h2>
 <p>Allocation blabla</p>
 <table class="longtable docutils align-default">
@@ -90,107 +106,36 @@
 <col style="width: 90%" />
 </colgroup>
 <tbody>
-<tr class="row-odd"><td><p><a class="reference internal" href="generated/clumpy.allocation.generalized_allocation.html#clumpy.allocation.generalized_allocation" title="clumpy.allocation.generalized_allocation"><code class="xref py py-obj docutils literal notranslate"><span class="pre">allocation.generalized_allocation</span></code></a>(P, list_v)</p></td>
-<td><p>Generalized allocation rejection process.</p></td>
-</tr>
 </tbody>
 </table>
-</div>
-<div class="section" id="module-clumpy.metrics">
-<span id="clumpy-metrics-metrics"></span><h2><a class="reference internal" href="#module-clumpy.metrics" title="clumpy.metrics"><code class="xref py py-mod docutils literal notranslate"><span class="pre">clumpy.metrics</span></code></a>: Metrics<a class="headerlink" href="#module-clumpy.metrics" title="Permalink to this headline">¶</a></h2>
-<p>The <a class="reference internal" href="#module-clumpy.metrics" title="clumpy.metrics"><code class="xref py py-mod docutils literal notranslate"><span class="pre">clumpy.metrics</span></code></a> module completes <a class="reference external" href="https://scikit-learn.org/stable/modules/classes.html#module-sklearn.metrics" title="(in scikit-learn v0.24)"><code class="xref py py-mod docutils literal notranslate"><span class="pre">sklearn.metrics</span></code></a>.</p>
-<div class="section" id="scores">
-<h3>Scores<a class="headerlink" href="#scores" title="Permalink to this headline">¶</a></h3>
+</section>
+<section id="clumpy-resampling-resampling">
+<h2><code class="xref py py-mod docutils literal notranslate"><span class="pre">clumpy.resampling</span></code>: Resampling<a class="headerlink" href="#clumpy-resampling-resampling" title="Permalink to this headline">¶</a></h2>
+<section id="under-sampling">
+<h3>Under sampling<a class="headerlink" href="#under-sampling" title="Permalink to this headline">¶</a></h3>
 <table class="longtable docutils align-default">
 <colgroup>
 <col style="width: 10%" />
 <col style="width: 90%" />
 </colgroup>
 <tbody>
-<tr class="row-odd"><td><p><a class="reference internal" href="generated/clumpy.metrics.compute_a.html#clumpy.metrics.compute_a" title="clumpy.metrics.compute_a"><code class="xref py py-obj docutils literal notranslate"><span class="pre">metrics.compute_a</span></code></a>(y)</p></td>
-<td><p>Computes log score parameter <code class="docutils literal notranslate"><span class="pre">a</span></code>.</p></td>
-</tr>
-<tr class="row-even"><td><p><a class="reference internal" href="generated/clumpy.metrics.log_score.html#clumpy.metrics.log_score" title="clumpy.metrics.log_score"><code class="xref py py-obj docutils literal notranslate"><span class="pre">metrics.log_score</span></code></a>(y_true, y_prob, a[, b])</p></td>
-<td><p>Log score</p></td>
-</tr>
 </tbody>
 </table>
-</div>
-<div class="section" id="scorers">
-<h3>Scorers<a class="headerlink" href="#scorers" title="Permalink to this headline">¶</a></h3>
-<table class="longtable docutils align-default">
-<colgroup>
-<col style="width: 10%" />
-<col style="width: 90%" />
-</colgroup>
-<tbody>
-<tr class="row-odd"><td><p><a class="reference internal" href="generated/clumpy.metrics.log_scorer.html#clumpy.metrics.log_scorer" title="clumpy.metrics.log_scorer"><code class="xref py py-obj docutils literal notranslate"><span class="pre">metrics.log_scorer</span></code></a>(a[, b])</p></td>
-<td><p>make log scorer.</p></td>
-</tr>
-<tr class="row-even"><td><p><a class="reference internal" href="generated/clumpy.metrics.under_sampling_log_scorer.html#clumpy.metrics.under_sampling_log_scorer" title="clumpy.metrics.under_sampling_log_scorer"><code class="xref py py-obj docutils literal notranslate"><span class="pre">metrics.under_sampling_log_scorer</span></code></a>(beta, id_u, a)</p></td>
-<td><p>log scorer</p></td>
-</tr>
-</tbody>
-</table>
-</div>
-</div>
-<div class="section" id="module-clumpy.integer">
-<span id="clumpy-integer-integer"></span><h2><a class="reference internal" href="#module-clumpy.integer" title="clumpy.integer"><code class="xref py py-mod docutils literal notranslate"><span class="pre">clumpy.integer</span></code></a>: Integer<a class="headerlink" href="#module-clumpy.integer" title="Permalink to this headline">¶</a></h2>
-<p>Fonctions d’intégration</p>
-<table class="longtable docutils align-default">
-<colgroup>
-<col style="width: 10%" />
-<col style="width: 90%" />
-</colgroup>
-<tbody>
-<tr class="row-odd"><td><p><a class="reference internal" href="generated/clumpy.integer.empirical_distribution_function.html#clumpy.integer.empirical_distribution_function" title="clumpy.integer.empirical_distribution_function"><code class="xref py py-obj docutils literal notranslate"><span class="pre">integer.empirical_distribution_function</span></code></a>(X)</p></td>
-<td><p>Empirical distribution function of the samples <code class="docutils literal notranslate"><span class="pre">X</span></code>.</p></td>
-</tr>
-<tr class="row-even"><td><p><a class="reference internal" href="generated/clumpy.integer.cumulative_distribution_function.html#clumpy.integer.cumulative_distribution_function" title="clumpy.integer.cumulative_distribution_function"><code class="xref py py-obj docutils literal notranslate"><span class="pre">integer.cumulative_distribution_function</span></code></a>(f, X)</p></td>
-<td><p>Computes cumulative distribution function through Monte Carlo method.</p></td>
-</tr>
-</tbody>
-</table>
-</div>
-<div class="section" id="module-clumpy.resampling">
-<span id="clumpy-resampling-resampling"></span><h2><a class="reference internal" href="#module-clumpy.resampling" title="clumpy.resampling"><code class="xref py py-mod docutils literal notranslate"><span class="pre">clumpy.resampling</span></code></a>: Resampling<a class="headerlink" href="#module-clumpy.resampling" title="Permalink to this headline">¶</a></h2>
-<p><a class="reference internal" href="#module-clumpy.resampling" title="clumpy.resampling"><code class="xref py py-class docutils literal notranslate"><span class="pre">clumpy.resampling</span></code></a> is a module which provides helps to compute resampling parameters.</p>
-<div class="section" id="module-clumpy.resampling.under_sampling">
-<span id="under-sampling"></span><h3>Under sampling<a class="headerlink" href="#module-clumpy.resampling.under_sampling" title="Permalink to this headline">¶</a></h3>
-<p>Under Sampling</p>
-<table class="longtable docutils align-default">
-<colgroup>
-<col style="width: 10%" />
-<col style="width: 90%" />
-</colgroup>
-<tbody>
-<tr class="row-odd"><td><p><a class="reference internal" href="generated/clumpy.resampling.under_sampling.compute_sampling_strategy.html#clumpy.resampling.under_sampling.compute_sampling_strategy" title="clumpy.resampling.under_sampling.compute_sampling_strategy"><code class="xref py py-obj docutils literal notranslate"><span class="pre">resampling.under_sampling.compute_sampling_strategy</span></code></a>(y)</p></td>
-<td><p>Compute sampling strategy</p></td>
-</tr>
-<tr class="row-even"><td><p><a class="reference internal" href="generated/clumpy.resampling.under_sampling.correct_probabilities.html#clumpy.resampling.under_sampling.correct_probabilities" title="clumpy.resampling.under_sampling.correct_probabilities"><code class="xref py py-obj docutils literal notranslate"><span class="pre">resampling.under_sampling.correct_probabilities</span></code></a>(P, …)</p></td>
-<td><p>Correct probabilities estimated through an undersampling.</p></td>
-</tr>
-</tbody>
-</table>
-</div>
-</div>
-<div class="section" id="module-clumpy.scenario">
+</section>
+</section>
+<section id="module-clumpy.scenario">
 <span id="clumpy-scenario-scenario"></span><h2><a class="reference internal" href="#module-clumpy.scenario" title="clumpy.scenario"><code class="xref py py-mod docutils literal notranslate"><span class="pre">clumpy.scenario</span></code></a>: Scenario<a class="headerlink" href="#module-clumpy.scenario" title="Permalink to this headline">¶</a></h2>
-<p>scenario blabla</p>
 <table class="longtable docutils align-default">
 <colgroup>
 <col style="width: 10%" />
 <col style="width: 90%" />
 </colgroup>
 <tbody>
-<tr class="row-odd"><td><p><a class="reference internal" href="generated/clumpy.scenario.adjust_probabilities.html#clumpy.scenario.adjust_probabilities" title="clumpy.scenario.adjust_probabilities"><code class="xref py py-obj docutils literal notranslate"><span class="pre">scenario.adjust_probabilities</span></code></a>(P, f)</p></td>
-<td><p>adjust probabilities</p></td>
-</tr>
 </tbody>
 </table>
-</div>
-<div class="section" id="module-clumpy.utils">
-<span id="clumpy-resampling-utils"></span><h2><a class="reference internal" href="#module-clumpy.resampling" title="clumpy.resampling"><code class="xref py py-mod docutils literal notranslate"><span class="pre">clumpy.resampling</span></code></a>: utils<a class="headerlink" href="#module-clumpy.utils" title="Permalink to this headline">¶</a></h2>
+</section>
+<section id="module-clumpy.utils">
+<span id="clumpy-resampling-utils"></span><h2><code class="xref py py-mod docutils literal notranslate"><span class="pre">clumpy.resampling</span></code>: utils<a class="headerlink" href="#module-clumpy.utils" title="Permalink to this headline">¶</a></h2>
 <p>The <a class="reference internal" href="#module-clumpy.utils" title="clumpy.utils"><code class="xref py py-mod docutils literal notranslate"><span class="pre">clumpy.utils</span></code></a> module completes <a class="reference external" href="https://scikit-learn.org/stable/modules/classes.html#module-sklearn.utils" title="(in scikit-learn v0.24)"><code class="xref py py-mod docutils literal notranslate"><span class="pre">sklearn.utils</span></code></a>.</p>
 <table class="longtable docutils align-default">
 <colgroup>
@@ -198,18 +143,13 @@
 <col style="width: 90%" />
 </colgroup>
 <tbody>
-<tr class="row-odd"><td><p><a class="reference internal" href="generated/clumpy.utils.human_size.html#clumpy.utils.human_size" title="clumpy.utils.human_size"><code class="xref py py-obj docutils literal notranslate"><span class="pre">utils.human_size</span></code></a>(s)</p></td>
-<td><p>return size in a human readable form.</p></td>
-</tr>
-<tr class="row-even"><td><p><a class="reference internal" href="generated/clumpy.utils.ndarray_suitable_integer_type.html#clumpy.utils.ndarray_suitable_integer_type" title="clumpy.utils.ndarray_suitable_integer_type"><code class="xref py py-obj docutils literal notranslate"><span class="pre">utils.ndarray_suitable_integer_type</span></code></a>(a)</p></td>
-<td><p>Convert a ndarray in a suitable integer type</p></td>
-</tr>
 </tbody>
 </table>
-</div>
-</div>
+</section>
+</section>
 
 
+            <div class="clearer"></div>
           </div>
         </div>
       </div>
@@ -226,15 +166,10 @@
 <li><a class="reference internal" href="#module-clumpy.definition._case">Case</a></li>
 </ul>
 </li>
+<li><a class="reference internal" href="#module-clumpy.kde"><code class="xref py py-mod docutils literal notranslate"><span class="pre">clumpy.kde</span></code>: Kernel Density Estimation</a></li>
 <li><a class="reference internal" href="#module-clumpy.allocation"><code class="xref py py-mod docutils literal notranslate"><span class="pre">clumpy.allocation</span></code>: Allocation</a></li>
-<li><a class="reference internal" href="#module-clumpy.metrics"><code class="xref py py-mod docutils literal notranslate"><span class="pre">clumpy.metrics</span></code>: Metrics</a><ul>
-<li><a class="reference internal" href="#scores">Scores</a></li>
-<li><a class="reference internal" href="#scorers">Scorers</a></li>
-</ul>
-</li>
-<li><a class="reference internal" href="#module-clumpy.integer"><code class="xref py py-mod docutils literal notranslate"><span class="pre">clumpy.integer</span></code>: Integer</a></li>
-<li><a class="reference internal" href="#module-clumpy.resampling"><code class="xref py py-mod docutils literal notranslate"><span class="pre">clumpy.resampling</span></code>: Resampling</a><ul>
-<li><a class="reference internal" href="#module-clumpy.resampling.under_sampling">Under sampling</a></li>
+<li><a class="reference internal" href="#clumpy-resampling-resampling"><code class="xref py py-mod docutils literal notranslate"><span class="pre">clumpy.resampling</span></code>: Resampling</a><ul>
+<li><a class="reference internal" href="#under-sampling">Under sampling</a></li>
 </ul>
 </li>
 <li><a class="reference internal" href="#module-clumpy.scenario"><code class="xref py py-mod docutils literal notranslate"><span class="pre">clumpy.scenario</span></code>: Scenario</a></li>
@@ -265,7 +200,7 @@
     </form>
     </div>
 </div>
-<script type="text/javascript">$('#searchbox').show(0);</script>
+<script>$('#searchbox').show(0);</script>
         </div>
       </div>
       <div class="clearer"></div>
@@ -285,12 +220,13 @@
         <li class="right" >
           <a href="user_guide/definition.html" title="Definition"
              >previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">clumpy 0.1.0 documentation</a> &#187;</li> 
+        <li class="nav-item nav-item-0"><a href="index.html">clumpy 0.1.0 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">Clumpy API</a></li> 
       </ul>
     </div>
     <div class="footer" role="contentinfo">
         &#169; Copyright 2020, François-Rémi Mazy.
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 2.2.2.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 4.0.2.
     </div>
   </body>
 </html>

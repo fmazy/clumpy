@@ -309,6 +309,13 @@ class FeatureLayer(_Layer):
         and this operation overwrites the file path if exists.
     data : :class:`numpy.ndarray`, defaul=None
         The data to write. If ``None``, no writing is made.
+    
+    low_bound : None or float, default=None
+        If float, a low bound is set. Used in density estimation methods as GKDE.
+    
+    high_bound : None or float, default=None
+        If float, a high bound is set. Used in density estimation methods as GKDE.
+    
     copy_geo : :class:`LandUseCoverLayer`, default=None
         The layer from whose geo metadata are copied.
         If ``None``, geo metadata are set to ``None``.
@@ -324,8 +331,8 @@ class FeatureLayer(_Layer):
                  time=0,
                  path=None,
                  data=None,
-                 low_bounded=False,
-                 high_bounded=False,
+                 low_bound = None,
+                 high_bound = None,
                  copy_geo=None):
         
         super().__init__(name=name,
@@ -334,11 +341,11 @@ class FeatureLayer(_Layer):
                          data=data,
                          copy_geo=copy_geo)
         
-        self.low_bounded = low_bounded
-        self.high_bounded = high_bounded
+        self.low_bound = low_bound
+        self.high_bound = high_bound
 
     def __repr__(self):
-        return('FeatureLayer()')
+        return(self.name)
 
     def display(self, colorbar = True, show=True):
         data = self.get_data()

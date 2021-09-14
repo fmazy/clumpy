@@ -1,4 +1,4 @@
-# -*- coding: utf-8 -*-
+"""Kernel Density Estimation Methods"""
 
 
 from ._gaussian_kde import GKDE

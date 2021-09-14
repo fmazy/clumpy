@@ -1,18 +1,18 @@
 
 <!DOCTYPE html>
 
-<html xmlns="http://www.w3.org/1999/xhtml">
+<html>
   <head>
     <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
     <title>clumpy.definition.FeatureLayer &#8212; clumpy 0.1.0 documentation</title>
-    <link rel="stylesheet" href="../_static/nature.css" type="text/css" />
-    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
-    <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
-    <script type="text/javascript" src="../_static/jquery.js"></script>
-    <script type="text/javascript" src="../_static/underscore.js"></script>
-    <script type="text/javascript" src="../_static/doctools.js"></script>
-    <script type="text/javascript" src="../_static/language_data.js"></script>
-    <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/nature.css" />
+    <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+    <script src="../_static/jquery.js"></script>
+    <script src="../_static/underscore.js"></script>
+    <script src="../_static/doctools.js"></script>
     <link rel="shortcut icon" href="../_static/logo.ico"/>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
@@ -35,7 +35,8 @@
           <a href="clumpy.definition.LandUseCoverLayer.html" title="clumpy.definition.LandUseCoverLayer"
              accesskey="P">previous</a> |</li>
         <li class="nav-item nav-item-0"><a href="../index.html">clumpy 0.1.0 documentation</a> &#187;</li>
-          <li class="nav-item nav-item-1"><a href="../api.html" accesskey="U">Clumpy API</a> &#187;</li> 
+          <li class="nav-item nav-item-1"><a href="../api.html" accesskey="U">Clumpy API</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href=""><code class="xref py py-mod docutils literal notranslate"><span class="pre">clumpy.definition</span></code>.FeatureLayer</a></li> 
       </ul>
     </div>  
 
@@ -44,11 +45,11 @@
         <div class="bodywrapper">
           <div class="body" role="main">
             
-  <div class="section" id="clumpy-definition-featurelayer">
+  <section id="clumpy-definition-featurelayer">
 <h1><a class="reference internal" href="../api.html#module-clumpy.definition" title="clumpy.definition"><code class="xref py py-mod docutils literal notranslate"><span class="pre">clumpy.definition</span></code></a>.FeatureLayer<a class="headerlink" href="#clumpy-definition-featurelayer" title="Permalink to this headline">¶</a></h1>
-<dl class="class">
-<dt id="clumpy.definition.FeatureLayer">
-<em class="property">class </em><code class="sig-prename descclassname">clumpy.definition.</code><code class="sig-name descname">FeatureLayer</code><span class="sig-paren">(</span><em class="sig-param">name=None</em>, <em class="sig-param">time=0</em>, <em class="sig-param">path=None</em>, <em class="sig-param">data=None</em>, <em class="sig-param">copy_geo=None</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/clumpy/definition/_layer.html#FeatureLayer"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#clumpy.definition.FeatureLayer" title="Permalink to this definition">¶</a></dt>
+<dl class="py class">
+<dt class="sig sig-object py" id="clumpy.definition.FeatureLayer">
+<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">clumpy.definition.</span></span><span class="sig-name descname"><span class="pre">FeatureLayer</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">time</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">path</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">data</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">low_bounded</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">high_bounded</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">copy_geo</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/clumpy/definition/_layer.html#FeatureLayer"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#clumpy.definition.FeatureLayer" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">clumpy.definition._layer._Layer</span></code></p>
 <p>Defines a feature layer.
 This layer can then used for the calibration stage or the allocation stage.</p>
@@ -66,7 +67,7 @@ If <code class="docutils literal notranslate"><span class="pre">None</span></cod
 </ul>
 </dd>
 <dt class="field-even">Attributes</dt>
-<dd class="field-even"><p><strong>raster_</strong> (<a class="reference external" href="https://rasterio.readthedocs.io/en/latest/api/rasterio.io.html#rasterio.io.DatasetReader" title="(in rasterio v1.2b4)"><code class="xref py py-class docutils literal notranslate"><span class="pre">rasterio.io.DatasetReader</span></code></a>) – The unbuffered data and metadata reader object, provided by <a class="reference external" href="https://rasterio.readthedocs.io/en/latest/api/rasterio.html#module-rasterio" title="(in rasterio v1.2b4)"><code class="xref py py-mod docutils literal notranslate"><span class="pre">rasterio</span></code></a>.</p>
+<dd class="field-even"><p><strong>raster_</strong> (<a class="reference external" href="https://rasterio.readthedocs.io/en/latest/api/rasterio.io.html#rasterio.io.DatasetReader" title="(in rasterio v1.3dev)"><code class="xref py py-class docutils literal notranslate"><span class="pre">rasterio.io.DatasetReader</span></code></a>) – The unbuffered data and metadata reader object, provided by <a class="reference external" href="https://rasterio.readthedocs.io/en/latest/api/rasterio.html#module-rasterio" title="(in rasterio v1.3dev)"><code class="xref py py-mod docutils literal notranslate"><span class="pre">rasterio</span></code></a>.</p>
 </dd>
 </dl>
 <p class="rubric">Methods</p>
@@ -76,14 +77,28 @@ If <code class="docutils literal notranslate"><span class="pre">None</span></cod
 <col style="width: 90%" />
 </colgroup>
 <tbody>
-<tr class="row-odd"><td><p><a class="reference internal" href="#clumpy.definition.FeatureLayer.export_asc" title="clumpy.definition.FeatureLayer.export_asc"><code class="xref py py-obj docutils literal notranslate"><span class="pre">export_asc</span></code></a>(self, path[, verbose])</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#clumpy.definition.FeatureLayer.export_asc" title="clumpy.definition.FeatureLayer.export_asc"><code class="xref py py-obj docutils literal notranslate"><span class="pre">export_asc</span></code></a>(path[, verbose])</p></td>
 <td><p>Export the layer data as an <code class="docutils literal notranslate"><span class="pre">asc</span></code> file in order to use it through CLUES and CLUMondo.</p></td>
 </tr>
 </tbody>
 </table>
-<dl class="method">
-<dt id="clumpy.definition.FeatureLayer.export_asc">
-<code class="sig-name descname">export_asc</code><span class="sig-paren">(</span><em class="sig-param">self</em>, <em class="sig-param">path</em>, <em class="sig-param">verbose=0</em><span class="sig-paren">)</span><a class="headerlink" href="#clumpy.definition.FeatureLayer.export_asc" title="Permalink to this definition">¶</a></dt>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 55%" />
+<col style="width: 45%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><strong>display</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p><strong>get_data</strong></p></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<dl class="py method">
+<dt class="sig sig-object py" id="clumpy.definition.FeatureLayer.export_asc">
+<span class="sig-name descname"><span class="pre">export_asc</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">verbose</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#clumpy.definition.FeatureLayer.export_asc" title="Permalink to this definition">¶</a></dt>
 <dd><p>Export the layer data as an <code class="docutils literal notranslate"><span class="pre">asc</span></code> file in order to use it through CLUES and CLUMondo.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -97,9 +112,10 @@ If <code class="docutils literal notranslate"><span class="pre">None</span></cod
 
 </dd></dl>
 
-<div class="clearer"></div></div>
+<div class="clearer"></div></section>
 
 
+            <div class="clearer"></div>
           </div>
         </div>
       </div>
@@ -130,7 +146,7 @@ If <code class="docutils literal notranslate"><span class="pre">None</span></cod
     </form>
     </div>
 </div>
-<script type="text/javascript">$('#searchbox').show(0);</script>
+<script>$('#searchbox').show(0);</script>
         </div>
       </div>
       <div class="clearer"></div>
@@ -151,12 +167,13 @@ If <code class="docutils literal notranslate"><span class="pre">None</span></cod
           <a href="clumpy.definition.LandUseCoverLayer.html" title="clumpy.definition.LandUseCoverLayer"
              >previous</a> |</li>
         <li class="nav-item nav-item-0"><a href="../index.html">clumpy 0.1.0 documentation</a> &#187;</li>
-          <li class="nav-item nav-item-1"><a href="../api.html" >Clumpy API</a> &#187;</li> 
+          <li class="nav-item nav-item-1"><a href="../api.html" >Clumpy API</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href=""><code class="xref py py-mod docutils literal notranslate"><span class="pre">clumpy.definition</span></code>.FeatureLayer</a></li> 
       </ul>
     </div>
     <div class="footer" role="contentinfo">
         &#169; Copyright 2020, François-Rémi Mazy.
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 2.2.2.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 4.0.2.
     </div>
   </body>
 </html>
