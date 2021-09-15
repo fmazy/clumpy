@@ -1,95 +1,196 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""
-Created on Mon Aug 23 10:47:48 2021
-
-@author: frem
-"""
 
 import numpy as np
+from ..definition._state import Palette
 
 class TransitionMatrix():
-    def __init__(self, M, list_u=None, list_v=None):
-        """
-        Define a transition matrix.
+    """
+    Define a transition matrix.
 
-        Parameters
-        ----------
-        M : array-like of shape (n_initial_states, n_final_states)
-            The transition matrix values.
-        list_u : list of 
-            DESCRIPTION. The default is None.
-        list_v : TYPE, optional
-            DESCRIPTION. The default is None.
-
-        Returns
-        -------
-        None.
-
-        """
-        
-        if list_u is None or list_v is None:
-            M, list_u, list_v = _compact_transition_matrix(full_M = M)
+    Parameters
+    ----------
+    M : array-like of shape (n_initial_states, n_final_states)
+        The transition matrix values.
+    palette_u : Palette
+        List of initial states.
+    palette_v : Palette
+        List of final states.
+    """
+    def __init__(self, M, palette_u=None, palette_v=None):
         
         M = np.nan_to_num(M)
         
         # check
         if not np.all(np.isclose(np.sum(M, axis=1), np.ones(M.shape[0]))):
             print("Warning : The transition matrix is uncorrect. The rows should sum to one")
-            
         
         self.M = M
-        self.list_u = list(list_u)
-        self.list_v = list(list_v)
-    
-    def get_value(self, u, v):
-        return(self.M[self.list_u.index(u), self.list_v.index(v)])
-    
-    def copy(self):
-        return(TransitionMatrix(self.M.copy(), self.list_u, self.list_v))
-    
-    def set_value(self, a, u, v):
-        self.M[self.list_u.index(u), self.list_v.index(v)] = a
-    
-    
-    def select_u(self, u):
-        M = self.M[[self.list_u.index(u)],:].copy()
-        
-        # list_v = []
-        # for id_v, v in enumerate(self.list_v):
-            # if M[0, id_v] > 0:
-                # list_v.append(v)
-        
-        return(TransitionMatrix(M, [u], self.list_v))
-    
-    def P_v(self, u):
-        p = self.M[self.list_u.index(u), :].copy()
-        
-        return(p, self.list_v)
+        self.palette_u = palette_u
+        self.palette_v = palette_v
     
     def __repr__(self):
-        return('TransitionMatrix()')
+        return('TM:'+repr(self.palette_u)+'->'+repr(self.palette_v))
     
-    def full_matrix(self):
-        max_v = np.max(self.list_v)
+    def get(self, info_u, info_v):
+        """
+        Get a probability.
+
+        Parameters
+        ----------
+        info_u : State or int or str
+            The initial state information which can be the object, the state's value or the state's label.
+            If two states share the same label, only the first one to occur is returned.
+        info_v : State or int or str
+            The final state information which can be the object, the state's value or the state's label.
+            If two states share the same label, only the first one to occur is returned.
+
+        Returns
+        -------
+        p : float
+            The requested probability.
+        """
+        id_u = self.palette_u.get_id(info_u)
+        id_v = self.palette_v.get_id(info_v)
         
-        full_M = np.diag(np.ones(max_v+1))
+        return(self.M[id_u, id_v])
     
-        list_v_full_matrix = list(np.arange(max_v+1))
+    def _get_by_states(self, state_u, state_v):
+        """
+        Get a probability by states.
+
+        Parameters
+        ----------
+        state_u : State
+            Initial state.
+        state_v : State
+            Final state.
+
+        Returns
+        -------
+        p : float
+            The requested probability.^
+        """
+        id_u = self.palette_u._get_id(state_u)
+        id_v = self.palette_v._get_id(state_v)
+        
+        return(self.M[id_u, id_v])
     
-        for id_u, u in enumerate(self.list_u):
-            for id_v, v in enumerate(self.list_v):
-                full_M[list_v_full_matrix.index(u),
-                       list_v_full_matrix.index(v)] = self.M[id_u, id_v]
+    def _get_by_states_values(self, u, v):
+        """
+        Get probability by states values.
+
+        Parameters
+        ----------
+        u : int
+            Initial state value.
+        v : int
+            Final state value.
+
+        Returns
+        -------
+        p : float
+            The requested probability.
+        """
+        id_u = self.palette_u.get_id_by_value(u)
+        id_v = self.palette_v.get_id_by_value(v)
         
-        full_M = full_M.astype(float)
+        return(self.M[id_u, id_v])
+    
+    def copy(self):
+        """
+        Make a copy.
+
+        Returns
+        -------
+        tm : TransitionMatrix
+            The copy.
+
+        """
+        return(TransitionMatrix(self.M.copy(), self.palette_u, self.palette_v))
+    
+    def set_value(self, a, info_u, info_v):
+        """
+        Set a transition probability value.
+
+        Parameters
+        ----------
+        a : float
+            The transition probability value.
+        info_u : State or int or str
+            The initial state information which can be the object, the state's value or the state's label.
+            If two states share the same label, only the first one to occur is returned.
+        v : State or int or str
+            The final state information which can be the object, the state's value or the state's label.
+            If two states share the same label, only the first one to occur is returned.
+        """
+        id_u = self.palette_u.get_id(info_u)
+        id_v = self.palette_v.get_id(info_v)
         
-        full_M = np.nan_to_num(full_M)
+        self.M[id_u, id_v] = a
+    
+    def select_all_u(self, info_u):
+        """
+        Select a new transition probabilities object for a given initial state.
+
+        Parameters
+        ----------
+        info_u : State or int or str
+            The initial state information which can be the object, the state's value or the state's label.
+            If two states share the same label, only the first one to occur is returned.
+
+        Returns
+        -------
+        tm : TransitionMatrix
+            The selected transition matrix object.
+
+        """
+        id_u = self.palette_u.get_id(info_u)
         
-        return(full_M)
+        M = self.M[[id_u],:].copy()
+                
+        new_palette_u = Palette([self.palette_u.states[id_u]])
         
+        return(TransitionMatrix(M, new_palette_u, self.palette_v))
+    
+    def get_P_v(self, info_u):
+        """
+        Get all transition probabilities from a given initial state.
+
+        Parameters
+        ----------
+        info_u : State or int or str
+            The initial state information which can be the object, the state's value or the state's label.
+            If two states share the same label, only the first one to occur is returned.
+
+        Returns
+        -------
+        P_v : ndarray of shape (n_final_states,)
+            The requested transition probabilities.
+        palette_v : Palette
+            The corresponding final states palette.
+        """
+        id_u = self.palette_u.get_id(info_u)
+        
+        p = self.M[id_u, :].copy()
+        
+        return(p, self.palette_v)
+            
     def multisteps(self, n):
-        tp = self.full_matrix()
+        """
+        Computes multisteps transition matrix.
+        
+        Parameters
+        ----------
+        n : int
+            Number of steps.
+        
+        Returns
+        -------
+        tm : TransitionMatrix
+            The computed multistep transition matrix.
+        """
+        tp = self._full_matrix()
         
         eigen_values, P = np.linalg.eig(tp)
         
@@ -97,13 +198,30 @@ class TransitionMatrix():
         
         full_M = np.dot(np.dot(P, np.diag(eigen_values)), np.linalg.inv(P))
         
-        compact_M, _, _ = _compact_transition_matrix(full_M = full_M,
-                                               list_u = self.list_u,
-                                               list_v = self.list_v)
+        list_u = self.palette_u.get_list_of_values()
+        list_v = self.palette_v.get_list_of_values()
         
-        return(TransitionMatrix(compact_M, self.list_u, self.list_v))
+        compact_M, _, _ = _compact_transition_matrix(full_M = full_M,
+                                               list_u = list_u,
+                                               list_v = list_v)
+        
+        return(TransitionMatrix(compact_M, self.palette_u, self.palette_v))
     
     def patches(self, patches):
+        """
+        Computes a new transition matrix according to patches parameters.
+
+        Parameters
+        ----------
+        patches : TYPE
+            DESCRIPTION.
+
+        Returns
+        -------
+        tm : TransitionMatrix
+            The transition matrix computed according to patches.
+
+        """
         M_p = np.zeros_like(self.M)
         
         for id_u, u in enumerate(self.list_u):
@@ -115,27 +233,81 @@ class TransitionMatrix():
                         M_p[id_u, self.list_v.index(u)] -= M_p[id_u, id_v]
         
         return(TransitionMatrix(M_p, self.list_u, self.list_v))
+    
+    def _full_matrix(self):
+        """
+        Get the full matrix
 
-def compute_transition_matrix(V_u, list_u, list_v):
+        Returns
+        -------
+        full_M : ndarray of shape (max_palette_v_values, max_palette_v_values)
+            The full transition probabilities matrix.
+        """
+        list_u = self.palette_u.get_list_of_values()
+        list_v = self.palette_v.get_list_of_values()
+        
+        max_v = np.max(self.palette_v.get_list_of_values())
+        
+        full_M = np.diag(np.ones(max_v+1))
+    
+        list_v_full_matrix = list(np.arange(max_v+1))
+    
+        for id_u, u in enumerate(list_u):
+            for id_v, v in enumerate(list_v):
+                full_M[list_v_full_matrix.index(u),
+                       list_v_full_matrix.index(v)] = self.M[id_u, id_v]
+        
+        full_M = full_M.astype(float)
+        
+        full_M = np.nan_to_num(full_M)
+        
+        return(full_M)
+
+def compute_transition_matrix(V_u, palette_u, palette_v):
+    """
+    Compute the transition matrix from final states vectors.
+    """
+    list_u = palette_u.get_list_of_values()
+    list_v = palette_v.get_list_of_values()
+    
     M = np.zeros((len(list_u), len(list_v)))
     
     for id_u, u in enumerate(list_u):
         for id_v, v in enumerate(list_v):
             M[id_u, id_v] = np.mean(V_u[u] == v)
     
-    return(TransitionMatrix(M, list_u, list_v))
+    return(TransitionMatrix(M, palette_u, palette_v))
 
-def load_transition_matrix(path):
+def load_transition_matrix(path, palette):
+    """
+    Load transition matrixes according to a given palette.
+
+    Parameters
+    ----------
+    path : str
+        Transition matrix file path.
+
+    Returns
+    -------
+    tm : TransitionMatrix
+        The loaded transition matrix.
+
+    """
     data = np.genfromtxt(path, delimiter=',')
     
     list_u = list(data[1:,0].astype(int))
     list_v = list(data[0,1:].astype(int))
+    
+    
     
     M = data[1:,1:]
     
     return(TransitionMatrix(M, list_u, list_v))
 
 def _compact_transition_matrix(full_M, list_u=None, list_v=None):
+    """
+    Extract compact transition matrix from full_M
+    """
     if list_u is None or list_v is None:
         list_u = []
         list_v = []

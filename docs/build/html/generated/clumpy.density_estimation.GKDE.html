@@ -1,0 +1,301 @@
+
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+    <title>clumpy.density_estimation.GKDE &#8212; clumpy 0.1.0 documentation</title>
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/nature.css" />
+    <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+    <script src="../_static/jquery.js"></script>
+    <script src="../_static/underscore.js"></script>
+    <script src="../_static/doctools.js"></script>
+    <script async="async" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <link rel="shortcut icon" href="../_static/logo.ico"/>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="clumpy.density_estimation.Parameters" href="clumpy.density_estimation.Parameters.html" />
+    <link rel="prev" title="clumpy.scenario.load_transition_matrix" href="clumpy.scenario.load_transition_matrix.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="clumpy.density_estimation.Parameters.html" title="clumpy.density_estimation.Parameters"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="clumpy.scenario.load_transition_matrix.html" title="clumpy.scenario.load_transition_matrix"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">clumpy 0.1.0 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../api.html" accesskey="U">Clumpy API</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href=""><code class="xref py py-mod docutils literal notranslate"><span class="pre">clumpy.density_estimation</span></code>.GKDE</a></li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <section id="clumpy-density-estimation-gkde">
+<h1><a class="reference internal" href="../api.html#module-clumpy.density_estimation" title="clumpy.density_estimation"><code class="xref py py-mod docutils literal notranslate"><span class="pre">clumpy.density_estimation</span></code></a>.GKDE<a class="headerlink" href="#clumpy-density-estimation-gkde" title="Permalink to this headline">¶</a></h1>
+<dl class="py class">
+<dt class="sig sig-object py" id="clumpy.density_estimation.GKDE">
+<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">clumpy.density_estimation.</span></span><span class="sig-name descname"><span class="pre">GKDE</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">h</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'scott'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">low_bounded_features</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">[]</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">high_bounded_features</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">[]</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">low_bounds</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">[]</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">high_bounds</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">[]</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">preprocessing</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'whitening'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">algorithm</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'kd_tree'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">leaf_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">30</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">support_factor</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">3</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_predict_max</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">20000</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">forbid_null_value</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_jobs_predict</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_jobs_neighbors</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">verbose</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/clumpy/density_estimation/_gaussian_kde.html#GKDE"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#clumpy.density_estimation.GKDE" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">clumpy.density_estimation._density_estimator.DensityEstimator</span></code></p>
+<p>Gaussian Kernel Density Estimator. It is a child of sklearn.BaseEstimator.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>h</strong> (<em>float</em><em> or </em><em>{'scott'</em><em>, </em><em>'silverman'}</em><em>, </em><em>default='scott'</em>) – <dl>
+<dt>The bandwidth. It can be a float or a method :</dt><dd><p>scott : The scott’s rule <span class="math notranslate nohighlight">\(h=-1 / n^{d+4}\)</span>.</p>
+<p>silverman : The Silverman’s rule which is the same as Scott’s rule.</p>
+</dd>
+</dl>
+</p></li>
+<li><p><strong>low_bounded_features</strong> (<em>list of int</em><em>, </em><em>default=</em><em>[</em><em>]</em>) – The low bounded features indices.</p></li>
+<li><p><strong>high_bounded_features</strong> (<em>list of int</em><em>, </em><em>default=</em><em>[</em><em>]</em>) – The high bounded features indices.</p></li>
+<li><p><strong>low_bounds</strong> (<em>list of float</em><em>, </em><em>default=</em><em>[</em><em>]</em>) – Consequently to <code class="docutils literal notranslate"><span class="pre">low_bounded_features</span></code> value, the low bounds are
+specified here.</p></li>
+<li><p><strong>high_bounds</strong> (<em>list of float</em><em>, </em><em>=</em><em>[</em><em>]</em>) – Consequently to <code class="docutils literal notranslate"><span class="pre">high_bounded_features</span></code> value, the high bounds are
+specified here.</p></li>
+<li><p><strong>preprocessing</strong> (<em>None</em><em> or </em><em>{'whitening'}</em><em>, </em><em>default='whitening'</em>) – <p>Preprocessing transformation.</p>
+<blockquote>
+<div><p>whitening : Whitening transformation to get a covariance matrix equal to the identity matrix.</p>
+</div></blockquote>
+</p></li>
+<li><p><strong>algorithm</strong> (<em>{'auto'</em><em>, </em><em>'ball_tree'</em><em>, </em><em>'kd_tree'</em><em>, </em><em>'brute'}</em><em>, </em><em>default=``'auto'``</em>) – <p>Algorithm used to compute the nearest neighbors as sklearn.</p>
+<blockquote>
+<div><p>’ball_tree’ will use BallTree</p>
+<p>’kd_tree’ will use KDTree</p>
+<p>’brute’ will use a brute-force search.</p>
+<p>’auto’ will attempt to decide the most appropriate algorithm based on the values passed to fit method.</p>
+</div></blockquote>
+<p>Note: fitting on sparse input will override the setting of this parameter, using brute force.</p>
+</p></li>
+<li><p><strong>leaf_size</strong> (<em>int</em><em>, </em><em>default=30</em>) – Leaf size passed to BallTree or KDTree. This can affect the speed of the construction and query, as well as the memory required to store the tree. The optimal value depends on the nature of the problem.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="simple">
+<dt>support_factor<span class="classifier">float, default=3</span></dt><dd><p>The kernel support factor, even if kernel has infinite support.</p>
+</dd>
+<dt>n_predict_max<span class="classifier">int, default=2*10**4</span></dt><dd><p>The maximum of simultaneous probability estimations.
+Several streams are consequently created.</p>
+</dd>
+<dt>forbid_null_value<span class="classifier">bool, default=False</span></dt><dd><p>If <code class="docutils literal notranslate"><span class="pre">True</span></code>, the null value is forbiden and a correction is made if
+necessary.</p>
+</dd>
+<dt>n_jobs_predict<span class="classifier">int, default=2</span></dt><dd><p>The number of parallel jobs to predict according to streams defined
+by <code class="docutils literal notranslate"><span class="pre">n_predict_max</span></code>.</p>
+</dd>
+<dt>n_jobs_neighbors<span class="classifier">int, default=1</span></dt><dd><p>The number of parallel jobs to run for neighbors search.</p>
+</dd>
+<dt>verbose<span class="classifier">int, default=0</span></dt><dd><p>The verbosity level.</p>
+</dd>
+</dl>
+<p class="rubric">Methods</p>
+<table class="longtable docutils align-default">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#clumpy.density_estimation.GKDE.cut_plot" title="clumpy.density_estimation.GKDE.cut_plot"><code class="xref py py-obj docutils literal notranslate"><span class="pre">cut_plot</span></code></a>([x, q, n_eval, linestyle, color, …])</p></td>
+<td><p>Estimate the value along a cut.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#clumpy.density_estimation.GKDE.fit" title="clumpy.density_estimation.GKDE.fit"><code class="xref py py-obj docutils literal notranslate"><span class="pre">fit</span></code></a>(X[, y])</p></td>
+<td><p>Fit according to observations</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#clumpy.density_estimation.GKDE.get_params" title="clumpy.density_estimation.GKDE.get_params"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_params</span></code></a>([deep])</p></td>
+<td><p>Get parameters for this estimator.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#clumpy.density_estimation.GKDE.marginal" title="clumpy.density_estimation.GKDE.marginal"><code class="xref py py-obj docutils literal notranslate"><span class="pre">marginal</span></code></a>(x, k)</p></td>
+<td><p>Estimate the marginal probability.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#clumpy.density_estimation.GKDE.predict" title="clumpy.density_estimation.GKDE.predict"><code class="xref py py-obj docutils literal notranslate"><span class="pre">predict</span></code></a>(X)</p></td>
+<td><p>Estimate the requested probabilities.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#clumpy.density_estimation.GKDE.set_params" title="clumpy.density_estimation.GKDE.set_params"><code class="xref py py-obj docutils literal notranslate"><span class="pre">set_params</span></code></a>(**params)</p></td>
+<td><p>Set the parameters of this estimator.</p></td>
+</tr>
+</tbody>
+</table>
+<dl class="py method">
+<dt class="sig sig-object py" id="clumpy.density_estimation.GKDE.cut_plot">
+<span class="sig-name descname"><span class="pre">cut_plot</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">q</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_eval</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">300</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">linestyle</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">color</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">label_prefix</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/clumpy/density_estimation/_gaussian_kde.html#GKDE.cut_plot"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#clumpy.density_estimation.GKDE.cut_plot" title="Permalink to this definition">¶</a></dt>
+<dd><p>Estimate the value along a cut.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="clumpy.density_estimation.GKDE.fit">
+<span class="sig-name descname"><span class="pre">fit</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">X</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/clumpy/density_estimation/_gaussian_kde.html#GKDE.fit"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#clumpy.density_estimation.GKDE.fit" title="Permalink to this definition">¶</a></dt>
+<dd><p>Fit according to observations</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>X</strong> (<em>array-like of shape</em><em> (</em><em>n_samples</em><em>, </em><em>n_features</em><em>)</em>) – The observations.</p></li>
+<li><p><strong>y</strong> (<em>None</em>) – Not used. It is provided for compatibility only.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>self</strong> – The fitted GKDE object.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="#clumpy.density_estimation.GKDE" title="clumpy.density_estimation.GKDE">GKDE</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="clumpy.density_estimation.GKDE.get_params">
+<span class="sig-name descname"><span class="pre">get_params</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">deep</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#clumpy.density_estimation.GKDE.get_params" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get parameters for this estimator.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>deep</strong> (<em>bool</em><em>, </em><em>default=True</em>) – If True, will return the parameters for this estimator and
+contained subobjects that are estimators.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>params</strong> – Parameter names mapped to their values.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>dict</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="clumpy.density_estimation.GKDE.marginal">
+<span class="sig-name descname"><span class="pre">marginal</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">k</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/clumpy/density_estimation/_gaussian_kde.html#GKDE.marginal"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#clumpy.density_estimation.GKDE.marginal" title="Permalink to this definition">¶</a></dt>
+<dd><p>Estimate the marginal probability.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>x</strong> (<em>array-like of shape</em><em> (</em><em>n_samples</em><em>,</em><em>)</em>) – The samples to estimate along the <cite>$k$</cite> feature.</p></li>
+<li><p><strong>k</strong> (<em>int</em>) – The feature index.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>f</strong> – The estimated marginal probabilities.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>ndarray of shape (n_samples,)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="clumpy.density_estimation.GKDE.predict">
+<span class="sig-name descname"><span class="pre">predict</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">X</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/clumpy/density_estimation/_gaussian_kde.html#GKDE.predict"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#clumpy.density_estimation.GKDE.predict" title="Permalink to this definition">¶</a></dt>
+<dd><p>Estimate the requested probabilities.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>X</strong> (<em>array-like of shape</em><em> (</em><em>n_samples</em><em>, </em><em>n_features</em><em>)</em>) – The samples to estimate the probability.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>f</strong> – The estimated probabilities.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>ndarray of shape (n_samples,)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="clumpy.density_estimation.GKDE.set_params">
+<span class="sig-name descname"><span class="pre">set_params</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">params</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#clumpy.density_estimation.GKDE.set_params" title="Permalink to this definition">¶</a></dt>
+<dd><p>Set the parameters of this estimator.</p>
+<p>The method works on simple estimators as well as on nested objects
+(such as <a class="reference external" href="https://scikit-learn.org/stable/modules/generated/sklearn.pipeline.Pipeline.html#sklearn.pipeline.Pipeline" title="(in scikit-learn v0.24)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Pipeline</span></code></a>). The latter have
+parameters of the form <code class="docutils literal notranslate"><span class="pre">&lt;component&gt;__&lt;parameter&gt;</span></code> so that it’s
+possible to update each component of a nested object.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>**params</strong> (<em>dict</em>) – Estimator parameters.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>self</strong> – Estimator instance.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>estimator instance</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<div class="clearer"></div></section>
+
+
+            <div class="clearer"></div>
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="../index.html">
+              <img class="logo" src="../_static/logo.png" alt="Logo"/>
+            </a></p>
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="clumpy.scenario.load_transition_matrix.html"
+                        title="previous chapter"><code class="xref py py-mod docutils literal notranslate"><span class="pre">clumpy.scenario</span></code>.load_transition_matrix</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="clumpy.density_estimation.Parameters.html"
+                        title="next chapter"><code class="xref py py-mod docutils literal notranslate"><span class="pre">clumpy.density_estimation</span></code>.Parameters</a></p>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="../_sources/generated/clumpy.density_estimation.GKDE.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="clumpy.density_estimation.Parameters.html" title="clumpy.density_estimation.Parameters"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="clumpy.scenario.load_transition_matrix.html" title="clumpy.scenario.load_transition_matrix"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">clumpy 0.1.0 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../api.html" >Clumpy API</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href=""><code class="xref py py-mod docutils literal notranslate"><span class="pre">clumpy.density_estimation</span></code>.GKDE</a></li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2020, François-Rémi Mazy.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 4.0.2.
+    </div>
+  </body>
+</html>

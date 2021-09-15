@@ -1,10 +1,5 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""
-Created on Tue Sep 14 22:39:48 2021
-
-@author: frem
-"""
 
 from xml.dom import minidom
 import numpy as np
@@ -48,7 +43,7 @@ class Palette():
     def __repr__(self):
         return(str(self.states))
         
-    def add_state(self, state):
+    def add(self, state):
         """
         Append a state to the palette's states.
 
@@ -71,7 +66,66 @@ class Palette():
         
         return(self)
     
-    def get_state_by_value(self, value):
+    def get_id(self, info):
+        """
+        Get a state's index from the palette.
+        
+        Parameters
+        ----------
+        info : State or int or str
+            The state information which can be the object, the state's value or the state's label.
+            If two states share the same label, only the first one to occur is returned.
+
+        Returns
+        -------
+        i : int
+            The requested state's index.
+
+        """
+        if isinstance(info, State):
+            return(self._get_id(info))
+        elif isinstance(info, int):
+            return(self._get_id_by_value(info))
+        elif isinstance(info, str):
+            return(self._get_id_by_label(info))
+        
+    def get(self, info):
+        """
+        Get a state from the palette.
+
+        Parameters
+        ----------
+        info : int or str
+            The state information which can be the state's value or the state's label.
+            If two states share the same label, only the first one to occur is returned.
+
+        Returns
+        -------
+        state : State
+            The requested state.
+        """
+        if isinstance(info, int):
+            return(self._get_by_value(info))
+        elif isinstance(info, str):
+            return(self._get_by_label(info))
+        
+    def _get_id(self, state):
+        """
+        Get a state index.
+        
+        Parameters
+        ----------
+        state : State
+            The state object.
+        
+        Returns
+        -------
+        i : int
+            The requested index.
+        """
+        return(self.states.index(state))
+    
+    def _get_by_value(self, value):
         """
         Get a state by its value.
 
@@ -89,7 +143,25 @@ class Palette():
         
         return(self.states[values.index(value)])
     
-    def get_state_by_label(self, label):
+    def _get_id_by_value(self, value):
+        """
+        Get a state's id by its value.
+
+        Parameters
+        ----------
+        value : int
+            The researched value.
+
+        Returns
+        -------
+        i : int
+            The requested state's id'
+        """
+        values = [state.value for state in self.states]
+            
+        return(values.index(value))
+    
+    def _get_by_label(self, label):
         """
         Get a state by its label.
         If two states have the same label, only the first one is returned.
@@ -107,47 +179,48 @@ class Palette():
         labels = [state.label for state in self.states]
         
         return(self.states[labels.index(label)])
-    def remove_state(self, state):
+    
+    def _get_id_by_label(self, label):
         """
-        Remove a state from the palette.
+        Get a state's id by its label.
+        If two states have the same label, only the first one is returned.
 
         Parameters
         ----------
-        state : State
-            The state to remove from the palette.
+        label : int
+            The researched label.
+
+        Returns
+        -------
+        i : int
+            The requested state's id.
+        """
+        labels = [state.label for state in self.states]
+        
+        return(labels.index(label))
+
+    
+    def remove(self, info):
+        """
+        Remove a state
+
+        Parameters
+        ----------
+        info : State or int or str
+            The state information which can be the object, the state's value or the state's label.
+            If two states share the same label, only the first one to occur is returned.
 
         Returns
         -------
         self : Palette
             The self object.
+
         """
-        self.states.remove(state)
+        self.states.remove(self.get(info))
         
         return(self)
     
-    def remove_state_by_value(self, value):
-        """
-        Remove a state by its value
-
-        Parameters
-        ----------
-        value : int
-            The value of the state to remove from the palette.
-
-        Returns
-        -------
-        self : Palette
-            The self object.
-        """
-        for s in self.states:
-            if s.value == value:
-                break
-        
-        self.states.remove(s)
-        
-        return(self)
-    
-    def import_style(self, path):
+    def load(self, path):
         """
         Import legend through qml file provided by QGis. Alpha is not supported.
 
@@ -166,6 +239,18 @@ class Palette():
                              elem.attributes['color'].value) for elem in items]
         
         return(self)
+    
+    def get_list_of_values(self):
+        """
+        Get the values list.
+
+        Returns
+        -------
+        values : list of int
+            The list of values.
+
+        """
+        return([state.value for state in self.states])
     
     def get_list_of_labels_values_colors(self):
         """
@@ -187,7 +272,7 @@ class Palette():
         
         return(labels, values, colors)
     
-    def sort(self, inplace=True):
+    def sort(self, inplace=False):
         """
         Sort the palette according states values.
 

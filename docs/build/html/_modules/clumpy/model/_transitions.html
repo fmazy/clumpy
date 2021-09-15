@@ -1,0 +1,242 @@
+
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>clumpy.model._transitions &#8212; clumpy 0.1.0 documentation</title>
+    <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/nature.css" />
+    <script data-url_root="../../../" id="documentation_options" src="../../../_static/documentation_options.js"></script>
+    <script src="../../../_static/jquery.js"></script>
+    <script src="../../../_static/underscore.js"></script>
+    <script src="../../../_static/doctools.js"></script>
+    <link rel="shortcut icon" href="../../../_static/logo.ico"/>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../../index.html">clumpy 0.1.0 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../../index.html" accesskey="U">Module code</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">clumpy.model._transitions</a></li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for clumpy.model._transitions</h1><div class="highlight"><pre>
+<span></span><span class="ch">#!/usr/bin/env python3</span>
+<span class="c1"># -*- coding: utf-8 -*-</span>
+
+<span class="kn">from</span> <span class="nn">..definition</span> <span class="kn">import</span> <span class="n">FeatureLayer</span><span class="p">,</span> <span class="n">Palette</span>
+<span class="kn">from</span> <span class="nn">..density_estimation</span> <span class="kn">import</span> <span class="n">Parameters</span> <span class="k">as</span> <span class="n">DensityEstimationParameters</span>
+
+<div class="viewcode-block" id="Transitions"><a class="viewcode-back" href="../../../generated/clumpy.model.Transitions.html#clumpy.model.Transitions">[docs]</a><span class="k">class</span> <span class="nc">Transitions</span><span class="p">():</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Transitions parameters used by module classes. Note that density estimation</span>
+<span class="sd">    parameters are set by the constructor with default values.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    features : list of FeaturesLayer or State</span>
+<span class="sd">        List of features where a State means a distance layer to the corresponding state.</span>
+<span class="sd">    dep_P_x__u : density_estimation.Parameters</span>
+<span class="sd">        Density estimation parameters (dep) for :math:`P(x|u)`.</span>
+<span class="sd">    dep_P_x__u_v : dict of density_estimation.Parameters with State as keys</span>
+<span class="sd">        Density estimation parameters (dep) for :math:`P(x|u,v)`.</span>
+<span class="sd">        Each dict key is a State and correspond to studied final states.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> 
+                 <span class="n">features</span><span class="p">,</span>
+                 <span class="n">dep_P_x__u</span><span class="p">,</span>
+                 <span class="n">dep_P_x__u_v</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">features</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">features</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">features</span> <span class="o">=</span> <span class="n">features</span>
+            
+        <span class="bp">self</span><span class="o">.</span><span class="n">dep_P_x__u</span> <span class="o">=</span> <span class="n">DensityEstimationParameters</span><span class="p">()</span>
+            
+<div class="viewcode-block" id="Transitions.set_global_density_estimation_parameters"><a class="viewcode-back" href="../../../generated/clumpy.model.Transitions.html#clumpy.model.Transitions.set_global_density_estimation_parameters">[docs]</a>    <span class="k">def</span> <span class="nf">set_global_density_estimation_parameters</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dep</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Set global density estimation parameters for :math:`P(x|u)`.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        dep_P_x__u : density_estimation.Parameters</span>
+<span class="sd">            Density estimation parameters (dep) for :math:`P(x|u)`.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        self : Transitions</span>
+<span class="sd">            The self object.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">dep_P_x__u</span> <span class="o">=</span> <span class="n">dep</span>
+        
+        <span class="k">return</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span></div>
+        
+<div class="viewcode-block" id="Transitions.set_transitions_density_estimation_parameters"><a class="viewcode-back" href="../../../generated/clumpy.model.Transitions.html#clumpy.model.Transitions.set_transitions_density_estimation_parameters">[docs]</a>    <span class="k">def</span> <span class="nf">set_transitions_density_estimation_parameters</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">info</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Set density estimation parameters for each transitions</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        info : dict of density_estimation.Parameters with states as keys or Palette</span>
+<span class="sd">            Dict of density estimation parameters with states as keys. If a Palette is</span>
+<span class="sd">            provided, default density estimation parameters are set for each states.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        self : Transitions</span>
+<span class="sd">            The self object.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">info</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">dep_P_x__u_v</span> <span class="o">=</span> <span class="n">info</span>
+            
+            <span class="k">return</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">info</span><span class="p">,</span> <span class="n">Palette</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">dep_P_x__u_v</span> <span class="o">=</span> <span class="p">{</span><span class="n">DensityEstimationParameters</span><span class="p">()</span> <span class="k">for</span> <span class="n">state</span> <span class="ow">in</span> <span class="n">info</span><span class="o">.</span><span class="n">states</span><span class="p">}</span></div></div>
+        
+<span class="c1"># class InitialStateAreaParameters():</span>
+<span class="c1">#     def __init__(self, features):</span>
+<span class="c1">#         if features is None:</span>
+<span class="c1">#             self.features = []</span>
+<span class="c1">#         else:</span>
+<span class="c1">#             self.features = features</span>
+    
+<span class="c1">#     def add_feature(self, info):</span>
+<span class="c1">#         self.features.append(info)</span>
+
+<span class="c1"># class Parameters():</span>
+<span class="c1">#     def __init__(self):</span>
+<span class="c1">#         self.regions = []</span>
+<span class="c1">#         self.transition_matrixes = {}</span>
+<span class="c1">#         self.list_v__u = {}</span>
+<span class="c1">#         self.features__u = {}</span>
+        
+<span class="c1">#     def add_region(self,</span>
+<span class="c1">#                    region):</span>
+        
+<span class="c1">#         self.regions.append(region)</span>
+<span class="c1">#         return(self)</span>
+    
+<span class="c1">#     def set_transition_matrix(self,</span>
+<span class="c1">#                               tm,</span>
+<span class="c1">#                               region):</span>
+        
+<span class="c1">#         self.transition_matrixes[region] = tm</span>
+        
+<span class="c1">#         self.list_v__u[region] = {}</span>
+<span class="c1">#         self.features__u[region] = {}</span>
+        
+<span class="c1">#         for u in tm.list_u:</span>
+<span class="c1">#             self.list_v__u[region][u] = []</span>
+<span class="c1">#             for v in tm.list_v:</span>
+<span class="c1">#                 if tm.get_value(u, v) &gt; 0:</span>
+<span class="c1">#                     self.list_v__u[region][u].append(v)</span>
+        
+<span class="c1">#         return(self)</span>
+    
+<span class="c1">#     def add_layer_feature(self,</span>
+<span class="c1">#                         region,</span>
+<span class="c1">#                         u,</span>
+<span class="c1">#                         feature_layer):</span>
+        
+<span class="c1">#         if u not in self.features__u[region].keys():</span>
+<span class="c1">#             self.features__u[region][u] = []</span>
+    
+<span class="c1">#         self.features__u[region][u].append((&#39;layer&#39;, feature_layer))</span>
+        
+<span class="c1">#     def add_distance_feature(self,</span>
+<span class="c1">#                             region,</span>
+<span class="c1">#                             u,</span>
+<span class="c1">#                             e):</span>
+        
+<span class="c1">#         if u not in self.features__u[region].keys():</span>
+<span class="c1">#             self.features__u[region][u] = []</span>
+    
+<span class="c1">#         self.features__u[region][u].append((&#39;distance&#39;, e))</span>
+        
+        
+    
+<span class="c1">#     def get_case_params(self, region):</span>
+<span class="c1">#         params = {}</span>
+<span class="c1">#         for u, list_v__u in self.list_v__u[region].items():</span>
+<span class="c1">#             params[u] = {&#39;v&#39; : list_v__u,</span>
+<span class="c1">#                          &#39;features&#39; : self.features__u[region][u]}</span>
+            
+<span class="c1">#         return(params)</span>
+    
+<span class="c1"># class RegionParameters():</span>
+<span class="c1">#     def __init__(self):</span>
+<span class="c1">#         self.state_parameters = {}</span>
+    
+<span class="c1">#     def add_transition_matrix(self, tm):</span>
+<span class="c1">#         self.transition_matrix = tm</span>
+    
+<span class="c1">#     def add_state_parameters(self, u, state_parameters):</span>
+<span class="c1">#         self.state_parameters[u] = state_parameters</span>
+
+
+    
+
+    
+    
+</pre></div>
+
+            <div class="clearer"></div>
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="../../../index.html">
+              <img class="logo" src="../../../_static/logo.png" alt="Logo"/>
+            </a></p>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../../index.html">clumpy 0.1.0 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../../index.html" >Module code</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">clumpy.model._transitions</a></li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2020, François-Rémi Mazy.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 4.0.2.
+    </div>
+  </body>
+</html>

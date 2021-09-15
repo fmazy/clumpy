@@ -183,7 +183,7 @@ class _Layer:
         return(plt)
 
 class LandUseCoverLayer(_Layer):
-    """Defines a Land Use Cover (LUC) layer.
+    """Define a Land Use Cover (LUC) layer.
     This layer can then used for the calibration stage or the allocation stage.
     
     Parameters
@@ -201,6 +201,8 @@ class LandUseCoverLayer(_Layer):
     copy_geo : :class:`LandUseCoverLayer`, default=None
         The layer from whose geo metadata are copied.
         If ``None``, geo metadata are set to ``None``.
+    palette : Palette
+        The states palette.
 
     Attributes
     ----------
@@ -300,7 +302,7 @@ class LandUseCoverLayer(_Layer):
 
 
 class FeatureLayer(_Layer):
-    """Defines a feature layer.
+    """Define a feature layer.
     This layer can then used for the calibration stage or the allocation stage.
     
     Parameters

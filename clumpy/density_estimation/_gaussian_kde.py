@@ -10,11 +10,12 @@ import numpy as np
 from sklearn.neighbors import NearestNeighbors
 from scipy.special import erf
 from multiprocessing import Pool
-from sklearn.base import BaseEstimator
 from matplotlib import pyplot as plt
 from sklearn.preprocessing import StandardScaler
 from . import bandwidth_selection
 from tqdm import tqdm
+
+from ._density_estimator import DensityEstimator
 from ._whitening_transformer import _WhiteningTransformer
 from ..utils._hyperplane import Hyperplane
 
@@ -37,7 +38,7 @@ def _compute_gaussian_kde(nn, X, h, support_factor, i=None, n_steps=None, verbos
                 
     return(np.array([_gaussian(dist/h) for dist in distances]))
 
-class GKDE(BaseEstimator):
+class GKDE(DensityEstimator):
     """
     Gaussian Kernel Density Estimator. It is a child of sklearn.BaseEstimator.
 
@@ -125,21 +126,21 @@ class GKDE(BaseEstimator):
                  n_jobs_neighbors=1,
                  verbose=0):
         
+        super().__init__(low_bounded_features=low_bounded_features,
+                         high_bounded_features=high_bounded_features,
+                         low_bounds = low_bounds,
+                         high_bounds = high_bounds,
+                         forbid_null_value = forbid_null_value,
+                         verbose=verbose) 
+        
         self.h = h
-        self.low_bounded_features = low_bounded_features
-        self.high_bounded_features = high_bounded_features
-        self.low_bounds = low_bounds
-        self.high_bounds = high_bounds
         self.algorithm = algorithm
         self.leaf_size = leaf_size
         self.support_factor = support_factor
-        self.forbid_null_value = forbid_null_value
         self.n_predict_max = n_predict_max
         self.n_jobs_predict = n_jobs_predict
         self.n_jobs_neighbors = n_jobs_neighbors
         self.preprocessing = preprocessing
-        self.verbose = verbose
-        
         
     def __repr__(self):
         return('GKDE(h='+str(self._h)+')')

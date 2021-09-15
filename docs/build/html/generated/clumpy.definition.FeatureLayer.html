@@ -16,7 +16,7 @@
     <link rel="shortcut icon" href="../_static/logo.ico"/>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="next" title="clumpy.definition.Case" href="clumpy.definition.Case.html" />
+    <link rel="next" title="clumpy.scenario.TransitionMatrix" href="clumpy.scenario.TransitionMatrix.html" />
     <link rel="prev" title="clumpy.definition.LandUseCoverLayer" href="clumpy.definition.LandUseCoverLayer.html" /> 
   </head><body>
     <div class="related" role="navigation" aria-label="related navigation">
@@ -29,7 +29,7 @@
           <a href="../py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
         <li class="right" >
-          <a href="clumpy.definition.Case.html" title="clumpy.definition.Case"
+          <a href="clumpy.scenario.TransitionMatrix.html" title="clumpy.scenario.TransitionMatrix"
              accesskey="N">next</a> |</li>
         <li class="right" >
           <a href="clumpy.definition.LandUseCoverLayer.html" title="clumpy.definition.LandUseCoverLayer"
@@ -49,19 +49,21 @@
 <h1><a class="reference internal" href="../api.html#module-clumpy.definition" title="clumpy.definition"><code class="xref py py-mod docutils literal notranslate"><span class="pre">clumpy.definition</span></code></a>.FeatureLayer<a class="headerlink" href="#clumpy-definition-featurelayer" title="Permalink to this headline">¶</a></h1>
 <dl class="py class">
 <dt class="sig sig-object py" id="clumpy.definition.FeatureLayer">
-<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">clumpy.definition.</span></span><span class="sig-name descname"><span class="pre">FeatureLayer</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">time</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">path</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">data</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">low_bounded</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">high_bounded</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">copy_geo</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/clumpy/definition/_layer.html#FeatureLayer"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#clumpy.definition.FeatureLayer" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">clumpy.definition.</span></span><span class="sig-name descname"><span class="pre">FeatureLayer</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">label</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">time</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">path</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">data</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">low_bound</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">high_bound</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">copy_geo</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/clumpy/definition/_layer.html#FeatureLayer"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#clumpy.definition.FeatureLayer" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">clumpy.definition._layer._Layer</span></code></p>
-<p>Defines a feature layer.
+<p>Define a feature layer.
 This layer can then used for the calibration stage or the allocation stage.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>name</strong> (<em>str</em><em>, </em><em>default=``None``</em>) – The layer name.</p></li>
+<li><p><strong>label</strong> (<em>str</em><em>, </em><em>default=``None``</em>) – The layer label.</p></li>
 <li><p><strong>time</strong> (<em>float</em><em>, </em><em>default=``0``</em>) – The layer time (year unit).</p></li>
 <li><p><strong>path</strong> (<em>str</em>) – The tiff file path.
 If <code class="docutils literal notranslate"><span class="pre">data</span></code> is provided, a new tiff file will be created according to this path
 and this operation overwrites the file path if exists.</p></li>
 <li><p><strong>data</strong> (<a class="reference external" href="https://numpy.org/doc/1.19/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.19)"><code class="xref py py-class docutils literal notranslate"><span class="pre">numpy.ndarray</span></code></a>, defaul=None) – The data to write. If <code class="docutils literal notranslate"><span class="pre">None</span></code>, no writing is made.</p></li>
+<li><p><strong>low_bound</strong> (<em>None</em><em> or </em><em>float</em><em>, </em><em>default=None</em>) – If float, a low bound is set. Used in density estimation methods as GKDE.</p></li>
+<li><p><strong>high_bound</strong> (<em>None</em><em> or </em><em>float</em><em>, </em><em>default=None</em>) – If float, a high bound is set. Used in density estimation methods as GKDE.</p></li>
 <li><p><strong>copy_geo</strong> (<a class="reference internal" href="clumpy.definition.LandUseCoverLayer.html#clumpy.definition.LandUseCoverLayer" title="clumpy.definition.LandUseCoverLayer"><code class="xref py py-class docutils literal notranslate"><span class="pre">LandUseCoverLayer</span></code></a>, default=None) – The layer from whose geo metadata are copied.
 If <code class="docutils literal notranslate"><span class="pre">None</span></code>, geo metadata are set to <code class="docutils literal notranslate"><span class="pre">None</span></code>.</p></li>
 </ul>
@@ -77,7 +79,10 @@ If <code class="docutils literal notranslate"><span class="pre">None</span></cod
 <col style="width: 90%" />
 </colgroup>
 <tbody>
-<tr class="row-odd"><td><p><a class="reference internal" href="#clumpy.definition.FeatureLayer.export_asc" title="clumpy.definition.FeatureLayer.export_asc"><code class="xref py py-obj docutils literal notranslate"><span class="pre">export_asc</span></code></a>(path[, verbose])</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#clumpy.definition.FeatureLayer.display" title="clumpy.definition.FeatureLayer.display"><code class="xref py py-obj docutils literal notranslate"><span class="pre">display</span></code></a>(center, window[, show, colorbar])</p></td>
+<td><p>Display the layer.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#clumpy.definition.FeatureLayer.export_asc" title="clumpy.definition.FeatureLayer.export_asc"><code class="xref py py-obj docutils literal notranslate"><span class="pre">export_asc</span></code></a>(path[, verbose])</p></td>
 <td><p>Export the layer data as an <code class="docutils literal notranslate"><span class="pre">asc</span></code> file in order to use it through CLUES and CLUMondo.</p></td>
 </tr>
 </tbody>
@@ -88,14 +93,34 @@ If <code class="docutils literal notranslate"><span class="pre">None</span></cod
 <col style="width: 45%" />
 </colgroup>
 <tbody>
-<tr class="row-odd"><td><p><strong>display</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-even"><td><p><strong>get_data</strong></p></td>
+<tr class="row-odd"><td><p><strong>get_data</strong></p></td>
 <td></td>
 </tr>
 </tbody>
 </table>
+<dl class="py method">
+<dt class="sig sig-object py" id="clumpy.definition.FeatureLayer.display">
+<span class="sig-name descname"><span class="pre">display</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">center</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">window</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">show</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">colorbar</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs_imshow</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#clumpy.definition.FeatureLayer.display" title="Permalink to this definition">¶</a></dt>
+<dd><p>Display the layer.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>center</strong> (<em>tuple of two integers</em>) – Center position as a tuple.</p></li>
+<li><p><strong>window</strong> (<em>tuple of two integers</em>) – Window dimensions as a tuple.</p></li>
+<li><p><strong>show</strong> (<em>bool</em><em>, </em><em>default=True</em>) – If True, the <code class="docutils literal notranslate"><span class="pre">plt.show()</span></code> is applied.</p></li>
+<li><p><strong>colorbar</strong> (<em>bool</em><em>, </em><em>default=True</em>) – If True, the colorbar is displayed.</p></li>
+<li><p><strong>**kwargs_imshow</strong> (<em>kwargs</em>) – Keyword arguments passed to the <code class="docutils literal notranslate"><span class="pre">plt.imshow()</span></code> function.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>plt</strong> – Pyplot object</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>matplotlib.pyplot</p>
+</dd>
+</dl>
+</dd></dl>
+
 <dl class="py method">
 <dt class="sig sig-object py" id="clumpy.definition.FeatureLayer.export_asc">
 <span class="sig-name descname"><span class="pre">export_asc</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">verbose</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#clumpy.definition.FeatureLayer.export_asc" title="Permalink to this definition">¶</a></dt>
@@ -128,8 +153,8 @@ If <code class="docutils literal notranslate"><span class="pre">None</span></cod
   <p class="topless"><a href="clumpy.definition.LandUseCoverLayer.html"
                         title="previous chapter"><code class="xref py py-mod docutils literal notranslate"><span class="pre">clumpy.definition</span></code>.LandUseCoverLayer</a></p>
   <h4>Next topic</h4>
-  <p class="topless"><a href="clumpy.definition.Case.html"
-                        title="next chapter"><code class="xref py py-mod docutils literal notranslate"><span class="pre">clumpy.definition</span></code>.Case</a></p>
+  <p class="topless"><a href="clumpy.scenario.TransitionMatrix.html"
+                        title="next chapter"><code class="xref py py-mod docutils literal notranslate"><span class="pre">clumpy.scenario</span></code>.TransitionMatrix</a></p>
   <div role="note" aria-label="source link">
     <h3>This Page</h3>
     <ul class="this-page-menu">
@@ -161,7 +186,7 @@ If <code class="docutils literal notranslate"><span class="pre">None</span></cod
           <a href="../py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
         <li class="right" >
-          <a href="clumpy.definition.Case.html" title="clumpy.definition.Case"
+          <a href="clumpy.scenario.TransitionMatrix.html" title="clumpy.scenario.TransitionMatrix"
              >next</a> |</li>
         <li class="right" >
           <a href="clumpy.definition.LandUseCoverLayer.html" title="clumpy.definition.LandUseCoverLayer"

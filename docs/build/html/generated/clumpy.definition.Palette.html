@@ -1,0 +1,288 @@
+
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+    <title>clumpy.definition.Palette &#8212; clumpy 0.1.0 documentation</title>
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/nature.css" />
+    <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+    <script src="../_static/jquery.js"></script>
+    <script src="../_static/underscore.js"></script>
+    <script src="../_static/doctools.js"></script>
+    <link rel="shortcut icon" href="../_static/logo.ico"/>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="clumpy.definition.LandUseCoverLayer" href="clumpy.definition.LandUseCoverLayer.html" />
+    <link rel="prev" title="clumpy.definition.State" href="clumpy.definition.State.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="clumpy.definition.LandUseCoverLayer.html" title="clumpy.definition.LandUseCoverLayer"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="clumpy.definition.State.html" title="clumpy.definition.State"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">clumpy 0.1.0 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../api.html" accesskey="U">Clumpy API</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href=""><code class="xref py py-mod docutils literal notranslate"><span class="pre">clumpy.definition</span></code>.Palette</a></li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <section id="clumpy-definition-palette">
+<h1><a class="reference internal" href="../api.html#module-clumpy.definition" title="clumpy.definition"><code class="xref py py-mod docutils literal notranslate"><span class="pre">clumpy.definition</span></code></a>.Palette<a class="headerlink" href="#clumpy-definition-palette" title="Permalink to this headline">¶</a></h1>
+<dl class="py class">
+<dt class="sig sig-object py" id="clumpy.definition.Palette">
+<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">clumpy.definition.</span></span><span class="sig-name descname"><span class="pre">Palette</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">states</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/clumpy/definition/_state.html#Palette"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#clumpy.definition.Palette" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Define a palette, i.e. a set of states.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>states</strong> (<em>list of States</em><em>, </em><em>default=None</em>) – A list of States object. Ignored if None.</p>
+</dd>
+</dl>
+<p class="rubric">Methods</p>
+<table class="longtable docutils align-default">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#clumpy.definition.Palette.add" title="clumpy.definition.Palette.add"><code class="xref py py-obj docutils literal notranslate"><span class="pre">add</span></code></a>(state)</p></td>
+<td><p>Append a state to the palette’s states.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#clumpy.definition.Palette.get" title="clumpy.definition.Palette.get"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get</span></code></a>(info)</p></td>
+<td><p>Get a state from the palette.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#clumpy.definition.Palette.get_id" title="clumpy.definition.Palette.get_id"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_id</span></code></a>(info)</p></td>
+<td><p>Get a state’s index from the palette.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#clumpy.definition.Palette.get_list_of_labels_values_colors" title="clumpy.definition.Palette.get_list_of_labels_values_colors"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_list_of_labels_values_colors</span></code></a>()</p></td>
+<td><p>Get the labels list, the values list and the colors list.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#clumpy.definition.Palette.get_list_of_values" title="clumpy.definition.Palette.get_list_of_values"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_list_of_values</span></code></a>()</p></td>
+<td><p>Get the values list.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#clumpy.definition.Palette.load" title="clumpy.definition.Palette.load"><code class="xref py py-obj docutils literal notranslate"><span class="pre">load</span></code></a>(path)</p></td>
+<td><p>Import legend through qml file provided by QGis.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#clumpy.definition.Palette.remove" title="clumpy.definition.Palette.remove"><code class="xref py py-obj docutils literal notranslate"><span class="pre">remove</span></code></a>(info)</p></td>
+<td><p>Remove a state</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#clumpy.definition.Palette.sort" title="clumpy.definition.Palette.sort"><code class="xref py py-obj docutils literal notranslate"><span class="pre">sort</span></code></a>([inplace])</p></td>
+<td><p>Sort the palette according states values.</p></td>
+</tr>
+</tbody>
+</table>
+<dl class="py method">
+<dt class="sig sig-object py" id="clumpy.definition.Palette.add">
+<span class="sig-name descname"><span class="pre">add</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">state</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/clumpy/definition/_state.html#Palette.add"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#clumpy.definition.Palette.add" title="Permalink to this definition">¶</a></dt>
+<dd><p>Append a state to the palette’s states.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>state</strong> (<a class="reference internal" href="clumpy.definition.State.html#clumpy.definition.State" title="clumpy.definition.State"><em>State</em></a>) – The state to append.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>self</strong> – The self object.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="#clumpy.definition.Palette" title="clumpy.definition.Palette">Palette</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="clumpy.definition.Palette.get">
+<span class="sig-name descname"><span class="pre">get</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">info</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/clumpy/definition/_state.html#Palette.get"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#clumpy.definition.Palette.get" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get a state from the palette.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>info</strong> (<em>int</em><em> or </em><em>str</em>) – The state information which can be the state’s value or the state’s label.
+If two states share the same label, only the first one to occur is returned.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>state</strong> – The requested state.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="clumpy.definition.State.html#clumpy.definition.State" title="clumpy.definition.State">State</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="clumpy.definition.Palette.get_id">
+<span class="sig-name descname"><span class="pre">get_id</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">info</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/clumpy/definition/_state.html#Palette.get_id"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#clumpy.definition.Palette.get_id" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get a state’s index from the palette.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>info</strong> (<a class="reference internal" href="clumpy.definition.State.html#clumpy.definition.State" title="clumpy.definition.State"><em>State</em></a><em> or </em><em>int</em><em> or </em><em>str</em>) – The state information which can be the object, the state’s value or the state’s label.
+If two states share the same label, only the first one to occur is returned.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>i</strong> – The requested state’s index.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>int</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="clumpy.definition.Palette.get_list_of_labels_values_colors">
+<span class="sig-name descname"><span class="pre">get_list_of_labels_values_colors</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/clumpy/definition/_state.html#Palette.get_list_of_labels_values_colors"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#clumpy.definition.Palette.get_list_of_labels_values_colors" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the labels list, the values list and the colors list.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p><ul class="simple">
+<li><p><strong>labels</strong> (<em>list of str</em>) – The list of labels.</p></li>
+<li><p><strong>values</strong> (<em>list of int</em>) – The list of values.</p></li>
+<li><p><strong>colors</strong> (<em>list of str</em>) – The list of colors.</p></li>
+</ul>
+</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="clumpy.definition.Palette.get_list_of_values">
+<span class="sig-name descname"><span class="pre">get_list_of_values</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/clumpy/definition/_state.html#Palette.get_list_of_values"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#clumpy.definition.Palette.get_list_of_values" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the values list.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p><strong>values</strong> – The list of values.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>list of int</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="clumpy.definition.Palette.load">
+<span class="sig-name descname"><span class="pre">load</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">path</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/clumpy/definition/_state.html#Palette.load"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#clumpy.definition.Palette.load" title="Permalink to this definition">¶</a></dt>
+<dd><p>Import legend through qml file provided by QGis. Alpha is not supported.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>path</strong> (<em>str</em>) – The qml file path</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="clumpy.definition.Palette.remove">
+<span class="sig-name descname"><span class="pre">remove</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">info</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/clumpy/definition/_state.html#Palette.remove"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#clumpy.definition.Palette.remove" title="Permalink to this definition">¶</a></dt>
+<dd><p>Remove a state</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>info</strong> (<a class="reference internal" href="clumpy.definition.State.html#clumpy.definition.State" title="clumpy.definition.State"><em>State</em></a><em> or </em><em>int</em><em> or </em><em>str</em>) – The state information which can be the object, the state’s value or the state’s label.
+If two states share the same label, only the first one to occur is returned.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>self</strong> – The self object.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="#clumpy.definition.Palette" title="clumpy.definition.Palette">Palette</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="clumpy.definition.Palette.sort">
+<span class="sig-name descname"><span class="pre">sort</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">inplace</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/clumpy/definition/_state.html#Palette.sort"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#clumpy.definition.Palette.sort" title="Permalink to this definition">¶</a></dt>
+<dd><p>Sort the palette according states values.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>inplace</strong> (<em>bool</em><em>, </em><em>default=False</em>) – If True, perform operation in-place.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>palette</strong> – If <code class="docutils literal notranslate"><span class="pre">inplace=True</span></code>, return the self object, else return a new palette with sorted states.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="#clumpy.definition.Palette" title="clumpy.definition.Palette">Palette</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<div class="clearer"></div></section>
+
+
+            <div class="clearer"></div>
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="../index.html">
+              <img class="logo" src="../_static/logo.png" alt="Logo"/>
+            </a></p>
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="clumpy.definition.State.html"
+                        title="previous chapter"><code class="xref py py-mod docutils literal notranslate"><span class="pre">clumpy.definition</span></code>.State</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="clumpy.definition.LandUseCoverLayer.html"
+                        title="next chapter"><code class="xref py py-mod docutils literal notranslate"><span class="pre">clumpy.definition</span></code>.LandUseCoverLayer</a></p>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="../_sources/generated/clumpy.definition.Palette.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="clumpy.definition.LandUseCoverLayer.html" title="clumpy.definition.LandUseCoverLayer"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="clumpy.definition.State.html" title="clumpy.definition.State"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">clumpy 0.1.0 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../api.html" >Clumpy API</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href=""><code class="xref py py-mod docutils literal notranslate"><span class="pre">clumpy.definition</span></code>.Palette</a></li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2020, François-Rémi Mazy.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 4.0.2.
+    </div>
+  </body>
+</html>

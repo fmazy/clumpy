@@ -53,13 +53,13 @@
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
-                 <span class="n">name</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                 <span class="n">label</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
                  <span class="n">time</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
                  <span class="n">path</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
                  <span class="n">data</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
                  <span class="n">copy_geo</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         
-        <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="n">name</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">label</span> <span class="o">=</span> <span class="n">label</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">time</span> <span class="o">=</span> <span class="n">time</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">path</span> <span class="o">=</span> <span class="n">path</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">copy_geo</span> <span class="o">=</span> <span class="n">copy_geo</span>
@@ -114,7 +114,7 @@
         <span class="k">return</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">raster_</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="n">band</span><span class="p">))</span>
 
     <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="k">return</span><span class="p">(</span><span class="s1">&#39;Layer()&#39;</span><span class="p">)</span>
+        <span class="k">return</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">label</span><span class="p">)</span>
         
     <span class="k">def</span> <span class="nf">export_asc</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">path</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Export the layer data as an ``asc`` file in order to use it through CLUES and CLUMondo.</span>
@@ -127,12 +127,12 @@
 <span class="sd">            level of verbosity.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="n">verbose</span><span class="o">&gt;</span><span class="mi">0</span><span class="p">:</span>
-            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;[&quot;</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">+</span> <span class="s2">&quot;] exporting tiff file in &quot;</span> <span class="o">+</span> <span class="n">path</span> <span class="o">+</span> <span class="s2">&quot;...&quot;</span><span class="p">)</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;[&quot;</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">label</span> <span class="o">+</span> <span class="s2">&quot;] exporting tiff file in &quot;</span> <span class="o">+</span> <span class="n">path</span> <span class="o">+</span> <span class="s2">&quot;...&quot;</span><span class="p">)</span>
         
          <span class="c1"># create folder if not exists</span>
-        <span class="n">folder_name</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
-        <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">folder_name</span><span class="p">)</span> <span class="ow">and</span> <span class="n">folder_name</span><span class="o">!=</span> <span class="s1">&#39;&#39;</span><span class="p">:</span>
-            <span class="n">os</span><span class="o">.</span><span class="n">makedirs</span><span class="p">(</span><span class="n">folder_name</span><span class="p">)</span>
+        <span class="n">folder_label</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirlabel</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">folder_label</span><span class="p">)</span> <span class="ow">and</span> <span class="n">folder_label</span><span class="o">!=</span> <span class="s1">&#39;&#39;</span><span class="p">:</span>
+            <span class="n">os</span><span class="o">.</span><span class="n">makedirs</span><span class="p">(</span><span class="n">folder_label</span><span class="p">)</span>
         
         <span class="n">data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">raster_</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
         
@@ -155,147 +155,40 @@
         
         <span class="k">if</span> <span class="n">verbose</span><span class="o">&gt;</span><span class="mi">0</span><span class="p">:</span>
             <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;done&#39;</span><span class="p">)</span>
-
-
-
-<div class="viewcode-block" id="LandUseCoverLayer"><a class="viewcode-back" href="../../../generated/clumpy.definition.LandUseCoverLayer.html#clumpy.definition.LandUseCoverLayer">[docs]</a><span class="k">class</span> <span class="nc">LandUseCoverLayer</span><span class="p">(</span><span class="n">_Layer</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Defines a Land Use Cover (LUC) layer.</span>
-<span class="sd">    This layer can then used for the calibration stage or the allocation stage.</span>
-<span class="sd">    </span>
-<span class="sd">    Parameters</span>
-<span class="sd">    ----------</span>
-<span class="sd">    name : str, default=``None``</span>
-<span class="sd">        The layer name.</span>
-<span class="sd">    time : float, default=``0``</span>
-<span class="sd">        The layer time (year unit).</span>
-<span class="sd">    path : str</span>
-<span class="sd">        The tiff file path.</span>
-<span class="sd">        If ``data`` is provided, a new tiff file will be created according to this path</span>
-<span class="sd">        and this operation overwrites the file path if exists.</span>
-<span class="sd">    data : :class:`numpy.ndarray`, defaul=None</span>
-<span class="sd">        The data to write. If ``None``, no writing is made.</span>
-<span class="sd">    copy_geo : :class:`LandUseCoverLayer`, default=None</span>
-<span class="sd">        The layer from whose geo metadata are copied.</span>
-<span class="sd">        If ``None``, geo metadata are set to ``None``.</span>
-
-<span class="sd">    Attributes</span>
-<span class="sd">    ----------</span>
-<span class="sd">    raster_ : :class:`rasterio.io.DatasetReader`</span>
-<span class="sd">        The unbuffered data and metadata reader object, provided by :mod:`rasterio`.</span>
-<span class="sd">    style_ : list of dict</span>
-<span class="sd">        The style used for displaying.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
-    
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
-                 <span class="n">name</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-                 <span class="n">time</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
-                 <span class="n">path</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-                 <span class="n">data</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-                 <span class="n">copy_geo</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
-        
-        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="n">name</span><span class="p">,</span>
-                         <span class="n">time</span><span class="o">=</span><span class="n">time</span><span class="p">,</span>
-                         <span class="n">path</span><span class="o">=</span><span class="n">path</span><span class="p">,</span>
-                         <span class="n">data</span><span class="o">=</span><span class="n">data</span><span class="p">,</span>
-                         <span class="n">copy_geo</span><span class="o">=</span><span class="n">copy_geo</span><span class="p">)</span>
-    
-        <span class="bp">self</span><span class="o">.</span><span class="n">style_</span> <span class="o">=</span> <span class="p">{}</span>
-
-    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="k">return</span><span class="p">(</span><span class="s1">&#39;LandUseCoverLayer()&#39;</span><span class="p">)</span>
-        
-<div class="viewcode-block" id="LandUseCoverLayer.import_style"><a class="viewcode-back" href="../../../generated/clumpy.definition.LandUseCoverLayer.html#clumpy.definition.LandUseCoverLayer.import_style">[docs]</a>    <span class="k">def</span> <span class="nf">import_style</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
-                      <span class="n">path</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Import legend through qml file provided by QGis. Alpha is not supported.</span>
-
-<span class="sd">        Parameters</span>
-<span class="sd">        ----------</span>
-<span class="sd">        path : str</span>
-<span class="sd">            The qml file path</span>
-
-<span class="sd">        &quot;&quot;&quot;</span>
-        <span class="kn">from</span> <span class="nn">xml.dom</span> <span class="kn">import</span> <span class="n">minidom</span>
-
-        <span class="c1"># parse an xml file by name</span>
-        <span class="n">mydoc</span> <span class="o">=</span> <span class="n">minidom</span><span class="o">.</span><span class="n">parse</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
-        <span class="n">items</span> <span class="o">=</span> <span class="n">mydoc</span><span class="o">.</span><span class="n">getElementsByTagName</span><span class="p">(</span><span class="s1">&#39;paletteEntry&#39;</span><span class="p">)</span>
-        
-        <span class="bp">self</span><span class="o">.</span><span class="n">style_</span> <span class="o">=</span> <span class="p">[]</span>
-        
-        <span class="k">for</span> <span class="n">elem</span> <span class="ow">in</span> <span class="n">items</span><span class="p">:</span>
             
-            <span class="bp">self</span><span class="o">.</span><span class="n">style_</span><span class="o">.</span><span class="n">append</span><span class="p">({</span><span class="s1">&#39;color&#39;</span><span class="p">:</span><span class="n">elem</span><span class="o">.</span><span class="n">attributes</span><span class="p">[</span><span class="s1">&#39;color&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">value</span><span class="p">,</span>
-                                <span class="s1">&#39;label&#39;</span><span class="p">:</span><span class="n">elem</span><span class="o">.</span><span class="n">attributes</span><span class="p">[</span><span class="s1">&#39;label&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">value</span><span class="p">,</span>
-                                <span class="s1">&#39;value&#39;</span><span class="p">:</span><span class="nb">int</span><span class="p">(</span><span class="n">elem</span><span class="o">.</span><span class="n">attributes</span><span class="p">[</span><span class="s1">&#39;value&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">value</span><span class="p">)})</span></div>
-    
-<div class="viewcode-block" id="LandUseCoverLayer.clean_style"><a class="viewcode-back" href="../../../generated/clumpy.definition.LandUseCoverLayer.html#clumpy.definition.LandUseCoverLayer.clean_style">[docs]</a>    <span class="k">def</span> <span class="nf">clean_style</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">null</span><span class="o">=</span><span class="s1">&#39;#ffffff&#39;</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">display</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
+                <span class="n">center</span><span class="p">,</span>
+                <span class="n">window</span><span class="p">,</span>
+                <span class="n">show</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                <span class="n">colorbar</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+                <span class="o">**</span><span class="n">kwargs_imshow</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Clean the style_ attr</span>
-
+<span class="sd">        Display the layer.</span>
+<span class="sd">        </span>
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
-<span class="sd">        null : TYPE, optional</span>
-<span class="sd">            DESCRIPTION. The default is &#39;#ffffff&#39;.</span>
-
-<span class="sd">        Returns</span>
-<span class="sd">        -------</span>
-<span class="sd">        None.</span>
-
-<span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">style</span> <span class="o">=</span> <span class="p">[]</span>
-        
-        <span class="n">u_unique</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">unique</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">raster_</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="mi">1</span><span class="p">)))</span>
-        
-        <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">style_</span><span class="p">:</span>
-            <span class="k">if</span> <span class="n">s</span><span class="p">[</span><span class="s1">&#39;value&#39;</span><span class="p">]</span> <span class="ow">in</span> <span class="n">u_unique</span><span class="p">:</span>
-                <span class="n">style</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">s</span><span class="p">)</span>
-                <span class="n">u_unique</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="n">u_unique</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">s</span><span class="p">[</span><span class="s1">&#39;value&#39;</span><span class="p">]))</span>
-        
-        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">u_unique</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
-            <span class="k">for</span> <span class="n">u</span> <span class="ow">in</span> <span class="n">u_unique</span><span class="p">:</span>
-                <span class="n">style</span><span class="o">.</span><span class="n">append</span><span class="p">({</span><span class="s1">&#39;color&#39;</span><span class="p">:</span><span class="s1">&#39;#ffffff&#39;</span><span class="p">,</span>
-                              <span class="s1">&#39;label&#39;</span><span class="p">:</span><span class="s1">&#39;null&#39;</span><span class="p">,</span>
-                              <span class="s1">&#39;value&#39;</span><span class="p">:</span><span class="n">u</span><span class="p">})</span>
-        
-        <span class="bp">self</span><span class="o">.</span><span class="n">style_</span> <span class="o">=</span> <span class="n">style</span></div>
-    
-<div class="viewcode-block" id="LandUseCoverLayer.display"><a class="viewcode-back" href="../../../generated/clumpy.definition.LandUseCoverLayer.html#clumpy.definition.LandUseCoverLayer.display">[docs]</a>    <span class="k">def</span> <span class="nf">display</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">center</span><span class="p">,</span> <span class="n">window</span><span class="p">,</span> <span class="n">show</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">colorbar</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Display the land use cover layer through python console with matplotlib.</span>
-
-<span class="sd">        Parameters</span>
-<span class="sd">        ----------</span>
-<span class="sd">        values : list of int</span>
-<span class="sd">            List of displayed states.</span>
-<span class="sd">        colors : list of str</span>
-<span class="sd">            List of colors in HTML format.</span>
-<span class="sd">        names : list of names</span>
-<span class="sd">            List of state names.</span>
 <span class="sd">        center : tuple of two integers</span>
 <span class="sd">            Center position as a tuple.</span>
 <span class="sd">        window : tuple of two integers</span>
 <span class="sd">            Window dimensions as a tuple.</span>
+<span class="sd">        show : bool, default=True</span>
+<span class="sd">            If True, the ``plt.show()`` is applied.</span>
+<span class="sd">        colorbar : bool, default=True</span>
+<span class="sd">            If True, the colorbar is displayed.</span>
+<span class="sd">        **kwargs_imshow : kwargs</span>
+<span class="sd">            Keyword arguments passed to the ``plt.imshow()`` function.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        plt : matplotlib.pyplot</span>
+<span class="sd">            Pyplot object</span>
+
 <span class="sd">        &quot;&quot;&quot;</span>
+        
         <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">center</span><span class="p">)</span> <span class="ow">is</span> <span class="nb">int</span><span class="p">:</span>
             <span class="n">center</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">unravel_index</span><span class="p">(</span><span class="n">center</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_data</span><span class="p">()</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
         
-        <span class="n">values</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">s</span><span class="p">[</span><span class="s1">&#39;value&#39;</span><span class="p">]</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">style_</span><span class="p">])</span>
-        <span class="n">colors</span> <span class="o">=</span> <span class="p">[</span><span class="n">s</span><span class="p">[</span><span class="s1">&#39;color&#39;</span><span class="p">]</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">style_</span><span class="p">]</span>
-        <span class="n">labels</span> <span class="o">=</span> <span class="p">[</span><span class="n">s</span><span class="p">[</span><span class="s1">&#39;label&#39;</span><span class="p">]</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">style_</span><span class="p">]</span>
-        
-        <span class="n">index_sorted</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">argsort</span><span class="p">(</span><span class="n">values</span><span class="p">))</span>
-        
-        <span class="n">values</span> <span class="o">=</span> <span class="p">[</span><span class="n">values</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">index_sorted</span><span class="p">]</span>
-        <span class="n">colors</span> <span class="o">=</span> <span class="p">[</span><span class="n">colors</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">index_sorted</span><span class="p">]</span>
-        <span class="n">labels</span> <span class="o">=</span> <span class="p">[</span><span class="n">labels</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">index_sorted</span><span class="p">]</span>
-        
         <span class="n">data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_data</span><span class="p">()</span>
-        
-        <span class="n">colors</span> <span class="o">=</span> <span class="n">colors</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span class="p">[</span><span class="n">colors</span><span class="p">[</span><span class="o">-</span><span class="mi">2</span><span class="p">]]</span> <span class="o">+</span> <span class="p">[</span><span class="n">colors</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]]</span>
-        <span class="n">bounds</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">values</span><span class="o">+</span><span class="p">[</span><span class="n">values</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">+</span><span class="mi">1</span><span class="p">])</span><span class="o">-</span><span class="mf">0.5</span>
-        
-        <span class="n">cmap</span> <span class="o">=</span> <span class="n">mpl_colors</span><span class="o">.</span><span class="n">ListedColormap</span><span class="p">(</span><span class="n">colors</span><span class="p">)</span>
-        <span class="n">norm</span> <span class="o">=</span> <span class="n">mpl_colors</span><span class="o">.</span><span class="n">BoundaryNorm</span><span class="p">(</span><span class="n">bounds</span><span class="p">,</span> <span class="n">cmap</span><span class="o">.</span><span class="n">N</span><span class="p">)</span>
         
         <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">window</span><span class="p">)</span> <span class="o">==</span> <span class="nb">int</span><span class="p">:</span>
             <span class="n">window</span> <span class="o">=</span> <span class="p">(</span><span class="n">window</span><span class="p">,</span> <span class="n">window</span><span class="p">)</span>
@@ -317,10 +210,125 @@
         <span class="k">if</span> <span class="n">y2</span> <span class="o">&gt;=</span> <span class="n">data</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]:</span>
             <span class="n">y2</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">data</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
             <span class="n">y1</span> <span class="o">=</span> <span class="n">y2</span> <span class="o">-</span> <span class="n">window</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
-
-        <span class="n">plt</span><span class="o">.</span><span class="n">imshow</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="n">x1</span><span class="p">:</span><span class="n">x2</span><span class="p">,</span> <span class="n">y1</span><span class="p">:</span><span class="n">y2</span><span class="p">],</span> <span class="n">interpolation</span><span class="o">=</span><span class="s1">&#39;none&#39;</span><span class="p">,</span> <span class="n">cmap</span><span class="o">=</span><span class="n">cmap</span><span class="p">,</span> <span class="n">norm</span><span class="o">=</span><span class="n">norm</span><span class="p">)</span>
+            
+        <span class="n">plt</span><span class="o">.</span><span class="n">imshow</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="n">x1</span><span class="p">:</span><span class="n">x2</span><span class="p">,</span> <span class="n">y1</span><span class="p">:</span><span class="n">y2</span><span class="p">],</span> <span class="o">**</span><span class="n">kwargs_imshow</span><span class="p">)</span>
         <span class="n">plt</span><span class="o">.</span><span class="n">yticks</span><span class="p">([],</span> <span class="p">[])</span>
         <span class="n">plt</span><span class="o">.</span><span class="n">xticks</span><span class="p">([],</span> <span class="p">[])</span>
+        
+        <span class="k">if</span> <span class="n">colorbar</span><span class="p">:</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">colorbar</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">show</span><span class="p">:</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+        <span class="k">return</span><span class="p">(</span><span class="n">plt</span><span class="p">)</span>
+
+<div class="viewcode-block" id="LandUseCoverLayer"><a class="viewcode-back" href="../../../generated/clumpy.definition.LandUseCoverLayer.html#clumpy.definition.LandUseCoverLayer">[docs]</a><span class="k">class</span> <span class="nc">LandUseCoverLayer</span><span class="p">(</span><span class="n">_Layer</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Define a Land Use Cover (LUC) layer.</span>
+<span class="sd">    This layer can then used for the calibration stage or the allocation stage.</span>
+<span class="sd">    </span>
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    label : str, default=``None``</span>
+<span class="sd">        The layer label.</span>
+<span class="sd">    time : float, default=``0``</span>
+<span class="sd">        The layer time (year unit).</span>
+<span class="sd">    path : str</span>
+<span class="sd">        The tiff file path.</span>
+<span class="sd">        If ``data`` is provided, a new tiff file will be created according to this path</span>
+<span class="sd">        and this operation overwrites the file path if exists.</span>
+<span class="sd">    data : :class:`numpy.ndarray`, defaul=None</span>
+<span class="sd">        The data to write. If ``None``, no writing is made.</span>
+<span class="sd">    copy_geo : :class:`LandUseCoverLayer`, default=None</span>
+<span class="sd">        The layer from whose geo metadata are copied.</span>
+<span class="sd">        If ``None``, geo metadata are set to ``None``.</span>
+<span class="sd">    palette : Palette</span>
+<span class="sd">        The states palette.</span>
+
+<span class="sd">    Attributes</span>
+<span class="sd">    ----------</span>
+<span class="sd">    raster_ : :class:`rasterio.io.DatasetReader`</span>
+<span class="sd">        The unbuffered data and metadata reader object, provided by :mod:`rasterio`.</span>
+<span class="sd">    style_ : list of dict</span>
+<span class="sd">        The style used for displaying.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
+                 <span class="n">label</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                 <span class="n">time</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+                 <span class="n">path</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                 <span class="n">data</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                 <span class="n">copy_geo</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                 <span class="n">palette</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">label</span><span class="o">=</span><span class="n">label</span><span class="p">,</span>
+                         <span class="n">time</span><span class="o">=</span><span class="n">time</span><span class="p">,</span>
+                         <span class="n">path</span><span class="o">=</span><span class="n">path</span><span class="p">,</span>
+                         <span class="n">data</span><span class="o">=</span><span class="n">data</span><span class="p">,</span>
+                         <span class="n">copy_geo</span><span class="o">=</span><span class="n">copy_geo</span><span class="p">)</span>
+    
+        <span class="bp">self</span><span class="o">.</span><span class="n">palette</span> <span class="o">=</span> <span class="n">palette</span>
+
+    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">label</span><span class="p">)</span>
+        
+<div class="viewcode-block" id="LandUseCoverLayer.set_palette"><a class="viewcode-back" href="../../../generated/clumpy.definition.LandUseCoverLayer.html#clumpy.definition.LandUseCoverLayer.set_palette">[docs]</a>    <span class="k">def</span> <span class="nf">set_palette</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">palette</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Set palette</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        palette : Palette</span>
+<span class="sd">            The palette.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        self : LandUseCoverLayer</span>
+<span class="sd">            The self object.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">palette</span> <span class="o">=</span> <span class="n">palette</span></div>
+    
+<div class="viewcode-block" id="LandUseCoverLayer.display"><a class="viewcode-back" href="../../../generated/clumpy.definition.LandUseCoverLayer.html#clumpy.definition.LandUseCoverLayer.display">[docs]</a>    <span class="k">def</span> <span class="nf">display</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
+                <span class="n">center</span><span class="p">,</span>
+                <span class="n">window</span><span class="p">,</span>
+                <span class="n">show</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                <span class="n">colorbar</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Display the land use cover layer through python console with matplotlib.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        center : tuple of two integers</span>
+<span class="sd">            Center position as a tuple.</span>
+<span class="sd">        window : tuple of two integers</span>
+<span class="sd">            Window dimensions as a tuple.</span>
+<span class="sd">        show : bool, default=True</span>
+<span class="sd">            If True, the ``plt.show()`` is applied.</span>
+<span class="sd">        colorbar : bool, default=True</span>
+<span class="sd">            If True, the colorbar is displayed.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        plt : matplotlib.pyplot</span>
+<span class="sd">            Pyplot object</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        
+        <span class="n">ordered_palette</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">palette</span><span class="o">.</span><span class="n">sort</span><span class="p">(</span><span class="n">inplace</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+        
+        <span class="n">labels</span><span class="p">,</span> <span class="n">values</span><span class="p">,</span> <span class="n">colors</span> <span class="o">=</span> <span class="n">ordered_palette</span><span class="o">.</span><span class="n">get_list_of_labels_values_colors</span><span class="p">()</span>
+        
+        <span class="n">colors</span> <span class="o">=</span> <span class="n">colors</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span class="p">[</span><span class="n">colors</span><span class="p">[</span><span class="o">-</span><span class="mi">2</span><span class="p">]]</span> <span class="o">+</span> <span class="p">[</span><span class="n">colors</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]]</span>
+        <span class="n">bounds</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">values</span><span class="o">+</span><span class="p">[</span><span class="n">values</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">+</span><span class="mi">1</span><span class="p">])</span><span class="o">-</span><span class="mf">0.5</span>
+        
+        <span class="n">cmap</span> <span class="o">=</span> <span class="n">mpl_colors</span><span class="o">.</span><span class="n">ListedColormap</span><span class="p">(</span><span class="n">colors</span><span class="p">)</span>
+        <span class="n">norm</span> <span class="o">=</span> <span class="n">mpl_colors</span><span class="o">.</span><span class="n">BoundaryNorm</span><span class="p">(</span><span class="n">bounds</span><span class="p">,</span> <span class="n">cmap</span><span class="o">.</span><span class="n">N</span><span class="p">)</span>
+        
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">display</span><span class="p">(</span><span class="n">center</span><span class="o">=</span><span class="n">center</span><span class="p">,</span>
+                        <span class="n">window</span><span class="o">=</span><span class="n">window</span><span class="p">,</span>
+                        <span class="n">show</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+                        <span class="n">colorbar</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+                        <span class="n">interpolation</span><span class="o">=</span><span class="s1">&#39;none&#39;</span><span class="p">,</span>
+                        <span class="n">cmap</span><span class="o">=</span><span class="n">cmap</span><span class="p">,</span>
+                        <span class="n">norm</span><span class="o">=</span><span class="n">norm</span><span class="p">)</span>
 
         <span class="k">if</span> <span class="n">colorbar</span><span class="p">:</span>
             <span class="n">cb</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">colorbar</span><span class="p">()</span>
@@ -333,13 +341,13 @@
 
 
 <div class="viewcode-block" id="FeatureLayer"><a class="viewcode-back" href="../../../generated/clumpy.definition.FeatureLayer.html#clumpy.definition.FeatureLayer">[docs]</a><span class="k">class</span> <span class="nc">FeatureLayer</span><span class="p">(</span><span class="n">_Layer</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Defines a feature layer.</span>
+    <span class="sd">&quot;&quot;&quot;Define a feature layer.</span>
 <span class="sd">    This layer can then used for the calibration stage or the allocation stage.</span>
 <span class="sd">    </span>
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
-<span class="sd">    name : str, default=``None``</span>
-<span class="sd">        The layer name.</span>
+<span class="sd">    label : str, default=``None``</span>
+<span class="sd">        The layer label.</span>
 <span class="sd">    time : float, default=``0``</span>
 <span class="sd">        The layer time (year unit).</span>
 <span class="sd">    path : str</span>
@@ -348,6 +356,13 @@
 <span class="sd">        and this operation overwrites the file path if exists.</span>
 <span class="sd">    data : :class:`numpy.ndarray`, defaul=None</span>
 <span class="sd">        The data to write. If ``None``, no writing is made.</span>
+<span class="sd">    </span>
+<span class="sd">    low_bound : None or float, default=None</span>
+<span class="sd">        If float, a low bound is set. Used in density estimation methods as GKDE.</span>
+<span class="sd">    </span>
+<span class="sd">    high_bound : None or float, default=None</span>
+<span class="sd">        If float, a high bound is set. Used in density estimation methods as GKDE.</span>
+<span class="sd">    </span>
 <span class="sd">    copy_geo : :class:`LandUseCoverLayer`, default=None</span>
 <span class="sd">        The layer from whose geo metadata are copied.</span>
 <span class="sd">        If ``None``, geo metadata are set to ``None``.</span>
@@ -359,37 +374,24 @@
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
-                 <span class="n">name</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                 <span class="n">label</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
                  <span class="n">time</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
                  <span class="n">path</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
                  <span class="n">data</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-                 <span class="n">low_bounded</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
-                 <span class="n">high_bounded</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+                 <span class="n">low_bound</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+                 <span class="n">high_bound</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
                  <span class="n">copy_geo</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         
-        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="n">name</span><span class="p">,</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">label</span><span class="o">=</span><span class="n">label</span><span class="p">,</span>
                          <span class="n">time</span><span class="o">=</span><span class="n">time</span><span class="p">,</span>
                          <span class="n">path</span><span class="o">=</span><span class="n">path</span><span class="p">,</span>
                          <span class="n">data</span><span class="o">=</span><span class="n">data</span><span class="p">,</span>
                          <span class="n">copy_geo</span><span class="o">=</span><span class="n">copy_geo</span><span class="p">)</span>
         
-        <span class="bp">self</span><span class="o">.</span><span class="n">low_bounded</span> <span class="o">=</span> <span class="n">low_bounded</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">high_bounded</span> <span class="o">=</span> <span class="n">high_bounded</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">low_bound</span> <span class="o">=</span> <span class="n">low_bound</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">high_bound</span> <span class="o">=</span> <span class="n">high_bound</span></div>
 
-    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="k">return</span><span class="p">(</span><span class="s1">&#39;FeatureLayer()&#39;</span><span class="p">)</span>
-
-    <span class="k">def</span> <span class="nf">display</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">colorbar</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span> <span class="n">show</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
-        <span class="n">data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_data</span><span class="p">()</span>
-        <span class="n">data</span><span class="p">[</span><span class="n">data</span> <span class="o">&lt;=</span> <span class="o">-</span><span class="mi">10</span><span class="o">**</span><span class="mi">3</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span>
-        <span class="n">plt</span><span class="o">.</span><span class="n">yticks</span><span class="p">([],</span> <span class="p">[])</span>
-        <span class="n">plt</span><span class="o">.</span><span class="n">xticks</span><span class="p">([],</span> <span class="p">[])</span>
-        <span class="n">plt</span><span class="o">.</span><span class="n">imshow</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
-        <span class="k">if</span> <span class="n">colorbar</span><span class="p">:</span>
-            <span class="n">plt</span><span class="o">.</span><span class="n">colorbar</span><span class="p">()</span>
-        <span class="k">if</span> <span class="n">show</span><span class="p">:</span>
-            <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
-        <span class="k">return</span><span class="p">(</span><span class="n">plt</span><span class="p">)</span></div>
+    
 </pre></div>
 
             <div class="clearer"></div>
