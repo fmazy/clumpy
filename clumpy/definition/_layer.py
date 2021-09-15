@@ -14,13 +14,13 @@ class _Layer:
     """
 
     def __init__(self,
-                 name=None,
+                 label=None,
                  time=0,
                  path=None,
                  data=None,
                  copy_geo=None):
         
-        self.name = name
+        self.label = label
         self.time = time
         self.path = path
         self.copy_geo = copy_geo
@@ -75,7 +75,7 @@ class _Layer:
         return(self.raster_.read(band))
 
     def __repr__(self):
-        return(self.name)
+        return(self.label)
         
     def export_asc(self, path, verbose=0):
         """Export the layer data as an ``asc`` file in order to use it through CLUES and CLUMondo.
@@ -88,12 +88,12 @@ class _Layer:
             level of verbosity.
         """
         if verbose>0:
-            print("[" + self.name + "] exporting tiff file in " + path + "...")
+            print("[" + self.label + "] exporting tiff file in " + path + "...")
         
          # create folder if not exists
-        folder_name = os.path.dirname(path)
-        if not os.path.exists(folder_name) and folder_name!= '':
-            os.makedirs(folder_name)
+        folder_label = os.path.dirlabel(path)
+        if not os.path.exists(folder_label) and folder_label!= '':
+            os.makedirs(folder_label)
         
         data = self.raster_.read(1)
         
@@ -116,147 +116,40 @@ class _Layer:
         
         if verbose>0:
             print('done')
-
-
-
-class LandUseCoverLayer(_Layer):
-    """Defines a Land Use Cover (LUC) layer.
-    This layer can then used for the calibration stage or the allocation stage.
-    
-    Parameters
-    ----------
-    name : str, default=``None``
-        The layer name.
-    time : float, default=``0``
-        The layer time (year unit).
-    path : str
-        The tiff file path.
-        If ``data`` is provided, a new tiff file will be created according to this path
-        and this operation overwrites the file path if exists.
-    data : :class:`numpy.ndarray`, defaul=None
-        The data to write. If ``None``, no writing is made.
-    copy_geo : :class:`LandUseCoverLayer`, default=None
-        The layer from whose geo metadata are copied.
-        If ``None``, geo metadata are set to ``None``.
-
-    Attributes
-    ----------
-    raster_ : :class:`rasterio.io.DatasetReader`
-        The unbuffered data and metadata reader object, provided by :mod:`rasterio`.
-    style_ : list of dict
-        The style used for displaying.
-    """
-    
-    def __init__(self,
-                 name=None,
-                 time=0,
-                 path=None,
-                 data=None,
-                 copy_geo=None):
-        
-        super().__init__(name=name,
-                         time=time,
-                         path=path,
-                         data=data,
-                         copy_geo=copy_geo)
-    
-        self.style_ = {}
-
-    def __repr__(self):
-        return('LandUseCoverLayer()')
-        
-    def import_style(self,
-                      path):
-        """
-        Import legend through qml file provided by QGis. Alpha is not supported.
-
-        Parameters
-        ----------
-        path : str
-            The qml file path
-
-        """
-        from xml.dom import minidom
-
-        # parse an xml file by name
-        mydoc = minidom.parse(path)
-        items = mydoc.getElementsByTagName('paletteEntry')
-        
-        self.style_ = []
-        
-        for elem in items:
             
-            self.style_.append({'color':elem.attributes['color'].value,
-                                'label':elem.attributes['label'].value,
-                                'value':int(elem.attributes['value'].value)})
-    
-    def clean_style(self, null='#ffffff'):
+    def display(self,
+                center,
+                window,
+                show=True,
+                colorbar = True,
+                **kwargs_imshow):
         """
-        Clean the style_ attr
-
+        Display the layer.
+        
         Parameters
         ----------
-        null : TYPE, optional
-            DESCRIPTION. The default is '#ffffff'.
-
-        Returns
-        -------
-        None.
-
-        """
-        style = []
-        
-        u_unique = list(np.unique(self.raster_.read(1)))
-        
-        for s in self.style_:
-            if s['value'] in u_unique:
-                style.append(s)
-                u_unique.pop(u_unique.index(s['value']))
-        
-        if len(u_unique) > 0:
-            for u in u_unique:
-                style.append({'color':'#ffffff',
-                              'label':'null',
-                              'value':u})
-        
-        self.style_ = style
-    
-    def display(self, center, window, show=True, colorbar=True):
-        """Display the land use cover layer through python console with matplotlib.
-
-        Parameters
-        ----------
-        values : list of int
-            List of displayed states.
-        colors : list of str
-            List of colors in HTML format.
-        names : list of names
-            List of state names.
         center : tuple of two integers
             Center position as a tuple.
         window : tuple of two integers
             Window dimensions as a tuple.
+        show : bool, default=True
+            If True, the ``plt.show()`` is applied.
+        colorbar : bool, default=True
+            If True, the colorbar is displayed.
+        **kwargs_imshow : kwargs
+            Keyword arguments passed to the ``plt.imshow()`` function.
+
+        Returns
+        -------
+        plt : matplotlib.pyplot
+            Pyplot object
+
         """
+        
         if type(center) is int:
             center = np.unravel_index(center, self.get_data().shape)
         
-        values = np.array([s['value'] for s in self.style_])
-        colors = [s['color'] for s in self.style_]
-        labels = [s['label'] for s in self.style_]
-        
-        index_sorted = list(np.argsort(values))
-        
-        values = [values[i] for i in index_sorted]
-        colors = [colors[i] for i in index_sorted]
-        labels = [labels[i] for i in index_sorted]
-        
         data = self.get_data()
-        
-        colors = colors[:-1] + [colors[-2]] + [colors[-1]]
-        bounds = np.array(values+[values[-1]+1])-0.5
-        
-        cmap = mpl_colors.ListedColormap(colors)
-        norm = mpl_colors.BoundaryNorm(bounds, cmap.N)
         
         if type(window) == int:
             window = (window, window)
@@ -278,10 +171,123 @@ class LandUseCoverLayer(_Layer):
         if y2 >= data.shape[1]:
             y2 = int(data.shape[1])
             y1 = y2 - window[1]
-
-        plt.imshow(data[x1:x2, y1:y2], interpolation='none', cmap=cmap, norm=norm)
+            
+        plt.imshow(data[x1:x2, y1:y2], **kwargs_imshow)
         plt.yticks([], [])
         plt.xticks([], [])
+        
+        if colorbar:
+            plt.colorbar()
+        if show:
+            plt.show()
+        return(plt)
+
+class LandUseCoverLayer(_Layer):
+    """Defines a Land Use Cover (LUC) layer.
+    This layer can then used for the calibration stage or the allocation stage.
+    
+    Parameters
+    ----------
+    label : str, default=``None``
+        The layer label.
+    time : float, default=``0``
+        The layer time (year unit).
+    path : str
+        The tiff file path.
+        If ``data`` is provided, a new tiff file will be created according to this path
+        and this operation overwrites the file path if exists.
+    data : :class:`numpy.ndarray`, defaul=None
+        The data to write. If ``None``, no writing is made.
+    copy_geo : :class:`LandUseCoverLayer`, default=None
+        The layer from whose geo metadata are copied.
+        If ``None``, geo metadata are set to ``None``.
+
+    Attributes
+    ----------
+    raster_ : :class:`rasterio.io.DatasetReader`
+        The unbuffered data and metadata reader object, provided by :mod:`rasterio`.
+    style_ : list of dict
+        The style used for displaying.
+    """
+    
+    def __init__(self,
+                 label=None,
+                 time=0,
+                 path=None,
+                 data=None,
+                 copy_geo=None,
+                 palette=None):
+        
+        super().__init__(label=label,
+                         time=time,
+                         path=path,
+                         data=data,
+                         copy_geo=copy_geo)
+    
+        self.palette = palette
+
+    def __repr__(self):
+        return(self.label)
+        
+    def set_palette(self, palette):
+        """
+        Set palette
+
+        Parameters
+        ----------
+        palette : Palette
+            The palette.
+
+        Returns
+        -------
+        self : LandUseCoverLayer
+            The self object.
+
+        """
+        self.palette = palette
+    
+    def display(self,
+                center,
+                window,
+                show=True,
+                colorbar=True):
+        """
+        Display the land use cover layer through python console with matplotlib.
+
+        Parameters
+        ----------
+        center : tuple of two integers
+            Center position as a tuple.
+        window : tuple of two integers
+            Window dimensions as a tuple.
+        show : bool, default=True
+            If True, the ``plt.show()`` is applied.
+        colorbar : bool, default=True
+            If True, the colorbar is displayed.
+
+        Returns
+        -------
+        plt : matplotlib.pyplot
+            Pyplot object
+        """
+        
+        ordered_palette = self.palette.sort(inplace=False)
+        
+        labels, values, colors = ordered_palette.get_list_of_labels_values_colors()
+        
+        colors = colors[:-1] + [colors[-2]] + [colors[-1]]
+        bounds = np.array(values+[values[-1]+1])-0.5
+        
+        cmap = mpl_colors.ListedColormap(colors)
+        norm = mpl_colors.BoundaryNorm(bounds, cmap.N)
+        
+        super().display(center=center,
+                        window=window,
+                        show=False,
+                        colorbar=False,
+                        interpolation='none',
+                        cmap=cmap,
+                        norm=norm)
 
         if colorbar:
             cb = plt.colorbar()
@@ -299,8 +305,8 @@ class FeatureLayer(_Layer):
     
     Parameters
     ----------
-    name : str, default=``None``
-        The layer name.
+    label : str, default=``None``
+        The layer label.
     time : float, default=``0``
         The layer time (year unit).
     path : str
@@ -327,7 +333,7 @@ class FeatureLayer(_Layer):
     """
 
     def __init__(self,
-                 name=None,
+                 label=None,
                  time=0,
                  path=None,
                  data=None,
@@ -335,7 +341,7 @@ class FeatureLayer(_Layer):
                  high_bound = None,
                  copy_geo=None):
         
-        super().__init__(name=name,
+        super().__init__(label=label,
                          time=time,
                          path=path,
                          data=data,
@@ -344,14 +350,4 @@ class FeatureLayer(_Layer):
         self.low_bound = low_bound
         self.high_bound = high_bound
 
-    def display(self, colorbar = True, show=True):
-        data = self.get_data()
-        data[data <= -10**3] = np.nan
-        plt.yticks([], [])
-        plt.xticks([], [])
-        plt.imshow(data)
-        if colorbar:
-            plt.colorbar()
-        if show:
-            plt.show()
-        return(plt)
+    

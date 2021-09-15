@@ -8,10 +8,24 @@ Created on Tue Sep 14 17:45:24 2021
 
 class Region():
     def __init__(self,
-                 name,
+                 label,
                  calibration_region,
                  allocation_region):
-        
-        self.name = name
+        """
+        Define a region.
+
+        Parameters
+        ----------
+        label : str
+            The region's label. It should be unique.
+        calibration_region : LandUseLayer
+            The region where the calibration is made.
+        allocation_region : LandUseLayer
+            The region where the allocation is made.
+        """
+        self.label = label
         self.calibration_region = calibration_region
         self.allocation_region = allocation_region
+        
+    def __repr__(self):
+        return(self.label)

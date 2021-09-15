@@ -126,7 +126,7 @@ class Case():
             J_u[u] = J
             
             if explanatory_variables:
-                # create feature names
+                # create feature labels
                 for feature_type, info in self.params[u]['features']:
                     # switch according z_type
     

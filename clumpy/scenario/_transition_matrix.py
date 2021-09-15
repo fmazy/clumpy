@@ -10,6 +10,23 @@ import numpy as np
 
 class TransitionMatrix():
     def __init__(self, M, list_u=None, list_v=None):
+        """
+        Define a transition matrix.
+
+        Parameters
+        ----------
+        M : array-like of shape (n_initial_states, n_final_states)
+            The transition matrix values.
+        list_u : list of 
+            DESCRIPTION. The default is None.
+        list_v : TYPE, optional
+            DESCRIPTION. The default is None.
+
+        Returns
+        -------
+        None.
+
+        """
         
         if list_u is None or list_v is None:
             M, list_u, list_v = _compact_transition_matrix(full_M = M)
