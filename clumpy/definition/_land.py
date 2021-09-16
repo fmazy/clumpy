@@ -105,7 +105,7 @@ class Land():
                    distances={}):
         """
         Get values.
-
+        
         """
         # initial data
         # the region is selected after the distance computation
