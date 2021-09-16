@@ -6,4 +6,4 @@ Created on Tue Sep 14 14:03:57 2021
 @author: frem
 """
 
-from ._estimator import TransitionProbabilityEstimator
+from ._tpe import TransitionProbabilityEstimator

@@ -40,8 +40,13 @@
 <span></span><span class="ch">#!/usr/bin/env python3</span>
 <span class="c1"># -*- coding: utf-8 -*-</span>
 
+<span class="kn">from</span> <span class="nn">scipy</span> <span class="kn">import</span> <span class="n">ndimage</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+
 <span class="kn">from</span> <span class="nn">..density_estimation</span> <span class="kn">import</span> <span class="n">_methods</span>
 <span class="kn">from</span> <span class="nn">..density_estimation._density_estimator</span> <span class="kn">import</span> <span class="n">DensityEstimator</span>
+<span class="kn">from</span> <span class="nn">._layer</span> <span class="kn">import</span> <span class="n">_Layer</span>
+<span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">State</span>
 
 <div class="viewcode-block" id="Land"><a class="viewcode-back" href="../../../generated/clumpy.definition.Land.html#clumpy.definition.Land">[docs]</a><span class="k">class</span> <span class="nc">Land</span><span class="p">():</span>
     <span class="sd">&quot;&quot;&quot;</span>
@@ -55,11 +60,14 @@
 <span class="sd">        Density estimation for :math:`P(x|u)`.</span>
 <span class="sd">            </span>
 <span class="sd">            gkde : Gaussian Kernel Density Estimation method</span>
+<span class="sd">    verbose : int, default=None</span>
+<span class="sd">        Verbosity level.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> 
                  <span class="n">features</span><span class="p">,</span>
-                 <span class="n">de</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-                 <span class="n">isl_ratio</span> <span class="o">=</span> <span class="mf">1.0</span><span class="p">):</span>
+                 <span class="n">de</span> <span class="o">=</span> <span class="s1">&#39;gkde&#39;</span><span class="p">,</span>
+                 <span class="n">isl_ratio</span> <span class="o">=</span> <span class="mf">1.0</span><span class="p">,</span>
+                 <span class="n">verbose</span> <span class="o">=</span> <span class="mi">0</span><span class="p">):</span>
         
         <span class="bp">self</span><span class="o">.</span><span class="n">features</span> <span class="o">=</span> <span class="n">features</span>
         
@@ -73,10 +81,12 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">conditional_density_estimation</span> <span class="o">=</span> <span class="p">{}</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">transition_patches</span> <span class="o">=</span> <span class="p">{}</span>
         
+        <span class="bp">self</span><span class="o">.</span><span class="n">verbose</span> <span class="o">=</span> <span class="n">verbose</span>
+        
     <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span><span class="p">(</span><span class="s1">&#39;land&#39;</span><span class="p">)</span>
     
-<div class="viewcode-block" id="Land.add_conditional_density_estimation"><a class="viewcode-back" href="../../../generated/clumpy.definition.Land.html#clumpy.definition.Land.add_conditional_density_estimation">[docs]</a>    <span class="k">def</span> <span class="nf">add_conditional_density_estimation</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">state</span><span class="p">,</span> <span class="n">de</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<div class="viewcode-block" id="Land.add_conditional_density_estimation"><a class="viewcode-back" href="../../../generated/clumpy.definition.Land.html#clumpy.definition.Land.add_conditional_density_estimation">[docs]</a>    <span class="k">def</span> <span class="nf">add_conditional_density_estimation</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">state</span><span class="p">,</span> <span class="n">de</span><span class="o">=</span><span class="s1">&#39;gkde&#39;</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Add conditional density for a given final state.</span>
 
@@ -123,9 +133,108 @@
         
         <span class="bp">self</span><span class="o">.</span><span class="n">transition_patches</span><span class="p">[</span><span class="n">state</span><span class="p">]</span> <span class="o">=</span> <span class="n">transition_patches</span>
         
-        <span class="k">return</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span></div></div>
+        <span class="k">return</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span></div>
     
+<div class="viewcode-block" id="Land.get_values"><a class="viewcode-back" href="../../../generated/clumpy.definition.Land.html#clumpy.definition.Land.get_values">[docs]</a>    <span class="k">def</span> <span class="nf">get_values</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
+                   <span class="n">state</span><span class="p">,</span>
+                   <span class="n">luc_initial</span><span class="p">,</span>
+                   <span class="n">luc_final</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+                   <span class="n">region</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+                   <span class="n">explanatory_variables</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                   <span class="n">distances</span><span class="o">=</span><span class="p">{}):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Get values.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        state : State</span>
+<span class="sd">            The studied initial state.</span>
+<span class="sd">        luc_initial : LandUseCoverLayer</span>
+<span class="sd">            The initial land use layer.</span>
+<span class="sd">        luc_final : LandUseCoverLayer, default=None</span>
+<span class="sd">            The final land use layer. Ignored if ``None``.</span>
+<span class="sd">        region : LandUseCoverLayer, default=None</span>
+<span class="sd">            The region mask layer. If ``None``, the whole area is studied.</span>
+<span class="sd">        explanatory_variables : bool, default=True</span>
+<span class="sd">            If ``True``, features values are returned.</span>
+<span class="sd">        distances : dict(ndarray)</span>
+<span class="sd">            A dict of ndarray distances to the State used as key.</span>
+<span class="sd">            Usefull to avoid redondant distance computations.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        J : ndarray of shape (n_samples,)</span>
+<span class="sd">            The samples flat indexes.</span>
+<span class="sd">        </span>
+<span class="sd">        X : ndarray of shape (n_samples, n_features)</span>
+<span class="sd">            Returned if ``explanatory_variables`` is ``True``. The features values.</span>
+<span class="sd">        </span>
+<span class="sd">        V : ndarray of shape (n_samples, n_features)</span>
+<span class="sd">            Returned if ``luc_final`` is not ``None``. The final state values.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># initial data</span>
+        <span class="c1"># the region is selected after the distance computation</span>
+        <span class="n">data_luc_initial</span> <span class="o">=</span> <span class="n">luc_initial</span><span class="o">.</span><span class="n">get_data</span><span class="p">()</span>
+                    
+        <span class="c1"># get pixels indexes whose initial states are u</span>
+        <span class="c1"># J = ndarray_suitable_integer_type(np.where(initial_luc_layer.raster_.read(1).flat==u)[0])</span>
+        <span class="n">J</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">data_luc_initial</span><span class="o">.</span><span class="n">flat</span> <span class="o">==</span> <span class="n">state</span><span class="o">.</span><span class="n">value</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+        
+        <span class="c1"># selection according to the region.</span>
+        <span class="k">if</span> <span class="n">region</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">J</span> <span class="o">=</span> <span class="n">J</span><span class="p">[</span><span class="n">region</span><span class="o">.</span><span class="n">get_data</span><span class="p">()</span><span class="o">.</span><span class="n">flat</span> <span class="o">==</span> <span class="mi">1</span><span class="p">]</span>
+        
+        <span class="n">X</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="k">if</span> <span class="n">explanatory_variables</span><span class="p">:</span>
+            <span class="c1"># create feature labels</span>
+            <span class="k">for</span> <span class="n">info</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">features</span><span class="p">:</span>
+                <span class="c1"># switch according z_type</span>
+                <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">info</span><span class="p">,</span> <span class="n">_Layer</span><span class="p">):</span>
+                    <span class="c1"># just get data</span>
+                    <span class="n">x</span> <span class="o">=</span> <span class="n">info</span><span class="o">.</span><span class="n">get_data</span><span class="p">()</span><span class="o">.</span><span class="n">flat</span><span class="p">[</span><span class="n">J</span><span class="p">]</span>
+                
+                <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">info</span><span class="p">,</span> <span class="n">State</span><span class="p">):</span>
+                    <span class="c1"># get distance data</span>
+                    <span class="c1"># in this case, feature is a State object !</span>
+                    <span class="k">if</span> <span class="n">info</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">distances</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+                        <span class="n">_compute_distance</span><span class="p">(</span><span class="n">info</span><span class="p">,</span> <span class="n">data_luc_initial</span><span class="p">,</span> <span class="n">distances</span><span class="p">)</span>
+                    <span class="n">x</span> <span class="o">=</span> <span class="n">distances</span><span class="p">[</span><span class="n">info</span><span class="p">]</span><span class="o">.</span><span class="n">flat</span><span class="p">[</span><span class="n">J</span><span class="p">]</span>
+                    
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="k">raise</span><span class="p">(</span><span class="ne">TypeError</span><span class="p">(</span><span class="s1">&#39;Unexpected feature.&#39;</span><span class="p">))</span>
+                    
+                <span class="c1"># if X is not yet defined</span>
+                <span class="k">if</span> <span class="n">X</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                    <span class="n">X</span> <span class="o">=</span> <span class="n">x</span>
+                
+                <span class="c1"># else column stack</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">X</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">column_stack</span><span class="p">((</span><span class="n">X</span><span class="p">,</span> <span class="n">x</span><span class="p">))</span>
+
+            <span class="c1"># if only one feature, reshape X as a column</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">features</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+                <span class="n">X</span> <span class="o">=</span> <span class="n">X</span><span class="p">[:,</span><span class="kc">None</span><span class="p">]</span>
+        
+        <span class="c1"># if final luc layer</span>
+        <span class="k">if</span> <span class="n">luc_final</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="c1"># just get data inside the region (because J is already inside)</span>
+            <span class="n">V</span> <span class="o">=</span> <span class="n">luc_final</span><span class="o">.</span><span class="n">get_data</span><span class="p">()</span><span class="o">.</span><span class="n">flat</span><span class="p">[</span><span class="n">J</span><span class="p">]</span>
+        
     
+        <span class="n">elements_to_return</span> <span class="o">=</span> <span class="p">[</span><span class="n">J</span><span class="p">]</span>
+        
+        <span class="k">if</span> <span class="n">explanatory_variables</span><span class="p">:</span>
+            <span class="n">elements_to_return</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">X</span><span class="p">)</span>
+        
+        <span class="k">if</span> <span class="n">luc_final</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">elements_to_return</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">V</span><span class="p">)</span>
+        
+        <span class="k">return</span><span class="p">(</span><span class="n">elements_to_return</span><span class="p">)</span></div></div>
+
+<span class="k">def</span> <span class="nf">_compute_distance</span><span class="p">(</span><span class="n">state</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="n">distances</span><span class="p">):</span>
+    <span class="n">v_matrix</span> <span class="o">=</span> <span class="p">(</span><span class="n">data</span> <span class="o">==</span> <span class="n">state</span><span class="o">.</span><span class="n">value</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">int</span><span class="p">)</span>
+    <span class="n">distances</span><span class="p">[</span><span class="n">state</span><span class="p">]</span> <span class="o">=</span> <span class="n">ndimage</span><span class="o">.</span><span class="n">distance_transform_edt</span><span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">v_matrix</span><span class="p">)</span>
 </pre></div>
 
             <div class="clearer"></div>

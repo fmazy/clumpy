@@ -38,32 +38,80 @@
             
   <h1>Source code for clumpy.definition._region</h1><div class="highlight"><pre>
 <span></span><span class="ch">#!/usr/bin/env python3</span>
-<span class="c1"># -*- coding: utf-8 -*-</span>
-
+<span class="c1"># -*- coding: utf-8 -*</span>
 
 <div class="viewcode-block" id="Region"><a class="viewcode-back" href="../../../generated/clumpy.definition.Region.html#clumpy.definition.Region">[docs]</a><span class="k">class</span> <span class="nc">Region</span><span class="p">():</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Define a region.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    label : str</span>
+<span class="sd">        The region&#39;s label. It should be unique.</span>
+<span class="sd">        </span>
+<span class="sd">    luc_initial : LandUseLayer</span>
+<span class="sd">        The initial land use where the calibration is made.</span>
+<span class="sd">    </span>
+<span class="sd">    luc_final : LandUseLayer, default=None</span>
+<span class="sd">        The final land use where the calibration is made.</span>
+<span class="sd">    </span>
+<span class="sd">    luc_start : LandUseLayer, default=None</span>
+<span class="sd">        The starting land use where the calibration is made.</span>
+<span class="sd">        </span>
+<span class="sd">    region_calibration : LandUseLayer, default=None</span>
+<span class="sd">        The region mask layer used for calibration.</span>
+<span class="sd">        </span>
+<span class="sd">    region_allocation : LandUseLayer, default=None</span>
+<span class="sd">        The region mask used for allocation.</span>
+<span class="sd">    </span>
+<span class="sd">    verbose : int, default=0</span>
+<span class="sd">        Verbosity level.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
                  <span class="n">label</span><span class="p">,</span>
-                 <span class="n">calibration_region</span><span class="p">,</span>
-                 <span class="n">allocation_region</span><span class="p">):</span>
+                 <span class="n">luc_initial</span><span class="p">,</span>
+                 <span class="n">luc_final</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+                 <span class="n">luc_start</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+                 <span class="n">region_calibration</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+                 <span class="n">region_allocation</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                 <span class="n">verbose</span> <span class="o">=</span> <span class="mi">0</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">label</span> <span class="o">=</span> <span class="n">label</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">luc_initial</span> <span class="o">=</span> <span class="n">luc_initial</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">luc_final</span> <span class="o">=</span> <span class="n">luc_final</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">luc_start</span> <span class="o">=</span> <span class="n">luc_start</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">region_calibration</span> <span class="o">=</span> <span class="n">region_calibration</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">region_allocation</span> <span class="o">=</span> <span class="n">region_allocation</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">verbose</span> <span class="o">=</span> <span class="n">verbose</span>
+        
+        <span class="bp">self</span><span class="o">.</span><span class="n">lands</span> <span class="o">=</span> <span class="p">{}</span>
+        
+    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">label</span><span class="p">)</span>
+    
+<div class="viewcode-block" id="Region.add_land"><a class="viewcode-back" href="../../../generated/clumpy.definition.Region.html#clumpy.definition.Region.add_land">[docs]</a>    <span class="k">def</span> <span class="nf">add_land</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">state</span><span class="p">,</span> <span class="n">land</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Define a region.</span>
+<span class="sd">        Add a land for a given state.</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
-<span class="sd">        label : str</span>
-<span class="sd">            The region&#39;s label. It should be unique.</span>
-<span class="sd">        calibration_region : LandUseLayer</span>
-<span class="sd">            The region where the calibration is made.</span>
-<span class="sd">        allocation_region : LandUseLayer</span>
-<span class="sd">            The region where the allocation is made.</span>
+<span class="sd">        state : State</span>
+<span class="sd">            The initial state.</span>
+<span class="sd">        </span>
+<span class="sd">        land : Land</span>
+<span class="sd">            The Land object.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        self : Region</span>
+<span class="sd">            The self object.</span>
+
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">label</span> <span class="o">=</span> <span class="n">label</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">calibration_region</span> <span class="o">=</span> <span class="n">calibration_region</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">allocation_region</span> <span class="o">=</span> <span class="n">allocation_region</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">lands</span><span class="p">[</span><span class="n">state</span><span class="p">]</span> <span class="o">=</span> <span class="n">land</span>
         
-    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="k">return</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">label</span><span class="p">)</span></div>
+        <span class="k">return</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span></div></div>
+    
+    
+        
 </pre></div>
 
             <div class="clearer"></div>

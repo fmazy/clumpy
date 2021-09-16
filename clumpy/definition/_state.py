@@ -18,6 +18,9 @@ class State():
         State color. It should be unique.
     """
     def __init__(self, label, value, color):
+        if value < 0:
+            raise(ValueError('Unexpected state value. It must be positive !'))
+        
         self.label = label
         self.value = value
         self.color = color
@@ -42,6 +45,13 @@ class Palette():
     
     def __repr__(self):
         return(str(self.states))
+    
+    def __iter__(self):
+        for state in self.states:
+            yield state
+            
+    def __len__(self):
+        return(len(self.states))
         
     def add(self, state):
         """
@@ -88,6 +98,7 @@ class Palette():
             return(self._get_id_by_value(info))
         elif isinstance(info, str):
             return(self._get_id_by_label(info))
+        
         
     def get(self, info):
         """

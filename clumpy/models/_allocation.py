@@ -15,7 +15,7 @@ def allocation(luc_initial,
                luc_final,
                luc_start,
                regions,
-               params_regions,
+               tms,
                path):
     """
     Allocation function according to regions parameters.
@@ -88,7 +88,6 @@ def _region_allocation(luc_initial,
         The allocated map data.
     """
     
-    # J_u, 
-    
     return(allocated_map)
 
+# def _land_transition_probabilities()

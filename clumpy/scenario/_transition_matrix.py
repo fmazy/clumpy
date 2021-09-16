@@ -129,13 +129,13 @@ class TransitionMatrix():
         
         self.M[id_u, id_v] = a
     
-    def select_all_u(self, info_u):
+    def select_land(self, state):
         """
         Select a new transition probabilities object for a given initial state.
 
         Parameters
         ----------
-        info_u : State or int or str
+        state : State or int or str
             The initial state information which can be the object, the state's value or the state's label.
             If two states share the same label, only the first one to occur is returned.
 
@@ -145,7 +145,7 @@ class TransitionMatrix():
             The selected transition matrix object.
 
         """
-        id_u = self.palette_u.get_id(info_u)
+        id_u = self.palette_u.get_id(state)
         
         M = self.M[[id_u],:].copy()
                 

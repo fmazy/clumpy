@@ -8,7 +8,7 @@ Created on Thu Sep 16 09:53:29 2021
 
 import os
 
-def path_split(path):
+def path_split(path, prefix=False):
     """
     Split a path.
     
@@ -30,7 +30,12 @@ def path_split(path):
     folder_path = os.path.dirname(path)
     
     base_name = os.path.basename(path)
+    
+    if prefix:
+        return(folder_path, base_name)
+    
     base_name_splitted = base_name.split('.')
+    
     file_ext = base_name_splitted[-1]
     file_name = ''
     for b in base_name_splitted[:-1]:
