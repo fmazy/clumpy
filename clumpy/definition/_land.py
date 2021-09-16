@@ -105,7 +105,26 @@ class Land():
                    distances={}):
         """
         Get values.
-        
+
+        Parameters
+        ----------
+        state : TYPE
+            DESCRIPTION.
+        luc_initial : TYPE
+            DESCRIPTION.
+        luc_final : TYPE, optional
+            DESCRIPTION. The default is None.
+        region : TYPE, optional
+            DESCRIPTION. The default is None.
+        explanatory_variables : TYPE, optional
+            DESCRIPTION. The default is True.
+        distances : TYPE, optional
+            DESCRIPTION. The default is {}.
+
+        Returns
+        -------
+        None.
+
         """
         # initial data
         # the region is selected after the distance computation
