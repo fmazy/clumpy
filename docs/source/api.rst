@@ -44,6 +44,49 @@ Layer
     
    definition.LandUseCoverLayer
    definition.FeatureLayer
+   
+Region
+------
+.. automodule:: clumpy.definition._region
+   :no-members:
+   :no-inherited-members:
+
+.. currentmodule:: clumpy
+
+.. autosummary::
+   :toctree: generated/
+   :template: class.rst
+    
+   definition.Region
+
+Land
+----
+.. automodule:: clumpy.definition._land
+   :no-members:
+   :no-inherited-members:
+
+.. currentmodule:: clumpy
+
+.. autosummary::
+   :toctree: generated/
+   :template: class.rst
+    
+   definition.Land
+   
+Patches
+-------
+.. automodule:: clumpy.definition._patches
+   :no-members:
+   :no-inherited-members:
+
+.. currentmodule:: clumpy
+
+.. autosummary::
+   :toctree: generated/
+   :template: class.rst
+
+   definition.BootstrapPatches
+   definition.TransitionPatches
 
 :mod:`clumpy.definition`: Scenario
 ==================================
@@ -115,10 +158,10 @@ Parameters
     :toctree: generated/
     :template: class.rst
         
-    models.parameters.Patches
-    models.parameters.BootstrapPatch
-    models.parameters.Transitions
-    models.parameters.Region
+    models.PatchesParams
+    models.BootstrapPatchParams
+    models.LandParams
+    models.RegionParams
         
 Models functions
 ----------------

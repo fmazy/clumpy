@@ -84,6 +84,51 @@
 </tbody>
 </table>
 </section>
+<section id="module-clumpy.definition._region">
+<span id="region"></span><h3>Region<a class="headerlink" href="#module-clumpy.definition._region" title="Permalink to this headline">¶</a></h3>
+<table class="longtable docutils align-default">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="generated/clumpy.definition.Region.html#clumpy.definition.Region" title="clumpy.definition.Region"><code class="xref py py-obj docutils literal notranslate"><span class="pre">definition.Region</span></code></a>(label, calibration_region, …)</p></td>
+<td><p></p></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="module-clumpy.definition._land">
+<span id="land"></span><h3>Land<a class="headerlink" href="#module-clumpy.definition._land" title="Permalink to this headline">¶</a></h3>
+<table class="longtable docutils align-default">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="generated/clumpy.definition.Land.html#clumpy.definition.Land" title="clumpy.definition.Land"><code class="xref py py-obj docutils literal notranslate"><span class="pre">definition.Land</span></code></a>(features[, de, isl_ratio])</p></td>
+<td><p>Land object which refers to a given initial state.</p></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="module-clumpy.definition._patches">
+<span id="patches"></span><h3>Patches<a class="headerlink" href="#module-clumpy.definition._patches" title="Permalink to this headline">¶</a></h3>
+<table class="longtable docutils align-default">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="generated/clumpy.definition.BootstrapPatches.html#clumpy.definition.BootstrapPatches" title="clumpy.definition.BootstrapPatches"><code class="xref py py-obj docutils literal notranslate"><span class="pre">definition.BootstrapPatches</span></code></a>(areas, …)</p></td>
+<td><p>Bootstrap patch parameters object.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="generated/clumpy.definition.TransitionPatches.html#clumpy.definition.TransitionPatches" title="clumpy.definition.TransitionPatches"><code class="xref py py-obj docutils literal notranslate"><span class="pre">definition.TransitionPatches</span></code></a>([isl_patches, …])</p></td>
+<td><p>Patches informations for a given transition</p></td>
+</tr>
+</tbody>
+</table>
+</section>
 </section>
 <section id="module-clumpy.scenario">
 <span id="clumpy-definition-scenario"></span><h2><a class="reference internal" href="#module-clumpy.definition" title="clumpy.definition"><code class="xref py py-mod docutils literal notranslate"><span class="pre">clumpy.definition</span></code></a>: Scenario<a class="headerlink" href="#module-clumpy.scenario" title="Permalink to this headline">¶</a></h2>
@@ -129,34 +174,30 @@
 <tr class="row-odd"><td><p><a class="reference internal" href="generated/clumpy.density_estimation.GKDE.html#clumpy.density_estimation.GKDE" title="clumpy.density_estimation.GKDE"><code class="xref py py-obj docutils literal notranslate"><span class="pre">density_estimation.GKDE</span></code></a>([h, …])</p></td>
 <td><p>Gaussian Kernel Density Estimator.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="generated/clumpy.density_estimation.Parameters.html#clumpy.density_estimation.Parameters" title="clumpy.density_estimation.Parameters"><code class="xref py py-obj docutils literal notranslate"><span class="pre">density_estimation.Parameters</span></code></a>([method])</p></td>
-<td><p>Density Estimators Parameters.</p></td>
-</tr>
 </tbody>
 </table>
 </section>
 <section id="clumpy-models-models">
 <h2><a class="reference internal" href="#module-clumpy.models" title="clumpy.models"><code class="xref py py-mod docutils literal notranslate"><span class="pre">clumpy.models</span></code></a>: Models<a class="headerlink" href="#clumpy-models-models" title="Permalink to this headline">¶</a></h2>
 <span class="target" id="module-clumpy.models"></span><p>Models</p>
-<section id="module-clumpy.models.parameters">
-<span id="parameters"></span><h3>Parameters<a class="headerlink" href="#module-clumpy.models.parameters" title="Permalink to this headline">¶</a></h3>
-<p>model parameters</p>
+<section id="parameters">
+<h3>Parameters<a class="headerlink" href="#parameters" title="Permalink to this headline">¶</a></h3>
 <table class="longtable docutils align-default">
 <colgroup>
 <col style="width: 10%" />
 <col style="width: 90%" />
 </colgroup>
 <tbody>
-<tr class="row-odd"><td><p><a class="reference internal" href="generated/clumpy.models.parameters.Patches.html#clumpy.models.parameters.Patches" title="clumpy.models.parameters.Patches"><code class="xref py py-obj docutils literal notranslate"><span class="pre">models.parameters.Patches</span></code></a>([isl_patch, …])</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="generated/clumpy.models.PatchesParams.html#clumpy.models.PatchesParams" title="clumpy.models.PatchesParams"><code class="xref py py-obj docutils literal notranslate"><span class="pre">models.PatchesParams</span></code></a>([isl_patch, exp_patch, …])</p></td>
 <td><p>Patches parameters object.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="generated/clumpy.models.parameters.BootstrapPatch.html#clumpy.models.parameters.BootstrapPatch" title="clumpy.models.parameters.BootstrapPatch"><code class="xref py py-obj docutils literal notranslate"><span class="pre">models.parameters.BootstrapPatch</span></code></a>(areas, …)</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="generated/clumpy.models.BootstrapPatchParams.html#clumpy.models.BootstrapPatchParams" title="clumpy.models.BootstrapPatchParams"><code class="xref py py-obj docutils literal notranslate"><span class="pre">models.BootstrapPatchParams</span></code></a>(areas, …)</p></td>
 <td><p>Bootstrap patch parameters object.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="generated/clumpy.models.parameters.Transitions.html#clumpy.models.parameters.Transitions" title="clumpy.models.parameters.Transitions"><code class="xref py py-obj docutils literal notranslate"><span class="pre">models.parameters.Transitions</span></code></a>(features[, …])</p></td>
-<td><p>Transitions parameters used by module classes.</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="generated/clumpy.models.LandParams.html#clumpy.models.LandParams" title="clumpy.models.LandParams"><code class="xref py py-obj docutils literal notranslate"><span class="pre">models.LandParams</span></code></a>(features[, dep_P_x__u])</p></td>
+<td><p>Land parameters used by module classes.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="generated/clumpy.models.parameters.Region.html#clumpy.models.parameters.Region" title="clumpy.models.parameters.Region"><code class="xref py py-obj docutils literal notranslate"><span class="pre">models.parameters.Region</span></code></a>(transition_matrix)</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="generated/clumpy.models.RegionParams.html#clumpy.models.RegionParams" title="clumpy.models.RegionParams"><code class="xref py py-obj docutils literal notranslate"><span class="pre">models.RegionParams</span></code></a>(transition_matrix)</p></td>
 <td><p>Region parameters.</p></td>
 </tr>
 </tbody>
@@ -195,6 +236,9 @@
 <li><a class="reference internal" href="#module-clumpy.definition"><code class="xref py py-mod docutils literal notranslate"><span class="pre">clumpy.definition</span></code>: Definition</a><ul>
 <li><a class="reference internal" href="#module-clumpy.definition._state">State</a></li>
 <li><a class="reference internal" href="#module-clumpy.definition._layer">Layer</a></li>
+<li><a class="reference internal" href="#module-clumpy.definition._region">Region</a></li>
+<li><a class="reference internal" href="#module-clumpy.definition._land">Land</a></li>
+<li><a class="reference internal" href="#module-clumpy.definition._patches">Patches</a></li>
 </ul>
 </li>
 <li><a class="reference internal" href="#module-clumpy.scenario"><code class="xref py py-mod docutils literal notranslate"><span class="pre">clumpy.definition</span></code>: Scenario</a><ul>
@@ -205,7 +249,7 @@
 </li>
 <li><a class="reference internal" href="#module-clumpy.density_estimation"><code class="xref py py-mod docutils literal notranslate"><span class="pre">clumpy.density_estimation</span></code>: Density Estimation</a></li>
 <li><a class="reference internal" href="#clumpy-models-models"><code class="xref py py-mod docutils literal notranslate"><span class="pre">clumpy.models</span></code>: Models</a><ul>
-<li><a class="reference internal" href="#module-clumpy.models.parameters">Parameters</a></li>
+<li><a class="reference internal" href="#parameters">Parameters</a></li>
 <li><a class="reference internal" href="#models-functions">Models functions</a></li>
 </ul>
 </li>

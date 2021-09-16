@@ -45,6 +45,11 @@
 <span class="sd">@author: frem</span>
 <span class="sd">&quot;&quot;&quot;</span>
 
+<span class="kn">import</span> <span class="nn">os</span>
+
+<span class="kn">from</span> <span class="nn">..definition</span> <span class="kn">import</span> <span class="n">LandUseCoverLayer</span>
+<span class="kn">from</span> <span class="nn">..tools</span> <span class="kn">import</span> <span class="n">path_split</span>
+
 <div class="viewcode-block" id="allocation"><a class="viewcode-back" href="../../../generated/clumpy.models.allocation.html#clumpy.models.allocation">[docs]</a><span class="k">def</span> <span class="nf">allocation</span><span class="p">(</span><span class="n">luc_initial</span><span class="p">,</span>
                <span class="n">luc_final</span><span class="p">,</span>
                <span class="n">luc_start</span><span class="p">,</span>
@@ -64,13 +69,73 @@
 <span class="sd">        Start land use for allocation.</span>
 <span class="sd">    regions : list(Region)</span>
 <span class="sd">        List of Region objects.</span>
-<span class="sd">    params_regions : list(parameters.Region)</span>
+<span class="sd">    params_regions : list(RegionParams)</span>
 <span class="sd">        List of region parameters objects.</span>
 <span class="sd">    path : str</span>
 <span class="sd">        The path to save the allocated map (tif file).</span>
+<span class="sd">        </span>
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    luc_allocated : LandUseCoverLayer</span>
+<span class="sd">        Allocated land use.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     
-    <span class="n">a</span> <span class="o">=</span> <span class="mi">1</span></div>
+    <span class="c1"># Path process</span>
+    <span class="n">folder_path</span><span class="p">,</span> <span class="n">file_name</span><span class="p">,</span> <span class="n">file_ext</span> <span class="o">=</span> <span class="n">path_split</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
+    
+    <span class="n">allocated_map</span> <span class="o">=</span> <span class="n">luc_start</span><span class="o">.</span><span class="n">get_data</span><span class="p">()</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+    
+    <span class="k">for</span> <span class="n">id_region</span><span class="p">,</span> <span class="n">region</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">regions</span><span class="p">):</span>
+        <span class="n">allocated_map</span> <span class="o">=</span> <span class="n">_region_allocation</span><span class="p">(</span><span class="n">luc_initial</span> <span class="o">=</span> <span class="n">luc_initial</span><span class="p">,</span>
+                                            <span class="n">luc_final</span> <span class="o">=</span> <span class="n">luc_final</span><span class="p">,</span>
+                                            <span class="n">region</span> <span class="o">=</span> <span class="n">region</span><span class="p">,</span>
+                                            <span class="n">params_region</span> <span class="o">=</span> <span class="n">params_regions</span><span class="p">[</span><span class="n">id_region</span><span class="p">],</span>
+                                            <span class="n">allocated_map</span> <span class="o">=</span> <span class="n">allocated_map</span><span class="p">)</span>
+    
+    <span class="n">luc_allocated</span> <span class="o">=</span> <span class="n">LandUseCoverLayer</span><span class="p">(</span><span class="n">label</span><span class="o">=</span><span class="n">file_name</span><span class="p">,</span>
+                                      <span class="n">path</span> <span class="o">=</span> <span class="n">path</span><span class="p">,</span> 
+                                      <span class="n">copy_geo</span><span class="o">=</span><span class="n">luc_start</span><span class="p">,</span>
+                                      <span class="n">data</span> <span class="o">=</span> <span class="n">allocated_map</span><span class="p">)</span>
+    
+    <span class="k">return</span><span class="p">(</span><span class="n">luc_allocated</span><span class="p">)</span></div>
+        
+    
+<span class="k">def</span> <span class="nf">_region_allocation</span><span class="p">(</span><span class="n">luc_initial</span><span class="p">,</span>
+                      <span class="n">luc_final</span><span class="p">,</span>
+                      <span class="n">region</span><span class="p">,</span>
+                      <span class="n">params_region</span><span class="p">,</span>
+                      <span class="n">allocated_map</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Allocation function dedicated to only one region.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    luc_initial : LandUseCoverLayer</span>
+<span class="sd">        Initial land use for calibration.</span>
+<span class="sd">    luc_final : LandUseCoverLayer</span>
+<span class="sd">        Final land use for calibration.</span>
+<span class="sd">    regions : Region</span>
+<span class="sd">        Region.</span>
+<span class="sd">    params_regions : RegionParams</span>
+<span class="sd">        Region Parameters.</span>
+<span class="sd">    allocated_map : array-like of type int</span>
+<span class="sd">        The allocated map as an array-like data.</span>
+<span class="sd">        </span>
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    allocated_map : ndarray</span>
+<span class="sd">        The allocated map data.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    
+    <span class="n">J_u</span><span class="p">,</span> 
+    
+    <span class="k">return</span><span class="p">(</span><span class="n">allocated_map</span><span class="p">)</span>
+
+<span class="c1"># def _land_allocation(luc_initial,</span>
+<span class="c1">#                      luc_final,</span>
+<span class="c1">#                      region,</span>
+<span class="c1">#                      state,</span>
+<span class="c1">#                      landParams)</span>
 </pre></div>
 
             <div class="clearer"></div>

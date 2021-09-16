@@ -16,7 +16,7 @@
     <link rel="shortcut icon" href="../_static/logo.ico"/>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="prev" title="clumpy.models.parameters.Region" href="clumpy.models.parameters.Region.html" /> 
+    <link rel="prev" title="clumpy.models.RegionParams" href="clumpy.models.RegionParams.html" /> 
   </head><body>
     <div class="related" role="navigation" aria-label="related navigation">
       <h3>Navigation</h3>
@@ -28,7 +28,7 @@
           <a href="../py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
         <li class="right" >
-          <a href="clumpy.models.parameters.Region.html" title="clumpy.models.parameters.Region"
+          <a href="clumpy.models.RegionParams.html" title="clumpy.models.RegionParams"
              accesskey="P">previous</a> |</li>
         <li class="nav-item nav-item-0"><a href="../index.html">clumpy 0.1.0 documentation</a> &#187;</li>
           <li class="nav-item nav-item-1"><a href="../api.html" accesskey="U">Clumpy API</a> &#187;</li>
@@ -53,10 +53,16 @@
 <li><p><strong>luc_initial</strong> (<a class="reference internal" href="clumpy.definition.LandUseCoverLayer.html#clumpy.definition.LandUseCoverLayer" title="clumpy.definition.LandUseCoverLayer"><em>LandUseCoverLayer</em></a>) – Initial land use for calibration.</p></li>
 <li><p><strong>luc_final</strong> (<a class="reference internal" href="clumpy.definition.LandUseCoverLayer.html#clumpy.definition.LandUseCoverLayer" title="clumpy.definition.LandUseCoverLayer"><em>LandUseCoverLayer</em></a>) – Final land use for calibration.</p></li>
 <li><p><strong>luc_start</strong> (<a class="reference internal" href="clumpy.definition.LandUseCoverLayer.html#clumpy.definition.LandUseCoverLayer" title="clumpy.definition.LandUseCoverLayer"><em>LandUseCoverLayer</em></a>) – Start land use for allocation.</p></li>
-<li><p><strong>regions</strong> (<em>list</em><em>(</em><a class="reference internal" href="clumpy.models.parameters.Region.html#clumpy.models.parameters.Region" title="clumpy.models.parameters.Region"><em>Region</em></a><em>)</em>) – List of Region objects.</p></li>
-<li><p><strong>params_regions</strong> (<em>list</em><em>(</em><a class="reference internal" href="clumpy.models.parameters.Region.html#clumpy.models.parameters.Region" title="clumpy.models.parameters.Region"><em>parameters.Region</em></a><em>)</em>) – List of region parameters objects.</p></li>
+<li><p><strong>regions</strong> (<em>list</em><em>(</em><a class="reference internal" href="clumpy.definition.Region.html#clumpy.definition.Region" title="clumpy.definition.Region"><em>Region</em></a><em>)</em>) – List of Region objects.</p></li>
+<li><p><strong>params_regions</strong> (<em>list</em><em>(</em><a class="reference internal" href="clumpy.models.RegionParams.html#clumpy.models.RegionParams" title="clumpy.models.RegionParams"><em>RegionParams</em></a><em>)</em>) – List of region parameters objects.</p></li>
 <li><p><strong>path</strong> (<em>str</em>) – The path to save the allocated map (tif file).</p></li>
 </ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>luc_allocated</strong> – Allocated land use.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="clumpy.definition.LandUseCoverLayer.html#clumpy.definition.LandUseCoverLayer" title="clumpy.definition.LandUseCoverLayer">LandUseCoverLayer</a></p>
 </dd>
 </dl>
 </dd></dl>
@@ -74,8 +80,8 @@
               <img class="logo" src="../_static/logo.png" alt="Logo"/>
             </a></p>
   <h4>Previous topic</h4>
-  <p class="topless"><a href="clumpy.models.parameters.Region.html"
-                        title="previous chapter"><code class="xref py py-mod docutils literal notranslate"><span class="pre">clumpy.models.parameters</span></code>.Region</a></p>
+  <p class="topless"><a href="clumpy.models.RegionParams.html"
+                        title="previous chapter"><code class="xref py py-mod docutils literal notranslate"><span class="pre">clumpy.models</span></code>.RegionParams</a></p>
   <div role="note" aria-label="source link">
     <h3>This Page</h3>
     <ul class="this-page-menu">
@@ -107,7 +113,7 @@
           <a href="../py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
         <li class="right" >
-          <a href="clumpy.models.parameters.Region.html" title="clumpy.models.parameters.Region"
+          <a href="clumpy.models.RegionParams.html" title="clumpy.models.RegionParams"
              >previous</a> |</li>
         <li class="nav-item nav-item-0"><a href="../index.html">clumpy 0.1.0 documentation</a> &#187;</li>
           <li class="nav-item nav-item-1"><a href="../api.html" >Clumpy API</a> &#187;</li>

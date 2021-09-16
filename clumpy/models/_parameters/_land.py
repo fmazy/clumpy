@@ -2,11 +2,11 @@
 # -*- coding: utf-8 -*-
 
 from ...definition import FeatureLayer, Palette
-from ...density_estimation import Parameters as DensityEstimationParameters
+from ...density_estimation import DensityEstimationParams
 
-class Transitions():
+class LandParams():
     """
-    Transitions parameters used by module classes.
+    Land parameters used by module classes.
 
     Parameters
     ----------
@@ -24,52 +24,52 @@ class Transitions():
         
         self.dep_P_x__u = dep_P_x__u
         if self.dep_P_x__u is None:
-            self.dep_P_x__u = DensityEstimationParameters()
+            self.dep_P_x__u = DensityEstimationParams()
         
         self.dep_P_x__u_v = {}
-        self.patches = {}
+        self.patches_params = {}
         
     def __repr__(self):
         return('trans_params->'+str(list(self.dep_P_x__u_v.keys())))
              
     def add_density_estimation_parameters(self, state, dep=None):
         """
-        Set density estimation parameters for each transitions
+        Set density estimation parameters for each final state.
 
         Parameters
         ----------
         state : State
             The final state.
-        dep : density_estimation.Parameters
+        dep : DensityEstimationParams
             Density estimation parameters. If None, default density estimation parameters
             is set.
 
         Returns
         -------
-        self : Transitions
+        self : Land
             The self object.
         """
         self.dep_P_x__u_v[state] = dep
         
         return(self)
     
-    def add_patches_parameters(self, state, params_patches):
+    def add_patches_params(self, state, patches_params):
         """
-        Set density estimation parameters for each transitions
+        Set density estimation parameters for each final state.
 
         Parameters
         ----------
         state : State
             The final state.
-        params_patches : parameters.Patches
+        patches_params : PatchesParams
             The patches parameters.
 
         Returns
         -------
-        self : Transitions
+        self : Land
             The self object.
         """
-        self.patches[state] = params_patches
+        self.patches_params[state] = patches_params
     
         return(self)
     

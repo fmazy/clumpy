@@ -43,7 +43,7 @@ class DensityEstimator(BaseEstimator):
             setattr(self, param, value)
 
 
-class Parameters():
+class DensityEstimationParams():
     """
     Density Estimators Parameters.
     Note that boundary parameters and ``forbid_null_value`` are set

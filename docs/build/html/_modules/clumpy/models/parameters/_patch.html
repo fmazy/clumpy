@@ -45,15 +45,15 @@
 <span class="sd">@author: frem</span>
 <span class="sd">&quot;&quot;&quot;</span>
 
-<div class="viewcode-block" id="Patches"><a class="viewcode-back" href="../../../../generated/clumpy.models.parameters.Patches.html#clumpy.models.parameters.Patches">[docs]</a><span class="k">class</span> <span class="nc">Patches</span><span class="p">():</span>
+<div class="viewcode-block" id="PatchesParams"><a class="viewcode-back" href="../../../../generated/clumpy.models.parameters.PatchesParams.html#clumpy.models.parameters.PatchesParams">[docs]</a><span class="k">class</span> <span class="nc">PatchesParams</span><span class="p">():</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Patches parameters object.</span>
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
-<span class="sd">    isl_patch : BootstrapPatch, default=None</span>
+<span class="sd">    isl_patch : BootstrapPatchParams, default=None</span>
 <span class="sd">        The island patch parameters. Unexpected to be ``None`` if ``ratio&gt;0``.</span>
-<span class="sd">    exp_patch : BootstrapPatch</span>
+<span class="sd">    exp_patch : BootstrapPatchParams, default=None</span>
 <span class="sd">        The expansion patch parameters. Unexpected to be ``None`` if ``ratio&lt;1``.</span>
 <span class="sd">    ratio : float</span>
 <span class="sd">        The ratio of island areas over the whole areas to allocate.</span>
@@ -67,7 +67,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">ratio</span> <span class="o">=</span> <span class="n">ratio</span></div>
         
         
-<span class="k">class</span> <span class="nc">Patch</span><span class="p">():</span>
+<span class="k">class</span> <span class="nc">PatchParams</span><span class="p">():</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Patch parameters object. Should prefer the child BootStrapPatch.</span>
 
@@ -79,7 +79,7 @@
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">method</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">method</span> <span class="o">=</span> <span class="n">method</span>
         
-<div class="viewcode-block" id="BootstrapPatch"><a class="viewcode-back" href="../../../../generated/clumpy.models.parameters.BootstrapPatch.html#clumpy.models.parameters.BootstrapPatch">[docs]</a><span class="k">class</span> <span class="nc">BootstrapPatch</span><span class="p">(</span><span class="n">Patch</span><span class="p">):</span>
+<div class="viewcode-block" id="BootstrapPatchParams"><a class="viewcode-back" href="../../../../generated/clumpy.models.parameters.BootstrapPatchParams.html#clumpy.models.parameters.BootstrapPatchParams">[docs]</a><span class="k">class</span> <span class="nc">BootstrapPatchParams</span><span class="p">(</span><span class="n">PatchParams</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Bootstrap patch parameters object.</span>
 <span class="sd">    </span>

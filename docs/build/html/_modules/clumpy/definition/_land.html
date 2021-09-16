@@ -1,0 +1,173 @@
+
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>clumpy.definition._land &#8212; clumpy 0.1.0 documentation</title>
+    <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/nature.css" />
+    <script data-url_root="../../../" id="documentation_options" src="../../../_static/documentation_options.js"></script>
+    <script src="../../../_static/jquery.js"></script>
+    <script src="../../../_static/underscore.js"></script>
+    <script src="../../../_static/doctools.js"></script>
+    <link rel="shortcut icon" href="../../../_static/logo.ico"/>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../../index.html">clumpy 0.1.0 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../../index.html" accesskey="U">Module code</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">clumpy.definition._land</a></li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for clumpy.definition._land</h1><div class="highlight"><pre>
+<span></span><span class="ch">#!/usr/bin/env python3</span>
+<span class="c1"># -*- coding: utf-8 -*-</span>
+
+<span class="kn">from</span> <span class="nn">..density_estimation</span> <span class="kn">import</span> <span class="n">_methods</span>
+<span class="kn">from</span> <span class="nn">..density_estimation._density_estimator</span> <span class="kn">import</span> <span class="n">DensityEstimator</span>
+
+<div class="viewcode-block" id="Land"><a class="viewcode-back" href="../../../generated/clumpy.definition.Land.html#clumpy.definition.Land">[docs]</a><span class="k">class</span> <span class="nc">Land</span><span class="p">():</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Land object which refers to a given initial state.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    features : list(FeaturesLayer) or list(State)</span>
+<span class="sd">        List of features where a State means a distance layer to the corresponding state.</span>
+<span class="sd">    de : {&#39;gkde&#39;} or DensityEstimator, default=&#39;gkde&#39;</span>
+<span class="sd">        Density estimation for :math:`P(x|u)`.</span>
+<span class="sd">            </span>
+<span class="sd">            gkde : Gaussian Kernel Density Estimation method</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> 
+                 <span class="n">features</span><span class="p">,</span>
+                 <span class="n">de</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+                 <span class="n">isl_ratio</span> <span class="o">=</span> <span class="mf">1.0</span><span class="p">):</span>
+        
+        <span class="bp">self</span><span class="o">.</span><span class="n">features</span> <span class="o">=</span> <span class="n">features</span>
+        
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">de</span><span class="p">,</span> <span class="n">DensityEstimator</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">density_estimation</span> <span class="o">=</span> <span class="n">de</span>
+        <span class="k">elif</span> <span class="n">de</span> <span class="ow">in</span> <span class="n">_methods</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">density_estimation</span> <span class="o">=</span> <span class="n">_methods</span><span class="p">[</span><span class="n">de</span><span class="p">]()</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span><span class="p">(</span><span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;Unexpected de value.&#39;</span><span class="p">))</span>
+                
+        <span class="bp">self</span><span class="o">.</span><span class="n">conditional_density_estimation</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">transition_patches</span> <span class="o">=</span> <span class="p">{}</span>
+        
+    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span><span class="p">(</span><span class="s1">&#39;land&#39;</span><span class="p">)</span>
+    
+<div class="viewcode-block" id="Land.add_conditional_density_estimation"><a class="viewcode-back" href="../../../generated/clumpy.definition.Land.html#clumpy.definition.Land.add_conditional_density_estimation">[docs]</a>    <span class="k">def</span> <span class="nf">add_conditional_density_estimation</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">state</span><span class="p">,</span> <span class="n">de</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Add conditional density for a given final state.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        state : State</span>
+<span class="sd">            The final state.</span>
+<span class="sd">        de : {&#39;gkde&#39;} or DensityEstimator, default=&#39;gkde&#39;</span>
+<span class="sd">            Density estimation for :math:`P(x|u,v)`.</span>
+<span class="sd">                gkde : Gaussian Kernel Density Estimation method</span>
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        self : Land</span>
+<span class="sd">            The self object.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">de</span><span class="p">,</span> <span class="n">DensityEstimator</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">conditional_density_estimation</span><span class="p">[</span><span class="n">state</span><span class="p">]</span> <span class="o">=</span> <span class="n">de</span>
+        <span class="k">elif</span> <span class="n">de</span> <span class="ow">in</span> <span class="n">_methods</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">conditional_density_estimation</span><span class="p">[</span><span class="n">state</span><span class="p">]</span> <span class="o">=</span> <span class="n">_methods</span><span class="p">[</span><span class="n">de</span><span class="p">]()</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span><span class="p">(</span><span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;Unexpected de value.&#39;</span><span class="p">))</span>
+        
+        <span class="k">return</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span></div>
+        
+<div class="viewcode-block" id="Land.add_transition_patches"><a class="viewcode-back" href="../../../generated/clumpy.definition.Land.html#clumpy.definition.Land.add_transition_patches">[docs]</a>    <span class="k">def</span> <span class="nf">add_transition_patches</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> 
+                            <span class="n">state</span><span class="p">,</span>
+                            <span class="n">transition_patches</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Add transition patches for a given final state.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        state : State</span>
+<span class="sd">            The final state.</span>
+<span class="sd">        transition_patches : TransitionPatches</span>
+<span class="sd">            The transition patches</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        self : Land</span>
+<span class="sd">            The self object.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        
+        <span class="bp">self</span><span class="o">.</span><span class="n">transition_patches</span><span class="p">[</span><span class="n">state</span><span class="p">]</span> <span class="o">=</span> <span class="n">transition_patches</span>
+        
+        <span class="k">return</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span></div></div>
+    
+    
+</pre></div>
+
+            <div class="clearer"></div>
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="../../../index.html">
+              <img class="logo" src="../../../_static/logo.png" alt="Logo"/>
+            </a></p>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../../index.html">clumpy 0.1.0 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../../index.html" >Module code</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">clumpy.definition._land</a></li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2020, François-Rémi Mazy.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 4.0.2.
+    </div>
+  </body>
+</html>

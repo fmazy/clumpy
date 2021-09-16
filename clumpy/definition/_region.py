@@ -1,16 +1,17 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""
-Created on Tue Sep 14 17:45:24 2021
-
-@author: frem
-"""
+from scipy import ndimage
+import numpy as np
 
 class Region():
     def __init__(self,
                  label,
-                 calibration_region,
-                 allocation_region):
+                 luc_initial,
+                 luc_final = None,
+                 luc_start = None,
+                 region_calibration = None,
+                 region_allocation=None,
+                 verbose = 0):
         """
         Define a region.
 
@@ -18,14 +19,59 @@ class Region():
         ----------
         label : str
             The region's label. It should be unique.
-        calibration_region : LandUseLayer
-            The region where the calibration is made.
-        allocation_region : LandUseLayer
-            The region where the allocation is made.
+            
+        luc_initial : LandUseLayer
+            The initial land use where the calibration is made.
+        
+        luc_final : LandUseLayer, default=None
+            The final land use where the calibration is made.
+        
+        luc_start : LandUseLayer, default=None
+            The starting land use where the calibration is made.
+            
+        region_calibration : LandUseLayer, default=None
+            The region mask layer used for calibration.
+            
+        region_allocation : LandUseLayer, default=None
+            The region mask used for allocation.
+        
+        verbose : int, default=0
+            Verbosity level.
         """
         self.label = label
-        self.calibration_region = calibration_region
-        self.allocation_region = allocation_region
+        self.luc_initial = luc_initial
+        self.luc_final = luc_final
+        self.luc_start = luc_start
+        self.region_calibration = region_calibration
+        self.region_allocation = region_allocation
+        self.verbose = verbose
+        
+        self.lands = {}
         
     def __repr__(self):
         return(self.label)
+    
+    def add_land(self, state, land):
+        """
+        Add a land for a given state.
+
+        Parameters
+        ----------
+        state : State
+            The initial state.
+        
+        land : Land
+            The Land object.
+
+        Returns
+        -------
+        self : Region
+            The self object.
+
+        """
+        self.lands[state] = land
+        
+        return(self)
+    
+    
+        

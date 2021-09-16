@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-class Region():
+class RegionParams():
     """
     Region parameters.
 
@@ -12,12 +12,12 @@ class Region():
     """
     def __init__(self, transition_matrix):
         self.transition_matrix = transition_matrix
-        self.transitions = {}
+        self.lands_params = {}
         
     def __repr__(self):
         return('region_params:'+str(list(self.transitions)))
     
-    def add_transitions(self, state, params_transitions):
+    def add_land_parameters(self, state, land_params):
         """
         Set all transitions for each initial states
 
@@ -26,14 +26,14 @@ class Region():
         state : State
             The final state.
         
-        params_transitions : parameters.Transitions
-            The transitions parameters.
+        land : parameters.Land
+            The land parameters.
 
         Returns
         -------
-        self : Region
+        self : RegionParams
             The self object.
         """
-        self.transitions[state] = params_transitions
+        self.lands_params[state] = land_params
         
         return(self)

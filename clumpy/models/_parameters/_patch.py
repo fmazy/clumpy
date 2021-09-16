@@ -6,15 +6,15 @@ Created on Thu Sep 16 07:50:46 2021
 @author: frem
 """
 
-class Patches():
+class PatchesParams():
     """
     Patches parameters object.
 
     Parameters
     ----------
-    isl_patch : BootstrapPatch, default=None
+    isl_patch : BootstrapPatchParams, default=None
         The island patch parameters. Unexpected to be ``None`` if ``ratio>0``.
-    exp_patch : BootstrapPatch
+    exp_patch : BootstrapPatchParams, default=None
         The expansion patch parameters. Unexpected to be ``None`` if ``ratio<1``.
     ratio : float
         The ratio of island areas over the whole areas to allocate.
@@ -28,7 +28,7 @@ class Patches():
         self.ratio = ratio
         
         
-class Patch():
+class PatchParams():
     """
     Patch parameters object. Should prefer the child BootStrapPatch.
 
@@ -40,7 +40,7 @@ class Patch():
     def __init__(self, method):
         self.method = method
         
-class BootstrapPatch(Patch):
+class BootstrapPatchParams(PatchParams):
     """
     Bootstrap patch parameters object.
     

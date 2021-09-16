@@ -30,7 +30,7 @@ def allocation(luc_initial,
         Start land use for allocation.
     regions : list(Region)
         List of Region objects.
-    params_regions : list(parameters.Region)
+    params_regions : list(RegionParams)
         List of region parameters objects.
     path : str
         The path to save the allocated map (tif file).
@@ -77,7 +77,7 @@ def _region_allocation(luc_initial,
         Final land use for calibration.
     regions : Region
         Region.
-    params_regions : Region
+    params_regions : RegionParams
         Region Parameters.
     allocated_map : array-like of type int
         The allocated map as an array-like data.
@@ -88,4 +88,7 @@ def _region_allocation(luc_initial,
         The allocated map data.
     """
     
+    # J_u, 
+    
     return(allocated_map)
+
