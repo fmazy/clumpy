@@ -15,20 +15,25 @@ class Region():
         self.transitions = {}
         
     def __repr__(self):
-        return('region:'+str(list(self.transitions)))
+        return('region_params:'+str(list(self.transitions)))
     
-    def add_transitions(self, state, transitions):
+    def add_transitions(self, state, params_transitions):
         """
         Set all transitions for each initial states
 
         Parameters
         ----------
-        transitions : dict of parameters.Transitions with States as keys
-            Dict of transitions with states as keys.
+        state : State
+            The final state.
+        
+        params_transitions : parameters.Transitions
+            The transitions parameters.
 
         Returns
         -------
-        None.
-
+        self : Region
+            The self object.
         """
-        self.transitions[state] = transitions
+        self.transitions[state] = params_transitions
+        
+        return(self)

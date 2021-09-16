@@ -5,3 +5,4 @@ Models
 """
 
 from . import parameters
+from ._allocation import allocation

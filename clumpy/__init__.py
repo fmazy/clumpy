@@ -8,4 +8,4 @@ from . import density_estimation
 from . import utils
 from . import scenario
 from . import estimation
-from . import model
+from . import models

@@ -10,7 +10,7 @@ class Transitions():
 
     Parameters
     ----------
-    features : list of FeaturesLayer or State
+    features : list(FeaturesLayer) or list(State)
         List of features where a State means a distance layer to the corresponding state.
     dep_P_x__u : density_estimation.Parameters, default=None
         Density estimation parameters (dep) for :math:`P(x|u)`. If None, default
@@ -27,9 +27,10 @@ class Transitions():
             self.dep_P_x__u = DensityEstimationParameters()
         
         self.dep_P_x__u_v = {}
+        self.patches = {}
         
     def __repr__(self):
-        return('transitions->'+str(list(self.dep_P_x__u_v.keys())))
+        return('trans_params->'+str(list(self.dep_P_x__u_v.keys())))
              
     def add_density_estimation_parameters(self, state, dep=None):
         """
@@ -49,7 +50,27 @@ class Transitions():
             The self object.
         """
         self.dep_P_x__u_v[state] = dep
+        
+        return(self)
     
+    def add_patches_parameters(self, state, params_patches):
+        """
+        Set density estimation parameters for each transitions
 
+        Parameters
+        ----------
+        state : State
+            The final state.
+        params_patches : parameters.Patches
+            The patches parameters.
+
+        Returns
+        -------
+        self : Transitions
+            The self object.
+        """
+        self.patches[state] = params_patches
+    
+        return(self)
     
     

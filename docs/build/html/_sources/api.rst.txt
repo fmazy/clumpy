@@ -93,10 +93,10 @@ Transition Matrix
    density_estimation.GKDE
    density_estimation.Parameters
 
-:mod:`clumpy.model`: Model
+:mod:`clumpy.models`: Models
 ==========================
 
-.. automodule:: clumpy.model
+.. automodule:: clumpy.models
     :no-members:
     :no-inherited-members:
     
@@ -105,7 +105,7 @@ Transition Matrix
 Parameters
 ----------
 
-.. automodule:: clumpy.model.parameters
+.. automodule:: clumpy.models.parameters
     :no-members:
     :no-inherited-members:
 
@@ -115,9 +115,21 @@ Parameters
     :toctree: generated/
     :template: class.rst
         
-        model.parameters.Transitions
-        model.parameters.Region
-   
+    models.parameters.Patches
+    models.parameters.BootstrapPatch
+    models.parameters.Transitions
+    models.parameters.Region
+        
+Models functions
+----------------
+
+.. currentmodule:: clumpy
+
+.. autosummary::
+    :toctree: generated/
+    :template: function.rst
+    
+    models.allocation
 ..
     Case
     ----

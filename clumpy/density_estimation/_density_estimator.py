@@ -23,6 +23,24 @@ class DensityEstimator(BaseEstimator):
         self.high_bounds = high_bounds
         self.forbid_null_value = forbid_null_value
         self.verbose = verbose
+        
+    def set_params(self, **params):
+        """
+        Set parameters.
+
+        Parameters
+        ----------
+        **params : kwargs
+            Parameters et values to set.
+
+        Returns
+        -------
+        self : DensityEstimator
+            The self object.
+
+        """
+        for param, value in params.items():
+            setattr(self, param, value)
 
 
 class Parameters():

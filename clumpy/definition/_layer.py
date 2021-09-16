@@ -7,7 +7,7 @@ import os
 from matplotlib import pyplot as plt
 from matplotlib import colors as mpl_colors
 import rasterio
-from ..tools import ndarray_suitable_integer_type
+from ..tools import ndarray_suitable_integer_type, path_split, create_directories
 
 class _Layer:
     """Layer base element
@@ -53,6 +53,9 @@ class _Layer:
                 crs = self.copy_geo.raster_.crs
                 transform = self.copy_geo.raster_.transform
             
+            # create parent directories if necessary
+            folder_path, file_name, file_ext = path_split(path)
+            create_directories(folder_path)
             
             # create file
             with rasterio.open(
