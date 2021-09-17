@@ -34,6 +34,7 @@ def path_split(path, prefix=False):
     if prefix:
         return(folder_path, base_name)
     
+    
     base_name_splitted = base_name.split('.')
     
     file_ext = base_name_splitted[-1]

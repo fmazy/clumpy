@@ -6,4 +6,5 @@ from ._case import make_J
 from ._region import Region
 from ._state import State, Palette
 from ._land import Land
-from ._patches import BootstrapPatches, TransitionPatches
+from ._patches import BootstrapPatch
+from ._territory import Territory

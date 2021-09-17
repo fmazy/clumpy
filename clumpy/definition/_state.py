@@ -115,10 +115,14 @@ class Palette():
         state : State
             The requested state.
         """
-        if isinstance(info, int):
+        if isinstance(info, int) or isinstance(info, np.integer):
             return(self._get_by_value(info))
         elif isinstance(info, str):
             return(self._get_by_label(info))
+        elif isinstance(info, State):
+            return(info)
+        else:
+            raise(TypeError("Unexpected info type. Should be int or str or State"))
         
     def _get_id(self, state):
         """
@@ -211,7 +215,7 @@ class Palette():
         return(labels.index(label))
 
     
-    def remove(self, info):
+    def remove(self, info, inplace=False):
         """
         Remove a state
 
@@ -227,9 +231,16 @@ class Palette():
             The self object.
 
         """
-        self.states.remove(self.get(info))
         
-        return(self)
+        if inplace:
+            self.states.remove(self.get(info))
+            return(self)
+        
+        else:
+            states = [state for state in self.states]
+            states.remove(self.get(info))
+            
+            return(Palette(states))
     
     def load(self, path):
         """

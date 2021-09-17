@@ -1,7 +1,10 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*
 
-import numpy as np
+# import numpy as np
+
+from . import LandUseCoverLayer
+from ..tools import path_split
 
 class Region():
     """
@@ -32,13 +35,8 @@ class Region():
     """
     def __init__(self,
                  label,
-                 transition_matrix=None,
-                 mask_calibration = None,
-                 mask_allocation = None,
                  verbose = 0):
         self.label = label
-        self.mask_calibration = mask_calibration
-        self.mask_allocation = mask_allocation
         self.verbose = verbose
         
         self.lands = {}
@@ -68,13 +66,26 @@ class Region():
         
         return(self)
     
+    def fit(self,
+            luc_initial,
+            luc_final,
+            mask=None,
+            distances_to_states = {}):
+        """
+        Fit the region.
+        """
+        for state, land in self.lands.items():
+            land.fit(state = state,
+                    luc_initial=luc_initial,
+                    luc_final = luc_final,
+                    mask = mask,
+                    distances_to_states = distances_to_states)
+    
     def transition_probabilities(self,
-                                  luc_initial,
-                                  luc_final,
-                                  luc_start,
                                   transition_matrix,
-                                  distances_to_states_calibration = {},
-                                  distances_to_states_allocation = {},
+                                  luc,
+                                  mask=None,
+                                  distances_to_states = {},
                                   path_prefix=None):
         """
         Compute transition probabilities.
@@ -113,19 +124,15 @@ class Region():
             
             P_v, palette_v = transition_matrix.get_P_v(state)
             
-            if path_prefix is None:
+            if path_prefix is not None:
                 path_prefix += '_'+str(state.value)
             
             ltp = land.transition_probabilities(state,
-                                         luc_initial = luc_initial,
-                                         luc_final = luc_final,
-                                         luc_start = luc_start,
-                                         mask_calibration = self.mask_calibration,
-                                         mask_allocation = self.mask_allocation,
+                                         luc = luc,
+                                         mask = mask,
                                          P_v = P_v,
                                          palette_v = palette_v,
-                                         distances_to_states_calibration=distances_to_states_calibration,
-                                         distances_to_states_allocation=distances_to_states_allocation,
+                                         distances_to_states=distances_to_states,
                                          path_prefix = path_prefix)
             
             if path_prefix is None:
@@ -134,4 +141,45 @@ class Region():
                 
         return(J, P)
     
+    def allocation(self,
+                   transition_matrix,
+                   luc,
+                   luc_origin = None,
+                   mask=None,
+                   distances_to_states={},
+                   path=None):
+        
+        if luc_origin is None:
+            luc_origin = luc
+        
+        if isinstance(luc_origin, LandUseCoverLayer):
+            luc_origin_data = luc_origin.get_data()
+        else:
+            luc_origin_data = luc_origin
+            
+        if isinstance(luc, LandUseCoverLayer):
+            luc_data = luc.get_data().copy()
+        else:
+            luc_data = luc
+        
+        for state, land in self.lands.items():
+            P_v, palette_v = transition_matrix.get_P_v(state)
+            
+            land.allocation(state=state,
+                           P_v=P_v,
+                           palette_v=palette_v,
+                           luc=luc_data,
+                           luc_origin=luc_origin_data,
+                           mask=mask,
+                           distances_to_states=distances_to_states,
+                           path=None)
+            
+        if path is not None:
+            folder_path, file_name, file_ext = path_split(path)
+            return(LandUseCoverLayer(label = 'file_name',
+                                     data = luc_data,
+                                     copy_geo = luc_origin,
+                                     path = path,
+                                     palette = luc_origin.palette))
+        
         

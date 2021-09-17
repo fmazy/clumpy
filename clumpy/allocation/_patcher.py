@@ -17,15 +17,18 @@ def _get_neighbors_id(j, shape, neighbors_structure='rook'):
                                     - shape[1] - 1])# 7, top-left
         
         # remove if side pixel
+        id_to_remove = []
         if (j + 1) % shape[1] == 0: # right side
-            j_neighbors = np.delete(j_neighbors, [1,2,3])
+            id_to_remove += [1,2,3]
         if j % shape[1] == 0: # left side
-            j_neighbors = np.delete(j_neighbors, [5,6,7])
+            id_to_remove += [5,6,7]
         if j >= shape[0]*shape[1] - shape[1]: # bottom side
-            j_neighbors = np.delete(j_neighbors, [3,4,5])
+            id_to_remove += [3,4,5]
         if j < shape[1]: # top side
-            j_neighbors = np.delete(j_neighbors, [0,1,7])
-            
+            id_to_remove += [0,1,7]
+        
+        j_neighbors = np.delete(j_neighbors, id_to_remove)
+        
     elif neighbors_structure == 'rook':
         j_neighbors = j + np.array([- shape[1],     # 0, top
                                       1,            # 1, right
@@ -33,14 +36,18 @@ def _get_neighbors_id(j, shape, neighbors_structure='rook'):
                                     - 1])           # 3, left
         
         # remove if side pixel
+        id_to_remove = []
         if (j + 1) % shape[1] == 0: # right side
-            j_neighbors = np.delete(j_neighbors, [1])
+            id_to_remove += [1]
         if j % shape[1] == 0: # left side
-            j_neighbors = np.delete(j_neighbors, [3])
+            id_to_remove += [3]
         if j >= shape[0]*shape[1] - shape[1]: # bottom side
-            j_neighbors = np.delete(j_neighbors, [2])
+            id_to_remove += [2]
         if j < shape[1]: # top side
-            j_neighbors = np.delete(j_neighbors, [0])
+            id_to_remove += [0]
+        
+        j_neighbors = np.delete(j_neighbors, id_to_remove)
+        
     else:
         print('ERROR, unexpected neighbors_structure')
     
@@ -131,6 +138,8 @@ def _weighted_neighbors(map_i_data,
         vi_neighbors = map_i_data.flat[j_neighbors]
         vf_neighbors = map_f_data.flat[j_neighbors]
         
+        
+        
         # si on veut éviter les aggrégations
         if (avoid_aggregation) and (np.sum((vi_neighbors == vi) * (vf_neighbors == vf)) > 0):
             # si un voisin a déja subi la transition, il fait échouer la tache
@@ -210,10 +219,11 @@ def _weighted_neighbors(map_i_data,
     
     if avoid_aggregation:
         # on vérifie que le dernier pixel ajouté n'a pas des voisins qui font échouer la tache
-        last_neighbors = _get_neighbors_id(j_allocated[-1], map_f_data.shape, neighbors_structure='rook')
+        last_neighbors = _get_neighbors_id(j_allocated[-1], map_f_data.shape, neighbors_structure=neighbors_structure)
         vi_neighbors = map_i_data.flat[last_neighbors]
         vf_neighbors = map_f_data.flat[last_neighbors]
-        if np.sum((vi_neighbors == vi) * (vf_neighbors == vf)) > 0:
+        
+        if np.any((vi_neighbors == vi) & (vf_neighbors == vf)):
             # print('aggrégation finale')
             return(0, j_allocated)
             

@@ -46,4 +46,5 @@ def generalized_allocation_rejection_test(P, list_v):
             print(list_v)
             print(inv_id_vf)
         
-    return(y)
+    return(y.astype(int))
+
