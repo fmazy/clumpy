@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 import numpy as np
-from ..definition._state import Palette
+from ._state import Palette
 
 class TransitionMatrix():
     """

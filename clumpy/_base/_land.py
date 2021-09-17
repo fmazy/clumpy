@@ -14,7 +14,6 @@ from . import FeatureLayer, LandUseCoverLayer
 from ..allocation._gart import generalized_allocation_rejection_test
 from ..allocation._patcher import _weighted_neighbors
 
-from matplotlib import pyplot as plt
 
 class Land():
     """
@@ -28,6 +27,14 @@ class Land():
         Density estimation for :math:`P(x|u)`.
             
             gkde : Gaussian Kernel Density Estimation method
+            
+    update_P_v__u_Y : bool, default=True
+        If ``True``, :math:`P(v|u,Y)` is updated at each loop during the
+        allocation process.
+    
+    n_allocation_try : int, default=10**3
+        The maximum number of allocation loops.
+    
     verbose : int, default=None
         Verbosity level.
     """
@@ -88,14 +95,14 @@ class Land():
                   state,
                   patch):
         """
-        Add transition patches for a given final state.
+        Add a patch object for a given final state.
 
         Parameters
         ----------
         state : State
             The final state.
-        transition_patches : TransitionPatches
-            The transition patches
+        patch : Patch
+            The corresponding Patch object.
 
         Returns
         -------
@@ -128,7 +135,7 @@ class Land():
         luc_final : LandUseCoverLayer or ndarray, default=None
             The final land use layer. Ignored if ``None``.
             
-        region : LandUseCoverLayer, default=None
+        mask : LandUseCoverLayer, default=None
             The region mask layer. If ``None``, the whole area is studied.
             
         explanatory_variables : bool, default=True
@@ -222,32 +229,49 @@ class Land():
     def transition_probabilities(self,
                                  state,
                                  luc,
-                                 mask,
                                  P_v,
                                  palette_v,
+                                 mask = None,
                                  distances_to_states={},
                                  path_prefix=None):
         """
-        Computes transition probabilities
-        
-        /!\ if path_prefix, luc should be LandUseCoverLayer
-        
+        Computes transition probabilities.
+
         Parameters
         ----------
-        luc_initial : TYPE
-            DESCRIPTION.
-        luc_final : TYPE
-            DESCRIPTION.
-        region_calibration : TYPE
-            DESCRIPTION.
-        region_allocation : TYPE
-            DESCRIPTION.
-        distances_to_states : TYPE, optional
-            DESCRIPTION. The default is {}.
+        state : State
+            The initial state of this land.
+            
+        luc : LandUseCoverLayer
+            The studied land use layer.
+            
+        P_v : ndarray of shape(len(palette_v,))
+            The global transition probabilities :math:`P(v)`. The order corresponds to
+            ``palette_v``
+            
+        palette_v : Palette
+            The final state palette corresponding to ``P_v``.
+        
+        mask : LandUseCoverLayer, default = None
+            The region mask layer. If ``None``, the whole area is studied.
+        
+        distances_to_states : dict(State:ndarray), default={}
+            The distances matrix to key state. Used to improve performance.
+        
+        path_prefix : str, default=None
+            The path prefix to save result as ``path_prefix+'_' + str(state.value) + '.tif'.
+            If None, the result is returned.
+            Note that if ``path_prefix is not None``, ``luc`` must be LandUseCoverLayer
 
         Returns
         -------
-        None.
+        J_allocation : ndarray of shape (n_samples,)
+            Only returned if ``path_prefix=False``. Element indexes in the flattened
+            matrix.
+        
+        P_v__u_Y : ndarray of shape (n_samples, len(palette_v))
+            The transition probabilities of each elements. Columns are
+            ordered as ``palette_v``.
 
         """
                 
@@ -286,7 +310,29 @@ class Land():
             mask=None,
             distances_to_states={}):
         """
-        Fit the land for any operations
+        Fit the land. Required for any further process.
+
+        Parameters
+        ----------
+        state : State
+            The initial state of this land.
+            
+        luc_initial : LandUseCoverLayer
+            The initial land use.
+            
+        luc_final : LandUseCoverLayer
+            The final land use.
+            
+        mask : LandUseCoverLayer, default = None
+            The region mask layer. If ``None``, the whole area is studied.
+        
+        distances_to_states : dict(State:ndarray), default={}
+            The distances matrix to key state. Used to improve performance.
+
+        Returns
+        -------
+        self : Land
+            The self object.
         """
         
         self._fit_tpe(state=state,
@@ -351,6 +397,30 @@ class Land():
                    path=None):
         """
         allocation. luc can be both LandUseCoverLayer and ndarray.
+
+        Parameters
+        ----------
+        state : TYPE
+            DESCRIPTION.
+        P_v : TYPE
+            DESCRIPTION.
+        palette_v : TYPE
+            DESCRIPTION.
+        luc : TYPE
+            DESCRIPTION.
+        luc_origin : TYPE, optional
+            DESCRIPTION. The default is None.
+        mask : TYPE, optional
+            DESCRIPTION. The default is None.
+        distances_to_states : TYPE, optional
+            DESCRIPTION. The default is {}.
+        path : TYPE, optional
+            DESCRIPTION. The default is None.
+
+        Returns
+        -------
+        None.
+
         """
         
         if luc_origin is None:
@@ -389,6 +459,8 @@ class Land():
             n_try += 1
             
             # P_v is divided by patch area mean
+            # P_v_patches is then largely smaller.
+            # one keep P_v to update it after the allocation try.
             P_v_patches = P_v.copy()
             P_v_patches[id_state] = 1
             for id_state_v, state_v in enumerate(palette_v):
@@ -396,6 +468,9 @@ class Land():
                     P_v_patches[id_state_v] /= self.patches[state_v].area_mean
                     P_v_patches[id_state] -= P_v[id_state_v]
             
+            # if P_v__u_Y has to be updated
+            # or if it is the first loop
+            # compute P(v|u,Y)
             if self.update_P_v__u_Y or n_try == 1:
                 luc_data_P_v__u_Y_update = luc_data.copy()
                 luc_data_P_v__u_Y_update.flat[J_used] = -1
@@ -407,24 +482,30 @@ class Land():
                                                 distances_to_states=distances_to_states)
             else:
                 # else just update J by removing used pixels.
+                # it is faster but implies a bias.
                 idx_to_keep = ~np.isin(J, J_used)
                 J = J[idx_to_keep]
                 P_v__u_Y = P_v__u_Y[idx_to_keep]
             
+            # save the original number of pixels in this land
+            # it is used to edit P(v)
             if first_len_J is None:
                 first_len_J = len(J)
             
-            J_used_last, n_allocated, n_ghost = self.try_allocation(state=state,
+            # Allocation try
+            # results are : all pixels used, number of allocation for each state
+            # and numbre of ghost pixels for each states.
+            J_used_last, n_allocated, n_ghost = self._try_allocation(state=state,
                                                 J=J,
                                                 P_v__u_Y=P_v__u_Y,
                                                 palette_v=palette_v,
                                                 luc_origin_data=luc_origin_data,
                                                 luc_data = luc_data)
             
+            # the pixel used and which are now useless are saved in J_used
             J_used += J_used_last
                        
-                        
-            # P_v update
+            # P_v update : for the next loop, one need less pixels
             P_v[id_state] = 1
             for id_state_v, state_v in enumerate(palette_v):
                 if state_v != state:
@@ -440,7 +521,7 @@ class Land():
                                      path = path,
                                      palette = luc_origin.palette))
     
-    def try_allocation(self,
+    def _try_allocation(self,
                      state,
                      J,
                      P_v__u_Y,
@@ -460,20 +541,14 @@ class Land():
             DESCRIPTION.
         palette_v : TYPE
             DESCRIPTION.
-        luc_origin : TYPE
+        luc_origin_data : TYPE
             DESCRIPTION.
         luc_data : TYPE
-            DESCRIPTION.
-        total_area_targets : TYPE
             DESCRIPTION.
 
         Returns
         -------
-        j_allocated : list(int)
-        
-        n_allocated : dict(State:int)
-        
-        n_ghost : dict(State:int)
+        None.
 
         """
         palette_v_without_u = palette_v.remove(state)

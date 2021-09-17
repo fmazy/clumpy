@@ -129,9 +129,9 @@ class Region():
             
             ltp = land.transition_probabilities(state,
                                          luc = luc,
-                                         mask = mask,
                                          P_v = P_v,
                                          palette_v = palette_v,
+                                         mask = mask,
                                          distances_to_states=distances_to_states,
                                          path_prefix = path_prefix)
             
