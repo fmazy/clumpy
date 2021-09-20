@@ -44,7 +44,7 @@ class SimpleUnbiased(_Allocation):
 
         Returns
         -------
-        map_f : definition.LandUseCoverLayer
+        map_f : definition.LandUseLayer
             The allocated land use map
             
         Notes
@@ -88,7 +88,7 @@ class SimpleUnbiased(_Allocation):
         self.execution_time['patches_parameters_initialization']=[0]
         
         # post processing
-        map_f = definition.LandUseCoverLayer(name="luc_simple",
+        map_f = definition.LandUseLayer(name="luc_simple",
                                                time=None,
                                                scale=case.map_i.scale)
         map_f.import_numpy(data=map_f_data, sound=sound)
@@ -142,7 +142,7 @@ class SimpleUnbiased(_Allocation):
         
         Returns
         -------
-        map_f : definition.LandUseCoverLayer
+        map_f : definition.LandUseLayer
             The allocated land use map
 
         Notes
@@ -309,7 +309,7 @@ class SimpleUnbiased(_Allocation):
         
         self.execution_time['allocation']=time.time()-start_time - np.sum(self.execution_time['sampling']) - np.sum(self.execution_time['patches_parameters_initialization'])
                 
-        map_f = definition.LandUseCoverLayer(name="luc_simple",
+        map_f = definition.LandUseLayer(name="luc_simple",
                                    time=None,
                                    scale=case.map_i.scale,
                                    sound=sound)

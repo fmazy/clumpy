@@ -4,9 +4,9 @@ class _Transition(object):
     
     Parameters
     ==========
-    map_i : LandUseCoverLayer
+    map_i : LandUseLayer
         initial LUC layer
-    map_f : LandUseCoverLayer (default=``None``)
+    map_f : LandUseLayer (default=``None``)
         final LUC layer, only required for the calibration stage     
     """
     def __init__(self):

@@ -57,7 +57,7 @@ class Dinamica(_Allocation):
             factor of selected pixels.
         Returns
         -------
-        map_f : definition.LandUseCoverLayer
+        map_f : definition.LandUseLayer
             The allocated land use map
         """
         
@@ -85,7 +85,7 @@ class Dinamica(_Allocation):
         
         probability_maps = probability_maps.copy()
                 
-        map_f = definition.LandUseCoverLayer(name="luc_neutral",
+        map_f = definition.LandUseLayer(name="luc_neutral",
                                    time=None,
                                    scale=case.map_i.scale,
                                    sound=0)
@@ -208,7 +208,7 @@ class Dinamica(_Allocation):
                             if sound > 0:
                                 print(str(vi)+'->'+str(vf)+' : done')
                 
-        map_f = definition.LandUseCoverLayer(name="luc_simple",
+        map_f = definition.LandUseLayer(name="luc_simple",
                                    time=None,
                                    scale=case.map_i.scale,
                                    sound=0)
@@ -259,7 +259,7 @@ class Dinamica(_Allocation):
             The above optional arguments in a dictionary. Overwrites if already passed. 
         Returns
         -------
-        map_f : definition.LandUseCoverLayer
+        map_f : definition.LandUseLayer
             The allocated land use map
         """
         
@@ -286,7 +286,7 @@ class Dinamica(_Allocation):
         probability_maps = probability_maps.copy()
         
         
-        map_f = definition.LandUseCoverLayer(name="luc_neutral",
+        map_f = definition.LandUseLayer(name="luc_neutral",
                                    time=None,
                                    scale=case.map_i.scale)
         map_f.import_numpy(data=map_f_data, sound=sound)
@@ -433,7 +433,7 @@ class Dinamica(_Allocation):
                             if sound > 1:
                                 print(str(vi)+'->'+str(vf)+' : done')
                                     
-        map_f = definition.LandUseCoverLayer(name="luc_simple",
+        map_f = definition.LandUseLayer(name="luc_simple",
                                    time=None,
                                    scale=case.map_i.scale,
                                    sound=sound)
@@ -459,7 +459,7 @@ class Dinamica(_Allocation):
             Replace rejected pixels in the pool (source of allocation bias).
         Returns
         -------
-        map_f : definition.LandUseCoverLayer
+        map_f : definition.LandUseLayer
             The allocated land use map
         """
         
@@ -471,7 +471,7 @@ class Dinamica(_Allocation):
         
         probability_maps = calibration.transition_probability_maps(case, P_vf__vi)
         
-        map_f = definition.LandUseCoverLayer(name="luc_neutral",
+        map_f = definition.LandUseLayer(name="luc_neutral",
                                    time=None,
                                    scale=case.map_i.scale)
         map_f.import_numpy(data=map_f_data)
@@ -552,7 +552,7 @@ class Dinamica(_Allocation):
                 else:
                     break
                 
-        map_f = definition.LandUseCoverLayer(name="luc_simple",
+        map_f = definition.LandUseLayer(name="luc_simple",
                                    time=None,
                                    scale=case.map_i.scale)
         map_f.import_numpy(data=map_f_data)

@@ -6,7 +6,7 @@ Created on Fri Sep 17 15:40:56 2021
 @author: frem
 """
 
-from . import LandUseCoverLayer
+from . import LandUseLayer
 from ..tools import path_split
 
 class Territory():
@@ -22,7 +22,19 @@ class Territory():
     
     def remove_regions(self, region):
         self.regions.remove(region)
-        
+
+    def check(self):
+        """
+        Check the Region object through regions checks.
+        Notably, estimators uniqueness are checked to avoid malfunctioning during transition probabilities estimation.
+        """
+        density_estimators = []
+        feature_selectors = []
+        for region in self.regions:
+            density_estimators = region._check_density_estimators(density_estimators=density_estimators)
+            feature_selectors = region._check_feature_selectors(feature_selectors=feature_selectors)
+
+
     def fit(self,
             luc_initial,
             luc_final,
@@ -89,7 +101,7 @@ class Territory():
             
         if path is not None:
             folder_path, file_name, file_ext = path_split(path)
-            return(LandUseCoverLayer(label = 'file_name',
+            return(LandUseLayer(label = 'file_name',
                                      data = luc_data,
                                      copy_geo = luc,
                                      path = path,
@@ -121,4 +133,3 @@ class Territory():
                             path = path_step)
         
         return(luc_step)
-        

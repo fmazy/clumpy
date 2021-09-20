@@ -1,6 +1,6 @@
 """Elements definition"""
 
-from ._layer import LandUseCoverLayer, FeatureLayer
+from ._layer import LandUseLayer, FeatureLayer
 from ._region import Region
 from ._state import State, Palette
 from ._land import Land

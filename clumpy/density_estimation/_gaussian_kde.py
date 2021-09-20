@@ -12,9 +12,9 @@ from scipy.special import erf
 from multiprocessing import Pool
 from matplotlib import pyplot as plt
 from sklearn.preprocessing import StandardScaler
-from . import bandwidth_selection
 from tqdm import tqdm
 
+from . import bandwidth_selection
 from ._density_estimator import DensityEstimator
 from ._whitening_transformer import _WhiteningTransformer
 from ..utils._hyperplane import Hyperplane

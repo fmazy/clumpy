@@ -3,6 +3,5 @@
   <component name="VcsDirectoryMappings">
     <mapping directory="" vcs="Git" />
     <mapping directory="$PROJECT_DIR$/../clumpy-cases" vcs="Git" />
-    <mapping directory="$PROJECT_DIR$/../multistats" vcs="Git" />
   </component>
 </project>

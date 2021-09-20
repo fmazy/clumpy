@@ -47,7 +47,7 @@
 
 <span class="kn">import</span> <span class="nn">os</span>
 
-<span class="kn">from</span> <span class="nn">..definition</span> <span class="kn">import</span> <span class="n">LandUseCoverLayer</span>
+<span class="kn">from</span> <span class="nn">..definition</span> <span class="kn">import</span> <span class="n">LandUseLayer</span>
 <span class="kn">from</span> <span class="nn">..tools</span> <span class="kn">import</span> <span class="n">path_split</span>
 
 <div class="viewcode-block" id="allocation"><a class="viewcode-back" href="../../../generated/clumpy.models.allocation.html#clumpy.models.allocation">[docs]</a><span class="k">def</span> <span class="nf">allocation</span><span class="p">(</span><span class="n">luc_initial</span><span class="p">,</span>
@@ -61,11 +61,11 @@
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
-<span class="sd">    luc_initial : LandUseCoverLayer</span>
+<span class="sd">    luc_initial : LandUseLayer</span>
 <span class="sd">        Initial land use for calibration.</span>
-<span class="sd">    luc_final : LandUseCoverLayer</span>
+<span class="sd">    luc_final : LandUseLayer</span>
 <span class="sd">        Final land use for calibration.</span>
-<span class="sd">    luc_start : LandUseCoverLayer</span>
+<span class="sd">    luc_start : LandUseLayer</span>
 <span class="sd">        Start land use for allocation.</span>
 <span class="sd">    regions : list(Region)</span>
 <span class="sd">        List of Region objects.</span>
@@ -76,7 +76,7 @@
 <span class="sd">        </span>
 <span class="sd">    Returns</span>
 <span class="sd">    -------</span>
-<span class="sd">    luc_allocated : LandUseCoverLayer</span>
+<span class="sd">    luc_allocated : LandUseLayer</span>
 <span class="sd">        Allocated land use.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     
@@ -92,7 +92,7 @@
                                             <span class="n">params_region</span> <span class="o">=</span> <span class="n">params_regions</span><span class="p">[</span><span class="n">id_region</span><span class="p">],</span>
                                             <span class="n">allocated_map</span> <span class="o">=</span> <span class="n">allocated_map</span><span class="p">)</span>
     
-    <span class="n">luc_allocated</span> <span class="o">=</span> <span class="n">LandUseCoverLayer</span><span class="p">(</span><span class="n">label</span><span class="o">=</span><span class="n">file_name</span><span class="p">,</span>
+    <span class="n">luc_allocated</span> <span class="o">=</span> <span class="n">LandUseLayer</span><span class="p">(</span><span class="n">label</span><span class="o">=</span><span class="n">file_name</span><span class="p">,</span>
                                       <span class="n">path</span> <span class="o">=</span> <span class="n">path</span><span class="p">,</span> 
                                       <span class="n">copy_geo</span><span class="o">=</span><span class="n">luc_start</span><span class="p">,</span>
                                       <span class="n">data</span> <span class="o">=</span> <span class="n">allocated_map</span><span class="p">)</span>
@@ -110,9 +110,9 @@
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
-<span class="sd">    luc_initial : LandUseCoverLayer</span>
+<span class="sd">    luc_initial : LandUseLayer</span>
 <span class="sd">        Initial land use for calibration.</span>
-<span class="sd">    luc_final : LandUseCoverLayer</span>
+<span class="sd">    luc_final : LandUseLayer</span>
 <span class="sd">        Final land use for calibration.</span>
 <span class="sd">    regions : Region</span>
 <span class="sd">        Region.</span>

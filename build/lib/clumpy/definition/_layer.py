@@ -104,7 +104,7 @@ class _Layer:
         print('done')
 
 
-class LandUseCoverLayer(_Layer):
+class LandUseLayer(_Layer):
     """
     Defines a Land Use Cover (LUC) layer. This layer can then used for the calibration stage or the allocation stage::
     
@@ -306,7 +306,7 @@ class DistanceToVFeatureLayer(FeatureLayer):
     v : int
         The state to compute the distance from.
     
-    layer_LUC : LandUseCoverLayer
+    layer_LUC : LandUseLayer
         The land use cover used to compute the distance.
         
     name : string (default=``None``)

@@ -3,7 +3,7 @@
 
 # import numpy as np
 
-from . import LandUseCoverLayer
+from . import LandUseLayer
 from ..tools import path_split
 
 class Region():
@@ -65,7 +65,33 @@ class Region():
         self.lands[state] = land
         
         return(self)
-    
+
+    def _check_density_estimators(self, density_estimators=[]):
+        """
+        Check the density estimators uniqueness.
+        """
+        for land in self.lands:
+            density_estimators = land._check_density_estimators(density_estimators=density_estimators)
+
+        return(density_estimators)
+
+    def _check_feature_selectors(self, feature_selectors=[]):
+        """
+        check the feature selectors uniqueness.
+        """
+        for land in self.lands:
+            feature_selectors = land._check_feature_selectors(feature_selectors=feature_selectors)
+
+        return(feature_selectors)
+
+    def check(self):
+        """
+        Check the Region object through lands checks.
+        Notably, estimators uniqueness are checked to avoid malfunctioning during transition probabilities estimation.
+        """
+        self._check_density_estimators()
+        self._check_feature_selectors()
+
     def fit(self,
             luc_initial,
             luc_final,
@@ -152,12 +178,12 @@ class Region():
         if luc_origin is None:
             luc_origin = luc
         
-        if isinstance(luc_origin, LandUseCoverLayer):
+        if isinstance(luc_origin, LandUseLayer):
             luc_origin_data = luc_origin.get_data()
         else:
             luc_origin_data = luc_origin
             
-        if isinstance(luc, LandUseCoverLayer):
+        if isinstance(luc, LandUseLayer):
             luc_data = luc.get_data().copy()
         else:
             luc_data = luc
@@ -176,10 +202,9 @@ class Region():
             
         if path is not None:
             folder_path, file_name, file_ext = path_split(path)
-            return(LandUseCoverLayer(label = 'file_name',
+            return(LandUseLayer(label = 'file_name',
                                      data = luc_data,
                                      copy_geo = luc_origin,
                                      path = path,
                                      palette = luc_origin.palette))
-        
         

@@ -1,14 +1,14 @@
-:mod:`clumpy.definition`.LandUseCoverLayer
+:mod:`clumpy.definition`.LandUseLayer
 =================================================
 
 .. currentmodule:: clumpy.definition
 
-.. autoclass:: LandUseCoverLayer
+.. autoclass:: LandUseLayer
    :members:
    :inherited-members:
    :show-inheritance:
 
-.. include:: clumpy.definition.LandUseCoverLayer.examples
+.. include:: clumpy.definition.LandUseLayer.examples
 
 .. raw:: html
 

@@ -49,7 +49,7 @@ class GeneralizedVonNeumann(_Allocation):
             The above optional arguments in a dictionary. Overwrites if already passed. 
         Returns
         -------
-        map_f : definition.LandUseCoverLayer
+        map_f : definition.LandUseLayer
             The allocated land use map
             
         Notes
@@ -99,7 +99,7 @@ class GeneralizedVonNeumann(_Allocation):
         self.execution_time['patches_parameters_initialization']=[0]
         
         # post processing
-        map_f = definition.LandUseCoverLayer(name="luc_simple",
+        map_f = definition.LandUseLayer(name="luc_simple",
                                    time=None,
                                    scale=case.map_i.scale)
         map_f.import_numpy(data=map_f_data, sound=sound)
@@ -161,7 +161,7 @@ class GeneralizedVonNeumann(_Allocation):
         
         Returns
         -------
-        map_f : definition.LandUseCoverLayer
+        map_f : definition.LandUseLayer
             The allocated land use map
             
         Notes
@@ -331,7 +331,7 @@ class GeneralizedVonNeumann(_Allocation):
         
         
         # post processing
-        map_f = definition.LandUseCoverLayer(name="luc_simple",
+        map_f = definition.LandUseLayer(name="luc_simple",
                                    time=None,
                                    scale=case.map_i.scale)
         map_f.import_numpy(data=map_f_data, sound=sound)

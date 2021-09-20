@@ -56,7 +56,7 @@ def _get_neighbors_id(j, shape, neighbors_structure='rook'):
 def _convolve(A,B):
     return(scipy.ndimage.convolve(A, B, mode='constant', cval=0))
 
-def _weighted_neighbors(map_i_data,
+def _weighted_neighbors_patcher(map_i_data,
                         map_f_data,
                         map_P_vf__vi_z,
                         j_kernel,
@@ -230,4 +230,3 @@ def _weighted_neighbors(map_i_data,
     # on peut procéder à l'allocation réelle
     map_f_data.flat[j_allocated] = vf
     return(len(j_allocated), j_allocated)
- 

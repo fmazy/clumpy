@@ -42,7 +42,7 @@ Layer
    :toctree: generated/
    :template: class.rst
     
-   definition.LandUseCoverLayer
+   definition.LandUseLayer
    definition.FeatureLayer
    
 Region

@@ -41,28 +41,3 @@ class DensityEstimator(BaseEstimator):
         """
         for param, value in params.items():
             setattr(self, param, value)
-
-
-class DensityEstimationParams():
-    """
-    Density Estimators Parameters.
-    Note that boundary parameters and ``forbid_null_value`` are set
-    automatically when the density estimator is called by a model class.
-
-    Parameters
-    ----------
-    method : {'gkde'} or DensityEstimator
-        The density estimator method or a callable class. For now, only
-        the GKDE method is avaiable.
-        
-            gkde : Gaussian Kernel Density Estimator.
-            
-    **params : kwargs
-        Density estimator parameters.
-
-    """
-    def __init__(self,
-                method='gkde',
-                **params):
-        self.method = method 
-        self.params = params

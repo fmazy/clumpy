@@ -9,7 +9,7 @@ from matplotlib import colors as mpl_colors
 import rasterio
 from ..tools import ndarray_suitable_integer_type, path_split, create_directories
 
-class _Layer:
+class Layer:
     """Layer base element
     """
 
@@ -185,7 +185,7 @@ class _Layer:
             plt.show()
         return(plt)
 
-class LandUseCoverLayer(_Layer):
+class LandUseLayer(Layer):
     """Define a Land Use Cover (LUC) layer.
     This layer can then used for the calibration stage or the allocation stage.
     
@@ -201,7 +201,7 @@ class LandUseCoverLayer(_Layer):
         and this operation overwrites the file path if exists.
     data : :class:`numpy.ndarray`, defaul=None
         The data to write. If ``None``, no writing is made.
-    copy_geo : :class:`LandUseCoverLayer`, default=None
+    copy_geo : :class:`LandUseLayer`, default=None
         The layer from whose geo metadata are copied.
         If ``None``, geo metadata are set to ``None``.
     palette : Palette
@@ -245,7 +245,7 @@ class LandUseCoverLayer(_Layer):
 
         Returns
         -------
-        self : LandUseCoverLayer
+        self : LandUseLayer
             The self object.
 
         """
@@ -304,7 +304,7 @@ class LandUseCoverLayer(_Layer):
         return(plt)
 
 
-class FeatureLayer(_Layer):
+class FeatureLayer(Layer):
     """Define a feature layer.
     This layer can then used for the calibration stage or the allocation stage.
     
@@ -327,7 +327,7 @@ class FeatureLayer(_Layer):
     high_bound : None or float, default=None
         If float, a high bound is set. Used in density estimation methods as GKDE.
     
-    copy_geo : :class:`LandUseCoverLayer`, default=None
+    copy_geo : :class:`LandUseLayer`, default=None
         The layer from whose geo metadata are copied.
         If ``None``, geo metadata are set to ``None``.
 
@@ -355,4 +355,3 @@ class FeatureLayer(_Layer):
         self.low_bound = low_bound
         self.high_bound = high_bound
 
-    
