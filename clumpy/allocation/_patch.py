@@ -68,17 +68,8 @@ class Patch():
 class BootstrapPatch(Patch):
     """
     Bootstrap patch parameters object.
-    
-    Parameters
-    ----------
-    areas : array-like of shape (n_patches,)
-        Array of areas.
-    eccentricities : array-like of shape (n_patches,)
-        Array of eccentricities which correspond to areas.
     """
     def __init__(self,
-                 areas, 
-                 eccentricities,
                  neighbors_structure = 'rook',
                  avoid_aggregation = True,
                  nb_of_neighbors_to_fill = 3,
@@ -90,44 +81,40 @@ class BootstrapPatch(Patch):
                          nb_of_neighbors_to_fill = nb_of_neighbors_to_fill,
                          proceed_even_if_no_probability = proceed_even_if_no_probability,
                          n_tries_target_sample=n_tries_target_sample)
-        
-        self.areas = areas
-        self.eccentricities = eccentricities
-        
-        self.area_mean = np.mean(areas)
-        self.eccentricities_mean = np.mean(eccentricities)
-    
+
     def _sample(self, n):
         idx = np.random.choice(self.areas.size, n, replace=True)
         
         return(self.areas[idx], self.eccentricities[idx])
-    
-    
 
-# class TransitionPatches():
-#     """
-#     Patches informations for a given transition
+    def set(self,
+            areas=np.array([1.0]),
+            eccentricities=np.array([0.5])):
+        """
+        Set areas and eccentricities.
 
-#     Parameters
-#     ----------
-#     patches_isl : BootstrapPatchParams, default=None
-#         The island patch parameters. Unexpected to be ``None`` if ``ratio>0``.
-#     patches_exp : BootstrapPatchParams, default=None
-#         The expansion patch parameters. Unexpected to be ``None`` if ``ratio<1``.
-#     ratio_isl : float
-#         The ratio of island areas over the whole areas to allocate.
-#     """
-#     def __init__(self,
-#                  patches_isl = None,
-#                  patches_exp = None,
-#                  ratio_isl = 1.0):
-        
-#         if ratio_isl < 1.0 and patches_exp is None:
-#             raise(ValueError('Unexpected patches_exp for such a ratio_isl.'))
-#         if ratio_isl > 0.0 and patches_isl is None:
-#             raise(ValueError('Unexpected patches_isl for such a ratio_isl.'))
-        
-#         self.patches_isl = patches_isl
-#         self.patches_exp = patches_exp
-#         self.ratio_isl = ratio_isl
-        
+        Parameters
+        ----------
+        areas : array-like of shape (n_patches,)
+            Array of areas.
+        eccentricities : array-like of shape (n_patches,)
+            Array of eccentricities which correspond to areas.
+
+        Returns
+        -------
+        self
+        """
+
+        self.areas = areas
+        self.eccentricities = eccentricities
+
+        self.area_mean = np.mean(areas)
+        self.eccentricities_mean = np.mean(eccentricities)
+
+        return(self)
+
+    #def crop_areas(self,
+    #              min_area=-np.inf,
+    #             max_area=np.inf):
+
+

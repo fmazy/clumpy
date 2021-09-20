@@ -1,6 +1,5 @@
 from ._patch import Patch
-from .._base import LandUseLayer
-
+from .._base import LandUseLayer, State
 from ..tools._path import path_split
 
 class Allocator():
@@ -30,9 +29,16 @@ class Allocator():
 
         if ~isinstance(patch, Patch):
             raise(TypeError("Unexpected 'patch'. A clumpy.allocation.Patch object is expected."))
+        if ~isinstance(state, State):
+            raise(TypeError("Unexpected 'state'. A clumpy.State object is expected."))
         self.patches[state] = patch
 
         return(self)
+
+    def set_patches(self,
+                    patches):
+        _check_patches(patches)
+        self.patches = patches
 
     def allocate(self,
                  state,
@@ -74,3 +80,10 @@ class Allocator():
                                  copy_geo=luc_origin,
                                  path=path,
                                  palette=luc_origin.palette))
+
+def _check_patches(patches):
+    if ~isinstance(patches, dict):
+        raise("Unexpected 'patches' type. A dict(State:Patch) is expected.")
+    for state, patch in patches.items():
+        if ~isinstance(state, State) or ~isinstance(patch, Patch):
+            raise("Unexpected 'patches' type. A dict(State:Patch) is expected.")

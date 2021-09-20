@@ -1,0 +1,74 @@
+import numpy as np
+from scipy import ndimage
+from skimage import measure
+from ..tools._data import np_drop_duplicates_from_column
+
+from ._patch import BootstrapPatch
+
+def compute_bootstrap_patches(state,
+                               land,
+                               luc_initial,
+                               luc_final,
+                               mask=None,
+                               neighbors_structure='rook'):
+    if neighbors_structure == 'queen':
+        structure = np.ones((3, 3))
+    elif neighbors_structure == 'rook':
+        structure = np.array([[0, 1, 0],
+                              [1, 1, 1],
+                              [0, 1, 0]])
+    else:
+        raise (ValueError('ERROR : unexpected neighbors_structure value'))
+
+    M_shape = luc_initial.get_data().shape
+
+    patches = {}
+
+    u = state.value
+
+    J, V = land.get_values(state=state,
+                          luc_initial=luc_initial,
+                          luc_final=luc_final,
+                          mask=mask,
+                          explanatory_variables=False)
+
+    for v in np.unique(V):
+        state_v = luc_initial.palette.get_id_by_value(info=v)
+        if state_v != state:
+            #print(str(u) + ' -> ' + str(v))
+            M = np.zeros(M_shape)
+            M.flat[J[V == v]] = 1
+
+            lw, _ = ndimage.measurements.label(M, structure=structure)
+            patch_id = lw.flat[J]
+
+            # unique pixel for a patch
+            one_pixel_from_patch = np.column_stack((J, patch_id))
+            one_pixel_from_patch = np_drop_duplicates_from_column(one_pixel_from_patch, 1)
+
+            one_pixel_from_patch = one_pixel_from_patch[1:, :]
+            one_pixel_from_patch[:, 1] -= 1
+
+            rpt = measure.regionprops_table(lw, properties=['area',
+                                                            'inertia_tensor_eigvals'])
+
+            areas = np.array(rpt['area'])
+
+            # return(patches, rpt)
+            l1_patch = np.array(rpt['inertia_tensor_eigvals-0'])[patches[u][v]['patch_id']]
+            l2_patch = np.array(rpt['inertia_tensor_eigvals-1'])[patches[u][v]['patch_id']]
+
+            eccentricities = np.zeros(patches[u][v]['area'].shape)
+            id_none_mono_pixel_patches = areas > 1
+
+            eccentricities[id_none_mono_pixel_patches] = 1 - np.sqrt(
+                l2_patch[id_none_mono_pixel_patches] / l1_patch[id_none_mono_pixel_patches])
+
+            # mono pixel patches are removed
+            areas = areas[id_none_mono_pixel_patches]
+            eccentricities = eccentricities[id_none_mono_pixel_patches]
+
+            patches[state_v] = BootstrapPatch().set(areas=areas,
+                                                    eccentricities=eccentricities)
+
+    return (patches)
