@@ -9,39 +9,72 @@ class Patch():
 
     Parameters
     ----------
-    method : str
-        Patch caracteristics draws method.
+    neighbors_structure : {'rook', 'queen'}, default='rook'
+        The neighbors structure.
+
+    avoid_aggregation : bool, default=True
+        If ``True``, the patcher will avoid patch aggregations to respect expected patch areas.
+
+    nb_of_neighbors_to_fill : int, default=3
+        The patcher will allocate cells whose the number of allocated neighbors is greater than this integer
+        (according to the specified ``neighbors_structure``)
+
+    proceed_even_if_no_probability : bool, default=True
+        The patcher will allocate even if the neighbors have no probabilities to transit.
+
+    n_tries_target_sample : int, default=10**3
+        Number of tries to draw samples in a biased way in order to approach the mean area.
+
+    equi_neighbors_proba : bool, default=False
+        If ``True``, all neighbors have the equiprobability to transit.
     """
     def __init__(self,
-                 neighbors_structure, 
+                 neighbors_structure = 'rook',
                  avoid_aggregation = True,
                  nb_of_neighbors_to_fill = 3,
                  proceed_even_if_no_probability = True,
-                 n_tries_target_sample = 'rook'):
+                 n_tries_target_sample = 10**3,
+                 equi_neighbors_proba = False):
         self.neighbors_structure = neighbors_structure
         self.avoid_aggregation = avoid_aggregation
         self.nb_of_neighbors_to_fill = nb_of_neighbors_to_fill
         self.proceed_even_if_no_probability = proceed_even_if_no_probability
         self.n_tries_target_sample = n_tries_target_sample
+        self.equi_neighbors_proba = equi_neighbors_proba
     
     def sample(self, n):
         """
         draws patches.
+
+        Parameters
+        ----------
+        n : int
+            Number of samples.
+
+        Returns
+        -------
+        areas : ndarray of shape (n_samples,)
+            The samples areas.
+        eccentricities : ndarray of shape (n_samples,)
+            The samples eccentricities.
         """
         return(self._sample(n))
     
     def target_sample(self, n):
         """
-        Draw areas and eccentricities according to a targeted total area.
+        Draw areas and eccentricities according to a targeted total area (biased sample).
     
         Parameters
         ----------
-        n
+        n : int
+            The number of samples.
     
         Returns
         -------
-        None.
-    
+        areas : ndarray of shape (n_samples,)
+            The samples areas.
+        eccentricities : ndarray of shape (n_samples,)
+            The samples eccentricities.
         """
         n_try = 0
             
@@ -88,8 +121,8 @@ class BootstrapPatch(Patch):
         return(self.areas[idx], self.eccentricities[idx])
 
     def set(self,
-            areas=np.array([1.0]),
-            eccentricities=np.array([0.5])):
+            areas,
+            eccentricities):
         """
         Set areas and eccentricities.
 
@@ -113,8 +146,31 @@ class BootstrapPatch(Patch):
 
         return(self)
 
-    #def crop_areas(self,
-    #              min_area=-np.inf,
-    #             max_area=np.inf):
+    def crop_areas(self,
+                   min_area=-np.inf,
+                   max_area=np.inf,
+                   inplace=True):
+        """
+        Crop areas.
+
+        Parameters
+        ----------
+        min_area : float, default=-np.inf
+            Minimum area threshold.
+        max_area : float, default=np.inf
+            Maximum area threshold.
+
+        Returns
+        -------
+        self
+        """
+        idx = self.areas >= min_area & self.areas <= max_area
+
+        if inplace:
+            self.areas = self.areas[idx]
+            self.eccentricities = self.eccentricities[idx]
+        else:
+            return(BootstrapPatch().set(areas=self.areas[idx],
+                                        eccentricities=self.eccentricities[idx]))
 
 

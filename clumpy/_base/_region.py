@@ -4,7 +4,8 @@
 # import numpy as np
 
 from . import LandUseLayer
-from ..tools import path_split
+from ..tools._path import path_split
+
 
 class Region():
     """
@@ -14,36 +15,22 @@ class Region():
     ----------
     label : str
         The region's label. It should be unique.
-        
-    luc_initial : LandUseLayer
-        The initial land use where the calibration is made.
-    
-    luc_final : LandUseLayer, default=None
-        The final land use where the calibration is made.
-    
-    luc_start : LandUseLayer, default=None
-        The starting land use where the calibration is made.
-        
-    region_calibration : LandUseLayer, default=None
-        The region mask layer used for calibration.
-        
-    region_allocation : LandUseLayer, default=None
-        The region mask used for allocation.
-    
+
     verbose : int, default=0
         Verbosity level.
     """
+
     def __init__(self,
                  label,
-                 verbose = 0):
+                 verbose=0):
         self.label = label
         self.verbose = verbose
-        
+
         self.lands = {}
-        
+
     def __repr__(self):
-        return(self.label)
-    
+        return (self.label)
+
     def add_land(self, state, land):
         """
         Add a land for a given state.
@@ -58,13 +45,11 @@ class Region():
 
         Returns
         -------
-        self : Region
-            The self object.
-
+        self
         """
         self.lands[state] = land
-        
-        return(self)
+
+        return (self)
 
     def _check_density_estimators(self, density_estimators=[]):
         """
@@ -73,7 +58,7 @@ class Region():
         for land in self.lands:
             density_estimators = land._check_density_estimators(density_estimators=density_estimators)
 
-        return(density_estimators)
+        return (density_estimators)
 
     def _check_feature_selectors(self, feature_selectors=[]):
         """
@@ -82,7 +67,7 @@ class Region():
         for land in self.lands:
             feature_selectors = land._check_feature_selectors(feature_selectors=feature_selectors)
 
-        return(feature_selectors)
+        return (feature_selectors)
 
     def check(self):
         """
@@ -93,118 +78,171 @@ class Region():
         self._check_feature_selectors()
 
     def fit(self,
-            luc_initial,
-            luc_final,
+            lul_initial,
+            lul_final,
             mask=None,
-            distances_to_states = {}):
+            distances_to_states={}):
         """
         Fit the region.
+
+        Parameters
+        ----------
+        lul_initial : LandUseLayer
+            The initial land use.
+
+        lul_final : LandUseLayer
+            The final land use.
+
+        mask : MaskLayer, default = None
+            The region mask layer. If ``None``, the whole area is studied.
+
+        distances_to_states : dict(State:ndarray), default={}
+            The distances matrix to key state. Used to improve performance.
+
+        Returns
+        -------
+        self
         """
         for state, land in self.lands.items():
-            land.fit(state = state,
-                    luc_initial=luc_initial,
-                    luc_final = luc_final,
-                    mask = mask,
-                    distances_to_states = distances_to_states)
-    
+            land.fit(state=state,
+                     lul_initial=lul_initial,
+                     lul_final=lul_final,
+                     mask=mask,
+                     distances_to_states=distances_to_states)
+
+        return (self)
+
     def transition_probabilities(self,
-                                  transition_matrix,
-                                  luc,
-                                  mask=None,
-                                  distances_to_states = {},
-                                  path_prefix=None):
+                                 transition_matrix,
+                                 lul,
+                                 mask=None,
+                                 distances_to_states={},
+                                 path_prefix=None):
         """
         Compute transition probabilities.
 
         Parameters
         ----------
-        luc_initial : TYPE
-            DESCRIPTION.
-        luc_final : TYPE
-            DESCRIPTION.
-        luc_start : TYPE
-            DESCRIPTION.
-        mask_calibration : TYPE
-            DESCRIPTION.
-        mask_allocation : TYPE
-            DESCRIPTION.
-        tm : TYPE
-            DESCRIPTION.
-        out : TYPE, optional
-            DESCRIPTION. The default is None.
-        distances_to_states_calibration : TYPE, optional
-            DESCRIPTION. The default is {}.
-        distances_to_states_allocation : TYPE, optional
-            DESCRIPTION. The default is {}.
+        transition_matrix : TransitionMatrix
+            The requested transition matrix.
+
+        lul : LandUseLayer
+            The studied land use layer.
+
+        mask : MaskLayer, default = None
+            The region mask layer. If ``None``, the whole map is studied.
+
+        distances_to_states : dict(State:ndarray), default={}
+            The distances matrix to key state. Used to improve performance.
+
+        path_prefix : str, default=None
+            The path prefix to save result as ``path_prefix+'_'+ str(state_u.value)+'_'+str(state_v.value)+'.tif'.
+            If None, the result is returned.
+            Note that if ``path_prefix is not None``, ``lul`` must be LandUseLayer
 
         Returns
         -------
-        None.
+        J : dict(State:ndarray of shape (n_samples,))
+            Only returned if ``path_prefix=False``. Element indexes in the flattened
+            matrix for each state.
 
+        P_v__u_Y : dict(State:ndarray of shape (n_samples, len(palette_v)))
+            Only returned if ``path_prefix=False``. The transition probabilities of each elements for each state. Ndarray columns are
+            ordered as ``palette_v``.
         """
-        
+
         J = {}
-        P = {}
-        
+        P_v__u_Y = {}
+
         for state, land in self.lands.items():
-            
+
             P_v, palette_v = transition_matrix.get_P_v(state)
-            
+
             if path_prefix is not None:
-                path_prefix += '_'+str(state.value)
-            
+                path_prefix += '_' + str(state.value)
+
             ltp = land.transition_probabilities(state,
-                                         luc = luc,
-                                         P_v = P_v,
-                                         palette_v = palette_v,
-                                         mask = mask,
-                                         distances_to_states=distances_to_states,
-                                         path_prefix = path_prefix)
-            
+                                                lul=lul,
+                                                P_v=P_v,
+                                                palette_v=palette_v,
+                                                mask=mask,
+                                                distances_to_states=distances_to_states,
+                                                path_prefix=path_prefix)
+
             if path_prefix is None:
                 J[state] = ltp[0]
-                P[state] = ltp[1]
-                
-        return(J, P)
-    
+                P_v__u_Y[state] = ltp[1]
+
+        return (J, P_v__u_Y)
+
     def allocation(self,
                    transition_matrix,
-                   luc,
-                   luc_origin = None,
+                   lul,
+                   lul_origin=None,
                    mask=None,
                    distances_to_states={},
                    path=None):
-        
-        if luc_origin is None:
-            luc_origin = luc
-        
-        if isinstance(luc_origin, LandUseLayer):
-            luc_origin_data = luc_origin.get_data()
+        """
+        allocation.
+
+        Parameters
+        ----------
+        transition_matrix : TransitionMatrix
+            The requested transition matrix.
+
+        lul : LandUseLayer or ndarray
+            The studied land use layer. If ndarray, the matrix is directly edited (inplace).
+
+        lul_origin : LandUseLayer
+            Original land use layer. Usefull in case of regional allocations. If ``None``, the  ``lul`` layer is copied.
+
+        mask : MaskLayer, default = None
+            The region mask layer. If ``None``, the whole map is studied.
+
+        distances_to_states : dict(State:ndarray), default={}
+            The distances matrix to key state. Used to improve performance.
+
+        path : str, default=None
+            The path to save result as a tif file.
+            If None, the allocation is only saved within `lul`, if `lul` is a ndarray.
+            Note that if ``path`` is not ``None``, ``lul`` must be LandUseLayer.
+
+        Returns
+        -------
+        lul_allocated : LandUseLayer
+            Only returned if ``path`` is not ``None``. The allocated map as a land use layer.
+        """
+
+        if lul_origin is None:
+            lul_origin = lul
+
+        if isinstance(lul_origin, LandUseLayer):
+            lul_origin_data = lul_origin.get_data()
         else:
-            luc_origin_data = luc_origin
-            
-        if isinstance(luc, LandUseLayer):
-            luc_data = luc.get_data().copy()
+            lul_origin_data = lul_origin
+
+        if isinstance(lul, LandUseLayer):
+            lul_data = lul.get_data().copy()
         else:
-            luc_data = luc
-        
+            lul_data = lul
+
         for state, land in self.lands.items():
             P_v, palette_v = transition_matrix.get_P_v(state)
-            
-            land.allocation(state=state,
-                           P_v=P_v,
-                           palette_v=palette_v,
-                           luc=luc_data,
-                           luc_origin=luc_origin_data,
-                           mask=mask,
-                           distances_to_states=distances_to_states,
-                           path=None)
-            
+
+            land.allocate(state=state,
+                          P_v=P_v,
+                          palette_v=palette_v,
+                          lul=lul_data,
+                          lul_origin=lul_origin_data,
+                          mask=mask,
+                          distances_to_states=distances_to_states,
+                          path=None)
+            # Note that the path is set to None above in order to allocate through all regions and save in a second time !
+
         if path is not None:
             folder_path, file_name, file_ext = path_split(path)
-            return(LandUseLayer(label = 'file_name',
-                                     data = luc_data,
-                                     copy_geo = luc_origin,
-                                     path = path,
-                                     palette = luc_origin.palette))
-        
+            return (LandUseLayer(label=file_name,
+                                 data=lul_data,
+                                 copy_geo=lul_origin,
+                                 path=path,
+                                 palette=lul_origin.palette))

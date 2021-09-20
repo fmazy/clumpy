@@ -7,21 +7,61 @@ Created on Fri Sep 17 15:40:56 2021
 """
 
 from . import LandUseLayer
-from ..tools import path_split
+from ..tools._path import path_split
+
 
 class Territory():
+    """
+    Territory.
+
+    Parameters
+    ----------
+    regions : list(Region)
+        List of regions which constitute the territory. If ``None``, an empty list is created
+        and can be append by ``self.add_region()``.
+    """
+
     def __init__(self,
-                 regions = None):
-        
+                 regions=None):
+
         self.regions = regions
         if self.regions is None:
-            self.regions = {}
-    
-    def add_regions(self, region):
-        self.regions[region] = region
-    
-    def remove_regions(self, region):
+            self.regions = []
+
+    def add_region(self, region):
+        """
+        Add a region. If ``region`` is already in the list, nothing happened.
+
+        Parameters
+        ----------
+        region : Region
+            The region to append.
+
+        Returns
+        -------
+        self
+        """
+        if region not in self.regions:
+            self.regions.append(region)
+
+        return (self)
+
+    def remove_region(self, region):
+        """
+        Remove a region.
+
+        Parameters
+        ----------
+        region : Region
+            The region to remove
+
+        Returns
+        -------
+        self
+        """
         self.regions.remove(region)
+
+        return (self)
 
     def check(self):
         """
@@ -34,102 +74,197 @@ class Territory():
             density_estimators = region._check_density_estimators(density_estimators=density_estimators)
             feature_selectors = region._check_feature_selectors(feature_selectors=feature_selectors)
 
-
     def fit(self,
-            luc_initial,
-            luc_final,
+            lul_initial,
+            lul_final,
             masks=None):
-        
+        """
+        Fit the territory.
+
+        Parameters
+        ----------
+        lul_initial : LandUseLayer
+            The initial land use layer.
+
+        lul_final : LandUseLayer
+            The final land use layer.
+
+        masks : dict(Region:MaskLayer), default=None
+            Dict of masks layer with the corresponding region as key. If None, the whole map is used for each region.
+
+        Returns
+        -------
+        self
+        """
+
         if masks is None:
-            masks = {region:None for region in self.regions}
-        
+            masks = {region: None for region in self.regions}
+
         distances_to_states = {}
-        
+
         for id_region, region in enumerate(self.regions):
-            region.fit(luc_initial = luc_initial,
-                       luc_final = luc_final,
-                       mask = masks[region],
-                       distances_to_states = distances_to_states)
-    
+            region.fit(lul_initial=lul_initial,
+                       lul_final=lul_final,
+                       mask=masks[region],
+                       distances_to_states=distances_to_states)
+
+        return (self)
+
     def transition_probabilities(self,
                                  transition_matrices,
-                                 luc,
+                                 lul,
                                  masks=None,
                                  path_prefix=None):
-        
+        """
+        Compute transition probabilities.
+
+        Parameters
+        ----------
+        transition_matrices : dict(Region:TransitionMatrix)
+            Dict of transition matrix with the corresponding region as key.
+
+        lul : LandUseLayer
+            The studied land use layer.
+
+        masks : dict(Region:MaskLayer), default=None
+            Dict of masks layer with the corresponding region as key. If None, the whole map is used for each region.
+
+        path_prefix : str, default=None
+            The path prefix to save result as ``path_prefix+'_'+region.label+'_'+ str(state_u.value)+'_'+str(state_v.value)+'.tif'.
+            If None, the result is returned.
+            Note that if ``path_prefix is not None``, ``lul`` must be LandUseLayer
+
+        Returns
+        -------
+        tp : dict(Region:[J,P_v__u_Y])
+            Dict of regional results with corresponding region as key. Th regional results are ``J``, a ndarray of shape (n_samples,)
+            which is the element indices in the flattened map and ``P_v__u_Y``, the transition probabilities whose columns correspond
+            to transition matrix argument : ``palette_v``.
+        """
+
         if masks is None:
-            masks = {region:None for region in self.regions}
-        
+            masks = {region: None for region in self.regions}
+
         distances_to_states = {}
-        
+
         tp = {}
-        
+
         for region in self.regions:
-            
+
             if path_prefix is not None:
-                path_prefix += '_'+str(region.label)
-            
-            tp[region] = region.transition_probabilities(transition_matrix = transition_matrices[region],
-                                            luc = luc,
-                                            mask=masks[region],
-                                            distances_to_states = distances_to_states,
-                                            path_prefix=path_prefix)
-            
+                path_prefix += '_' + str(region.label)
+
+            tp[region] = region.transition_probabilities(transition_matrix=transition_matrices[region],
+                                                         lul=lul,
+                                                         mask=masks[region],
+                                                         distances_to_states=distances_to_states,
+                                                         path_prefix=path_prefix)
+
         if path_prefix is None:
-            return(tp)
-        
-    def allocation(self,
-                   transition_matrices,
-                   luc,
-                   masks=None,
-                   path=None):
-        
+            return (tp)
+
+    def allocate(self,
+                 transition_matrices,
+                 lul,
+                 masks=None,
+                 path=None):
+        """
+        Allocate.
+
+        Parameters
+        ----------
+        transition_matrices : dict(Region:TransitionMatrix)
+            Dict of transition matrix with the corresponding region as key.
+
+        lul : LandUseLayer or ndarray
+            The studied land use layer.
+
+        masks : dict(Region:MaskLayer), default=None
+            Dict of masks layer with the corresponding region as key. If None, the whole map is used for each region.
+
+        path : str, default=None
+            The path to save result as a tif file.
+            If None, the allocation is only saved within `lul`, if `lul` is a ndarray.
+            Note that if ``path`` is not ``None``, ``lul`` must be LandUseLayer.
+
+        Returns
+        -------
+        lul_allocated : LandUseLayer
+            Only returned if ``path`` is not ``None``. The allocated map as a land use layer.
+        """
+
         if masks is None:
-            masks = {region:None for region in self.regions}
-            
+            masks = {region: None for region in self.regions}
+
         distances_to_states = {}
-        
-        luc_data = luc.get_data().copy()
-        
+
+        lul_data = lul.get_data().copy()
+
         for region in self.regions:
-            region.allocation(transition_matrix = transition_matrices[region],
-                              luc = luc_data,
-                              luc_origin = luc,
-                              mask=masks[region],
-                              distances_to_states = distances_to_states,
-                              path=path)
-            
+            region.allocate(transition_matrix=transition_matrices[region],
+                            lul=lul_data,
+                            lul_origin=lul,
+                            mask=masks[region],
+                            distances_to_states=distances_to_states,
+                            path=None)
+            # Note that the path is set to None above in order to allocate through all regions and save in a second time !
+
         if path is not None:
             folder_path, file_name, file_ext = path_split(path)
-            return(LandUseLayer(label = 'file_name',
-                                     data = luc_data,
-                                     copy_geo = luc,
-                                     path = path,
-                                     palette = luc.palette))
-        
-        return(luc_data)
-    
+            return (LandUseLayer(label=file_name,
+                                 data=lul_data,
+                                 copy_geo=lul,
+                                 path=path,
+                                 palette=lul.palette))
+
     def multisteps_allocation(self,
                               n,
                               transition_matrices,
-                              luc,
+                              lul,
                               masks=None,
                               path_prefix=None):
-        
-        multisteps_transition_matrices = {region : tm.multisteps(n) for region, tm in transition_matrices.items()}
-        
-        luc_step = luc
-        
+        """
+        Multisteps allocation
+
+        Parameters
+        ----------
+        n : int
+            Number of steps.
+
+        transition_matrices : dict(Region:TransitionMatrix)
+            Dict of transition matrix with the corresponding region as key.
+
+        lul : LandUseLayer or ndarray
+            The studied land use layer.
+
+        masks : dict(Region:MaskLayer), default=None
+            Dict of masks layer with the corresponding region as key. If None, the whole map is used for each region.
+
+        path_prefix : str, default=None
+            The path to save every allocated step map as ``path_prefix+'_'+str(i)+'.tif'``.
+            If None, the allocation is only saved within `lul`, if `lul` is a ndarray.
+            Note that if ``path`` is not ``None``, ``lul`` must be LandUseLayer.
+
+        Returns
+        -------
+        lul_allocated : LandUseLayer
+            The allocated map as a land use layer.
+        """
+
+        multisteps_transition_matrices = {region: tm.multisteps(n) for region, tm in transition_matrices.items()}
+
+        lul_step = lul
+
         for i in range(n):
-            
+
             if isinstance(path_prefix, str):
                 path_step = path_prefix + '_' + str(i) + '.tif'
             elif callable(path_prefix):
                 path_step = path_prefix(i)
-            
-            luc_step = self.allocation(transition_matrices = multisteps_transition_matrices,
-                            luc = luc_step,
-                            masks = masks,
-                            path = path_step)
-        
-        return(luc_step)
+
+            lul_step = self.allocation(transition_matrices=multisteps_transition_matrices,
+                                       lul=lul_step,
+                                       masks=masks,
+                                       path=path_step)
+        if path_prefix is not None:
+            return lul_step

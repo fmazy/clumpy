@@ -1,8 +1,15 @@
+"""
+Allocators blabla.
+"""
+
 from ._patch import Patch
 from .._base import LandUseLayer, State
 from ..tools._path import path_split
 
 class Allocator():
+    """
+    Allocator
+    """
     def __init__(self,
                  verbose=0):
         self.patches = {}
@@ -37,6 +44,14 @@ class Allocator():
 
     def set_patches(self,
                     patches):
+        """
+        Set patches
+
+        Parameters
+        ----------
+        patches : dict(State:Patch)
+            Dict of patches with states as keys.
+        """
         _check_patches(patches)
         self.patches = patches
 
@@ -45,41 +60,81 @@ class Allocator():
                  land,
                  P_v,
                  palette_v,
-                 luc,
-                 luc_origin=None,
+                 lul,
+                 lul_origin=None,
                  mask=None,
                  distances_to_states={},
                  path=None):
+        """
+        Allocate
 
-        if luc_origin is None:
-            luc_origin = luc
+        Parameters
+        ----------
+        state : State
+            The initial state of this land.
 
-        if isinstance(luc_origin, LandUseLayer):
-            luc_origin_data = luc_origin.get_data()
+        land : Land
+            The studied land object.
+
+        P_v : ndarray of shape(len(palette_v,))
+            The global transition probabilities :math:`P(v)`. The order corresponds to
+            ``palette_v``
+
+        palette_v : Palette
+            The final state palette corresponding to ``P_v``.
+
+        lul : LandUseLayer or ndarray
+            The studied land use layer. If ndarray, the matrix is directly edited (inplace).
+
+        lul_origin : LandUseLayer
+            Original land use layer. Usefull in case of regional allocations. If ``None``, the  ``lul`` layer is copied.
+
+        mask : MaskLayer, default = None
+            The region mask layer. If ``None``, the whole map is studied.
+
+        distances_to_states : dict(State:ndarray), default={}
+            The distances matrix to key state. Used to improve performance.
+
+        path : str, default=None
+            The path to save result as a tif file.
+            If None, the allocation is only saved within `lul`, if `lul` is a ndarray.
+            Note that if ``path`` is not ``None``, ``lul`` must be LandUseLayer.
+
+        Returns
+        -------
+        lul_allocated : LandUseLayer
+            Only returned if ``path`` is not ``None``. The allocated map as a land use layer.
+        """
+
+        if lul_origin is None:
+            lul_origin = lul
+
+        if isinstance(lul_origin, LandUseLayer):
+            lul_origin_data = lul_origin.get_data()
         else:
-            luc_origin_data = luc_origin
+            lul_origin_data = lul_origin
 
-        if isinstance(luc, LandUseLayer):
-            luc_data = luc.get_data().copy()
+        if isinstance(lul, LandUseLayer):
+            lul_data = lul.get_data().copy()
         else:
-            luc_data = luc
+            lul_data = lul
 
         self._allocate(state=state,
                    land=land,
                    P_v=P_v,
                    palette_v=palette_v,
-                   luc_data=luc_data,
-                   luc_origin_data=luc_origin_data,
+                   lul_data=lul_data,
+                   lul_origin_data=lul_origin_data,
                    mask=mask,
                    distances_to_states=distances_to_states)
 
         if path is not None:
             folder_path, file_name, file_ext = path_split(path)
             return (LandUseLayer(label='file_name',
-                                 data=luc_data,
-                                 copy_geo=luc_origin,
+                                 data=lul_data,
+                                 copy_geo=lul_origin,
                                  path=path,
-                                 palette=luc_origin.palette))
+                                 palette=lul_origin.palette))
 
 def _check_patches(patches):
     if ~isinstance(patches, dict):

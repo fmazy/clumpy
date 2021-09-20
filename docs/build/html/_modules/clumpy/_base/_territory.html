@@ -1,0 +1,354 @@
+
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>clumpy._base._territory &#8212; clumpy 0.1.0 documentation</title>
+    <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/nature.css" />
+    <script data-url_root="../../../" id="documentation_options" src="../../../_static/documentation_options.js"></script>
+    <script src="../../../_static/jquery.js"></script>
+    <script src="../../../_static/underscore.js"></script>
+    <script src="../../../_static/doctools.js"></script>
+    <link rel="shortcut icon" href="../../../_static/logo.ico"/>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../../index.html">clumpy 0.1.0 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../../index.html" accesskey="U">Module code</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">clumpy._base._territory</a></li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for clumpy._base._territory</h1><div class="highlight"><pre>
+<span></span><span class="ch">#!/usr/bin/env python3</span>
+<span class="c1"># -*- coding: utf-8 -*-</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Created on Fri Sep 17 15:40:56 2021</span>
+
+<span class="sd">@author: frem</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">LandUseLayer</span>
+<span class="kn">from</span> <span class="nn">..tools._path</span> <span class="kn">import</span> <span class="n">path_split</span>
+
+
+<div class="viewcode-block" id="Territory"><a class="viewcode-back" href="../../../generated/clumpy.Territory.html#clumpy.Territory">[docs]</a><span class="k">class</span> <span class="nc">Territory</span><span class="p">():</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Territory.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    regions : list(Region)</span>
+<span class="sd">        List of regions which constitute the territory. If ``None``, an empty list is created</span>
+<span class="sd">        and can be append by ``self.add_region()``.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
+                 <span class="n">regions</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">regions</span> <span class="o">=</span> <span class="n">regions</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">regions</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">regions</span> <span class="o">=</span> <span class="p">[]</span>
+
+<div class="viewcode-block" id="Territory.add_region"><a class="viewcode-back" href="../../../generated/clumpy.Territory.html#clumpy.Territory.add_region">[docs]</a>    <span class="k">def</span> <span class="nf">add_region</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">region</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Add a region. If ``region`` is already in the list, nothing happened.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        region : Region</span>
+<span class="sd">            The region to append.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        self</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">region</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">regions</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">regions</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">region</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="p">(</span><span class="bp">self</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Territory.remove_region"><a class="viewcode-back" href="../../../generated/clumpy.Territory.html#clumpy.Territory.remove_region">[docs]</a>    <span class="k">def</span> <span class="nf">remove_region</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">region</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Remove a region.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        region : Region</span>
+<span class="sd">            The region to remove</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        self</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">regions</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">region</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="p">(</span><span class="bp">self</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Territory.check"><a class="viewcode-back" href="../../../generated/clumpy.Territory.html#clumpy.Territory.check">[docs]</a>    <span class="k">def</span> <span class="nf">check</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Check the Region object through regions checks.</span>
+<span class="sd">        Notably, estimators uniqueness are checked to avoid malfunctioning during transition probabilities estimation.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">density_estimators</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">feature_selectors</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">region</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">regions</span><span class="p">:</span>
+            <span class="n">density_estimators</span> <span class="o">=</span> <span class="n">region</span><span class="o">.</span><span class="n">_check_density_estimators</span><span class="p">(</span><span class="n">density_estimators</span><span class="o">=</span><span class="n">density_estimators</span><span class="p">)</span>
+            <span class="n">feature_selectors</span> <span class="o">=</span> <span class="n">region</span><span class="o">.</span><span class="n">_check_feature_selectors</span><span class="p">(</span><span class="n">feature_selectors</span><span class="o">=</span><span class="n">feature_selectors</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Territory.fit"><a class="viewcode-back" href="../../../generated/clumpy.Territory.html#clumpy.Territory.fit">[docs]</a>    <span class="k">def</span> <span class="nf">fit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
+            <span class="n">lul_initial</span><span class="p">,</span>
+            <span class="n">lul_final</span><span class="p">,</span>
+            <span class="n">masks</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Fit the territory.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        lul_initial : LandUseLayer</span>
+<span class="sd">            The initial land use layer.</span>
+
+<span class="sd">        lul_final : LandUseLayer</span>
+<span class="sd">            The final land use layer.</span>
+
+<span class="sd">        masks : dict(Region:MaskLayer), default=None</span>
+<span class="sd">            Dict of masks layer with the corresponding region as key. If None, the whole map is used for each region.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        self</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">if</span> <span class="n">masks</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">masks</span> <span class="o">=</span> <span class="p">{</span><span class="n">region</span><span class="p">:</span> <span class="kc">None</span> <span class="k">for</span> <span class="n">region</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">regions</span><span class="p">}</span>
+
+        <span class="n">distances_to_states</span> <span class="o">=</span> <span class="p">{}</span>
+
+        <span class="k">for</span> <span class="n">id_region</span><span class="p">,</span> <span class="n">region</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">regions</span><span class="p">):</span>
+            <span class="n">region</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">lul_initial</span><span class="o">=</span><span class="n">lul_initial</span><span class="p">,</span>
+                       <span class="n">lul_final</span><span class="o">=</span><span class="n">lul_final</span><span class="p">,</span>
+                       <span class="n">mask</span><span class="o">=</span><span class="n">masks</span><span class="p">[</span><span class="n">region</span><span class="p">],</span>
+                       <span class="n">distances_to_states</span><span class="o">=</span><span class="n">distances_to_states</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="p">(</span><span class="bp">self</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Territory.transition_probabilities"><a class="viewcode-back" href="../../../generated/clumpy.Territory.html#clumpy.Territory.transition_probabilities">[docs]</a>    <span class="k">def</span> <span class="nf">transition_probabilities</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
+                                 <span class="n">transition_matrices</span><span class="p">,</span>
+                                 <span class="n">lul</span><span class="p">,</span>
+                                 <span class="n">masks</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                                 <span class="n">path_prefix</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Compute transition probabilities.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        transition_matrices : dict(Region:TransitionMatrix)</span>
+<span class="sd">            Dict of transition matrix with the corresponding region as key.</span>
+
+<span class="sd">        lul : LandUseLayer</span>
+<span class="sd">            The studied land use layer.</span>
+
+<span class="sd">        masks : dict(Region:MaskLayer), default=None</span>
+<span class="sd">            Dict of masks layer with the corresponding region as key. If None, the whole map is used for each region.</span>
+
+<span class="sd">        path_prefix : str, default=None</span>
+<span class="sd">            The path prefix to save result as ``path_prefix+&#39;_&#39;+region.label+&#39;_&#39;+ str(state_u.value)+&#39;_&#39;+str(state_v.value)+&#39;.tif&#39;.</span>
+<span class="sd">            If None, the result is returned.</span>
+<span class="sd">            Note that if ``path_prefix is not None``, ``lul`` must be LandUseLayer</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        tp : dict(Region:[J,P_v__u_Y])</span>
+<span class="sd">            Dict of regional results with corresponding region as key. Th regional results are ``J``, a ndarray of shape (n_samples,)</span>
+<span class="sd">            which is the element indices in the flattened map and ``P_v__u_Y``, the transition probabilities whose columns correspond</span>
+<span class="sd">            to transition matrix argument : ``palette_v``.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">if</span> <span class="n">masks</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">masks</span> <span class="o">=</span> <span class="p">{</span><span class="n">region</span><span class="p">:</span> <span class="kc">None</span> <span class="k">for</span> <span class="n">region</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">regions</span><span class="p">}</span>
+
+        <span class="n">distances_to_states</span> <span class="o">=</span> <span class="p">{}</span>
+
+        <span class="n">tp</span> <span class="o">=</span> <span class="p">{}</span>
+
+        <span class="k">for</span> <span class="n">region</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">regions</span><span class="p">:</span>
+
+            <span class="k">if</span> <span class="n">path_prefix</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">path_prefix</span> <span class="o">+=</span> <span class="s1">&#39;_&#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">region</span><span class="o">.</span><span class="n">label</span><span class="p">)</span>
+
+            <span class="n">tp</span><span class="p">[</span><span class="n">region</span><span class="p">]</span> <span class="o">=</span> <span class="n">region</span><span class="o">.</span><span class="n">transition_probabilities</span><span class="p">(</span><span class="n">transition_matrix</span><span class="o">=</span><span class="n">transition_matrices</span><span class="p">[</span><span class="n">region</span><span class="p">],</span>
+                                                         <span class="n">lul</span><span class="o">=</span><span class="n">lul</span><span class="p">,</span>
+                                                         <span class="n">mask</span><span class="o">=</span><span class="n">masks</span><span class="p">[</span><span class="n">region</span><span class="p">],</span>
+                                                         <span class="n">distances_to_states</span><span class="o">=</span><span class="n">distances_to_states</span><span class="p">,</span>
+                                                         <span class="n">path_prefix</span><span class="o">=</span><span class="n">path_prefix</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">path_prefix</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="p">(</span><span class="n">tp</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Territory.allocate"><a class="viewcode-back" href="../../../generated/clumpy.Territory.html#clumpy.Territory.allocate">[docs]</a>    <span class="k">def</span> <span class="nf">allocate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
+                 <span class="n">transition_matrices</span><span class="p">,</span>
+                 <span class="n">lul</span><span class="p">,</span>
+                 <span class="n">masks</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                 <span class="n">path</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Allocate.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        transition_matrices : dict(Region:TransitionMatrix)</span>
+<span class="sd">            Dict of transition matrix with the corresponding region as key.</span>
+
+<span class="sd">        lul : LandUseLayer or ndarray</span>
+<span class="sd">            The studied land use layer.</span>
+
+<span class="sd">        masks : dict(Region:MaskLayer), default=None</span>
+<span class="sd">            Dict of masks layer with the corresponding region as key. If None, the whole map is used for each region.</span>
+
+<span class="sd">        path : str, default=None</span>
+<span class="sd">            The path to save result as a tif file.</span>
+<span class="sd">            If None, the allocation is only saved within `lul`, if `lul` is a ndarray.</span>
+<span class="sd">            Note that if ``path`` is not ``None``, ``lul`` must be LandUseLayer.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        lul_allocated : LandUseLayer</span>
+<span class="sd">            Only returned if ``path`` is not ``None``. The allocated map as a land use layer.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">if</span> <span class="n">masks</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">masks</span> <span class="o">=</span> <span class="p">{</span><span class="n">region</span><span class="p">:</span> <span class="kc">None</span> <span class="k">for</span> <span class="n">region</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">regions</span><span class="p">}</span>
+
+        <span class="n">distances_to_states</span> <span class="o">=</span> <span class="p">{}</span>
+
+        <span class="n">lul_data</span> <span class="o">=</span> <span class="n">lul</span><span class="o">.</span><span class="n">get_data</span><span class="p">()</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+
+        <span class="k">for</span> <span class="n">region</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">regions</span><span class="p">:</span>
+            <span class="n">region</span><span class="o">.</span><span class="n">allocate</span><span class="p">(</span><span class="n">transition_matrix</span><span class="o">=</span><span class="n">transition_matrices</span><span class="p">[</span><span class="n">region</span><span class="p">],</span>
+                            <span class="n">lul</span><span class="o">=</span><span class="n">lul_data</span><span class="p">,</span>
+                            <span class="n">lul_origin</span><span class="o">=</span><span class="n">lul</span><span class="p">,</span>
+                            <span class="n">mask</span><span class="o">=</span><span class="n">masks</span><span class="p">[</span><span class="n">region</span><span class="p">],</span>
+                            <span class="n">distances_to_states</span><span class="o">=</span><span class="n">distances_to_states</span><span class="p">,</span>
+                            <span class="n">path</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
+            <span class="c1"># Note that the path is set to None above in order to allocate through all regions and save in a second time !</span>
+
+        <span class="k">if</span> <span class="n">path</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">folder_path</span><span class="p">,</span> <span class="n">file_name</span><span class="p">,</span> <span class="n">file_ext</span> <span class="o">=</span> <span class="n">path_split</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
+            <span class="k">return</span> <span class="p">(</span><span class="n">LandUseLayer</span><span class="p">(</span><span class="n">label</span><span class="o">=</span><span class="n">file_name</span><span class="p">,</span>
+                                 <span class="n">data</span><span class="o">=</span><span class="n">lul_data</span><span class="p">,</span>
+                                 <span class="n">copy_geo</span><span class="o">=</span><span class="n">lul</span><span class="p">,</span>
+                                 <span class="n">path</span><span class="o">=</span><span class="n">path</span><span class="p">,</span>
+                                 <span class="n">palette</span><span class="o">=</span><span class="n">lul</span><span class="o">.</span><span class="n">palette</span><span class="p">))</span></div>
+
+<div class="viewcode-block" id="Territory.multisteps_allocation"><a class="viewcode-back" href="../../../generated/clumpy.Territory.html#clumpy.Territory.multisteps_allocation">[docs]</a>    <span class="k">def</span> <span class="nf">multisteps_allocation</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
+                              <span class="n">n</span><span class="p">,</span>
+                              <span class="n">transition_matrices</span><span class="p">,</span>
+                              <span class="n">lul</span><span class="p">,</span>
+                              <span class="n">masks</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                              <span class="n">path_prefix</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Multisteps allocation</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        n : int</span>
+<span class="sd">            Number of steps.</span>
+
+<span class="sd">        transition_matrices : dict(Region:TransitionMatrix)</span>
+<span class="sd">            Dict of transition matrix with the corresponding region as key.</span>
+
+<span class="sd">        lul : LandUseLayer or ndarray</span>
+<span class="sd">            The studied land use layer.</span>
+
+<span class="sd">        masks : dict(Region:MaskLayer), default=None</span>
+<span class="sd">            Dict of masks layer with the corresponding region as key. If None, the whole map is used for each region.</span>
+
+<span class="sd">        path_prefix : str, default=None</span>
+<span class="sd">            The path to save every allocated step map as ``path_prefix+&#39;_&#39;+str(i)+&#39;.tif&#39;``.</span>
+<span class="sd">            If None, the allocation is only saved within `lul`, if `lul` is a ndarray.</span>
+<span class="sd">            Note that if ``path`` is not ``None``, ``lul`` must be LandUseLayer.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        lul_allocated : LandUseLayer</span>
+<span class="sd">            The allocated map as a land use layer.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">multisteps_transition_matrices</span> <span class="o">=</span> <span class="p">{</span><span class="n">region</span><span class="p">:</span> <span class="n">tm</span><span class="o">.</span><span class="n">multisteps</span><span class="p">(</span><span class="n">n</span><span class="p">)</span> <span class="k">for</span> <span class="n">region</span><span class="p">,</span> <span class="n">tm</span> <span class="ow">in</span> <span class="n">transition_matrices</span><span class="o">.</span><span class="n">items</span><span class="p">()}</span>
+
+        <span class="n">lul_step</span> <span class="o">=</span> <span class="n">lul</span>
+
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n</span><span class="p">):</span>
+
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">path_prefix</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+                <span class="n">path_step</span> <span class="o">=</span> <span class="n">path_prefix</span> <span class="o">+</span> <span class="s1">&#39;_&#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">i</span><span class="p">)</span> <span class="o">+</span> <span class="s1">&#39;.tif&#39;</span>
+            <span class="k">elif</span> <span class="n">callable</span><span class="p">(</span><span class="n">path_prefix</span><span class="p">):</span>
+                <span class="n">path_step</span> <span class="o">=</span> <span class="n">path_prefix</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>
+
+            <span class="n">lul_step</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">allocation</span><span class="p">(</span><span class="n">transition_matrices</span><span class="o">=</span><span class="n">multisteps_transition_matrices</span><span class="p">,</span>
+                                       <span class="n">lul</span><span class="o">=</span><span class="n">lul_step</span><span class="p">,</span>
+                                       <span class="n">masks</span><span class="o">=</span><span class="n">masks</span><span class="p">,</span>
+                                       <span class="n">path</span><span class="o">=</span><span class="n">path_step</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">path_prefix</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">lul_step</span></div></div>
+</pre></div>
+
+            <div class="clearer"></div>
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="../../../index.html">
+              <img class="logo" src="../../../_static/logo.png" alt="Logo"/>
+            </a></p>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../../index.html">clumpy 0.1.0 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../../index.html" >Module code</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">clumpy._base._territory</a></li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2020, François-Rémi Mazy.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 4.0.2.
+    </div>
+  </body>
+</html>

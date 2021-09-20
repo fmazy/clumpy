@@ -16,7 +16,7 @@
     <link rel="shortcut icon" href="_static/logo.ico"/>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="clumpy.definition.State" href="generated/clumpy.definition.State.html" />
+    <link rel="next" title="clumpy.State" href="generated/clumpy.State.html" />
     <link rel="prev" title="Definition" href="user_guide/definition.html" /> 
   </head><body>
     <div class="related" role="navigation" aria-label="related navigation">
@@ -29,7 +29,7 @@
           <a href="py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
         <li class="right" >
-          <a href="generated/clumpy.definition.State.html" title="clumpy.definition.State"
+          <a href="generated/clumpy.State.html" title="clumpy.State"
              accesskey="N">next</a> |</li>
         <li class="right" >
           <a href="user_guide/definition.html" title="Definition"
@@ -47,101 +47,76 @@
   <section id="clumpy-api">
 <h1>Clumpy API<a class="headerlink" href="#clumpy-api" title="Permalink to this headline">¶</a></h1>
 <p>This is the full API documentation of the <cite>clumpy</cite> toolbox.</p>
-<section id="module-clumpy.definition">
-<span id="clumpy-definition-definition"></span><h2><a class="reference internal" href="#module-clumpy.definition" title="clumpy.definition"><code class="xref py py-mod docutils literal notranslate"><span class="pre">clumpy.definition</span></code></a>: Definition<a class="headerlink" href="#module-clumpy.definition" title="Permalink to this headline">¶</a></h2>
-<p>Elements definition</p>
-<section id="module-clumpy.definition._state">
-<span id="state"></span><h3>State<a class="headerlink" href="#module-clumpy.definition._state" title="Permalink to this headline">¶</a></h3>
+<section id="module-clumpy._base">
+<span id="base-objects"></span><h2>Base objects<a class="headerlink" href="#module-clumpy._base" title="Permalink to this headline">¶</a></h2>
+<p>Base objects</p>
+<section id="module-clumpy._base._state">
+<span id="state-and-palette"></span><h3>State and palette<a class="headerlink" href="#module-clumpy._base._state" title="Permalink to this headline">¶</a></h3>
+<p>State blabla.</p>
 <table class="longtable docutils align-default">
 <colgroup>
 <col style="width: 10%" />
 <col style="width: 90%" />
 </colgroup>
 <tbody>
-<tr class="row-odd"><td><p><a class="reference internal" href="generated/clumpy.definition.State.html#clumpy.definition.State" title="clumpy.definition.State"><code class="xref py py-obj docutils literal notranslate"><span class="pre">definition.State</span></code></a>(label, value, color)</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="generated/clumpy.State.html#clumpy.State" title="clumpy.State"><code class="xref py py-obj docutils literal notranslate"><span class="pre">State</span></code></a>(label, value, color)</p></td>
 <td><p>Define a land use state.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="generated/clumpy.definition.Palette.html#clumpy.definition.Palette" title="clumpy.definition.Palette"><code class="xref py py-obj docutils literal notranslate"><span class="pre">definition.Palette</span></code></a>([states])</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="generated/clumpy.Palette.html#clumpy.Palette" title="clumpy.Palette"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Palette</span></code></a>([states])</p></td>
 <td><p>Define a palette, i.e. a set of states.</p></td>
 </tr>
 </tbody>
 </table>
 </section>
-<section id="module-clumpy.definition._layer">
-<span id="layer"></span><h3>Layer<a class="headerlink" href="#module-clumpy.definition._layer" title="Permalink to this headline">¶</a></h3>
+<section id="module-clumpy._base._layer">
+<span id="layers"></span><h3>Layers<a class="headerlink" href="#module-clumpy._base._layer" title="Permalink to this headline">¶</a></h3>
 <table class="longtable docutils align-default">
 <colgroup>
 <col style="width: 10%" />
 <col style="width: 90%" />
 </colgroup>
 <tbody>
-<tr class="row-odd"><td><p><a class="reference internal" href="generated/clumpy.definition.LandUseLayer.html#clumpy.definition.LandUseLayer" title="clumpy.definition.LandUseLayer"><code class="xref py py-obj docutils literal notranslate"><span class="pre">definition.LandUseLayer</span></code></a>([label, time, …])</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="generated/clumpy.LandUseLayer.html#clumpy.LandUseLayer" title="clumpy.LandUseLayer"><code class="xref py py-obj docutils literal notranslate"><span class="pre">LandUseLayer</span></code></a>([label, time, path, data, …])</p></td>
 <td><p>Define a Land Use Cover (LUC) layer.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="generated/clumpy.definition.FeatureLayer.html#clumpy.definition.FeatureLayer" title="clumpy.definition.FeatureLayer"><code class="xref py py-obj docutils literal notranslate"><span class="pre">definition.FeatureLayer</span></code></a>([label, time, path, …])</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="generated/clumpy.MaskLayer.html#clumpy.MaskLayer" title="clumpy.MaskLayer"><code class="xref py py-obj docutils literal notranslate"><span class="pre">MaskLayer</span></code></a>([label, time, path, data, copy_geo])</p></td>
+<td><p>Mask layer.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="generated/clumpy.FeatureLayer.html#clumpy.FeatureLayer" title="clumpy.FeatureLayer"><code class="xref py py-obj docutils literal notranslate"><span class="pre">FeatureLayer</span></code></a>([label, time, path, data, …])</p></td>
 <td><p>Define a feature layer.</p></td>
 </tr>
 </tbody>
 </table>
 </section>
-<section id="module-clumpy.definition._region">
-<span id="region"></span><h3>Region<a class="headerlink" href="#module-clumpy.definition._region" title="Permalink to this headline">¶</a></h3>
+<section id="levels">
+<h3>Levels<a class="headerlink" href="#levels" title="Permalink to this headline">¶</a></h3>
 <table class="longtable docutils align-default">
 <colgroup>
 <col style="width: 10%" />
 <col style="width: 90%" />
 </colgroup>
 <tbody>
-<tr class="row-odd"><td><p><a class="reference internal" href="generated/clumpy.definition.Region.html#clumpy.definition.Region" title="clumpy.definition.Region"><code class="xref py py-obj docutils literal notranslate"><span class="pre">definition.Region</span></code></a>(label, luc_initial[, …])</p></td>
-<td><p>Define a region.</p></td>
-</tr>
-</tbody>
-</table>
-</section>
-<section id="module-clumpy.definition._land">
-<span id="land"></span><h3>Land<a class="headerlink" href="#module-clumpy.definition._land" title="Permalink to this headline">¶</a></h3>
-<table class="longtable docutils align-default">
-<colgroup>
-<col style="width: 10%" />
-<col style="width: 90%" />
-</colgroup>
-<tbody>
-<tr class="row-odd"><td><p><a class="reference internal" href="generated/clumpy.definition.Land.html#clumpy.definition.Land" title="clumpy.definition.Land"><code class="xref py py-obj docutils literal notranslate"><span class="pre">definition.Land</span></code></a>(features[, de, isl_ratio, …])</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="generated/clumpy.Land.html#clumpy.Land" title="clumpy.Land"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Land</span></code></a>(features, transition_probability_estimator)</p></td>
 <td><p>Land object which refers to a given initial state.</p></td>
 </tr>
+<tr class="row-even"><td><p><a class="reference internal" href="generated/clumpy.Region.html#clumpy.Region" title="clumpy.Region"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Region</span></code></a>(label[, verbose])</p></td>
+<td><p>Define a region.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="generated/clumpy.Territory.html#clumpy.Territory" title="clumpy.Territory"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Territory</span></code></a>([regions])</p></td>
+<td><p>Territory.</p></td>
+</tr>
 </tbody>
 </table>
 </section>
-<section id="module-clumpy.definition._patches">
-<span id="patches"></span><h3>Patches<a class="headerlink" href="#module-clumpy.definition._patches" title="Permalink to this headline">¶</a></h3>
+<section id="transition-matrix">
+<h3>Transition matrix<a class="headerlink" href="#transition-matrix" title="Permalink to this headline">¶</a></h3>
 <table class="longtable docutils align-default">
 <colgroup>
 <col style="width: 10%" />
 <col style="width: 90%" />
 </colgroup>
 <tbody>
-<tr class="row-odd"><td><p><a class="reference internal" href="generated/clumpy.definition.BootstrapPatches.html#clumpy.definition.BootstrapPatches" title="clumpy.definition.BootstrapPatches"><code class="xref py py-obj docutils literal notranslate"><span class="pre">definition.BootstrapPatches</span></code></a>(areas, …)</p></td>
-<td><p>Bootstrap patch parameters object.</p></td>
-</tr>
-<tr class="row-even"><td><p><a class="reference internal" href="generated/clumpy.definition.TransitionPatches.html#clumpy.definition.TransitionPatches" title="clumpy.definition.TransitionPatches"><code class="xref py py-obj docutils literal notranslate"><span class="pre">definition.TransitionPatches</span></code></a>([isl_patches, …])</p></td>
-<td><p>Patches informations for a given transition</p></td>
-</tr>
-</tbody>
-</table>
-</section>
-</section>
-<section id="module-clumpy.scenario">
-<span id="clumpy-definition-scenario"></span><h2><a class="reference internal" href="#module-clumpy.definition" title="clumpy.definition"><code class="xref py py-mod docutils literal notranslate"><span class="pre">clumpy.definition</span></code></a>: Scenario<a class="headerlink" href="#module-clumpy.scenario" title="Permalink to this headline">¶</a></h2>
-<p>Scenario module.</p>
-<section id="module-clumpy.scenario._transition_matrix">
-<span id="transition-matrix"></span><h3>Transition Matrix<a class="headerlink" href="#module-clumpy.scenario._transition_matrix" title="Permalink to this headline">¶</a></h3>
-<table class="longtable docutils align-default">
-<colgroup>
-<col style="width: 10%" />
-<col style="width: 90%" />
-</colgroup>
-<tbody>
-<tr class="row-odd"><td><p><a class="reference internal" href="generated/clumpy.scenario.TransitionMatrix.html#clumpy.scenario.TransitionMatrix" title="clumpy.scenario.TransitionMatrix"><code class="xref py py-obj docutils literal notranslate"><span class="pre">scenario.TransitionMatrix</span></code></a>(M[, palette_u, …])</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="generated/clumpy.TransitionMatrix.html#clumpy.TransitionMatrix" title="clumpy.TransitionMatrix"><code class="xref py py-obj docutils literal notranslate"><span class="pre">TransitionMatrix</span></code></a>(M[, palette_u, palette_v])</p></td>
 <td><p>Define a transition matrix.</p></td>
 </tr>
 </tbody>
@@ -152,18 +127,20 @@
 <col style="width: 90%" />
 </colgroup>
 <tbody>
-<tr class="row-odd"><td><p><a class="reference internal" href="generated/clumpy.scenario.compute_transition_matrix.html#clumpy.scenario.compute_transition_matrix" title="clumpy.scenario.compute_transition_matrix"><code class="xref py py-obj docutils literal notranslate"><span class="pre">scenario.compute_transition_matrix</span></code></a>(V_u, …)</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="generated/clumpy.compute_transition_matrix.html#clumpy.compute_transition_matrix" title="clumpy.compute_transition_matrix"><code class="xref py py-obj docutils literal notranslate"><span class="pre">compute_transition_matrix</span></code></a>(V_u, palette_u, …)</p></td>
 <td><p>Compute the transition matrix from final states vectors.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="generated/clumpy.scenario.load_transition_matrix.html#clumpy.scenario.load_transition_matrix" title="clumpy.scenario.load_transition_matrix"><code class="xref py py-obj docutils literal notranslate"><span class="pre">scenario.load_transition_matrix</span></code></a>(path, palette)</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="generated/clumpy.load_transition_matrix.html#clumpy.load_transition_matrix" title="clumpy.load_transition_matrix"><code class="xref py py-obj docutils literal notranslate"><span class="pre">load_transition_matrix</span></code></a>(path, palette)</p></td>
 <td><p>Load transition matrixes according to a given palette.</p></td>
 </tr>
 </tbody>
 </table>
 </section>
 </section>
+<section id="estimation">
+<h2>Estimation<a class="headerlink" href="#estimation" title="Permalink to this headline">¶</a></h2>
 <section id="module-clumpy.density_estimation">
-<span id="clumpy-density-estimation-density-estimation"></span><h2><a class="reference internal" href="#module-clumpy.density_estimation" title="clumpy.density_estimation"><code class="xref py py-mod docutils literal notranslate"><span class="pre">clumpy.density_estimation</span></code></a>: Density Estimation<a class="headerlink" href="#module-clumpy.density_estimation" title="Permalink to this headline">¶</a></h2>
+<span id="density-estimation"></span><h3>Density Estimation<a class="headerlink" href="#module-clumpy.density_estimation" title="Permalink to this headline">¶</a></h3>
 <p>Density Estimation Methods</p>
 <table class="longtable docutils align-default">
 <colgroup>
@@ -177,42 +154,60 @@
 </tbody>
 </table>
 </section>
-<section id="clumpy-models-models">
-<h2><a class="reference internal" href="#module-clumpy.models" title="clumpy.models"><code class="xref py py-mod docutils literal notranslate"><span class="pre">clumpy.models</span></code></a>: Models<a class="headerlink" href="#clumpy-models-models" title="Permalink to this headline">¶</a></h2>
-<span class="target" id="module-clumpy.models"></span><p>Models</p>
-<section id="parameters">
-<h3>Parameters<a class="headerlink" href="#parameters" title="Permalink to this headline">¶</a></h3>
+<section id="module-clumpy.transition_probability_estimation">
+<span id="transition-probability-estimation"></span><h3>Transition Probability Estimation<a class="headerlink" href="#module-clumpy.transition_probability_estimation" title="Permalink to this headline">¶</a></h3>
+<p>Transition probability estimation methods</p>
 <table class="longtable docutils align-default">
 <colgroup>
 <col style="width: 10%" />
 <col style="width: 90%" />
 </colgroup>
 <tbody>
-<tr class="row-odd"><td><p><a class="reference internal" href="generated/clumpy.models.PatchesParams.html#clumpy.models.PatchesParams" title="clumpy.models.PatchesParams"><code class="xref py py-obj docutils literal notranslate"><span class="pre">models.PatchesParams</span></code></a>([isl_patch, exp_patch, …])</p></td>
-<td><p>Patches parameters object.</p></td>
-</tr>
-<tr class="row-even"><td><p><a class="reference internal" href="generated/clumpy.models.BootstrapPatchParams.html#clumpy.models.BootstrapPatchParams" title="clumpy.models.BootstrapPatchParams"><code class="xref py py-obj docutils literal notranslate"><span class="pre">models.BootstrapPatchParams</span></code></a>(areas, …)</p></td>
-<td><p>Bootstrap patch parameters object.</p></td>
-</tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="generated/clumpy.models.LandParams.html#clumpy.models.LandParams" title="clumpy.models.LandParams"><code class="xref py py-obj docutils literal notranslate"><span class="pre">models.LandParams</span></code></a>(features[, dep_P_x__u])</p></td>
-<td><p>Land parameters used by module classes.</p></td>
-</tr>
-<tr class="row-even"><td><p><a class="reference internal" href="generated/clumpy.models.RegionParams.html#clumpy.models.RegionParams" title="clumpy.models.RegionParams"><code class="xref py py-obj docutils literal notranslate"><span class="pre">models.RegionParams</span></code></a>(transition_matrix)</p></td>
-<td><p>Region parameters.</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="generated/clumpy.transition_probability_estimation.Bayes.html#clumpy.transition_probability_estimation.Bayes" title="clumpy.transition_probability_estimation.Bayes"><code class="xref py py-obj docutils literal notranslate"><span class="pre">transition_probability_estimation.Bayes</span></code></a>([…])</p></td>
+<td><p>Bayes transition probability estimator.</p></td>
 </tr>
 </tbody>
 </table>
 </section>
-<section id="models-functions">
-<h3>Models functions<a class="headerlink" href="#models-functions" title="Permalink to this headline">¶</a></h3>
+</section>
+<section id="allocation">
+<h2>Allocation<a class="headerlink" href="#allocation" title="Permalink to this headline">¶</a></h2>
+<section id="module-clumpy.allocation._patch">
+<span id="patches"></span><h3>Patches<a class="headerlink" href="#module-clumpy.allocation._patch" title="Permalink to this headline">¶</a></h3>
 <table class="longtable docutils align-default">
 <colgroup>
 <col style="width: 10%" />
 <col style="width: 90%" />
 </colgroup>
 <tbody>
-<tr class="row-odd"><td><p><a class="reference internal" href="generated/clumpy.models.allocation.html#clumpy.models.allocation" title="clumpy.models.allocation"><code class="xref py py-obj docutils literal notranslate"><span class="pre">models.allocation</span></code></a>(luc_initial, luc_final, …)</p></td>
-<td><p>Allocation function according to regions parameters.</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="generated/clumpy.allocation.BootstrapPatch.html#clumpy.allocation.BootstrapPatch" title="clumpy.allocation.BootstrapPatch"><code class="xref py py-obj docutils literal notranslate"><span class="pre">allocation.BootstrapPatch</span></code></a>([…])</p></td>
+<td><p>Bootstrap patch parameters object.</p></td>
+</tr>
+</tbody>
+</table>
+<table class="longtable docutils align-default">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="generated/clumpy.allocation.compute_bootstrap_patches.html#clumpy.allocation.compute_bootstrap_patches" title="clumpy.allocation.compute_bootstrap_patches"><code class="xref py py-obj docutils literal notranslate"><span class="pre">allocation.compute_bootstrap_patches</span></code></a>(state, …)</p></td>
+<td><p></p></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="module-clumpy.allocation._allocator">
+<span id="allocators"></span><h3>Allocators<a class="headerlink" href="#module-clumpy.allocation._allocator" title="Permalink to this headline">¶</a></h3>
+<p>Allocators blabla.</p>
+<table class="longtable docutils align-default">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="generated/clumpy.allocation.Unbiased.html#clumpy.allocation.Unbiased" title="clumpy.allocation.Unbiased"><code class="xref py py-obj docutils literal notranslate"><span class="pre">allocation.Unbiased</span></code></a>([update_P_v__u_Y, …])</p></td>
+<td><p>Unbiased method.</p></td>
 </tr>
 </tbody>
 </table>
@@ -233,24 +228,25 @@
   <h3><a href="index.html">Table of Contents</a></h3>
   <ul>
 <li><a class="reference internal" href="#">Clumpy API</a><ul>
-<li><a class="reference internal" href="#module-clumpy.definition"><code class="xref py py-mod docutils literal notranslate"><span class="pre">clumpy.definition</span></code>: Definition</a><ul>
-<li><a class="reference internal" href="#module-clumpy.definition._state">State</a></li>
-<li><a class="reference internal" href="#module-clumpy.definition._layer">Layer</a></li>
-<li><a class="reference internal" href="#module-clumpy.definition._region">Region</a></li>
-<li><a class="reference internal" href="#module-clumpy.definition._land">Land</a></li>
-<li><a class="reference internal" href="#module-clumpy.definition._patches">Patches</a></li>
-</ul>
-</li>
-<li><a class="reference internal" href="#module-clumpy.scenario"><code class="xref py py-mod docutils literal notranslate"><span class="pre">clumpy.definition</span></code>: Scenario</a><ul>
-<li><a class="reference internal" href="#module-clumpy.scenario._transition_matrix">Transition Matrix</a><ul>
+<li><a class="reference internal" href="#module-clumpy._base">Base objects</a><ul>
+<li><a class="reference internal" href="#module-clumpy._base._state">State and palette</a></li>
+<li><a class="reference internal" href="#module-clumpy._base._layer">Layers</a></li>
+<li><a class="reference internal" href="#levels">Levels</a></li>
+<li><a class="reference internal" href="#transition-matrix">Transition matrix</a><ul>
 </ul>
 </li>
 </ul>
 </li>
-<li><a class="reference internal" href="#module-clumpy.density_estimation"><code class="xref py py-mod docutils literal notranslate"><span class="pre">clumpy.density_estimation</span></code>: Density Estimation</a></li>
-<li><a class="reference internal" href="#clumpy-models-models"><code class="xref py py-mod docutils literal notranslate"><span class="pre">clumpy.models</span></code>: Models</a><ul>
-<li><a class="reference internal" href="#parameters">Parameters</a></li>
-<li><a class="reference internal" href="#models-functions">Models functions</a></li>
+<li><a class="reference internal" href="#estimation">Estimation</a><ul>
+<li><a class="reference internal" href="#module-clumpy.density_estimation">Density Estimation</a></li>
+<li><a class="reference internal" href="#module-clumpy.transition_probability_estimation">Transition Probability Estimation</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#allocation">Allocation</a><ul>
+<li><a class="reference internal" href="#module-clumpy.allocation._patch">Patches</a><ul>
+</ul>
+</li>
+<li><a class="reference internal" href="#module-clumpy.allocation._allocator">Allocators</a></li>
 </ul>
 </li>
 </ul>
@@ -261,8 +257,8 @@
   <p class="topless"><a href="user_guide/definition.html"
                         title="previous chapter">Definition</a></p>
   <h4>Next topic</h4>
-  <p class="topless"><a href="generated/clumpy.definition.State.html"
-                        title="next chapter"><code class="xref py py-mod docutils literal notranslate"><span class="pre">clumpy.definition</span></code>.State</a></p>
+  <p class="topless"><a href="generated/clumpy.State.html"
+                        title="next chapter"><code class="xref py py-mod docutils literal notranslate"><span class="pre">clumpy</span></code>.State</a></p>
   <div role="note" aria-label="source link">
     <h3>This Page</h3>
     <ul class="this-page-menu">
@@ -294,7 +290,7 @@
           <a href="py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
         <li class="right" >
-          <a href="generated/clumpy.definition.State.html" title="clumpy.definition.State"
+          <a href="generated/clumpy.State.html" title="clumpy.State"
              >next</a> |</li>
         <li class="right" >
           <a href="user_guide/definition.html" title="Definition"

@@ -7,10 +7,37 @@ from ._patch import BootstrapPatch
 
 def compute_bootstrap_patches(state,
                                land,
-                               luc_initial,
-                               luc_final,
+                               lul_initial,
+                               lul_final,
                                mask=None,
                                neighbors_structure='rook'):
+    """Compute bootstrap patches
+
+    Parameters
+    ----------
+    state : State
+            The initial state of this land.
+
+    land : Land
+        The studied land object.
+
+    lul_initial : LandUseLayer
+        The initial land use.
+
+    lul_final : LandUseLayer
+        The final land use.
+
+    mask : MaskLayer, default = None
+        The region mask layer. If ``None``, the whole area is studied.
+
+    neighbors_structure : {'rook', 'queen'}, default='rook'
+        The neighbors structure.
+
+    Returns
+    -------
+    patches : dict(State:Patch)
+        Dict of patches with states as keys.
+    """
     if neighbors_structure == 'queen':
         structure = np.ones((3, 3))
     elif neighbors_structure == 'rook':
@@ -20,20 +47,20 @@ def compute_bootstrap_patches(state,
     else:
         raise (ValueError('ERROR : unexpected neighbors_structure value'))
 
-    M_shape = luc_initial.get_data().shape
+    M_shape = lul_initial.get_data().shape
 
     patches = {}
 
     u = state.value
 
     J, V = land.get_values(state=state,
-                          luc_initial=luc_initial,
-                          luc_final=luc_final,
+                          lul_initial=lul_initial,
+                          lul_final=lul_final,
                           mask=mask,
                           explanatory_variables=False)
 
     for v in np.unique(V):
-        state_v = luc_initial.palette.get_id_by_value(info=v)
+        state_v = lul_initial.palette.get_id_by_value(info=v)
         if state_v != state:
             #print(str(u) + ' -> ' + str(v))
             M = np.zeros(M_shape)

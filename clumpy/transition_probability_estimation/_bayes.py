@@ -3,7 +3,7 @@ from ._tpe import TransitionProbabilityEstimator
 from ..density_estimation import GKDE
 
 import numpy as np
-from ..density_estimation._density_estimator import DensityEstimator
+from ..density_estimation._density_estimator import DensityEstimator, NullEstimator
 from ..density_estimation import _methods
 
 class Bayes(TransitionProbabilityEstimator):
@@ -106,12 +106,19 @@ class Bayes(TransitionProbabilityEstimator):
 
         return (self)
 
-    def transition_probability(self, Y, P_v, palette_v):
+    def transition_probability(self,
+                               state,
+                               Y,
+                               P_v,
+                               palette_v):
         """
-        Estimates transition probability.
+        Estimates transition probability. Non estimated final states transition probabilities are filled to the null value.
 
         Parameters
         ----------
+        state : State
+            Initial land use state.
+
         Y : array-like of shape (n_samples, n_features)
             Samples to estimate transition probabilities
         P_v : array-like of shape (n_transitions,)
@@ -130,22 +137,21 @@ class Bayes(TransitionProbabilityEstimator):
 
         self.density_estimator.fit(Y)
 
-        # list_v_id is the list of v index except u.
-        # list_v_id = list(np.arange(len(self.list_v)))
-        # list_v_id.remove(self.list_v.index(self.u))
-
         # P(Y) estimation
         P_Y = self.density_estimator.predict(Y)[:, None]
 
         # P(Y|v) estimation
-        P_Y__v = np.vstack([cde.predict(Y) for cde in self.conditional_density_estimators.values()]).T
+        # first, create a list of estimators according to palette_v order
+        # if no estimator is informed, the NullEstimator is invoked.
+        conditional_density_estimators = []
+        for state_v in palette_v:
+            if state_v in self.conditional_density_estimators.keys():
+                conditional_density_estimators.append(self.conditional_density_estimators[state_v])
+            else:
+                conditional_density_estimators.append(NullEstimator())
 
-        # compose P_v in the same order as self.conditional_density_estimators.keys()
-        P_v = np.array([P_v[palette_v.get_id(state)] for state in self.conditional_density_estimators.keys()])
-
-        # it should only remain the no-transited state
-        if P_v.size != len(palette_v) - 1:
-            raise (ValueError('conditional density estimators and palette_v are not compatible.'))
+        # estimate P(Y|u,v). Columns with no estimators are null columns.
+        P_Y__v = np.vstack([cde.predict(Y) for cde in conditional_density_estimators]).T
 
         # BAYES PROCESS
         if self.log_computations == False:
@@ -218,13 +224,8 @@ class Bayes(TransitionProbabilityEstimator):
         # avoid nan values
         P_v__Y = np.nan_to_num(P_v__Y)
 
-        cde_states = list(self.conditional_density_estimators.keys())
-        complete_P_v__Y = np.zeros((P_v__Y.shape[0], len(palette_v)))
+        # compute the non transited column
+        state_value = palette_v.get_id(state)
+        P_v__Y[:, state_value] = 1 - np.delete(P_v__Y, state_value, axis=1).sum(axis=1)
 
-        for id_state, state in enumerate(palette_v):
-            if state in cde_states:
-                complete_P_v__Y[:, id_state] = P_v__Y[:, cde_states.index(state)]
-            else:
-                complete_P_v__Y[:, id_state] = 1 - P_v__Y.sum(axis=1)
-
-        return (complete_P_v__Y)
+        return (P_v__Y)

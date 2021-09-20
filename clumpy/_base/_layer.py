@@ -7,7 +7,8 @@ import os
 from matplotlib import pyplot as plt
 from matplotlib import colors as mpl_colors
 import rasterio
-from ..tools import ndarray_suitable_integer_type, path_split, create_directories
+from ..tools._data import ndarray_suitable_integer_type
+from ..tools._path import path_split, create_directories
 
 class Layer:
     """Layer base element
@@ -40,9 +41,10 @@ class Layer:
             
             elif len(data.shape) > 3:
                 raise(ValueError("len(data.shape) is expected to be lower or equal to 3."))
-            
-            # data = ndarray_suitable_integer_type(data)
-            print(data.dtype)
+
+            # choose an appropriate dtype.
+            data = ndarray_suitable_integer_type(data)
+
             driver = None
             crs = None
             transform = None
@@ -303,6 +305,25 @@ class LandUseLayer(Layer):
            plt.show()
         return(plt)
 
+class MaskLayer(Layer):
+    """
+    Mask layer.
+    """
+    def __init__(self,
+                 label=None,
+                 time=0,
+                 path=None,
+                 data=None,
+                 copy_geo=None):
+
+        super().__init__(label=label,
+                         time=time,
+                         path=path,
+                         data=data,
+                         copy_geo=copy_geo)
+
+        if ~np.all(np.equal(np.unique(self.get_data()), np.array([0,1]))):
+            raise(ValueError("Unexpected mask layer. Mask layer should be only composed by '0' and '1' values."))
 
 class FeatureLayer(Layer):
     """Define a feature layer.

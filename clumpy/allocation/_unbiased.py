@@ -8,6 +8,17 @@ from ._patcher import _weighted_neighbors_patcher
 from ..tools._path import path_split
 
 class Unbiased(Allocator):
+    """
+    Unbiased method.
+
+    Parameters
+    ----------
+    update_P_v__u_Y : bool, default=True
+        If ``True``, P(v|u,Y) is updated at each iteration.
+
+    n_allocation_try : int, default=10**3
+        Maximum number of iterations.
+    """
     def __init__(self,
                  update_P_v__u_Y = True,
                  n_allocation_try = 10**3,
@@ -23,36 +34,12 @@ class Unbiased(Allocator):
                    land,
                    P_v,
                    palette_v,
-                   luc_data,
-                   luc_origin_data,
+                   lul_data,
+                   lul_origin_data,
                    mask=None,
                    distances_to_states={}):
         """
-        allocation. luc can be both LandUseLayer and ndarray.
-
-        Parameters
-        ----------
-        state : TYPE
-            DESCRIPTION.
-        P_v : TYPE
-            DESCRIPTION.
-        palette_v : TYPE
-            DESCRIPTION.
-        luc : TYPE
-            DESCRIPTION.
-        luc_origin : TYPE, optional
-            DESCRIPTION. The default is None.
-        mask : TYPE, optional
-            DESCRIPTION. The default is None.
-        distances_to_states : TYPE, optional
-            DESCRIPTION. The default is {}.
-        path : TYPE, optional
-            DESCRIPTION. The default is None.
-
-        Returns
-        -------
-        None.
-
+        allocation. lul_data and lul_origin_data are ndarrays only.
         """
 
         # ghost initialization
@@ -88,10 +75,10 @@ class Unbiased(Allocator):
             # or if it is the first loop
             # compute P(v|u,Y)
             if self.update_P_v__u_Y or n_try == 1:
-                luc_data_P_v__u_Y_update = luc_data.copy()
-                luc_data_P_v__u_Y_update.flat[J_used] = -1
+                lul_data_P_v__u_Y_update = lul_data.copy()
+                lul_data_P_v__u_Y_update.flat[J_used] = -1
                 J, P_v__u_Y = land._compute_tpe(state=state,
-                                                luc=luc_data_P_v__u_Y_update,
+                                                lul=lul_data_P_v__u_Y_update,
                                                 P_v=P_v_patches,
                                                 palette_v=palette_v,
                                                 mask=mask,
@@ -112,12 +99,11 @@ class Unbiased(Allocator):
             # results are : all pixels used, number of allocation for each state
             # and numbre of ghost pixels for each states.
             J_used_last, n_allocated, n_ghost = self._try_allocate(state=state,
-                                                                     land=land,
                                                                      J=J,
                                                                      P_v__u_Y=P_v__u_Y,
                                                                      palette_v=palette_v,
-                                                                     luc_origin_data=luc_origin_data,
-                                                                     luc_data=luc_data)
+                                                                     lul_origin_data=lul_origin_data,
+                                                                     lul_data=lul_data)
 
             # the pixel used and which are now useless are saved in J_used
             J_used += J_used_last
@@ -131,34 +117,13 @@ class Unbiased(Allocator):
 
     def _try_allocate(self,
                         state,
-                        land,
                         J,
                         P_v__u_Y,
                         palette_v,
-                        luc_origin_data,
-                        luc_data):
+                        lul_origin_data,
+                        lul_data):
         """
         Try to allocate
-
-        Parameters
-        ----------
-        state : TYPE
-            DESCRIPTION.
-        J : TYPE
-            DESCRIPTION.
-        P_v__u_Y : TYPE
-            DESCRIPTION.
-        palette_v : TYPE
-            DESCRIPTION.
-        luc_origin_data : TYPE
-            DESCRIPTION.
-        luc_data : TYPE
-            DESCRIPTION.
-
-        Returns
-        -------
-        None.
-
         """
         palette_v_without_u = palette_v.remove(state)
 
@@ -195,8 +160,8 @@ class Unbiased(Allocator):
         for id_j in np.random.choice(J_pivot.size, J_pivot.size, replace=False):
             v = V_pivot[id_j]
             state_v = palette_v._get_by_value(v)
-            allocated_area, J_used_last = _weighted_neighbors_patcher(map_i_data=luc_origin_data,
-                                                                      map_f_data=luc_data,
+            allocated_area, J_used_last = _weighted_neighbors_patcher(map_i_data=lul_origin_data,
+                                                                      map_f_data=lul_data,
                                                                       map_P_vf__vi_z=P_v__u_Y_maps[state_v],
                                                                       j_kernel=J_pivot[id_j],
                                                                       vi=state.value,
@@ -211,7 +176,8 @@ class Unbiased(Allocator):
                                                                       nb_of_neighbors_to_fill=self.patches[
                                                                           state_v].nb_of_neighbors_to_fill,
                                                                       proceed_even_if_no_probability=self.patches[
-                                                                          state_v].proceed_even_if_no_probability)
+                                                                          state_v].proceed_even_if_no_probability,
+                                                                      equi_neighbors_proba = self.patches[state_v].equi_neighbors_proba)
 
             J_used += J_used_last
 

@@ -68,7 +68,8 @@ def _weighted_neighbors_patcher(map_i_data,
                         neighbors_structure = 'rook',
                         avoid_aggregation = True,
                         nb_of_neighbors_to_fill = 3,
-                        proceed_even_if_no_probability=True):
+                        proceed_even_if_no_probability=True,
+                        equi_neighbors_proba=False):
     
     j_allocated = [j_kernel]
     
@@ -168,7 +169,10 @@ def _weighted_neighbors_patcher(map_i_data,
                 continue
         
         # on attribue une probabilité à chaque voisin
-        P = map_P_vf__vi_z.flat[j_neighbors]
+        if equi_neighbors_proba:
+            P = np.ones(j_neighbors.size)
+        else:
+            P = map_P_vf__vi_z.flat[j_neighbors]
         
         # si les probas sont nulles, on les met à 1            
         if np.isclose(P.sum(), 0):

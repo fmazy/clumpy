@@ -1,0 +1,294 @@
+
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+    <title>clumpy.Territory &#8212; clumpy 0.1.0 documentation</title>
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/nature.css" />
+    <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+    <script src="../_static/jquery.js"></script>
+    <script src="../_static/underscore.js"></script>
+    <script src="../_static/doctools.js"></script>
+    <link rel="shortcut icon" href="../_static/logo.ico"/>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="clumpy.TransitionMatrix" href="clumpy.TransitionMatrix.html" />
+    <link rel="prev" title="clumpy.Region" href="clumpy.Region.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="clumpy.TransitionMatrix.html" title="clumpy.TransitionMatrix"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="clumpy.Region.html" title="clumpy.Region"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">clumpy 0.1.0 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../api.html" accesskey="U">Clumpy API</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href=""><code class="xref py py-mod docutils literal notranslate"><span class="pre">clumpy</span></code>.Territory</a></li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <section id="clumpy-territory">
+<h1><code class="xref py py-mod docutils literal notranslate"><span class="pre">clumpy</span></code>.Territory<a class="headerlink" href="#clumpy-territory" title="Permalink to this headline">¶</a></h1>
+<dl class="py class">
+<dt class="sig sig-object py" id="clumpy.Territory">
+<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">clumpy.</span></span><span class="sig-name descname"><span class="pre">Territory</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">regions</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/clumpy/_base/_territory.html#Territory"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#clumpy.Territory" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Territory.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>regions</strong> (<em>list</em><em>(</em><a class="reference internal" href="clumpy.Region.html#clumpy.Region" title="clumpy.Region"><em>Region</em></a><em>)</em>) – List of regions which constitute the territory. If <code class="docutils literal notranslate"><span class="pre">None</span></code>, an empty list is created
+and can be append by <code class="docutils literal notranslate"><span class="pre">self.add_region()</span></code>.</p>
+</dd>
+</dl>
+<p class="rubric">Methods</p>
+<table class="longtable docutils align-default">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#clumpy.Territory.add_region" title="clumpy.Territory.add_region"><code class="xref py py-obj docutils literal notranslate"><span class="pre">add_region</span></code></a>(region)</p></td>
+<td><p>Add a region.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#clumpy.Territory.allocate" title="clumpy.Territory.allocate"><code class="xref py py-obj docutils literal notranslate"><span class="pre">allocate</span></code></a>(transition_matrices, lul[, masks, path])</p></td>
+<td><p>Allocate.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#clumpy.Territory.check" title="clumpy.Territory.check"><code class="xref py py-obj docutils literal notranslate"><span class="pre">check</span></code></a>()</p></td>
+<td><p>Check the Region object through regions checks.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#clumpy.Territory.fit" title="clumpy.Territory.fit"><code class="xref py py-obj docutils literal notranslate"><span class="pre">fit</span></code></a>(lul_initial, lul_final[, masks])</p></td>
+<td><p>Fit the territory.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#clumpy.Territory.multisteps_allocation" title="clumpy.Territory.multisteps_allocation"><code class="xref py py-obj docutils literal notranslate"><span class="pre">multisteps_allocation</span></code></a>(n, …[, masks, …])</p></td>
+<td><p>Multisteps allocation</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#clumpy.Territory.remove_region" title="clumpy.Territory.remove_region"><code class="xref py py-obj docutils literal notranslate"><span class="pre">remove_region</span></code></a>(region)</p></td>
+<td><p>Remove a region.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#clumpy.Territory.transition_probabilities" title="clumpy.Territory.transition_probabilities"><code class="xref py py-obj docutils literal notranslate"><span class="pre">transition_probabilities</span></code></a>(…[, masks, …])</p></td>
+<td><p>Compute transition probabilities.</p></td>
+</tr>
+</tbody>
+</table>
+<dl class="py method">
+<dt class="sig sig-object py" id="clumpy.Territory.add_region">
+<span class="sig-name descname"><span class="pre">add_region</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">region</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/clumpy/_base/_territory.html#Territory.add_region"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#clumpy.Territory.add_region" title="Permalink to this definition">¶</a></dt>
+<dd><p>Add a region. If <code class="docutils literal notranslate"><span class="pre">region</span></code> is already in the list, nothing happened.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>region</strong> (<a class="reference internal" href="clumpy.Region.html#clumpy.Region" title="clumpy.Region"><em>Region</em></a>) – The region to append.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p></p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>self</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="clumpy.Territory.allocate">
+<span class="sig-name descname"><span class="pre">allocate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">transition_matrices</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lul</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">masks</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">path</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/clumpy/_base/_territory.html#Territory.allocate"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#clumpy.Territory.allocate" title="Permalink to this definition">¶</a></dt>
+<dd><p>Allocate.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>transition_matrices</strong> (<em>dict</em><em>(</em><em>Region:TransitionMatrix</em><em>)</em>) – Dict of transition matrix with the corresponding region as key.</p></li>
+<li><p><strong>lul</strong> (<a class="reference internal" href="clumpy.LandUseLayer.html#clumpy.LandUseLayer" title="clumpy.LandUseLayer"><em>LandUseLayer</em></a><em> or </em><em>ndarray</em>) – The studied land use layer.</p></li>
+<li><p><strong>masks</strong> (<em>dict</em><em>(</em><em>Region:MaskLayer</em><em>)</em><em>, </em><em>default=None</em>) – Dict of masks layer with the corresponding region as key. If None, the whole map is used for each region.</p></li>
+<li><p><strong>path</strong> (<em>str</em><em>, </em><em>default=None</em>) – The path to save result as a tif file.
+If None, the allocation is only saved within <cite>lul</cite>, if <cite>lul</cite> is a ndarray.
+Note that if <code class="docutils literal notranslate"><span class="pre">path</span></code> is not <code class="docutils literal notranslate"><span class="pre">None</span></code>, <code class="docutils literal notranslate"><span class="pre">lul</span></code> must be LandUseLayer.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>lul_allocated</strong> – Only returned if <code class="docutils literal notranslate"><span class="pre">path</span></code> is not <code class="docutils literal notranslate"><span class="pre">None</span></code>. The allocated map as a land use layer.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="clumpy.LandUseLayer.html#clumpy.LandUseLayer" title="clumpy.LandUseLayer">LandUseLayer</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="clumpy.Territory.check">
+<span class="sig-name descname"><span class="pre">check</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/clumpy/_base/_territory.html#Territory.check"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#clumpy.Territory.check" title="Permalink to this definition">¶</a></dt>
+<dd><p>Check the Region object through regions checks.
+Notably, estimators uniqueness are checked to avoid malfunctioning during transition probabilities estimation.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="clumpy.Territory.fit">
+<span class="sig-name descname"><span class="pre">fit</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">lul_initial</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lul_final</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">masks</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/clumpy/_base/_territory.html#Territory.fit"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#clumpy.Territory.fit" title="Permalink to this definition">¶</a></dt>
+<dd><p>Fit the territory.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>lul_initial</strong> (<a class="reference internal" href="clumpy.LandUseLayer.html#clumpy.LandUseLayer" title="clumpy.LandUseLayer"><em>LandUseLayer</em></a>) – The initial land use layer.</p></li>
+<li><p><strong>lul_final</strong> (<a class="reference internal" href="clumpy.LandUseLayer.html#clumpy.LandUseLayer" title="clumpy.LandUseLayer"><em>LandUseLayer</em></a>) – The final land use layer.</p></li>
+<li><p><strong>masks</strong> (<em>dict</em><em>(</em><em>Region:MaskLayer</em><em>)</em><em>, </em><em>default=None</em>) – Dict of masks layer with the corresponding region as key. If None, the whole map is used for each region.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p></p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>self</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="clumpy.Territory.multisteps_allocation">
+<span class="sig-name descname"><span class="pre">multisteps_allocation</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">n</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">transition_matrices</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lul</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">masks</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">path_prefix</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/clumpy/_base/_territory.html#Territory.multisteps_allocation"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#clumpy.Territory.multisteps_allocation" title="Permalink to this definition">¶</a></dt>
+<dd><p>Multisteps allocation</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>n</strong> (<em>int</em>) – Number of steps.</p></li>
+<li><p><strong>transition_matrices</strong> (<em>dict</em><em>(</em><em>Region:TransitionMatrix</em><em>)</em>) – Dict of transition matrix with the corresponding region as key.</p></li>
+<li><p><strong>lul</strong> (<a class="reference internal" href="clumpy.LandUseLayer.html#clumpy.LandUseLayer" title="clumpy.LandUseLayer"><em>LandUseLayer</em></a><em> or </em><em>ndarray</em>) – The studied land use layer.</p></li>
+<li><p><strong>masks</strong> (<em>dict</em><em>(</em><em>Region:MaskLayer</em><em>)</em><em>, </em><em>default=None</em>) – Dict of masks layer with the corresponding region as key. If None, the whole map is used for each region.</p></li>
+<li><p><strong>path_prefix</strong> (<em>str</em><em>, </em><em>default=None</em>) – The path to save every allocated step map as <code class="docutils literal notranslate"><span class="pre">path_prefix+'_'+str(i)+'.tif'</span></code>.
+If None, the allocation is only saved within <cite>lul</cite>, if <cite>lul</cite> is a ndarray.
+Note that if <code class="docutils literal notranslate"><span class="pre">path</span></code> is not <code class="docutils literal notranslate"><span class="pre">None</span></code>, <code class="docutils literal notranslate"><span class="pre">lul</span></code> must be LandUseLayer.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>lul_allocated</strong> – The allocated map as a land use layer.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="clumpy.LandUseLayer.html#clumpy.LandUseLayer" title="clumpy.LandUseLayer">LandUseLayer</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="clumpy.Territory.remove_region">
+<span class="sig-name descname"><span class="pre">remove_region</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">region</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/clumpy/_base/_territory.html#Territory.remove_region"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#clumpy.Territory.remove_region" title="Permalink to this definition">¶</a></dt>
+<dd><p>Remove a region.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>region</strong> (<a class="reference internal" href="clumpy.Region.html#clumpy.Region" title="clumpy.Region"><em>Region</em></a>) – The region to remove</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p></p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>self</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="clumpy.Territory.transition_probabilities">
+<span class="sig-name descname"><span class="pre">transition_probabilities</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">transition_matrices</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lul</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">masks</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">path_prefix</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/clumpy/_base/_territory.html#Territory.transition_probabilities"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#clumpy.Territory.transition_probabilities" title="Permalink to this definition">¶</a></dt>
+<dd><p>Compute transition probabilities.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>transition_matrices</strong> (<em>dict</em><em>(</em><em>Region:TransitionMatrix</em><em>)</em>) – Dict of transition matrix with the corresponding region as key.</p></li>
+<li><p><strong>lul</strong> (<a class="reference internal" href="clumpy.LandUseLayer.html#clumpy.LandUseLayer" title="clumpy.LandUseLayer"><em>LandUseLayer</em></a>) – The studied land use layer.</p></li>
+<li><p><strong>masks</strong> (<em>dict</em><em>(</em><em>Region:MaskLayer</em><em>)</em><em>, </em><em>default=None</em>) – Dict of masks layer with the corresponding region as key. If None, the whole map is used for each region.</p></li>
+<li><p><strong>path_prefix</strong> (<em>str</em><em>, </em><em>default=None</em>) – The path prefix to save result as <code class="docutils literal notranslate"><span class="pre">path_prefix+'_'+region.label+'_'+</span> <span class="pre">str(state_u.value)+'_'+str(state_v.value)+'.tif'.</span>
+<span class="pre">If</span> <span class="pre">None,</span> <span class="pre">the</span> <span class="pre">result</span> <span class="pre">is</span> <span class="pre">returned.</span>
+<span class="pre">Note</span> <span class="pre">that</span> <span class="pre">if</span> <span class="pre">``path_prefix</span> <span class="pre">is</span> <span class="pre">not</span> <span class="pre">None</span></code>, <code class="docutils literal notranslate"><span class="pre">lul</span></code> must be LandUseLayer</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>tp</strong> – Dict of regional results with corresponding region as key. Th regional results are <code class="docutils literal notranslate"><span class="pre">J</span></code>, a ndarray of shape (n_samples,)
+which is the element indices in the flattened map and <code class="docutils literal notranslate"><span class="pre">P_v__u_Y</span></code>, the transition probabilities whose columns correspond
+to transition matrix argument : <code class="docutils literal notranslate"><span class="pre">palette_v</span></code>.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>dict(Region:[J,P_v__u_Y])</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<div class="clearer"></div></section>
+
+
+            <div class="clearer"></div>
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="../index.html">
+              <img class="logo" src="../_static/logo.png" alt="Logo"/>
+            </a></p>
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="clumpy.Region.html"
+                        title="previous chapter"><code class="xref py py-mod docutils literal notranslate"><span class="pre">clumpy</span></code>.Region</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="clumpy.TransitionMatrix.html"
+                        title="next chapter"><code class="xref py py-mod docutils literal notranslate"><span class="pre">clumpy</span></code>.TransitionMatrix</a></p>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="../_sources/generated/clumpy.Territory.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="clumpy.TransitionMatrix.html" title="clumpy.TransitionMatrix"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="clumpy.Region.html" title="clumpy.Region"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">clumpy 0.1.0 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../api.html" >Clumpy API</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href=""><code class="xref py py-mod docutils literal notranslate"><span class="pre">clumpy</span></code>.Territory</a></li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2020, François-Rémi Mazy.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 4.0.2.
+    </div>
+  </body>
+</html>

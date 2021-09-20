@@ -1,0 +1,274 @@
+
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>clumpy.allocation._unbiased &#8212; clumpy 0.1.0 documentation</title>
+    <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/nature.css" />
+    <script data-url_root="../../../" id="documentation_options" src="../../../_static/documentation_options.js"></script>
+    <script src="../../../_static/jquery.js"></script>
+    <script src="../../../_static/underscore.js"></script>
+    <script src="../../../_static/doctools.js"></script>
+    <link rel="shortcut icon" href="../../../_static/logo.ico"/>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../../index.html">clumpy 0.1.0 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../../index.html" accesskey="U">Module code</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">clumpy.allocation._unbiased</a></li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for clumpy.allocation._unbiased</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+
+<span class="kn">from</span> <span class="nn">.._base._layer</span> <span class="kn">import</span> <span class="n">LandUseLayer</span>
+
+<span class="kn">from</span> <span class="nn">._allocator</span> <span class="kn">import</span> <span class="n">Allocator</span>
+<span class="kn">from</span> <span class="nn">._gart</span> <span class="kn">import</span> <span class="n">generalized_allocation_rejection_test</span>
+<span class="kn">from</span> <span class="nn">._patcher</span> <span class="kn">import</span> <span class="n">_weighted_neighbors_patcher</span>
+<span class="kn">from</span> <span class="nn">..tools._path</span> <span class="kn">import</span> <span class="n">path_split</span>
+
+<div class="viewcode-block" id="Unbiased"><a class="viewcode-back" href="../../../generated/clumpy.allocation.Unbiased.html#clumpy.allocation.Unbiased">[docs]</a><span class="k">class</span> <span class="nc">Unbiased</span><span class="p">(</span><span class="n">Allocator</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Unbiased method.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    update_P_v__u_Y : bool, default=True</span>
+<span class="sd">        If ``True``, P(v|u,Y) is updated at each iteration.</span>
+
+<span class="sd">    n_allocation_try : int, default=10**3</span>
+<span class="sd">        Maximum number of iterations.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
+                 <span class="n">update_P_v__u_Y</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+                 <span class="n">n_allocation_try</span> <span class="o">=</span> <span class="mi">10</span><span class="o">**</span><span class="mi">3</span><span class="p">,</span>
+                 <span class="n">verbose</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">update_P_v__u_Y</span> <span class="o">=</span> <span class="n">update_P_v__u_Y</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">n_allocation_try</span> <span class="o">=</span> <span class="n">n_allocation_try</span>
+
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">verbose</span> <span class="o">=</span> <span class="n">verbose</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_allocate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
+                   <span class="n">state</span><span class="p">,</span>
+                   <span class="n">land</span><span class="p">,</span>
+                   <span class="n">P_v</span><span class="p">,</span>
+                   <span class="n">palette_v</span><span class="p">,</span>
+                   <span class="n">lul_data</span><span class="p">,</span>
+                   <span class="n">lul_origin_data</span><span class="p">,</span>
+                   <span class="n">mask</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                   <span class="n">distances_to_states</span><span class="o">=</span><span class="p">{}):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        allocation. lul_data and lul_origin_data are ndarrays only.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="c1"># ghost initialization</span>
+        <span class="n">palette_v_without_u</span> <span class="o">=</span> <span class="n">palette_v</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">state</span><span class="p">)</span>
+        <span class="n">n_ghost</span> <span class="o">=</span> <span class="p">{</span><span class="n">state_v</span><span class="p">:</span> <span class="mi">1</span> <span class="k">for</span> <span class="n">state_v</span> <span class="ow">in</span> <span class="n">palette_v_without_u</span><span class="p">}</span>
+
+        <span class="c1"># P_v initialization</span>
+        <span class="n">P_v</span> <span class="o">=</span> <span class="n">P_v</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+
+        <span class="c1"># get the id of the initial state</span>
+        <span class="n">id_state</span> <span class="o">=</span> <span class="n">palette_v</span><span class="o">.</span><span class="n">get_id</span><span class="p">(</span><span class="n">state</span><span class="p">)</span>
+
+        <span class="c1"># first_len_J initialization</span>
+        <span class="n">first_len_J</span> <span class="o">=</span> <span class="kc">None</span>
+
+        <span class="n">J_used</span> <span class="o">=</span> <span class="p">[]</span>
+
+        <span class="n">n_try</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="k">while</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">n_ghost</span><span class="o">.</span><span class="n">values</span><span class="p">()))</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="ow">and</span> <span class="n">n_try</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">n_allocation_try</span><span class="p">:</span>
+            <span class="n">n_try</span> <span class="o">+=</span> <span class="mi">1</span>
+
+            <span class="c1"># P_v is divided by patch area mean</span>
+            <span class="c1"># P_v_patches is then largely smaller.</span>
+            <span class="c1"># one keep P_v to update it after the allocation try.</span>
+            <span class="n">P_v_patches</span> <span class="o">=</span> <span class="n">P_v</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+            <span class="n">P_v_patches</span><span class="p">[</span><span class="n">id_state</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span>
+            <span class="k">for</span> <span class="n">id_state_v</span><span class="p">,</span> <span class="n">state_v</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">palette_v</span><span class="p">):</span>
+                <span class="k">if</span> <span class="n">state_v</span> <span class="o">!=</span> <span class="n">state</span><span class="p">:</span>
+                    <span class="n">P_v_patches</span><span class="p">[</span><span class="n">id_state_v</span><span class="p">]</span> <span class="o">/=</span> <span class="bp">self</span><span class="o">.</span><span class="n">patches</span><span class="p">[</span><span class="n">state_v</span><span class="p">]</span><span class="o">.</span><span class="n">area_mean</span>
+                    <span class="n">P_v_patches</span><span class="p">[</span><span class="n">id_state</span><span class="p">]</span> <span class="o">-=</span> <span class="n">P_v</span><span class="p">[</span><span class="n">id_state_v</span><span class="p">]</span>
+
+            <span class="c1"># if P_v__u_Y has to be updated</span>
+            <span class="c1"># or if it is the first loop</span>
+            <span class="c1"># compute P(v|u,Y)</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">update_P_v__u_Y</span> <span class="ow">or</span> <span class="n">n_try</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+                <span class="n">lul_data_P_v__u_Y_update</span> <span class="o">=</span> <span class="n">lul_data</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+                <span class="n">lul_data_P_v__u_Y_update</span><span class="o">.</span><span class="n">flat</span><span class="p">[</span><span class="n">J_used</span><span class="p">]</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span>
+                <span class="n">J</span><span class="p">,</span> <span class="n">P_v__u_Y</span> <span class="o">=</span> <span class="n">land</span><span class="o">.</span><span class="n">_compute_tpe</span><span class="p">(</span><span class="n">state</span><span class="o">=</span><span class="n">state</span><span class="p">,</span>
+                                                <span class="n">lul</span><span class="o">=</span><span class="n">lul_data_P_v__u_Y_update</span><span class="p">,</span>
+                                                <span class="n">P_v</span><span class="o">=</span><span class="n">P_v_patches</span><span class="p">,</span>
+                                                <span class="n">palette_v</span><span class="o">=</span><span class="n">palette_v</span><span class="p">,</span>
+                                                <span class="n">mask</span><span class="o">=</span><span class="n">mask</span><span class="p">,</span>
+                                                <span class="n">distances_to_states</span><span class="o">=</span><span class="n">distances_to_states</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="c1"># else just update J by removing used pixels.</span>
+                <span class="c1"># it is faster but implies a bias.</span>
+                <span class="n">idx_to_keep</span> <span class="o">=</span> <span class="o">~</span><span class="n">np</span><span class="o">.</span><span class="n">isin</span><span class="p">(</span><span class="n">J</span><span class="p">,</span> <span class="n">J_used</span><span class="p">)</span>
+                <span class="n">J</span> <span class="o">=</span> <span class="n">J</span><span class="p">[</span><span class="n">idx_to_keep</span><span class="p">]</span>
+                <span class="n">P_v__u_Y</span> <span class="o">=</span> <span class="n">P_v__u_Y</span><span class="p">[</span><span class="n">idx_to_keep</span><span class="p">]</span>
+
+            <span class="c1"># save the original number of pixels in this land</span>
+            <span class="c1"># it is used to edit P(v)</span>
+            <span class="k">if</span> <span class="n">first_len_J</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">first_len_J</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">J</span><span class="p">)</span>
+
+            <span class="c1"># Allocation try</span>
+            <span class="c1"># results are : all pixels used, number of allocation for each state</span>
+            <span class="c1"># and numbre of ghost pixels for each states.</span>
+            <span class="n">J_used_last</span><span class="p">,</span> <span class="n">n_allocated</span><span class="p">,</span> <span class="n">n_ghost</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_try_allocate</span><span class="p">(</span><span class="n">state</span><span class="o">=</span><span class="n">state</span><span class="p">,</span>
+                                                                     <span class="n">J</span><span class="o">=</span><span class="n">J</span><span class="p">,</span>
+                                                                     <span class="n">P_v__u_Y</span><span class="o">=</span><span class="n">P_v__u_Y</span><span class="p">,</span>
+                                                                     <span class="n">palette_v</span><span class="o">=</span><span class="n">palette_v</span><span class="p">,</span>
+                                                                     <span class="n">lul_origin_data</span><span class="o">=</span><span class="n">lul_origin_data</span><span class="p">,</span>
+                                                                     <span class="n">lul_data</span><span class="o">=</span><span class="n">lul_data</span><span class="p">)</span>
+
+            <span class="c1"># the pixel used and which are now useless are saved in J_used</span>
+            <span class="n">J_used</span> <span class="o">+=</span> <span class="n">J_used_last</span>
+
+            <span class="c1"># P_v update : for the next loop, one need less pixels</span>
+            <span class="n">P_v</span><span class="p">[</span><span class="n">id_state</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span>
+            <span class="k">for</span> <span class="n">id_state_v</span><span class="p">,</span> <span class="n">state_v</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">palette_v</span><span class="p">):</span>
+                <span class="k">if</span> <span class="n">state_v</span> <span class="o">!=</span> <span class="n">state</span><span class="p">:</span>
+                    <span class="n">P_v</span><span class="p">[</span><span class="n">id_state_v</span><span class="p">]</span> <span class="o">-=</span> <span class="n">n_allocated</span><span class="p">[</span><span class="n">state_v</span><span class="p">]</span> <span class="o">/</span> <span class="n">first_len_J</span>
+                    <span class="n">P_v</span><span class="p">[</span><span class="n">id_state</span><span class="p">]</span> <span class="o">-=</span> <span class="n">P_v</span><span class="p">[</span><span class="n">id_state_v</span><span class="p">]</span>
+
+    <span class="k">def</span> <span class="nf">_try_allocate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
+                        <span class="n">state</span><span class="p">,</span>
+                        <span class="n">J</span><span class="p">,</span>
+                        <span class="n">P_v__u_Y</span><span class="p">,</span>
+                        <span class="n">palette_v</span><span class="p">,</span>
+                        <span class="n">lul_origin_data</span><span class="p">,</span>
+                        <span class="n">lul_data</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Try to allocate</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">palette_v_without_u</span> <span class="o">=</span> <span class="n">palette_v</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">state</span><span class="p">)</span>
+
+        <span class="c1"># GART</span>
+        <span class="n">V</span> <span class="o">=</span> <span class="n">generalized_allocation_rejection_test</span><span class="p">(</span><span class="n">P_v__u_Y</span><span class="p">,</span> <span class="n">palette_v</span><span class="o">.</span><span class="n">get_list_of_values</span><span class="p">())</span>
+
+        <span class="n">id_pivot</span> <span class="o">=</span> <span class="n">V</span> <span class="o">!=</span> <span class="n">state</span><span class="o">.</span><span class="n">value</span>
+        <span class="n">V_pivot</span> <span class="o">=</span> <span class="n">V</span><span class="p">[</span><span class="n">id_pivot</span><span class="p">]</span>
+        <span class="n">J_pivot</span> <span class="o">=</span> <span class="n">J</span><span class="p">[</span><span class="n">id_pivot</span><span class="p">]</span>
+
+        <span class="n">areas</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="n">eccentricities</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="n">eccentricity_mean</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="n">eccentricity_std</span> <span class="o">=</span> <span class="p">{}</span>
+
+        <span class="k">for</span> <span class="n">state_v</span><span class="p">,</span> <span class="n">patch</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">patches</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="n">j</span> <span class="o">=</span> <span class="n">V_pivot</span> <span class="o">==</span> <span class="n">state_v</span><span class="o">.</span><span class="n">value</span>
+            <span class="k">if</span> <span class="n">j</span><span class="o">.</span><span class="n">size</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="n">areas</span><span class="p">[</span><span class="n">state_v</span><span class="p">],</span> <span class="n">eccentricities</span><span class="p">[</span><span class="n">state_v</span><span class="p">]</span> <span class="o">=</span> <span class="n">patch</span><span class="o">.</span><span class="n">target_sample</span><span class="p">(</span><span class="n">j</span><span class="o">.</span><span class="n">sum</span><span class="p">())</span>
+
+                <span class="n">eccentricity_mean</span><span class="p">[</span><span class="n">state_v</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">eccentricities</span><span class="p">[</span><span class="n">state_v</span><span class="p">])</span>
+                <span class="n">eccentricity_std</span><span class="p">[</span><span class="n">state_v</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">std</span><span class="p">(</span><span class="n">eccentricities</span><span class="p">[</span><span class="n">state_v</span><span class="p">])</span>
+
+        <span class="n">P_v__u_Y_maps</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">for</span> <span class="n">id_v</span><span class="p">,</span> <span class="n">state_v</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">palette_v</span><span class="p">):</span>
+            <span class="n">P_v__u_Y_maps</span><span class="p">[</span><span class="n">state_v</span><span class="p">]</span> <span class="o">=</span> <span class="n">P_v__u_Y</span><span class="p">[:,</span> <span class="n">id_v</span><span class="p">]</span>
+
+        <span class="n">J_used</span> <span class="o">=</span> <span class="p">[]</span>
+
+        <span class="n">n_allocated</span> <span class="o">=</span> <span class="p">{</span><span class="n">state_v</span><span class="p">:</span> <span class="mi">0</span> <span class="k">for</span> <span class="n">state_v</span> <span class="ow">in</span> <span class="n">palette_v_without_u</span><span class="p">}</span>
+        <span class="n">n_ghost</span> <span class="o">=</span> <span class="p">{</span><span class="n">state_v</span><span class="p">:</span> <span class="mi">0</span> <span class="k">for</span> <span class="n">state_v</span> <span class="ow">in</span> <span class="n">palette_v_without_u</span><span class="p">}</span>
+
+        <span class="c1"># allocation</span>
+        <span class="k">for</span> <span class="n">id_j</span> <span class="ow">in</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">choice</span><span class="p">(</span><span class="n">J_pivot</span><span class="o">.</span><span class="n">size</span><span class="p">,</span> <span class="n">J_pivot</span><span class="o">.</span><span class="n">size</span><span class="p">,</span> <span class="n">replace</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+            <span class="n">v</span> <span class="o">=</span> <span class="n">V_pivot</span><span class="p">[</span><span class="n">id_j</span><span class="p">]</span>
+            <span class="n">state_v</span> <span class="o">=</span> <span class="n">palette_v</span><span class="o">.</span><span class="n">_get_by_value</span><span class="p">(</span><span class="n">v</span><span class="p">)</span>
+            <span class="n">allocated_area</span><span class="p">,</span> <span class="n">J_used_last</span> <span class="o">=</span> <span class="n">_weighted_neighbors_patcher</span><span class="p">(</span><span class="n">map_i_data</span><span class="o">=</span><span class="n">lul_origin_data</span><span class="p">,</span>
+                                                                      <span class="n">map_f_data</span><span class="o">=</span><span class="n">lul_data</span><span class="p">,</span>
+                                                                      <span class="n">map_P_vf__vi_z</span><span class="o">=</span><span class="n">P_v__u_Y_maps</span><span class="p">[</span><span class="n">state_v</span><span class="p">],</span>
+                                                                      <span class="n">j_kernel</span><span class="o">=</span><span class="n">J_pivot</span><span class="p">[</span><span class="n">id_j</span><span class="p">],</span>
+                                                                      <span class="n">vi</span><span class="o">=</span><span class="n">state</span><span class="o">.</span><span class="n">value</span><span class="p">,</span>
+                                                                      <span class="n">vf</span><span class="o">=</span><span class="n">v</span><span class="p">,</span>
+                                                                      <span class="n">patch_S</span><span class="o">=</span><span class="n">areas</span><span class="p">[</span><span class="n">state_v</span><span class="p">][</span><span class="n">id_j</span><span class="p">],</span>
+                                                                      <span class="n">eccentricity_mean</span><span class="o">=</span><span class="n">eccentricity_mean</span><span class="p">[</span><span class="n">state_v</span><span class="p">],</span>
+                                                                      <span class="n">eccentricity_std</span><span class="o">=</span><span class="n">eccentricity_std</span><span class="p">[</span><span class="n">state_v</span><span class="p">],</span>
+                                                                      <span class="n">neighbors_structure</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">patches</span><span class="p">[</span>
+                                                                          <span class="n">state_v</span><span class="p">]</span><span class="o">.</span><span class="n">neighbors_structure</span><span class="p">,</span>
+                                                                      <span class="n">avoid_aggregation</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">patches</span><span class="p">[</span>
+                                                                          <span class="n">state_v</span><span class="p">]</span><span class="o">.</span><span class="n">avoid_aggregation</span><span class="p">,</span>
+                                                                      <span class="n">nb_of_neighbors_to_fill</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">patches</span><span class="p">[</span>
+                                                                          <span class="n">state_v</span><span class="p">]</span><span class="o">.</span><span class="n">nb_of_neighbors_to_fill</span><span class="p">,</span>
+                                                                      <span class="n">proceed_even_if_no_probability</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">patches</span><span class="p">[</span>
+                                                                          <span class="n">state_v</span><span class="p">]</span><span class="o">.</span><span class="n">proceed_even_if_no_probability</span><span class="p">,</span>
+                                                                      <span class="n">equi_neighbors_proba</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">patches</span><span class="p">[</span><span class="n">state_v</span><span class="p">]</span><span class="o">.</span><span class="n">equi_neighbors_proba</span><span class="p">)</span>
+
+            <span class="n">J_used</span> <span class="o">+=</span> <span class="n">J_used_last</span>
+
+            <span class="n">n_allocated</span><span class="p">[</span><span class="n">state_v</span><span class="p">]</span> <span class="o">+=</span> <span class="n">allocated_area</span>
+
+            <span class="c1"># if the allocation has been aborted</span>
+            <span class="k">if</span> <span class="n">allocated_area</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="n">n_ghost</span><span class="p">[</span><span class="n">state_v</span><span class="p">]</span> <span class="o">+=</span> <span class="mi">1</span>
+
+        <span class="k">return</span> <span class="p">(</span><span class="n">J_used</span><span class="p">,</span> <span class="n">n_allocated</span><span class="p">,</span> <span class="n">n_ghost</span><span class="p">)</span></div>
+</pre></div>
+
+            <div class="clearer"></div>
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="../../../index.html">
+              <img class="logo" src="../../../_static/logo.png" alt="Logo"/>
+            </a></p>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../../index.html">clumpy 0.1.0 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../../index.html" >Module code</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">clumpy.allocation._unbiased</a></li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2020, François-Rémi Mazy.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 4.0.2.
+    </div>
+  </body>
+</html>

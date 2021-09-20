@@ -1,0 +1,218 @@
+
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+    <title>clumpy.allocation.BootstrapPatch &#8212; clumpy 0.1.0 documentation</title>
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/nature.css" />
+    <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+    <script src="../_static/jquery.js"></script>
+    <script src="../_static/underscore.js"></script>
+    <script src="../_static/doctools.js"></script>
+    <link rel="shortcut icon" href="../_static/logo.ico"/>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="clumpy.allocation.compute_bootstrap_patches" href="clumpy.allocation.compute_bootstrap_patches.html" />
+    <link rel="prev" title="clumpy.transition_probability_estimation.Bayes" href="clumpy.transition_probability_estimation.Bayes.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="clumpy.allocation.compute_bootstrap_patches.html" title="clumpy.allocation.compute_bootstrap_patches"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="clumpy.transition_probability_estimation.Bayes.html" title="clumpy.transition_probability_estimation.Bayes"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">clumpy 0.1.0 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../api.html" accesskey="U">Clumpy API</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href=""><code class="xref py py-mod docutils literal notranslate"><span class="pre">clumpy.allocation</span></code>.BootstrapPatch</a></li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <section id="clumpy-allocation-bootstrappatch">
+<h1><code class="xref py py-mod docutils literal notranslate"><span class="pre">clumpy.allocation</span></code>.BootstrapPatch<a class="headerlink" href="#clumpy-allocation-bootstrappatch" title="Permalink to this headline">¶</a></h1>
+<dl class="py class">
+<dt class="sig sig-object py" id="clumpy.allocation.BootstrapPatch">
+<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">clumpy.allocation.</span></span><span class="sig-name descname"><span class="pre">BootstrapPatch</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">neighbors_structure</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'rook'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">avoid_aggregation</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nb_of_neighbors_to_fill</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">3</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">proceed_even_if_no_probability</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_tries_target_sample</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1000</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/clumpy/allocation/_patch.html#BootstrapPatch"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#clumpy.allocation.BootstrapPatch" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">clumpy.allocation._patch.Patch</span></code></p>
+<p>Bootstrap patch parameters object.</p>
+<p class="rubric">Methods</p>
+<table class="longtable docutils align-default">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#clumpy.allocation.BootstrapPatch.crop_areas" title="clumpy.allocation.BootstrapPatch.crop_areas"><code class="xref py py-obj docutils literal notranslate"><span class="pre">crop_areas</span></code></a>([min_area, max_area, inplace])</p></td>
+<td><p>Crop areas.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#clumpy.allocation.BootstrapPatch.sample" title="clumpy.allocation.BootstrapPatch.sample"><code class="xref py py-obj docutils literal notranslate"><span class="pre">sample</span></code></a>(n)</p></td>
+<td><p>draws patches.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#clumpy.allocation.BootstrapPatch.set" title="clumpy.allocation.BootstrapPatch.set"><code class="xref py py-obj docutils literal notranslate"><span class="pre">set</span></code></a>(areas, eccentricities)</p></td>
+<td><p>Set areas and eccentricities.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#clumpy.allocation.BootstrapPatch.target_sample" title="clumpy.allocation.BootstrapPatch.target_sample"><code class="xref py py-obj docutils literal notranslate"><span class="pre">target_sample</span></code></a>(n)</p></td>
+<td><p>Draw areas and eccentricities according to a targeted total area (biased sample).</p></td>
+</tr>
+</tbody>
+</table>
+<dl class="py method">
+<dt class="sig sig-object py" id="clumpy.allocation.BootstrapPatch.crop_areas">
+<span class="sig-name descname"><span class="pre">crop_areas</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">min_area</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">-</span> <span class="pre">inf</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_area</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">inf</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">inplace</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/clumpy/allocation/_patch.html#BootstrapPatch.crop_areas"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#clumpy.allocation.BootstrapPatch.crop_areas" title="Permalink to this definition">¶</a></dt>
+<dd><p>Crop areas.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>min_area</strong> (<em>float</em><em>, </em><em>default=-np.inf</em>) – Minimum area threshold.</p></li>
+<li><p><strong>max_area</strong> (<em>float</em><em>, </em><em>default=np.inf</em>) – Maximum area threshold.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p></p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>self</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="clumpy.allocation.BootstrapPatch.sample">
+<span class="sig-name descname"><span class="pre">sample</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">n</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#clumpy.allocation.BootstrapPatch.sample" title="Permalink to this definition">¶</a></dt>
+<dd><p>draws patches.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>n</strong> (<em>int</em>) – Number of samples.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><ul class="simple">
+<li><p><strong>areas</strong> (<em>ndarray of shape (n_samples,)</em>) – The samples areas.</p></li>
+<li><p><strong>eccentricities</strong> (<em>ndarray of shape (n_samples,)</em>) – The samples eccentricities.</p></li>
+</ul>
+</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="clumpy.allocation.BootstrapPatch.set">
+<span class="sig-name descname"><span class="pre">set</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">areas</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">eccentricities</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/clumpy/allocation/_patch.html#BootstrapPatch.set"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#clumpy.allocation.BootstrapPatch.set" title="Permalink to this definition">¶</a></dt>
+<dd><p>Set areas and eccentricities.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>areas</strong> (<em>array-like of shape</em><em> (</em><em>n_patches</em><em>,</em><em>)</em>) – Array of areas.</p></li>
+<li><p><strong>eccentricities</strong> (<em>array-like of shape</em><em> (</em><em>n_patches</em><em>,</em><em>)</em>) – Array of eccentricities which correspond to areas.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p></p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>self</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="clumpy.allocation.BootstrapPatch.target_sample">
+<span class="sig-name descname"><span class="pre">target_sample</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">n</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#clumpy.allocation.BootstrapPatch.target_sample" title="Permalink to this definition">¶</a></dt>
+<dd><p>Draw areas and eccentricities according to a targeted total area (biased sample).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>n</strong> (<em>int</em>) – The number of samples.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><ul class="simple">
+<li><p><strong>areas</strong> (<em>ndarray of shape (n_samples,)</em>) – The samples areas.</p></li>
+<li><p><strong>eccentricities</strong> (<em>ndarray of shape (n_samples,)</em>) – The samples eccentricities.</p></li>
+</ul>
+</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<div class="clearer"></div></section>
+
+
+            <div class="clearer"></div>
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="../index.html">
+              <img class="logo" src="../_static/logo.png" alt="Logo"/>
+            </a></p>
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="clumpy.transition_probability_estimation.Bayes.html"
+                        title="previous chapter"><code class="xref py py-mod docutils literal notranslate"><span class="pre">clumpy.transition_probability_estimation</span></code>.Bayes</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="clumpy.allocation.compute_bootstrap_patches.html"
+                        title="next chapter"><code class="xref py py-mod docutils literal notranslate"><span class="pre">clumpy.allocation</span></code>.compute_bootstrap_patches</a></p>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="../_sources/generated/clumpy.allocation.BootstrapPatch.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="clumpy.allocation.compute_bootstrap_patches.html" title="clumpy.allocation.compute_bootstrap_patches"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="clumpy.transition_probability_estimation.Bayes.html" title="clumpy.transition_probability_estimation.Bayes"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">clumpy 0.1.0 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../api.html" >Clumpy API</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href=""><code class="xref py py-mod docutils literal notranslate"><span class="pre">clumpy.allocation</span></code>.BootstrapPatch</a></li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2020, François-Rémi Mazy.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 4.0.2.
+    </div>
+  </body>
+</html>
