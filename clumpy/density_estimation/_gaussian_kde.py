@@ -89,7 +89,10 @@ class GKDE(DensityEstimator):
     
     support_factor : float, default=3
         The kernel support factor, even if kernel has infinite support.
-    
+
+    n_fit_max : int, default=np.inf
+        The maximum number of training samples. A random sampling is done if necessary.
+
     n_predict_max : int, default=2*10**4
         The maximum of simultaneous probability estimations.
         Several streams are consequently created.
@@ -120,6 +123,7 @@ class GKDE(DensityEstimator):
                  algorithm='kd_tree',
                  leaf_size=30,
                  support_factor=3,
+                 n_fit_max = 2*10**4,
                  n_predict_max = 2*10**4,
                  forbid_null_value = False,
                  n_jobs_predict=2,
@@ -137,6 +141,7 @@ class GKDE(DensityEstimator):
         self.algorithm = algorithm
         self.leaf_size = leaf_size
         self.support_factor = support_factor
+        self.n_fit_max = n_fit_max
         self.n_predict_max = n_predict_max
         self.n_jobs_predict = n_jobs_predict
         self.n_jobs_neighbors = n_jobs_neighbors
@@ -163,6 +168,20 @@ class GKDE(DensityEstimator):
             The fitted GKDE object.
 
         """
+
+        if self.verbose > 0:
+            print('GKDE fitting...')
+
+        if X.shape[0] > self.n_fit_max:
+            X = X[np.random.sample(a=X.shape[0],
+                                   size=self.n_fit_max,
+                                   replace=False)]
+
+            self._force_forbid_null_value = True
+
+            if self.verbose > 0:
+                print('n_fit_max overshoot. Random sampling done.')
+
         # preprocessing
         if self.preprocessing == 'standard':
             self._preprocessor = StandardScaler()
@@ -174,6 +193,9 @@ class GKDE(DensityEstimator):
         
         else:
             self._data = X
+
+        if self.verbose > 0:
+            print('Preprocessing done.')
         
         # get data dimensions
         self._n = self._data.shape[0]
@@ -192,7 +214,7 @@ class GKDE(DensityEstimator):
             A_wt = self._preprocessor.transform(A)
             
             self._low_bounds_hyperplanes.append(Hyperplane().set_by_points(A_wt))
-        
+
         # high bounds
         if self.high_bounds is None or len(self.high_bounds) != len(self.high_bounded_features):
             raise(ValueError("unexpected low bounds value"))
@@ -206,7 +228,9 @@ class GKDE(DensityEstimator):
             
             self._high_bounds_hyperplanes.append(Hyperplane().set_by_points(A_wt))
             
-        
+        if self.verbose > 0:
+            print('Boundaries initialization done.')
+
         # BANDWIDTH SELECTION
         if type(self.h) is int or type(self.h) is float:
             self._h = float(self.h)
@@ -218,17 +242,25 @@ class GKDE(DensityEstimator):
                 raise(ValueError("Unexpected bandwidth selection method."))
         else:
             raise(TypeError("Unexpected bandwidth type."))
+
+        if self.verbose > 0:
+            print('Bandwidth selection done : h='+str(self._h))
         
         # NORMALIZATION FACTOR
         self._normalization = 1 / ((2*np.pi)**(self._d/2) * self._h**self._d)
         
         # NEAREST NEIGHBOR FITTING
+        if self.verbose > 0:
+            print('sklearn.neighbors.NearestNeighbors fitting...')
         self._nn = NearestNeighbors(radius = self._h * self.support_factor,
                                    algorithm = self.algorithm,
                                    leaf_size = self.leaf_size,
                                    n_jobs = self.n_jobs_neighbors)
         self._nn.fit(self._data)
-        
+
+        if self.verbose > 0:
+            print('sklearn.neighbors.NearestNeighbors fitting done.')
+            print('GKDE fitting done.')
         return(self)
         
     def predict(self, X):
@@ -245,7 +277,13 @@ class GKDE(DensityEstimator):
         f : ndarray of shape (n_samples,)
             The estimated probabilities.
         """
+        if self.verbose > 0:
+            print('GKDE Predict')
+
         pdf = self._predict_with_bandwidth(X, self._h)
+
+        if self.verbose > 0:
+            print('GKDE predict done.')
         return(pdf)
     
     def _predict_with_bandwidth(self, X, h):
@@ -274,14 +312,16 @@ class GKDE(DensityEstimator):
         if self.preprocessing != 'none':
             X = self._preprocessor.transform(X)
         
-        
-        
+
         # STEPS INITIALIZATION
         # requested elements are not estimated alltogether in order to
         # improve numerical computations.
         # the limit is given by n_predict_max
         steps = np.arange(0, X.shape[0], self.n_predict_max)
-        
+
+        if self.verbose > 0:
+            print('Gaussian kernel process with '+str(steps.size)+' streams computed in parallel through '+str(self.n_jobs_predict)+' CPUs.')
+
         if self.n_jobs_predict == 1:
             if self.verbose > 0:
                 steps = tqdm(steps)
@@ -308,11 +348,17 @@ class GKDE(DensityEstimator):
                 restart_line()
                 sys.stdout.write('done\n')
                 sys.stdout.flush()
-        
+
+        if self.verbose > 0:
+            print('Gaussian kernel process done.')
+
         # Normalization
         f *= self._normalization / self._n
         
         # boundary bias correction
+        if self.verbose > 0:
+            print('Boundary bias correction...')
+
         for bounds_hyperplanes in [self._low_bounds_hyperplanes, self._high_bounds_hyperplanes]:
             for hyperplane in bounds_hyperplanes:
                 f /= 1 / 2 * (1 + erf(hyperplane.distance(X) / h / np.sqrt(2)))
@@ -320,23 +366,30 @@ class GKDE(DensityEstimator):
         # outside bounds : equal to 0
         f[id_out_of_low_bounds] = 0
         f[id_out_of_high_bounds] = 0
-            
+
+        if self.verbose > 0:
+            print('Boundary bias correction done.')
         
         # Preprocessing correction
         if self.preprocessing != 'none':
             f /= np.product(self._preprocessor.scale_)
-        
-        # if null value is forbiden
-        if self.forbid_null_value:
-            idx = f == 0.0
-            
-            new_n = self._n + idx.sum()
-            
-            f = f * self._n / new_n
-            
-            min_value = 1 / new_n / self._normalization * _gaussian(0)
-            f[f == 0.0] = min_value
-        
+
+            # if null value is forbiden
+            if self.forbid_null_value or self._force_forbid_null_value:
+                if self.verbose > 0:
+                    print('Null value correction...')
+                idx = f == 0.0
+
+                new_n = self._n + idx.sum()
+
+                f = f * self._n / new_n
+
+                min_value = 1 / new_n / self._normalization * _gaussian(0)
+                f[f == 0.0] = min_value
+
+                if self.verbose > 0:
+                    print('Null value correction done.')
+
         return(f)
             
     def marginal(self,

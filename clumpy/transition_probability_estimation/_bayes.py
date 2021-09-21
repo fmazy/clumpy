@@ -96,13 +96,21 @@ class Bayes(TransitionProbabilityEstimator):
             The fitted transition probability estimator object.
 
         """
+        if self.verbose > 0:
+            print('TPE fitting...')
+            print('Conditional density estimators fitting :')
 
         for state_v, cde in self.conditional_density_estimators.items():
+            if self.verbose > 0:
+                print('state_v : '+str(state_v))
             # select X_v
             X_v = X[V == state_v.value]
 
             # Density estimation fit
             cde.fit(X_v)
+
+        if self.verbose > 0:
+            print('TPE fitting done.')
 
         return (self)
 
@@ -132,26 +140,45 @@ class Bayes(TransitionProbabilityEstimator):
             as ``self.list_v``, i.e. the numerical order of studied final land us states.
         """
 
+        if self.verbose > 0:
+            print('TPE computing...')
+
         # forbid_null_value is forced to True by default for this density estimator
         self.density_estimator.set_params(forbid_null_value=True)
 
+        if self.verbose > 0:
+            print('Density estimator fitting...')
         self.density_estimator.fit(Y)
+        if self.verbose > 0:
+            print('Density estimator fitting done.')
 
         # P(Y) estimation
+        if self.verbose > 0:
+            print('Density estimator predict...')
         P_Y = self.density_estimator.predict(Y)[:, None]
+        if self.verbose > 0:
+            print('Density estimator predict done.')
 
         # P(Y|v) estimation
         # first, create a list of estimators according to palette_v order
         # if no estimator is informed, the NullEstimator is invoked.
+        if self.verbose > 0:
+            print('Conditionnal density estimators predict...')
+            print('are concerned :')
         conditional_density_estimators = []
         for state_v in palette_v:
             if state_v in self.conditional_density_estimators.keys():
+                if self.verbose > 0:
+                    print('state_v '+str(state_v))
                 conditional_density_estimators.append(self.conditional_density_estimators[state_v])
             else:
                 conditional_density_estimators.append(NullEstimator())
 
         # estimate P(Y|u,v). Columns with no estimators are null columns.
         P_Y__v = np.vstack([cde.predict(Y) for cde in conditional_density_estimators]).T
+
+        if self.verbose > 0:
+            print('Conditional density estimators predict done.')
 
         # BAYES PROCESS
         if self.log_computations == False:
@@ -227,5 +254,8 @@ class Bayes(TransitionProbabilityEstimator):
         # compute the non transited column
         state_value = palette_v.get_id(state)
         P_v__Y[:, state_value] = 1 - np.delete(P_v__Y, state_value, axis=1).sum(axis=1)
+
+        if self.verbose > 0:
+            print('TPE computing done.')
 
         return (P_v__Y)

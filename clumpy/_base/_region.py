@@ -103,12 +103,18 @@ class Region():
         -------
         self
         """
+        if self.verbose > 0:
+            print('\n### Region '+self.label+' fitting\n')
+
         for state, land in self.lands.items():
             land.fit(state=state,
                      lul_initial=lul_initial,
                      lul_final=lul_final,
                      mask=mask,
                      distances_to_states=distances_to_states)
+
+        if self.verbose > 0:
+            print('Region '+self.label+' fitting done.\n')
 
         return (self)
 
@@ -154,7 +160,13 @@ class Region():
         J = {}
         P_v__u_Y = {}
 
+        if self.verbose > 0:
+            print('\n### Region '+str(self.label)+' TPE\n')
+
         for state, land in self.lands.items():
+
+            if self.verbose > 0:
+                print('state '+str(state))
 
             P_v, palette_v = transition_matrix.get_P_v(state)
 
@@ -172,6 +184,9 @@ class Region():
             if path_prefix is None:
                 J[state] = ltp[0]
                 P_v__u_Y[state] = ltp[1]
+
+        if self.verbose > 0:
+            print('Region '+str(self.label)+' TPE done.\n')
 
         return (J, P_v__u_Y)
 
@@ -213,6 +228,9 @@ class Region():
             Only returned if ``path`` is not ``None``. The allocated map as a land use layer.
         """
 
+        if self.verbose > 0:
+            print('\n### Region '+str(self.label)+' allocate\n')
+
         if lul_origin is None:
             lul_origin = lul
 
@@ -238,6 +256,9 @@ class Region():
                           distances_to_states=distances_to_states,
                           path=None)
             # Note that the path is set to None above in order to allocate through all regions and save in a second time !
+
+        if self.verbose > 0:
+            print('Region '+str(self.label)+' allocate done.\n')
 
         if path is not None:
             folder_path, file_name, file_ext = path_split(path)

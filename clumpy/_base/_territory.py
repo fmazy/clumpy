@@ -97,6 +97,9 @@ class Territory():
         self
         """
 
+        if self.verbose > 0:
+            print('\n## Territory fitting\n')
+
         if masks is None:
             masks = {region: None for region in self.regions}
 
@@ -107,6 +110,9 @@ class Territory():
                        lul_final=lul_final,
                        mask=masks[region],
                        distances_to_states=distances_to_states)
+
+        if self.verbose > 0:
+            print('Territory fitting done.\n')
 
         return (self)
 
@@ -142,6 +148,9 @@ class Territory():
             to transition matrix argument : ``palette_v``.
         """
 
+        if self.verbose > 0:
+            print('\n## Territory TPE\n')
+
         if masks is None:
             masks = {region: None for region in self.regions}
 
@@ -159,6 +168,9 @@ class Territory():
                                                          mask=masks[region],
                                                          distances_to_states=distances_to_states,
                                                          path_prefix=path_prefix)
+
+        if self.verbose > 0:
+            print('Territory transition probabilities estimation done.\n')
 
         if path_prefix is None:
             return (tp)
@@ -193,6 +205,9 @@ class Territory():
             Only returned if ``path`` is not ``None``. The allocated map as a land use layer.
         """
 
+        if self.verbose > 0:
+            print('\n## Territory allocate\n')
+
         if masks is None:
             masks = {region: None for region in self.regions}
 
@@ -216,6 +231,9 @@ class Territory():
                                  copy_geo=lul,
                                  path=path,
                                  palette=lul.palette))
+
+        if self.verbose > 0:
+            print('Territory allocate done.\n')
 
     def multisteps_allocation(self,
                               n,
@@ -251,11 +269,16 @@ class Territory():
             The allocated map as a land use layer.
         """
 
+
+
         multisteps_transition_matrices = {region: tm.multisteps(n) for region, tm in transition_matrices.items()}
 
         lul_step = lul
 
         for i in range(n):
+
+            if self.verbose > 0:
+                print('\n# Territory multisteps allocate '+str(i)+'\n')
 
             if isinstance(path_prefix, str):
                 path_step = path_prefix + '_' + str(i) + '.tif'
@@ -266,5 +289,9 @@ class Territory():
                                        lul=lul_step,
                                        masks=masks,
                                        path=path_step)
+
+            if self.verbose > 0:
+                print('Territory multisteps allocate '+str(i)+' done.\n')
+
         if path_prefix is not None:
             return lul_step

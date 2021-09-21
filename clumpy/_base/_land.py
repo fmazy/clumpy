@@ -245,11 +245,17 @@ class Land():
         self
         """
 
+        if self.verbose > 0:
+            print('\n#### Land '+str(state)+' fitting\n')
+
         self._fit_tpe(state=state,
                       lul_initial=lul_initial,
                       lul_final=lul_final,
                       mask=mask,
                       distances_to_states=distances_to_states)
+
+        if self.verbose > 0:
+            print('Land '+str(state)+' fitting done.\n')
 
         return self
 
@@ -278,12 +284,17 @@ class Land():
             feature_selection = [self.feature_selection]
 
         for fs in feature_selection:
+            if self.verbose > 0:
+                print('Feature selecting : '+str(fs)+'...')
             # check the type
             if ~isinstance(fs, FeatureSelector):
                 raise (TypeError(
                     "Unexpected 'feature_selection' type. Should be 'FeatureSelector' or 'list(FeatureSelector)'"))
             # fit and transform X
             X = fs.fit_transform(X=X)
+
+            if self.verbose > 0:
+                print('Feature selecting : '+str(fs)+' done.')
 
         # TRANSITION PROBABILITY ESTIMATOR
         self.transition_probability_estimator.fit(X, V)
@@ -375,12 +386,18 @@ class Land():
 
         """
 
+        if self.verbose > 0:
+            print('\n#### Land '+str(state)+' TPE\n')
+
         J, P_v__u_Y = self._compute_tpe(state=state,
                                         lul=lul,
                                         P_v=P_v,
                                         palette_v=palette_v,
                                         mask=mask,
                                         distances_to_states=distances_to_states)
+
+        if self.verbose > 0:
+            print('Land '+str(state)+' TPE done.\n')
 
         if path_prefix is None:
             return J, P_v__u_Y
@@ -451,6 +468,9 @@ class Land():
         if ~isinstance(self.allocator, Allocator):
             raise (ValueError("Unexpected 'allocator'. A clumpy.allocation.Allocator object is expected."))
 
+        if self.verbose > 0:
+            print('\n#### Land '+str(state)+' allocation\n')
+
         self.allocator(state=state,
                        land=self,
                        P_v=P_v,
@@ -460,6 +480,9 @@ class Land():
                        mask=mask,
                        distances_to_states=distances_to_states,
                        path=path)
+
+        if self.verbose > 0:
+            print('Land ' + str(state) + ' allocation done.\n')
 
 
 def _compute_distance(state, data, distances_to_states):

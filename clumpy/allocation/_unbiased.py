@@ -57,6 +57,11 @@ class Unbiased(Allocator):
 
         J_used = []
 
+        if self.verbose > 0:
+            print('Allocation start...')
+            print('P_v : '+str(P_v))
+            print('update_P_v__u_Y : '+str(self.update_P_v__u_Y)+'\n')
+
         n_try = 0
         while np.sum(list(n_ghost.values())) > 0 and n_try < self.n_allocation_try:
             n_try += 1
@@ -108,12 +113,16 @@ class Unbiased(Allocator):
             # the pixel used and which are now useless are saved in J_used
             J_used += J_used_last
 
+            if self.verbose > 0:
+                print('try #'+str(n_try)+' - n_allocated : '+str(n_allocated)+' - sum(n_ghost) : '+str(np.sum(list(n_ghost.values()))))
+
             # P_v update : for the next loop, one need less pixels
             P_v[id_state] = 1
             for id_state_v, state_v in enumerate(palette_v):
                 if state_v != state:
                     P_v[id_state_v] -= n_allocated[state_v] / first_len_J
                     P_v[id_state] -= P_v[id_state_v]
+
 
     def _try_allocate(self,
                         state,

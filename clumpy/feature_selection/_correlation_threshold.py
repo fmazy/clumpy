@@ -15,6 +15,9 @@ class CorrelationThreshold(FeatureSelector):
     def __init__(self, threshold=1.0):
         self.threshold = threshold
 
+    def __repr__(self):
+        return('CorrelationThreshold('+str(self.threshold)+')')
+
     def fit(self, X, y=None):
         """
         Learn from X.

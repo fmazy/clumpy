@@ -23,6 +23,8 @@ class DensityEstimator(BaseEstimator):
         self.high_bounds = high_bounds
         self.forbid_null_value = forbid_null_value
         self.verbose = verbose
+
+        self._force_forbid_null_value = False
         
     def set_params(self, **params):
         """

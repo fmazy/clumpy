@@ -15,6 +15,9 @@ class VarianceThreshold(FeatureSelector):
     def __init__(self, threshold=0.0):
         self.threshold = threshold
 
+    def __repr__(self):
+        return('VarianceThreshold('+str(self.threshold)+')')
+
     def fit(self, X, y=None):
         """
         Learn from X.
