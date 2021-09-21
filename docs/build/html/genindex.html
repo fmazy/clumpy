@@ -5,7 +5,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Index &#8212; clumpy 0.1.0 documentation</title>
+    <title>Index &#8212; clumpy 1.0.0 documentation</title>
     <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
     <link rel="stylesheet" type="text/css" href="_static/nature.css" />
     <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
@@ -25,7 +25,7 @@
         <li class="right" >
           <a href="py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">clumpy 0.1.0 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="index.html">clumpy 1.0.0 documentation</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href="">Index</a></li> 
       </ul>
     </div>  
@@ -168,8 +168,6 @@
       </ul></li>
       <li><a href="generated/clumpy.allocation.compute_bootstrap_patches.html#clumpy.allocation.compute_bootstrap_patches">compute_bootstrap_patches() (in module clumpy.allocation)</a>
 </li>
-      <li><a href="generated/clumpy.compute_transition_matrix.html#clumpy.compute_transition_matrix">compute_transition_matrix() (in module clumpy)</a>
-</li>
       <li><a href="generated/clumpy.TransitionMatrix.html#clumpy.TransitionMatrix.copy">copy() (clumpy.TransitionMatrix method)</a>
 </li>
       <li><a href="generated/clumpy.allocation.BootstrapPatch.html#clumpy.allocation.BootstrapPatch.crop_areas">crop_areas() (clumpy.allocation.BootstrapPatch method)</a>
@@ -202,6 +200,14 @@
         <li><a href="generated/clumpy.LandUseLayer.html#clumpy.LandUseLayer.export_asc">(clumpy.LandUseLayer method)</a>
 </li>
         <li><a href="generated/clumpy.MaskLayer.html#clumpy.MaskLayer.export_asc">(clumpy.MaskLayer method)</a>
+</li>
+      </ul></li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="generated/clumpy.Palette.html#clumpy.Palette.extract">extract() (clumpy.Palette method)</a>
+
+      <ul>
+        <li><a href="generated/clumpy.TransitionMatrix.html#clumpy.TransitionMatrix.extract">(clumpy.TransitionMatrix method)</a>
 </li>
       </ul></li>
   </ul></td>
@@ -264,7 +270,7 @@
 </li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="generated/clumpy.Palette.html#clumpy.Palette.load">load() (clumpy.Palette method)</a>
+      <li><a href="generated/clumpy.load_palette.html#clumpy.load_palette">load_palette() (in module clumpy)</a>
 </li>
       <li><a href="generated/clumpy.load_transition_matrix.html#clumpy.load_transition_matrix">load_transition_matrix() (in module clumpy)</a>
 </li>
@@ -278,6 +284,12 @@
 </li>
       <li><a href="generated/clumpy.MaskLayer.html#clumpy.MaskLayer">MaskLayer (class in clumpy)</a>
 </li>
+      <li><a href="generated/clumpy.Palette.html#clumpy.Palette.merge">merge() (clumpy.Palette method)</a>
+
+      <ul>
+        <li><a href="generated/clumpy.TransitionMatrix.html#clumpy.TransitionMatrix.merge">(clumpy.TransitionMatrix method)</a>
+</li>
+      </ul></li>
       <li>
     module
 
@@ -315,8 +327,6 @@
 </li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="generated/clumpy.TransitionMatrix.html#clumpy.TransitionMatrix.patches">patches() (clumpy.TransitionMatrix method)</a>
-</li>
       <li><a href="generated/clumpy.density_estimation.GKDE.html#clumpy.density_estimation.GKDE.predict">predict() (clumpy.density_estimation.GKDE method)</a>
 </li>
   </ul></td>
@@ -341,18 +351,16 @@
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="generated/clumpy.allocation.BootstrapPatch.html#clumpy.allocation.BootstrapPatch.sample">sample() (clumpy.allocation.BootstrapPatch method)</a>
 </li>
-      <li><a href="generated/clumpy.TransitionMatrix.html#clumpy.TransitionMatrix.select_land">select_land() (clumpy.TransitionMatrix method)</a>
-</li>
       <li><a href="generated/clumpy.allocation.BootstrapPatch.html#clumpy.allocation.BootstrapPatch.set">set() (clumpy.allocation.BootstrapPatch method)</a>
 </li>
       <li><a href="generated/clumpy.LandUseLayer.html#clumpy.LandUseLayer.set_palette">set_palette() (clumpy.LandUseLayer method)</a>
 </li>
       <li><a href="generated/clumpy.density_estimation.GKDE.html#clumpy.density_estimation.GKDE.set_params">set_params() (clumpy.density_estimation.GKDE method)</a>
 </li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="generated/clumpy.allocation.Unbiased.html#clumpy.allocation.Unbiased.set_patches">set_patches() (clumpy.allocation.Unbiased method)</a>
 </li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="generated/clumpy.TransitionMatrix.html#clumpy.TransitionMatrix.set_value">set_value() (clumpy.TransitionMatrix method)</a>
 </li>
       <li><a href="generated/clumpy.Palette.html#clumpy.Palette.sort">sort() (clumpy.Palette method)</a>
@@ -373,6 +381,14 @@
 </li>
       <li><a href="generated/clumpy.Territory.html#clumpy.Territory">Territory (class in clumpy)</a>
 </li>
+      <li><a href="generated/clumpy.Land.html#clumpy.Land.transition_matrix">transition_matrix() (clumpy.Land method)</a>
+
+      <ul>
+        <li><a href="generated/clumpy.Region.html#clumpy.Region.transition_matrix">(clumpy.Region method)</a>
+</li>
+      </ul></li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="generated/clumpy.Land.html#clumpy.Land.transition_probabilities">transition_probabilities() (clumpy.Land method)</a>
 
       <ul>
@@ -381,8 +397,6 @@
         <li><a href="generated/clumpy.Territory.html#clumpy.Territory.transition_probabilities">(clumpy.Territory method)</a>
 </li>
       </ul></li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="generated/clumpy.transition_probability_estimation.Bayes.html#clumpy.transition_probability_estimation.Bayes.transition_probability">transition_probability() (clumpy.transition_probability_estimation.Bayes method)</a>
 </li>
       <li><a href="generated/clumpy.TransitionMatrix.html#clumpy.TransitionMatrix">TransitionMatrix (class in clumpy)</a>
@@ -432,12 +446,12 @@
         <li class="right" >
           <a href="py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">clumpy 0.1.0 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="index.html">clumpy 1.0.0 documentation</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href="">Index</a></li> 
       </ul>
     </div>
     <div class="footer" role="contentinfo">
-        &#169; Copyright 2020, François-Rémi Mazy.
+        &#169; Copyright 2021, François-Rémi Mazy.
       Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 4.0.2.
     </div>
   </body>

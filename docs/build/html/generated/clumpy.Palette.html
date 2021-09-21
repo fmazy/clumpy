@@ -6,7 +6,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
 
-    <title>clumpy.Palette &#8212; clumpy 0.1.0 documentation</title>
+    <title>clumpy.Palette &#8212; clumpy 1.0.0 documentation</title>
     <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
     <link rel="stylesheet" type="text/css" href="../_static/nature.css" />
     <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
@@ -16,7 +16,7 @@
     <link rel="shortcut icon" href="../_static/logo.ico"/>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="next" title="clumpy.LandUseLayer" href="clumpy.LandUseLayer.html" />
+    <link rel="next" title="clumpy.load_palette" href="clumpy.load_palette.html" />
     <link rel="prev" title="clumpy.State" href="clumpy.State.html" /> 
   </head><body>
     <div class="related" role="navigation" aria-label="related navigation">
@@ -29,12 +29,12 @@
           <a href="../py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
         <li class="right" >
-          <a href="clumpy.LandUseLayer.html" title="clumpy.LandUseLayer"
+          <a href="clumpy.load_palette.html" title="clumpy.load_palette"
              accesskey="N">next</a> |</li>
         <li class="right" >
           <a href="clumpy.State.html" title="clumpy.State"
              accesskey="P">previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="../index.html">clumpy 0.1.0 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">clumpy 1.0.0 documentation</a> &#187;</li>
           <li class="nav-item nav-item-1"><a href="../api.html" accesskey="U">Clumpy API</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href=""><code class="xref py py-mod docutils literal notranslate"><span class="pre">clumpy</span></code>.Palette</a></li> 
       </ul>
@@ -67,25 +67,28 @@
 <tr class="row-odd"><td><p><a class="reference internal" href="#clumpy.Palette.add" title="clumpy.Palette.add"><code class="xref py py-obj docutils literal notranslate"><span class="pre">add</span></code></a>(state)</p></td>
 <td><p>Append a state to the palette’s states.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#clumpy.Palette.get" title="clumpy.Palette.get"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get</span></code></a>(info)</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#clumpy.Palette.extract" title="clumpy.Palette.extract"><code class="xref py py-obj docutils literal notranslate"><span class="pre">extract</span></code></a>(infos)</p></td>
+<td><p>Extract a sub palette</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#clumpy.Palette.get" title="clumpy.Palette.get"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get</span></code></a>(info)</p></td>
 <td><p>Get a state from the palette.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#clumpy.Palette.get_id" title="clumpy.Palette.get_id"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_id</span></code></a>(info)</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#clumpy.Palette.get_id" title="clumpy.Palette.get_id"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_id</span></code></a>(info)</p></td>
 <td><p>Get a state’s index from the palette.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#clumpy.Palette.get_list_of_labels_values_colors" title="clumpy.Palette.get_list_of_labels_values_colors"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_list_of_labels_values_colors</span></code></a>()</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#clumpy.Palette.get_list_of_labels_values_colors" title="clumpy.Palette.get_list_of_labels_values_colors"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_list_of_labels_values_colors</span></code></a>()</p></td>
 <td><p>Get the labels list, the values list and the colors list.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#clumpy.Palette.get_list_of_values" title="clumpy.Palette.get_list_of_values"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_list_of_values</span></code></a>()</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#clumpy.Palette.get_list_of_values" title="clumpy.Palette.get_list_of_values"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_list_of_values</span></code></a>()</p></td>
 <td><p>Get the values list.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#clumpy.Palette.load" title="clumpy.Palette.load"><code class="xref py py-obj docutils literal notranslate"><span class="pre">load</span></code></a>(path)</p></td>
-<td><p>Import legend through qml file provided by QGis.</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#clumpy.Palette.merge" title="clumpy.Palette.merge"><code class="xref py py-obj docutils literal notranslate"><span class="pre">merge</span></code></a>(palette[, inplace])</p></td>
+<td><p>Merge to another palette.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#clumpy.Palette.remove" title="clumpy.Palette.remove"><code class="xref py py-obj docutils literal notranslate"><span class="pre">remove</span></code></a>(info[, inplace])</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#clumpy.Palette.remove" title="clumpy.Palette.remove"><code class="xref py py-obj docutils literal notranslate"><span class="pre">remove</span></code></a>(info[, inplace])</p></td>
 <td><p>Remove a state</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#clumpy.Palette.sort" title="clumpy.Palette.sort"><code class="xref py py-obj docutils literal notranslate"><span class="pre">sort</span></code></a>([inplace])</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#clumpy.Palette.sort" title="clumpy.Palette.sort"><code class="xref py py-obj docutils literal notranslate"><span class="pre">sort</span></code></a>([inplace])</p></td>
 <td><p>Sort the palette according states values.</p></td>
 </tr>
 </tbody>
@@ -100,6 +103,23 @@
 </dd>
 <dt class="field-even">Returns</dt>
 <dd class="field-even"><p><strong>self</strong> – The self object.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="#clumpy.Palette" title="clumpy.Palette">Palette</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="clumpy.Palette.extract">
+<span class="sig-name descname"><span class="pre">extract</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">infos</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/clumpy/_base/_state.html#Palette.extract"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#clumpy.Palette.extract" title="Permalink to this definition">¶</a></dt>
+<dd><p>Extract a sub palette</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>infos</strong> (<em>list</em><em>(</em><em>int</em><em> or </em><a class="reference internal" href="clumpy.State.html#clumpy.State" title="clumpy.State"><em>State</em></a><em>)</em>) – List of initial state information which can be the object, the state’s value or the state’s label.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>palette</strong> – The extracted palette.</p>
 </dd>
 <dt class="field-odd">Return type</dt>
 <dd class="field-odd"><p><a class="reference internal" href="#clumpy.Palette" title="clumpy.Palette">Palette</a></p>
@@ -174,12 +194,21 @@ If two states share the same label, only the first one to occur is returned.</p>
 </dd></dl>
 
 <dl class="py method">
-<dt class="sig sig-object py" id="clumpy.Palette.load">
-<span class="sig-name descname"><span class="pre">load</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">path</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/clumpy/_base/_state.html#Palette.load"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#clumpy.Palette.load" title="Permalink to this definition">¶</a></dt>
-<dd><p>Import legend through qml file provided by QGis. Alpha is not supported.</p>
+<dt class="sig sig-object py" id="clumpy.Palette.merge">
+<span class="sig-name descname"><span class="pre">merge</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">palette</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">inplace</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/clumpy/_base/_state.html#Palette.merge"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#clumpy.Palette.merge" title="Permalink to this definition">¶</a></dt>
+<dd><p>Merge to another palette.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>path</strong> (<em>str</em>) – The qml file path</p>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>palette</strong> (<a class="reference internal" href="#clumpy.Palette" title="clumpy.Palette"><em>Palette</em></a>) – The other palette</p></li>
+<li><p><strong>inplace</strong> (<em>bool</em><em>, </em><em>default=False</em>) – If True, perform operation in-place.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>palette</strong> – If <code class="docutils literal notranslate"><span class="pre">inplace=True</span></code>, return the self object, else return a new palette with sorted states.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="#clumpy.Palette" title="clumpy.Palette">Palette</a></p>
 </dd>
 </dl>
 </dd></dl>
@@ -190,11 +219,14 @@ If two states share the same label, only the first one to occur is returned.</p>
 <dd><p>Remove a state</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>info</strong> (<a class="reference internal" href="clumpy.State.html#clumpy.State" title="clumpy.State"><em>State</em></a><em> or </em><em>int</em><em> or </em><em>str</em>) – The state information which can be the object, the state’s value or the state’s label.
-If two states share the same label, only the first one to occur is returned.</p>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>info</strong> (<a class="reference internal" href="clumpy.State.html#clumpy.State" title="clumpy.State"><em>State</em></a><em> or </em><em>int</em><em> or </em><em>str</em>) – The state information which can be the object, the state’s value or the state’s label.
+If two states share the same label, only the first one to occur is returned.</p></li>
+<li><p><strong>inplace</strong> (<em>bool</em><em>, </em><em>default=False</em>) – If True, perform operation in-place.</p></li>
+</ul>
 </dd>
 <dt class="field-even">Returns</dt>
-<dd class="field-even"><p><strong>self</strong> – The self object.</p>
+<dd class="field-even"><p><strong>palette</strong> – If <code class="docutils literal notranslate"><span class="pre">inplace=True</span></code>, return the self object, else return a new palette with sorted states.</p>
 </dd>
 <dt class="field-odd">Return type</dt>
 <dd class="field-odd"><p><a class="reference internal" href="#clumpy.Palette" title="clumpy.Palette">Palette</a></p>
@@ -237,8 +269,8 @@ If two states share the same label, only the first one to occur is returned.</p>
   <p class="topless"><a href="clumpy.State.html"
                         title="previous chapter"><code class="xref py py-mod docutils literal notranslate"><span class="pre">clumpy</span></code>.State</a></p>
   <h4>Next topic</h4>
-  <p class="topless"><a href="clumpy.LandUseLayer.html"
-                        title="next chapter"><code class="xref py py-mod docutils literal notranslate"><span class="pre">clumpy</span></code>.LandUseLayer</a></p>
+  <p class="topless"><a href="clumpy.load_palette.html"
+                        title="next chapter"><code class="xref py py-mod docutils literal notranslate"><span class="pre">clumpy</span></code>.load_palette</a></p>
   <div role="note" aria-label="source link">
     <h3>This Page</h3>
     <ul class="this-page-menu">
@@ -270,18 +302,18 @@ If two states share the same label, only the first one to occur is returned.</p>
           <a href="../py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
         <li class="right" >
-          <a href="clumpy.LandUseLayer.html" title="clumpy.LandUseLayer"
+          <a href="clumpy.load_palette.html" title="clumpy.load_palette"
              >next</a> |</li>
         <li class="right" >
           <a href="clumpy.State.html" title="clumpy.State"
              >previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="../index.html">clumpy 0.1.0 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">clumpy 1.0.0 documentation</a> &#187;</li>
           <li class="nav-item nav-item-1"><a href="../api.html" >Clumpy API</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href=""><code class="xref py py-mod docutils literal notranslate"><span class="pre">clumpy</span></code>.Palette</a></li> 
       </ul>
     </div>
     <div class="footer" role="contentinfo">
-        &#169; Copyright 2020, François-Rémi Mazy.
+        &#169; Copyright 2021, François-Rémi Mazy.
       Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 4.0.2.
     </div>
   </body>

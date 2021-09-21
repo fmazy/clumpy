@@ -10,9 +10,9 @@ class VarianceThreshold(FeatureSelector):
     ----------
 
     Threshold : float, default=0.0
-        Features with a training-set variance lower than this threshold will be removed. The default is to keep all features with non-zero variance, i.e. remove the features that have the same value in all samples.
+        Features with a training-set variance lower than this threshold will be removed. The value ``0.0`` means keeping all features with non-zero variance, i.e. remove the features that have the same value in all samples.
     """
-    def __init__(self, threshold=0.0):
+    def __init__(self, threshold=0.3):
         self.threshold = threshold
 
     def __repr__(self):

@@ -5,7 +5,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>clumpy._base._state &#8212; clumpy 0.1.0 documentation</title>
+    <title>clumpy._base._state &#8212; clumpy 1.0.0 documentation</title>
     <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css" />
     <link rel="stylesheet" type="text/css" href="../../../_static/nature.css" />
     <script data-url_root="../../../" id="documentation_options" src="../../../_static/documentation_options.js"></script>
@@ -25,7 +25,7 @@
         <li class="right" >
           <a href="../../../py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
-        <li class="nav-item nav-item-0"><a href="../../../index.html">clumpy 0.1.0 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="../../../index.html">clumpy 1.0.0 documentation</a> &#187;</li>
           <li class="nav-item nav-item-1"><a href="../../index.html" accesskey="U">Module code</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href="">clumpy._base._state</a></li> 
       </ul>
@@ -47,6 +47,7 @@
 <span class="kn">from</span> <span class="nn">xml.dom</span> <span class="kn">import</span> <span class="n">minidom</span>
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 
+
 <div class="viewcode-block" id="State"><a class="viewcode-back" href="../../../generated/clumpy.State.html#clumpy.State">[docs]</a><span class="k">class</span> <span class="nc">State</span><span class="p">():</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Define a land use state.        </span>
@@ -60,17 +61,19 @@
 <span class="sd">    color : str</span>
 <span class="sd">        State color. It should be unique.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
+
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">label</span><span class="p">,</span> <span class="n">value</span><span class="p">,</span> <span class="n">color</span><span class="p">):</span>
         <span class="k">if</span> <span class="n">value</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
-            <span class="k">raise</span><span class="p">(</span><span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;Unexpected state value. It must be positive !&#39;</span><span class="p">))</span>
-        
+            <span class="k">raise</span> <span class="p">(</span><span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;Unexpected state value. It must be positive !&#39;</span><span class="p">))</span>
+
         <span class="bp">self</span><span class="o">.</span><span class="n">label</span> <span class="o">=</span> <span class="n">label</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">value</span> <span class="o">=</span> <span class="n">value</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">color</span> <span class="o">=</span> <span class="n">color</span>
-    
+
     <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="k">return</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">label</span><span class="p">)</span></div>
-        
+        <span class="k">return</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">label</span><span class="p">)</span></div>
+
+
 <div class="viewcode-block" id="Palette"><a class="viewcode-back" href="../../../generated/clumpy.Palette.html#clumpy.Palette">[docs]</a><span class="k">class</span> <span class="nc">Palette</span><span class="p">():</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Define a palette, i.e. a set of states.</span>
@@ -80,22 +83,25 @@
 <span class="sd">    states : list of States, default=None</span>
 <span class="sd">        A list of States object. Ignored if None.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
+
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">states</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="k">if</span> <span class="n">states</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">states</span> <span class="o">=</span> <span class="p">[]</span>
         <span class="k">else</span><span class="p">:</span>
+            <span class="n">_check_states</span><span class="p">(</span><span class="n">states</span><span class="p">)</span>
+
             <span class="bp">self</span><span class="o">.</span><span class="n">states</span> <span class="o">=</span> <span class="n">states</span>
-    
+
     <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="k">return</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">states</span><span class="p">))</span>
-    
+        <span class="k">return</span> <span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">states</span><span class="p">))</span>
+
     <span class="k">def</span> <span class="fm">__iter__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">for</span> <span class="n">state</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">states</span><span class="p">:</span>
             <span class="k">yield</span> <span class="n">state</span>
-            
+
     <span class="k">def</span> <span class="fm">__len__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="k">return</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">states</span><span class="p">))</span>
-        
+        <span class="k">return</span> <span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">states</span><span class="p">))</span>
+
 <div class="viewcode-block" id="Palette.add"><a class="viewcode-back" href="../../../generated/clumpy.Palette.html#clumpy.Palette.add">[docs]</a>    <span class="k">def</span> <span class="nf">add</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">state</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Append a state to the palette&#39;s states.</span>
@@ -111,14 +117,13 @@
 <span class="sd">            The self object.</span>
 
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">states</span><span class="p">:</span>
-            <span class="k">if</span> <span class="n">s</span><span class="o">.</span><span class="n">value</span> <span class="o">==</span> <span class="n">state</span><span class="o">.</span><span class="n">value</span><span class="p">:</span>
-                <span class="k">raise</span><span class="p">(</span><span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;Unexpected state : its value is already set&#39;</span><span class="p">))</span>
-    
+        <span class="k">if</span> <span class="n">state</span><span class="o">.</span><span class="n">value</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_list_of_values</span><span class="p">():</span>
+            <span class="k">raise</span> <span class="p">(</span><span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;Unexpected state : its value is already set&#39;</span><span class="p">))</span>
+
         <span class="bp">self</span><span class="o">.</span><span class="n">states</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">state</span><span class="p">)</span>
-        
-        <span class="k">return</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span></div>
-    
+
+        <span class="k">return</span> <span class="p">(</span><span class="bp">self</span><span class="p">)</span></div>
+
 <div class="viewcode-block" id="Palette.get_id"><a class="viewcode-back" href="../../../generated/clumpy.Palette.html#clumpy.Palette.get_id">[docs]</a>    <span class="k">def</span> <span class="nf">get_id</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">info</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Get a state&#39;s index from the palette.</span>
@@ -136,13 +141,12 @@
 
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">info</span><span class="p">,</span> <span class="n">State</span><span class="p">):</span>
-            <span class="k">return</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_get_id</span><span class="p">(</span><span class="n">info</span><span class="p">))</span>
+            <span class="k">return</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_get_id</span><span class="p">(</span><span class="n">info</span><span class="p">))</span>
         <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">info</span><span class="p">,</span> <span class="nb">int</span><span class="p">):</span>
-            <span class="k">return</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_get_id_by_value</span><span class="p">(</span><span class="n">info</span><span class="p">))</span>
+            <span class="k">return</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_get_id_by_value</span><span class="p">(</span><span class="n">info</span><span class="p">))</span>
         <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">info</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
-            <span class="k">return</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_get_id_by_label</span><span class="p">(</span><span class="n">info</span><span class="p">))</span></div>
-        
-        
+            <span class="k">return</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_get_id_by_label</span><span class="p">(</span><span class="n">info</span><span class="p">))</span></div>
+
 <div class="viewcode-block" id="Palette.get"><a class="viewcode-back" href="../../../generated/clumpy.Palette.html#clumpy.Palette.get">[docs]</a>    <span class="k">def</span> <span class="nf">get</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">info</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Get a state from the palette.</span>
@@ -159,14 +163,34 @@
 <span class="sd">            The requested state.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">info</span><span class="p">,</span> <span class="nb">int</span><span class="p">)</span> <span class="ow">or</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">info</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">integer</span><span class="p">):</span>
-            <span class="k">return</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_get_by_value</span><span class="p">(</span><span class="n">info</span><span class="p">))</span>
+            <span class="k">return</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_get_by_value</span><span class="p">(</span><span class="n">info</span><span class="p">))</span>
         <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">info</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
-            <span class="k">return</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_get_by_label</span><span class="p">(</span><span class="n">info</span><span class="p">))</span>
+            <span class="k">return</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_get_by_label</span><span class="p">(</span><span class="n">info</span><span class="p">))</span>
         <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">info</span><span class="p">,</span> <span class="n">State</span><span class="p">):</span>
-            <span class="k">return</span><span class="p">(</span><span class="n">info</span><span class="p">)</span>
+            <span class="k">return</span> <span class="p">(</span><span class="n">info</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="k">raise</span><span class="p">(</span><span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;Unexpected info type. Should be int or str or State&quot;</span><span class="p">))</span></div>
-        
+            <span class="k">raise</span> <span class="p">(</span><span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;Unexpected info type. Should be int or str or State&quot;</span><span class="p">))</span></div>
+
+<div class="viewcode-block" id="Palette.extract"><a class="viewcode-back" href="../../../generated/clumpy.Palette.html#clumpy.Palette.extract">[docs]</a>    <span class="k">def</span> <span class="nf">extract</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">infos</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Extract a sub palette</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        infos : list(int or State)</span>
+<span class="sd">            List of initial state information which can be the object, the state&#39;s value or the state&#39;s label.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        palette : Palette</span>
+<span class="sd">            The extracted palette.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">states</span> <span class="o">=</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">info</span><span class="p">)</span> <span class="k">for</span> <span class="n">info</span> <span class="ow">in</span> <span class="n">infos</span><span class="p">]</span>
+
+        <span class="n">_check_states</span><span class="p">(</span><span class="n">states</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="p">(</span><span class="n">Palette</span><span class="p">(</span><span class="n">states</span><span class="o">=</span><span class="n">states</span><span class="p">))</span></div>
+
     <span class="k">def</span> <span class="nf">_get_id</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">state</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Get a state index.</span>
@@ -181,8 +205,8 @@
 <span class="sd">        i : int</span>
 <span class="sd">            The requested index.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">return</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">states</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">state</span><span class="p">))</span>
-    
+        <span class="k">return</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">states</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">state</span><span class="p">))</span>
+
     <span class="k">def</span> <span class="nf">_get_by_value</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Get a state by its value.</span>
@@ -198,9 +222,9 @@
 <span class="sd">            The requested state.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">values</span> <span class="o">=</span> <span class="p">[</span><span class="n">state</span><span class="o">.</span><span class="n">value</span> <span class="k">for</span> <span class="n">state</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">states</span><span class="p">]</span>
-        
-        <span class="k">return</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">states</span><span class="p">[</span><span class="n">values</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">value</span><span class="p">)])</span>
-    
+
+        <span class="k">return</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">states</span><span class="p">[</span><span class="n">values</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">value</span><span class="p">)])</span>
+
     <span class="k">def</span> <span class="nf">_get_id_by_value</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Get a state&#39;s id by its value.</span>
@@ -216,9 +240,9 @@
 <span class="sd">            The requested state&#39;s id&#39;</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">values</span> <span class="o">=</span> <span class="p">[</span><span class="n">state</span><span class="o">.</span><span class="n">value</span> <span class="k">for</span> <span class="n">state</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">states</span><span class="p">]</span>
-            
-        <span class="k">return</span><span class="p">(</span><span class="n">values</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">value</span><span class="p">))</span>
-    
+
+        <span class="k">return</span> <span class="p">(</span><span class="n">values</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">value</span><span class="p">))</span>
+
     <span class="k">def</span> <span class="nf">_get_by_label</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">label</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Get a state by its label.</span>
@@ -235,9 +259,9 @@
 <span class="sd">            The requested state.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">labels</span> <span class="o">=</span> <span class="p">[</span><span class="n">state</span><span class="o">.</span><span class="n">label</span> <span class="k">for</span> <span class="n">state</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">states</span><span class="p">]</span>
-        
-        <span class="k">return</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">states</span><span class="p">[</span><span class="n">labels</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">label</span><span class="p">)])</span>
-    
+
+        <span class="k">return</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">states</span><span class="p">[</span><span class="n">labels</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">label</span><span class="p">)])</span>
+
     <span class="k">def</span> <span class="nf">_get_id_by_label</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">label</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Get a state&#39;s id by its label.</span>
@@ -254,10 +278,39 @@
 <span class="sd">            The requested state&#39;s id.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">labels</span> <span class="o">=</span> <span class="p">[</span><span class="n">state</span><span class="o">.</span><span class="n">label</span> <span class="k">for</span> <span class="n">state</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">states</span><span class="p">]</span>
-        
-        <span class="k">return</span><span class="p">(</span><span class="n">labels</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">label</span><span class="p">))</span>
 
-    
+        <span class="k">return</span> <span class="p">(</span><span class="n">labels</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">label</span><span class="p">))</span>
+
+<div class="viewcode-block" id="Palette.merge"><a class="viewcode-back" href="../../../generated/clumpy.Palette.html#clumpy.Palette.merge">[docs]</a>    <span class="k">def</span> <span class="nf">merge</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">palette</span><span class="p">,</span> <span class="n">inplace</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Merge to another palette.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        palette : Palette</span>
+<span class="sd">            The other palette</span>
+
+<span class="sd">        inplace : bool, default=False</span>
+<span class="sd">            If True, perform operation in-place.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        palette : Palette</span>
+<span class="sd">            If ``inplace=True``, return the self object, else return a new palette with sorted states.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">states</span> <span class="o">=</span> <span class="p">[</span><span class="n">state</span> <span class="k">for</span> <span class="n">state</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">states</span><span class="p">]</span>
+
+        <span class="k">for</span> <span class="n">state</span> <span class="ow">in</span> <span class="n">palette</span><span class="o">.</span><span class="n">states</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">state</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">states</span><span class="p">:</span>
+                <span class="n">states</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">state</span><span class="p">)</span>
+
+        <span class="n">merged_palette</span> <span class="o">=</span> <span class="n">Palette</span><span class="p">(</span><span class="n">states</span><span class="p">)</span><span class="o">.</span><span class="n">sort</span><span class="p">(</span><span class="n">inplace</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">inplace</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">states</span> <span class="o">=</span> <span class="n">merged_palette</span><span class="o">.</span><span class="n">states</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="p">(</span><span class="n">merged_palette</span><span class="p">)</span></div>
+
 <div class="viewcode-block" id="Palette.remove"><a class="viewcode-back" href="../../../generated/clumpy.Palette.html#clumpy.Palette.remove">[docs]</a>    <span class="k">def</span> <span class="nf">remove</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">info</span><span class="p">,</span> <span class="n">inplace</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Remove a state</span>
@@ -268,43 +321,26 @@
 <span class="sd">            The state information which can be the object, the state&#39;s value or the state&#39;s label.</span>
 <span class="sd">            If two states share the same label, only the first one to occur is returned.</span>
 
+<span class="sd">        inplace : bool, default=False</span>
+<span class="sd">            If True, perform operation in-place.</span>
+
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
-<span class="sd">        self : Palette</span>
-<span class="sd">            The self object.</span>
+<span class="sd">        palette : Palette</span>
+<span class="sd">            If ``inplace=True``, return the self object, else return a new palette with sorted states.</span>
 
 <span class="sd">        &quot;&quot;&quot;</span>
-        
+
         <span class="k">if</span> <span class="n">inplace</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">states</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">info</span><span class="p">))</span>
-            <span class="k">return</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
-        
+            <span class="k">return</span> <span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+
         <span class="k">else</span><span class="p">:</span>
             <span class="n">states</span> <span class="o">=</span> <span class="p">[</span><span class="n">state</span> <span class="k">for</span> <span class="n">state</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">states</span><span class="p">]</span>
             <span class="n">states</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">info</span><span class="p">))</span>
-            
-            <span class="k">return</span><span class="p">(</span><span class="n">Palette</span><span class="p">(</span><span class="n">states</span><span class="p">))</span></div>
-    
-<div class="viewcode-block" id="Palette.load"><a class="viewcode-back" href="../../../generated/clumpy.Palette.html#clumpy.Palette.load">[docs]</a>    <span class="k">def</span> <span class="nf">load</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">path</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Import legend through qml file provided by QGis. Alpha is not supported.</span>
 
-<span class="sd">        Parameters</span>
-<span class="sd">        ----------</span>
-<span class="sd">        path : str</span>
-<span class="sd">            The qml file path</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-        
-        <span class="c1"># parse an xml file by label</span>
-        <span class="n">mydoc</span> <span class="o">=</span> <span class="n">minidom</span><span class="o">.</span><span class="n">parse</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
-        <span class="n">items</span> <span class="o">=</span> <span class="n">mydoc</span><span class="o">.</span><span class="n">getElementsByTagName</span><span class="p">(</span><span class="s1">&#39;paletteEntry&#39;</span><span class="p">)</span>
-        
-        <span class="bp">self</span><span class="o">.</span><span class="n">states</span> <span class="o">=</span> <span class="p">[</span><span class="n">State</span><span class="p">(</span><span class="n">elem</span><span class="o">.</span><span class="n">attributes</span><span class="p">[</span><span class="s1">&#39;label&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">value</span><span class="p">,</span>
-                             <span class="nb">int</span><span class="p">(</span><span class="n">elem</span><span class="o">.</span><span class="n">attributes</span><span class="p">[</span><span class="s1">&#39;value&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">value</span><span class="p">),</span>
-                             <span class="n">elem</span><span class="o">.</span><span class="n">attributes</span><span class="p">[</span><span class="s1">&#39;color&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">value</span><span class="p">)</span> <span class="k">for</span> <span class="n">elem</span> <span class="ow">in</span> <span class="n">items</span><span class="p">]</span>
-        
-        <span class="k">return</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span></div>
-    
+            <span class="k">return</span> <span class="p">(</span><span class="n">Palette</span><span class="p">(</span><span class="n">states</span><span class="p">))</span></div>
+
 <div class="viewcode-block" id="Palette.get_list_of_values"><a class="viewcode-back" href="../../../generated/clumpy.Palette.html#clumpy.Palette.get_list_of_values">[docs]</a>    <span class="k">def</span> <span class="nf">get_list_of_values</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Get the values list.</span>
@@ -315,8 +351,8 @@
 <span class="sd">            The list of values.</span>
 
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">return</span><span class="p">([</span><span class="n">state</span><span class="o">.</span><span class="n">value</span> <span class="k">for</span> <span class="n">state</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">states</span><span class="p">])</span></div>
-    
+        <span class="k">return</span> <span class="p">([</span><span class="n">state</span><span class="o">.</span><span class="n">value</span> <span class="k">for</span> <span class="n">state</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">states</span><span class="p">])</span></div>
+
 <div class="viewcode-block" id="Palette.get_list_of_labels_values_colors"><a class="viewcode-back" href="../../../generated/clumpy.Palette.html#clumpy.Palette.get_list_of_labels_values_colors">[docs]</a>    <span class="k">def</span> <span class="nf">get_list_of_labels_values_colors</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Get the labels list, the values list and the colors list.</span>
@@ -334,9 +370,9 @@
         <span class="n">labels</span> <span class="o">=</span> <span class="p">[</span><span class="n">state</span><span class="o">.</span><span class="n">label</span> <span class="k">for</span> <span class="n">state</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">states</span><span class="p">]</span>
         <span class="n">values</span> <span class="o">=</span> <span class="p">[</span><span class="n">state</span><span class="o">.</span><span class="n">value</span> <span class="k">for</span> <span class="n">state</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">states</span><span class="p">]</span>
         <span class="n">colors</span> <span class="o">=</span> <span class="p">[</span><span class="n">state</span><span class="o">.</span><span class="n">color</span> <span class="k">for</span> <span class="n">state</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">states</span><span class="p">]</span>
-        
-        <span class="k">return</span><span class="p">(</span><span class="n">labels</span><span class="p">,</span> <span class="n">values</span><span class="p">,</span> <span class="n">colors</span><span class="p">)</span></div>
-    
+
+        <span class="k">return</span> <span class="p">(</span><span class="n">labels</span><span class="p">,</span> <span class="n">values</span><span class="p">,</span> <span class="n">colors</span><span class="p">)</span></div>
+
 <div class="viewcode-block" id="Palette.sort"><a class="viewcode-back" href="../../../generated/clumpy.Palette.html#clumpy.Palette.sort">[docs]</a>    <span class="k">def</span> <span class="nf">sort</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">inplace</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Sort the palette according states values.</span>
@@ -353,16 +389,58 @@
 
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">_</span><span class="p">,</span> <span class="n">values</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_list_of_labels_values_colors</span><span class="p">()</span>
-        
+
         <span class="n">index_sorted</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">argsort</span><span class="p">(</span><span class="n">values</span><span class="p">))</span>
-        
+
         <span class="n">ordered_states</span> <span class="o">=</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">states</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">index_sorted</span><span class="p">]</span>
-        
+
         <span class="k">if</span> <span class="n">inplace</span><span class="p">:</span>
-            <span class="k">return</span><span class="p">(</span><span class="n">Palette</span><span class="p">(</span><span class="n">ordered_states</span><span class="p">))</span>
-        <span class="k">else</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">states</span> <span class="o">=</span> <span class="n">ordered_states</span>
-            <span class="k">return</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span></div></div>
+            <span class="k">return</span> <span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="p">(</span><span class="n">Palette</span><span class="p">(</span><span class="n">ordered_states</span><span class="p">))</span></div></div>
+
+
+<span class="k">def</span> <span class="nf">_check_states</span><span class="p">(</span><span class="n">states</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Check if they are duplicates in states (object and state values).</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">states</span><span class="p">))</span> <span class="o">!=</span> <span class="nb">len</span><span class="p">(</span><span class="n">states</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="p">(</span><span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;Duplicate states found !&#39;</span><span class="p">))</span>
+
+    <span class="n">values</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">state</span> <span class="ow">in</span> <span class="n">states</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">state</span><span class="o">.</span><span class="n">value</span> <span class="ow">in</span> <span class="n">values</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="p">(</span><span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;Duplicate states values found !&#39;</span><span class="p">))</span>
+        <span class="n">values</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">state</span><span class="o">.</span><span class="n">value</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="load_palette"><a class="viewcode-back" href="../../../generated/clumpy.load_palette.html#clumpy.load_palette">[docs]</a><span class="k">def</span> <span class="nf">load_palette</span><span class="p">(</span><span class="n">path</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Import legend through qml file provided by QGis. Alpha is not supported.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    path : str</span>
+<span class="sd">        The qml file path</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    palette : Palette</span>
+<span class="sd">        The loaded palette.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="c1"># parse an xml file by label</span>
+    <span class="n">mydoc</span> <span class="o">=</span> <span class="n">minidom</span><span class="o">.</span><span class="n">parse</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
+    <span class="n">items</span> <span class="o">=</span> <span class="n">mydoc</span><span class="o">.</span><span class="n">getElementsByTagName</span><span class="p">(</span><span class="s1">&#39;paletteEntry&#39;</span><span class="p">)</span>
+
+    <span class="n">states</span> <span class="o">=</span> <span class="p">[</span><span class="n">State</span><span class="p">(</span><span class="n">elem</span><span class="o">.</span><span class="n">attributes</span><span class="p">[</span><span class="s1">&#39;label&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">value</span><span class="p">,</span>
+                    <span class="nb">int</span><span class="p">(</span><span class="n">elem</span><span class="o">.</span><span class="n">attributes</span><span class="p">[</span><span class="s1">&#39;value&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">value</span><span class="p">),</span>
+                    <span class="n">elem</span><span class="o">.</span><span class="n">attributes</span><span class="p">[</span><span class="s1">&#39;color&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">value</span><span class="p">)</span> <span class="k">for</span> <span class="n">elem</span> <span class="ow">in</span> <span class="n">items</span><span class="p">]</span>
+
+    <span class="n">_check_states</span><span class="p">(</span><span class="n">states</span><span class="o">=</span><span class="n">states</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="p">(</span><span class="n">Palette</span><span class="p">(</span><span class="n">states</span><span class="o">=</span><span class="n">states</span><span class="p">))</span></div>
 </pre></div>
 
             <div class="clearer"></div>
@@ -397,13 +475,13 @@
         <li class="right" >
           <a href="../../../py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
-        <li class="nav-item nav-item-0"><a href="../../../index.html">clumpy 0.1.0 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="../../../index.html">clumpy 1.0.0 documentation</a> &#187;</li>
           <li class="nav-item nav-item-1"><a href="../../index.html" >Module code</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href="">clumpy._base._state</a></li> 
       </ul>
     </div>
     <div class="footer" role="contentinfo">
-        &#169; Copyright 2020, François-Rémi Mazy.
+        &#169; Copyright 2021, François-Rémi Mazy.
       Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 4.0.2.
     </div>
   </body>

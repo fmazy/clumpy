@@ -29,6 +29,12 @@ State and palette
    State
    Palette
 
+.. autosummary::
+   :toctree: generated/
+   :template: function.rst
+
+   load_palette
+
 Layers
 ------
 
@@ -68,7 +74,6 @@ Transition matrix
    :toctree: generated/
    :template: function.rst
 
-   compute_transition_matrix
    load_transition_matrix
 
 Estimation

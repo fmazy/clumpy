@@ -7,6 +7,7 @@ import os
 from matplotlib import pyplot as plt
 from matplotlib import colors as mpl_colors
 import rasterio
+
 from ..tools._data import ndarray_suitable_integer_type
 from ..tools._path import path_split, create_directories
 

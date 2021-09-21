@@ -12,11 +12,4 @@
     <option name="myDocStringFormat" value="Plain" />
     <option name="renderExternalDocumentation" value="true" />
   </component>
-  <component name="TemplatesService">
-    <option name="TEMPLATE_FOLDERS">
-      <list>
-        <option value="$MODULE_DIR$/docs/source/_templates" />
-      </list>
-    </option>
-  </component>
 </module>

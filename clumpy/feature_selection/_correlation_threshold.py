@@ -9,10 +9,10 @@ class CorrelationThreshold(FeatureSelector):
 
     Parameters
     ----------
-    threshold : float, default=1.0
-        One feature among two will be removed if their correlation is greater than this threshold. The default is to keep all strictly different features.
+    threshold : float, default=0.7
+        One feature among two will be removed if their correlation is greater than this threshold. If ``1.0`` all strictly different features are kept.
     """
-    def __init__(self, threshold=1.0):
+    def __init__(self, threshold=0.7):
         self.threshold = threshold
 
     def __repr__(self):

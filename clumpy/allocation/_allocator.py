@@ -34,9 +34,9 @@ class Allocator():
             The self object.
         """
 
-        if ~isinstance(patch, Patch):
+        if not isinstance(patch, Patch):
             raise(TypeError("Unexpected 'patch'. A clumpy.allocation.Patch object is expected."))
-        if ~isinstance(state, State):
+        if not isinstance(state, State):
             raise(TypeError("Unexpected 'state'. A clumpy.State object is expected."))
         self.patches[state] = patch
 
@@ -51,15 +51,19 @@ class Allocator():
         ----------
         patches : dict(State:Patch)
             Dict of patches with states as keys.
+
+        Returns
+        -------
+        self
         """
         _check_patches(patches)
         self.patches = patches
 
+        return(self)
+
     def allocate(self,
-                 state,
+                 transition_matrix,
                  land,
-                 P_v,
-                 palette_v,
                  lul,
                  lul_origin=None,
                  mask=None,
@@ -70,18 +74,11 @@ class Allocator():
 
         Parameters
         ----------
-        state : State
-            The initial state of this land.
+        transition_matrix : TransitionMatrix
+            Land transition matrix with only one state in ``tm.palette_u``.
 
         land : Land
             The studied land object.
-
-        P_v : ndarray of shape(len(palette_v,))
-            The global transition probabilities :math:`P(v)`. The order corresponds to
-            ``palette_v``
-
-        palette_v : Palette
-            The final state palette corresponding to ``P_v``.
 
         lul : LandUseLayer or ndarray
             The studied land use layer. If ndarray, the matrix is directly edited (inplace).
@@ -106,6 +103,9 @@ class Allocator():
             Only returned if ``path`` is not ``None``. The allocated map as a land use layer.
         """
 
+        # check if it is really a land transition matrix
+        transition_matrix._check_land_transition_matrix()
+
         if lul_origin is None:
             lul_origin = lul
 
@@ -119,10 +119,8 @@ class Allocator():
         else:
             lul_data = lul
 
-        self._allocate(state=state,
+        self._allocate(transition_matrix=transition_matrix,
                    land=land,
-                   P_v=P_v,
-                   palette_v=palette_v,
                    lul_data=lul_data,
                    lul_origin_data=lul_origin_data,
                    mask=mask,
@@ -137,8 +135,8 @@ class Allocator():
                                  palette=lul_origin.palette))
 
 def _check_patches(patches):
-    if ~isinstance(patches, dict):
+    if not isinstance(patches, dict):
         raise("Unexpected 'patches' type. A dict(State:Patch) is expected.")
     for state, patch in patches.items():
-        if ~isinstance(state, State) or ~isinstance(patch, Patch):
+        if not isinstance(state, State) or not isinstance(patch, Patch):
             raise("Unexpected 'patches' type. A dict(State:Patch) is expected.")

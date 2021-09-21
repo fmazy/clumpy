@@ -60,7 +60,7 @@ def compute_bootstrap_patches(state,
                           explanatory_variables=False)
 
     for v in np.unique(V):
-        state_v = lul_initial.palette.get_id_by_value(info=v)
+        state_v = lul_initial.palette._get_by_value(value=v)
         if state_v != state:
             #print(str(u) + ' -> ' + str(v))
             M = np.zeros(M_shape)
@@ -82,10 +82,10 @@ def compute_bootstrap_patches(state,
             areas = np.array(rpt['area'])
 
             # return(patches, rpt)
-            l1_patch = np.array(rpt['inertia_tensor_eigvals-0'])[patches[u][v]['patch_id']]
-            l2_patch = np.array(rpt['inertia_tensor_eigvals-1'])[patches[u][v]['patch_id']]
+            l1_patch = np.array(rpt['inertia_tensor_eigvals-0'])
+            l2_patch = np.array(rpt['inertia_tensor_eigvals-1'])
 
-            eccentricities = np.zeros(patches[u][v]['area'].shape)
+            eccentricities = np.zeros(areas.shape)
             id_none_mono_pixel_patches = areas > 1
 
             eccentricities[id_none_mono_pixel_patches] = 1 - np.sqrt(

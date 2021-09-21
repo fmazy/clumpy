@@ -21,6 +21,7 @@ class _WhiteningTransformer():
             The fitted object.
 
         """
+
         self._mean = X.mean(axis=0)
         
         self._num_obs = X.shape[0]

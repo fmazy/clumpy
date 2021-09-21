@@ -174,30 +174,31 @@
         <span class="k">return</span> <span class="p">(</span><span class="bp">self</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="Bayes.transition_probability"><a class="viewcode-back" href="../../../generated/clumpy.transition_probability_estimation.Bayes.html#clumpy.transition_probability_estimation.Bayes.transition_probability">[docs]</a>    <span class="k">def</span> <span class="nf">transition_probability</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
-                               <span class="n">state</span><span class="p">,</span>
-                               <span class="n">Y</span><span class="p">,</span>
-                               <span class="n">P_v</span><span class="p">,</span>
-                               <span class="n">palette_v</span><span class="p">):</span>
+                               <span class="n">transition_matrix</span><span class="p">,</span>
+                               <span class="n">Y</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Estimates transition probability. Non estimated final states transition probabilities are filled to the null value.</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
-<span class="sd">        state : State</span>
-<span class="sd">            Initial land use state.</span>
+<span class="sd">        transition_matrix : TransitionMatrix</span>
+<span class="sd">            Land transition matrix with only one state in ``tm.palette_u``.</span>
 
 <span class="sd">        Y : array-like of shape (n_samples, n_features)</span>
 <span class="sd">            Samples to estimate transition probabilities</span>
-<span class="sd">        P_v : array-like of shape (n_transitions,)</span>
-<span class="sd">            Global transition probabilities ordered as ``self.list_v``, i.e.</span>
-<span class="sd">            the numerical order of studied final land us states.</span>
 
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
 <span class="sd">        P_v__Y : ndarray of shape (n_samples, n_transitions)</span>
 <span class="sd">            Transition probabilities for each studied final land use states ordered</span>
-<span class="sd">            as ``self.list_v``, i.e. the numerical order of studied final land us states.</span>
+<span class="sd">            as ``transition_matrix.palette_v``.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="c1"># check if it is really a land transition matrix</span>
+        <span class="n">transition_matrix</span><span class="o">.</span><span class="n">_check_land_transition_matrix</span><span class="p">()</span>
+
+        <span class="n">state</span> <span class="o">=</span> <span class="n">transition_matrix</span><span class="o">.</span><span class="n">palette_u</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">P_v</span><span class="p">,</span> <span class="n">palette_v</span> <span class="o">=</span> <span class="n">transition_matrix</span><span class="o">.</span><span class="n">get_P_v</span><span class="p">(</span><span class="n">state</span><span class="p">)</span>
 
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">verbose</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
             <span class="nb">print</span><span class="p">(</span><span class="n">title_heading</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">verbose_heading_level</span><span class="p">)</span><span class="o">+</span><span class="s1">&#39;TPE computing&#39;</span><span class="p">)</span>

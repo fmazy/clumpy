@@ -49,9 +49,6 @@ class DensityEstimator(BaseEstimator):
 
 
 class NullEstimator(BaseEstimator):
-    def __init__(self):
-        super().__init__(forbid_null_value=False)
-
     def fit(self, X, y):
         return (self)
 

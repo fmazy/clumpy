@@ -6,11 +6,9 @@ Created on Fri Sep 17 15:40:56 2021
 @author: frem
 """
 
-from . import LandUseLayer
+from ._layer import LandUseLayer
 from ..tools._path import path_split
 from ..tools._console import title_heading
-
-# TODO : ajouter un self.verbosity_head_level à toutes les classes pour connaître le niveau de titre markdown.
 
 class Territory():
     """
@@ -128,6 +126,42 @@ class Territory():
 
         return (self)
 
+    def transition_matrices(self,
+                            lul_initial,
+                            lul_final,
+                            masks=None):
+        """
+        Compute transition matrices
+
+        Parameters
+        ----------
+        lul_initial : LandUseLayer
+            The initial land use.
+
+        lul_final : LandUseLayer
+            The final land use.
+
+        mask : MaskLayer, default = None
+            The region mask layer. If ``None``, the whole area is studied.
+
+        Returns
+        -------
+        tms : dict(Region:TransitionMatrix)
+            A dict of transition matrices with regions as keys.
+        """
+        if masks is None:
+            masks = {region: None for region in self.regions}
+
+        tms = {}
+
+        for region in self.regions:
+            tms[region] = region.transition_matrix(lul_initial=lul_initial,
+                                                                   lul_final=lul_final,
+                                                                   mask=masks[region])
+
+        return(tms)
+
+
     def transition_probabilities(self,
                                  transition_matrices,
                                  lul,
@@ -173,13 +207,15 @@ class Territory():
         for region in self.regions:
 
             if path_prefix is not None:
-                path_prefix += '_' + str(region.label)
+                region_path_prefix = path_prefix + '_' + str(region.label)
+            else:
+                region_path_prefix = None
 
             tp[region] = region.transition_probabilities(transition_matrix=transition_matrices[region],
                                                          lul=lul,
                                                          mask=masks[region],
                                                          distances_to_states=distances_to_states,
-                                                         path_prefix=path_prefix)
+                                                         path_prefix=region_path_prefix)
 
         if self.verbose > 0:
             print('Territory transition probabilities estimation done.\n')

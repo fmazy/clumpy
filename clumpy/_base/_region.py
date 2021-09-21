@@ -1,11 +1,14 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*
 
-# import numpy as np
+import numpy as np
 
-from . import LandUseLayer
+from ._layer import LandUseLayer
+from ._state import Palette
+from ._transition_matrix import TransitionMatrix
 from ..tools._path import path_split
 from ..tools._console import title_heading
+
 
 class Region():
     """
@@ -60,7 +63,7 @@ class Region():
         """
         Check the density estimators uniqueness.
         """
-        for land in self.lands:
+        for state, land in self.lands.items():
             density_estimators = land._check_density_estimators(density_estimators=density_estimators)
 
         return (density_estimators)
@@ -69,7 +72,7 @@ class Region():
         """
         check the feature selectors uniqueness.
         """
-        for land in self.lands:
+        for state, land in self.lands.items():
             feature_selectors = land._check_feature_selectors(feature_selectors=feature_selectors)
 
         return (feature_selectors)
@@ -109,7 +112,7 @@ class Region():
         self
         """
         if self.verbose > 0:
-            print(title_heading(self.verbose_heading_level)+'Region '+self.label+' fitting\n')
+            print(title_heading(self.verbose_heading_level) + 'Region ' + self.label + ' fitting\n')
 
         for state, land in self.lands.items():
             land.fit(state=state,
@@ -119,24 +122,46 @@ class Region():
                      distances_to_states=distances_to_states)
 
         if self.verbose > 0:
-            print('Region '+self.label+' fitting done.\n')
+            print('Region ' + self.label + ' fitting done.\n')
 
         return (self)
 
-    def compute_transition_matrix(self,
-                                  lul_initial,
-                                  lul_final,
-                                  mask=None):
+    def transition_matrix(self,
+                          lul_initial,
+                          lul_final,
+                          mask=None):
+        """
+        Compute transition matrix
 
+        Parameters
+        ----------
+        lul_initial : LandUseLayer
+            The initial land use.
 
+        lul_final : LandUseLayer
+            The final land use.
+
+        mask : MaskLayer, default = None
+            The region mask layer. If ``None``, the whole area is studied.
+
+        Returns
+        -------
+        tm : TransitionMatrix
+            The computed transition matrix.
+        """
+        palette_u = Palette()
+        palette_v = Palette()
+
+        tm = TransitionMatrix(np.ones((1, 1)), palette_u, palette_v)
 
         for state, land in self.lands.items():
-            transition_matrix = land.compute_transition_matrix(state=state,
-                                                               lul_initial=lul_initial,
-                                                               lul_final=lul_final,
-                                                               mask=mask)
-            # TODO : Here !!
+            tm.merge(tm=land.transition_matrix(state=state,
+                                               lul_initial=lul_initial,
+                                               lul_final=lul_final,
+                                               mask=mask),
+                     inplace=True)
 
+        return (tm)
 
     def transition_probabilities(self,
                                  transition_matrix,
@@ -181,42 +206,40 @@ class Region():
         P_v__u_Y = {}
 
         if self.verbose > 0:
-            print(title_heading(self.verbose_heading_level)+'Region '+str(self.label)+' TPE\n')
+            print(title_heading(self.verbose_heading_level) + 'Region ' + str(self.label) + ' TPE\n')
 
         for state, land in self.lands.items():
 
             if self.verbose > 0:
-                print('state '+str(state))
-
-            P_v, palette_v = transition_matrix.get_P_v(state)
+                print('state ' + str(state))
 
             if path_prefix is not None:
-                path_prefix += '_' + str(state.value)
+                land_path_prefix = path_prefix + '_' + str(state.value)
+            else:
+                land_path_prefix = None
 
-            ltp = land.transition_probabilities(state,
+            ltp = land.transition_probabilities(transition_matrix=transition_matrix.extract(infos=[state]),
                                                 lul=lul,
-                                                P_v=P_v,
-                                                palette_v=palette_v,
                                                 mask=mask,
                                                 distances_to_states=distances_to_states,
-                                                path_prefix=path_prefix)
+                                                path_prefix=land_path_prefix)
 
             if path_prefix is None:
                 J[state] = ltp[0]
                 P_v__u_Y[state] = ltp[1]
 
         if self.verbose > 0:
-            print('Region '+str(self.label)+' TPE done.\n')
+            print('Region ' + str(self.label) + ' TPE done.\n')
 
         return (J, P_v__u_Y)
 
-    def allocation(self,
-                   transition_matrix,
-                   lul,
-                   lul_origin=None,
-                   mask=None,
-                   distances_to_states={},
-                   path=None):
+    def allocate(self,
+                 transition_matrix,
+                 lul,
+                 lul_origin=None,
+                 mask=None,
+                 distances_to_states={},
+                 path=None):
         """
         allocation.
 
@@ -249,7 +272,7 @@ class Region():
         """
 
         if self.verbose > 0:
-            print(title_heading(self.verbose_heading_level)+'Region '+str(self.label)+' allocate\n')
+            print(title_heading(self.verbose_heading_level) + 'Region ' + str(self.label) + ' allocate\n')
 
         if lul_origin is None:
             lul_origin = lul
@@ -265,20 +288,16 @@ class Region():
             lul_data = lul
 
         for state, land in self.lands.items():
-            P_v, palette_v = transition_matrix.get_P_v(state)
-
-            land.allocate(state=state,
-                          P_v=P_v,
-                          palette_v=palette_v,
+            land.allocate(transition_matrix=transition_matrix.extract(infos=[state]),
                           lul=lul_data,
                           lul_origin=lul_origin_data,
                           mask=mask,
                           distances_to_states=distances_to_states,
                           path=None)
-            # Note that the path is set to None above in order to allocate through all regions and save in a second time !
+            # Note that the path is set to None in the line above in order to allocate through all regions and save in a second time !
 
         if self.verbose > 0:
-            print('Region '+str(self.label)+' allocate done.\n')
+            print('Region ' + str(self.label) + ' allocate done.\n')
 
         if path is not None:
             folder_path, file_name, file_ext = path_split(path)

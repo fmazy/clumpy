@@ -8,6 +8,7 @@ State blabla.
 from xml.dom import minidom
 import numpy as np
 
+
 class State():
     """
     Define a land use state.        
@@ -21,17 +22,19 @@ class State():
     color : str
         State color. It should be unique.
     """
+
     def __init__(self, label, value, color):
         if value < 0:
-            raise(ValueError('Unexpected state value. It must be positive !'))
-        
+            raise (ValueError('Unexpected state value. It must be positive !'))
+
         self.label = label
         self.value = value
         self.color = color
-    
+
     def __repr__(self):
-        return(self.label)
-        
+        return (self.label)
+
+
 class Palette():
     """
     Define a palette, i.e. a set of states.
@@ -41,22 +44,25 @@ class Palette():
     states : list of States, default=None
         A list of States object. Ignored if None.
     """
+
     def __init__(self, states=None):
         if states is None:
             self.states = []
         else:
+            _check_states(states)
+
             self.states = states
-    
+
     def __repr__(self):
-        return(str(self.states))
-    
+        return (str(self.states))
+
     def __iter__(self):
         for state in self.states:
             yield state
-            
+
     def __len__(self):
-        return(len(self.states))
-        
+        return (len(self.states))
+
     def add(self, state):
         """
         Append a state to the palette's states.
@@ -72,14 +78,13 @@ class Palette():
             The self object.
 
         """
-        for s in self.states:
-            if s.value == state.value:
-                raise(ValueError('Unexpected state : its value is already set'))
-    
+        if state.value in self.get_list_of_values():
+            raise (ValueError('Unexpected state : its value is already set'))
+
         self.states.append(state)
-        
-        return(self)
-    
+
+        return (self)
+
     def get_id(self, info):
         """
         Get a state's index from the palette.
@@ -97,13 +102,12 @@ class Palette():
 
         """
         if isinstance(info, State):
-            return(self._get_id(info))
+            return (self._get_id(info))
         elif isinstance(info, int):
-            return(self._get_id_by_value(info))
+            return (self._get_id_by_value(info))
         elif isinstance(info, str):
-            return(self._get_id_by_label(info))
-        
-        
+            return (self._get_id_by_label(info))
+
     def get(self, info):
         """
         Get a state from the palette.
@@ -120,18 +124,33 @@ class Palette():
             The requested state.
         """
         if isinstance(info, int) or isinstance(info, np.integer):
-            return(self._get_by_value(info))
+            return (self._get_by_value(info))
         elif isinstance(info, str):
-            return(self._get_by_label(info))
+            return (self._get_by_label(info))
         elif isinstance(info, State):
-            return(info)
+            return (info)
         else:
-            raise(TypeError("Unexpected info type. Should be int or str or State"))
+            raise (TypeError("Unexpected info type. Should be int or str or State"))
 
     def extract(self, infos):
+        """
+        Extract a sub palette
+
+        Parameters
+        ----------
+        infos : list(int or State)
+            List of initial state information which can be the object, the state's value or the state's label.
+
+        Returns
+        -------
+        palette : Palette
+            The extracted palette.
+        """
         states = [self.get(info) for info in infos]
 
-        return(Palette(states=states))
+        _check_states(states)
+
+        return (Palette(states=states))
 
     def _get_id(self, state):
         """
@@ -147,8 +166,8 @@ class Palette():
         i : int
             The requested index.
         """
-        return(self.states.index(state))
-    
+        return (self.states.index(state))
+
     def _get_by_value(self, value):
         """
         Get a state by its value.
@@ -164,9 +183,9 @@ class Palette():
             The requested state.
         """
         values = [state.value for state in self.states]
-        
-        return(self.states[values.index(value)])
-    
+
+        return (self.states[values.index(value)])
+
     def _get_id_by_value(self, value):
         """
         Get a state's id by its value.
@@ -182,9 +201,9 @@ class Palette():
             The requested state's id'
         """
         values = [state.value for state in self.states]
-            
-        return(values.index(value))
-    
+
+        return (values.index(value))
+
     def _get_by_label(self, label):
         """
         Get a state by its label.
@@ -201,9 +220,9 @@ class Palette():
             The requested state.
         """
         labels = [state.label for state in self.states]
-        
-        return(self.states[labels.index(label)])
-    
+
+        return (self.states[labels.index(label)])
+
     def _get_id_by_label(self, label):
         """
         Get a state's id by its label.
@@ -220,10 +239,39 @@ class Palette():
             The requested state's id.
         """
         labels = [state.label for state in self.states]
-        
-        return(labels.index(label))
 
-    
+        return (labels.index(label))
+
+    def merge(self, palette, inplace=False):
+        """
+        Merge to another palette.
+
+        Parameters
+        ----------
+        palette : Palette
+            The other palette
+
+        inplace : bool, default=False
+            If True, perform operation in-place.
+
+        Returns
+        -------
+        palette : Palette
+            If ``inplace=True``, return the self object, else return a new palette with sorted states.
+        """
+        states = [state for state in self.states]
+
+        for state in palette.states:
+            if state not in states:
+                states.append(state)
+
+        merged_palette = Palette(states).sort(inplace=True)
+
+        if inplace:
+            self.states = merged_palette.states
+        else:
+            return (merged_palette)
+
     def remove(self, info, inplace=False):
         """
         Remove a state
@@ -234,43 +282,26 @@ class Palette():
             The state information which can be the object, the state's value or the state's label.
             If two states share the same label, only the first one to occur is returned.
 
+        inplace : bool, default=False
+            If True, perform operation in-place.
+
         Returns
         -------
-        self : Palette
-            The self object.
+        palette : Palette
+            If ``inplace=True``, return the self object, else return a new palette with sorted states.
 
         """
-        
+
         if inplace:
             self.states.remove(self.get(info))
-            return(self)
-        
+            return (self)
+
         else:
             states = [state for state in self.states]
             states.remove(self.get(info))
-            
-            return(Palette(states))
-    
-    def load(self, path):
-        """
-        Import legend through qml file provided by QGis. Alpha is not supported.
 
-        Parameters
-        ----------
-        path : str
-            The qml file path
-        """
-        
-        # parse an xml file by label
-        mydoc = minidom.parse(path)
-        items = mydoc.getElementsByTagName('paletteEntry')
-        
-        self.states = [State(elem.attributes['label'].value,
-                             int(elem.attributes['value'].value),
-                             elem.attributes['color'].value) for elem in items]
-        
-        return(self)
-    
+            return (Palette(states))
+
     def get_list_of_values(self):
         """
         Get the values list.
@@ -281,8 +312,8 @@ class Palette():
             The list of values.
 
         """
-        return([state.value for state in self.states])
-    
+        return ([state.value for state in self.states])
+
     def get_list_of_labels_values_colors(self):
         """
         Get the labels list, the values list and the colors list.
@@ -300,9 +331,9 @@ class Palette():
         labels = [state.label for state in self.states]
         values = [state.value for state in self.states]
         colors = [state.color for state in self.states]
-        
-        return(labels, values, colors)
-    
+
+        return (labels, values, colors)
+
     def sort(self, inplace=False):
         """
         Sort the palette according states values.
@@ -319,13 +350,55 @@ class Palette():
 
         """
         _, values, _ = self.get_list_of_labels_values_colors()
-        
+
         index_sorted = list(np.argsort(values))
-        
+
         ordered_states = [self.states[i] for i in index_sorted]
-        
+
         if inplace:
-            return(Palette(ordered_states))
-        else:
             self.states = ordered_states
-            return(self)
+            return (self)
+        else:
+            return (Palette(ordered_states))
+
+
+def _check_states(states):
+    """
+    Check if they are duplicates in states (object and state values).
+    """
+    if len(set(states)) != len(states):
+        raise (ValueError('Duplicate states found !'))
+
+    values = []
+    for state in states:
+        if state.value in values:
+            raise (ValueError('Duplicate states values found !'))
+        values.append(state.value)
+
+
+def load_palette(path):
+    """
+    Import legend through qml file provided by QGis. Alpha is not supported.
+
+    Parameters
+    ----------
+    path : str
+        The qml file path
+
+    Returns
+    -------
+    palette : Palette
+        The loaded palette.
+    """
+
+    # parse an xml file by label
+    mydoc = minidom.parse(path)
+    items = mydoc.getElementsByTagName('paletteEntry')
+
+    states = [State(elem.attributes['label'].value,
+                    int(elem.attributes['value'].value),
+                    elem.attributes['color'].value) for elem in items]
+
+    _check_states(states=states)
+
+    return (Palette(states=states))

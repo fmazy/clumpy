@@ -7,6 +7,7 @@ from ..density_estimation._density_estimator import DensityEstimator, NullEstima
 from ..density_estimation import _methods
 from ..tools._console import title_heading
 
+
 class Bayes(TransitionProbabilityEstimator):
     """
     Bayes transition probability estimator.
@@ -29,6 +30,7 @@ class Bayes(TransitionProbabilityEstimator):
         Verbose heading level for markdown titles. If ``0``, no markdown title are printed.
 
     """
+
     def __init__(self,
                  density_estimator='gkde',
                  n_corrections_max=1000,
@@ -36,23 +38,31 @@ class Bayes(TransitionProbabilityEstimator):
                  verbose=0,
                  verbose_heading_level=1):
 
-        super.__init__(verbose=verbose,
-                       verbose_heading_level=verbose_heading_level)
+        super().__init__(verbose=verbose,
+                         verbose_heading_level=verbose_heading_level)
 
         if isinstance(density_estimator, DensityEstimator):
             self.density_estimator = density_estimator
         elif density_estimator in _methods:
-            self.density_estimator = _methods[density_estimator](verbose = self.verbose - 1,
-                                                                 verbose_heading_level = self.verbose_heading_level + 1)
+            self.density_estimator = _methods[density_estimator](verbose=self.verbose - 1,
+                                                   verbose_heading_level=self.verbose_heading_level + 1)
         else:
             raise (ValueError('Unexpected density_estimator value.'))
+
+        self.conditional_density_estimators = {}
+
+        self.P_v_min = {}
+        self.n_samples_min = {}
 
         self.n_corrections_max = n_corrections_max
         self.log_computations = log_computations
 
 
-
-    def add_conditional_density_estimator(self, state, de='gkde'):
+    def add_conditional_density_estimator(self,
+                                          state,
+                                          de='gkde',
+                                          P_v_min=5*10**(-5),
+                                          n_samples_min=500):
         """
         Add conditional density for a given final state.
 
@@ -60,9 +70,17 @@ class Bayes(TransitionProbabilityEstimator):
         ----------
         state : State
             The final state.
+
         de : {'gkde'} or DensityEstimator, default='gkde'
             Density estimation for :math:`P(x|u,v)`.
                 gkde : Gaussian Kernel Density Estimation method
+
+        P_v_min : float, default=5*10**(-5)
+        Minimum global probability to learn.
+
+        n_samples_min : int, default=500
+            Minimum number of samples to learn.
+
         Returns
         -------
         self : Land
@@ -72,9 +90,13 @@ class Bayes(TransitionProbabilityEstimator):
         if isinstance(de, DensityEstimator):
             self.conditional_density_estimators[state] = de
         elif de in _methods:
-            self.conditional_density_estimators[state] = _methods[de]()
+            self.conditional_density_estimators[state] = _methods[de](verbose=self.verbose - 1,
+                                                   verbose_heading_level=self.verbose_heading_level + 1)
         else:
             raise (ValueError('Unexpected de value.'))
+
+        self.P_v_min[state] = P_v_min
+        self.n_samples_min[state] = n_samples_min
 
         return (self)
 
@@ -96,7 +118,13 @@ class Bayes(TransitionProbabilityEstimator):
 
         return (density_estimators)
 
-    def fit(self, X, V):
+    def fit(self,
+            X,
+            V,
+            low_bounded_features=[],
+            high_bounded_features=[],
+            low_bounds=[],
+            high_bounds=[]):
         """
         Fit the transition probability estimators. Only :math:`P(Y|u,v)` is
         concerned.
@@ -117,17 +145,30 @@ class Bayes(TransitionProbabilityEstimator):
 
         """
         if self.verbose > 0:
-            print(title_heading(self.verbose_heading_level)+'TPE fitting')
+            print(title_heading(self.verbose_heading_level) + 'TPE fitting')
             print('Conditional density estimators fitting :')
 
         for state_v, cde in self.conditional_density_estimators.items():
             if self.verbose > 0:
-                print('state_v : '+str(state_v))
-            # select X_v
-            X_v = X[V == state_v.value]
+                print('state_v : ' + str(state_v))
 
-            # Density estimation fit
-            cde.fit(X_v)
+            # set params
+            cde.low_bounded_features = low_bounded_features
+            cde.high_bounded_features = high_bounded_features
+            cde.low_bounds = low_bounds
+            cde.high_bounds = high_bounds
+
+            # select X_v
+            idx_v = V == state_v.value
+
+            # check fitting conditions
+            if idx_v.mean() > self.P_v_min[state_v] and idx_v.sum() > self.n_samples_min[state_v]:
+                # Density estimation fit
+                cde.fit(X[idx_v])
+            else:
+                # fitting conditions are not satisfying
+                # change the density estimator to the null estimator.
+                self.conditional_density_estimators[state_v] = NullEstimator()
 
         if self.verbose > 0:
             print('TPE fitting done.')
@@ -135,33 +176,35 @@ class Bayes(TransitionProbabilityEstimator):
         return (self)
 
     def transition_probability(self,
-                               state,
-                               Y,
-                               P_v,
-                               palette_v):
+                               transition_matrix,
+                               Y):
         """
         Estimates transition probability. Non estimated final states transition probabilities are filled to the null value.
 
         Parameters
         ----------
-        state : State
-            Initial land use state.
+        transition_matrix : TransitionMatrix
+            Land transition matrix with only one state in ``tm.palette_u``.
 
         Y : array-like of shape (n_samples, n_features)
             Samples to estimate transition probabilities
-        P_v : array-like of shape (n_transitions,)
-            Global transition probabilities ordered as ``self.list_v``, i.e.
-            the numerical order of studied final land us states.
 
         Returns
         -------
         P_v__Y : ndarray of shape (n_samples, n_transitions)
             Transition probabilities for each studied final land use states ordered
-            as ``self.list_v``, i.e. the numerical order of studied final land us states.
+            as ``transition_matrix.palette_v``.
         """
 
+        # check if it is really a land transition matrix
+        transition_matrix._check_land_transition_matrix()
+
+        state = transition_matrix.palette_u.states[0]
+        palette_v = transition_matrix.palette_v
+        P_v = transition_matrix.M[0,:]
+
         if self.verbose > 0:
-            print(title_heading(self.verbose_heading_level)+'TPE computing')
+            print(title_heading(self.verbose_heading_level) + 'TPE computing')
 
         # forbid_null_value is forced to True by default for this density estimator
         self.density_estimator.set_params(forbid_null_value=True)
@@ -189,7 +232,7 @@ class Bayes(TransitionProbabilityEstimator):
         for state_v in palette_v:
             if state_v in self.conditional_density_estimators.keys():
                 if self.verbose > 0:
-                    print('state_v '+str(state_v))
+                    print('state_v ' + str(state_v))
                 conditional_density_estimators.append(self.conditional_density_estimators[state_v])
             else:
                 conditional_density_estimators.append(NullEstimator())
@@ -204,7 +247,12 @@ class Bayes(TransitionProbabilityEstimator):
         if self.log_computations == False:
             # if no log computation
             P_v__Y = P_Y__v / P_Y
-            P_v__Y *= P_v / P_v__Y.mean(axis=0)
+
+            P_v__Y_mean = P_v__Y.mean(axis=0)
+            multiply_cols = P_v__Y_mean != 0
+            P_v__Y[:, multiply_cols] *= P_v[multiply_cols] / P_v__Y_mean[multiply_cols]
+
+            #P_v__Y *= P_v / P_v__Y.mean(axis=0)
 
             s = P_v__Y.sum(axis=1)
 
@@ -239,7 +287,11 @@ class Bayes(TransitionProbabilityEstimator):
                     P_v__Y[id_anomalies] = P_v__Y[id_anomalies] / \
                                            s[id_anomalies][:, None]
 
-                    P_v__Y *= P_v / P_v__Y.mean(axis=0)
+                    P_v__Y_mean = P_v__Y.mean(axis=0)
+                    multiply_cols = P_v__Y_mean != 0
+                    P_v__Y[:, multiply_cols] *= P_v[multiply_cols] / P_v__Y_mean[multiply_cols]
+
+                    #P_v__Y *= P_v / P_v__Y.mean(axis=0)
 
                     s = np.sum(P_v__Y, axis=1)
                 else:

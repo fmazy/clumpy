@@ -6,7 +6,8 @@ import numpy as np
 
 # base import
 from ._layer import Layer, FeatureLayer, LandUseLayer
-from . import State, TransitionMatrix
+from ._state import State
+from ._transition_matrix import TransitionMatrix
 
 # Transition Probability Estimator
 from ..transition_probability_estimation._tpe import TransitionProbabilityEstimator
@@ -28,11 +29,14 @@ class Land():
 
     Parameters
     ----------
-    features : list(FeaturesLayer or State)
+    features : list(FeaturesLayer or State), default=[]
         List of features where a State means a distance layer to the corresponding state.
 
-    transition_probability_estimator : TransitionProbabilityEstimator
-        Transition probability estimator.
+    transition_probability_estimator : TransitionProbabilityEstimator, default=None
+        Transition probability estimator. If ``None``, fit, transition_probabilities and allocate are not available.
+
+    feature_selection : FeatureSelection or list(FeatureSelection)
+        List of features selection methods.
 
     allocator : Allocator, default=None
         Allocator. If `None`, the allocation is not available.
@@ -45,21 +49,22 @@ class Land():
     """
 
     def __init__(self,
-                 features,
-                 transition_probability_estimator,
+                 features=[],
+                 transition_probability_estimator=None,
                  feature_selection=None,
                  allocator=None,
                  verbose=0,
                  verbose_heading_level=1):
 
         # Transition probability estimator
-        if ~isinstance(transition_probability_estimator, TransitionProbabilityEstimator):
+        if transition_probability_estimator is not None and isinstance(transition_probability_estimator,
+                                                                       TransitionProbabilityEstimator) == False:
             raise (TypeError(
                 "Unexpected 'transition_probability_estimator. A 'TransitionProbabilityEstimator' object is expected."))
         self.transition_probability_estimator = transition_probability_estimator
 
         # features as a list
-        if ~isinstance(features, list):
+        if not isinstance(features, list):
             raise (TypeError("Unexpected 'features'. A list is expected."))
         self.features = features
 
@@ -103,7 +108,7 @@ class Land():
             feature_selection = [self.feature_selection]
 
         for fs in feature_selection:
-            if fs in feature_selectors:
+            if fs in feature_selectors and fs is not None:
                 raise (ValueError('The feature selection is already used. A new FeatureSelector must be invoked.'))
             feature_selectors.append(fs)
 
@@ -185,8 +190,16 @@ class Land():
                         _compute_distance(info, data_lul_initial, distances_to_states)
                     x = distances_to_states[info].flat[J]
 
+                elif isinstance(info, int):
+                    # get the corresponding state
+                    state = lul_initial.palette.get(info)
+                    # get distance data
+                    # in this case, feature is a State object !
+                    if state not in distances_to_states.keys():
+                        _compute_distance(state, data_lul_initial, distances_to_states)
+                    x = distances_to_states[state].flat[J]
                 else:
-                    raise (TypeError('Unexpected feature.'))
+                    raise (TypeError('Unexpected feature info : ' + str(info) + '.'))
 
                 # if X is not yet defined
                 if X is None:
@@ -252,7 +265,10 @@ class Land():
         """
 
         if self.verbose > 0:
-            print(title_heading(self.verbose_heading_level)+'Land '+str(state)+' fitting\n')
+            print(title_heading(self.verbose_heading_level) + 'Land ' + str(state) + ' fitting\n')
+
+        if self.transition_probability_estimator is None:
+            raise (ValueError('Transition probability estimator is expected for fitting.'))
 
         self._fit_tpe(state=state,
                       lul_initial=lul_initial,
@@ -261,7 +277,7 @@ class Land():
                       distances_to_states=distances_to_states)
 
         if self.verbose > 0:
-            print('Land '+str(state)+' fitting done.\n')
+            print('Land ' + str(state) + ' fitting done.\n')
 
         return self
 
@@ -286,68 +302,66 @@ class Land():
         # if only one object, make a list
         if isinstance(self.feature_selection, list):
             feature_selection = self.feature_selection
+        elif self.feature_selection is None:
+            feature_selection = []
         else:
             feature_selection = [self.feature_selection]
 
+        # features_idx is used for boundaries parameters
+        # it will be transformed as a X data
+        # to get selected columns after all selectors.
+        features_idx = np.arange(len(self.features))[None, :]
+
         for fs in feature_selection:
             if self.verbose > 0:
-                print('Feature selecting : '+str(fs)+'...')
+                print('Feature selecting : ' + str(fs) + '...')
             # check the type
-            if ~isinstance(fs, FeatureSelector):
+            if not isinstance(fs, FeatureSelector):
                 raise (TypeError(
                     "Unexpected 'feature_selection' type. Should be 'FeatureSelector' or 'list(FeatureSelector)'"))
             # fit and transform X
             X = fs.fit_transform(X=X)
 
+            features_idx = fs.transform(features_idx)
+
             if self.verbose > 0:
-                print('Feature selecting : '+str(fs)+' done.')
+                print('Feature selecting : ' + str(fs) + ' done.')
+
+        features_idx = features_idx[0, :]
+
+        # BOUNDARIES PARAMETERS
+        low_bounded_features = []
+        high_bounded_features = []
+        low_bounds = []
+        high_bounds = []
+        for idx in features_idx:
+            if isinstance(self.features[idx], FeatureLayer):
+                if self.features[idx].low_bound is not None:
+                    low_bounded_features.append(idx)
+                    low_bounds.append(self.features[idx].low_bound)
+
+                if self.features[idx].high_bound is not None:
+                    high_bounded_features.append(idx)
+                    high_bounds.append(self.features[idx].high_bound)
+            if isinstance(self.features[idx], State) or isinstance(self.features[idx], int):
+                low_bounded_features.append(idx)
+                low_bounds.append(0.0)
 
         # TRANSITION PROBABILITY ESTIMATOR
-        self.transition_probability_estimator.fit(X, V)
+        self.transition_probability_estimator.fit(X,
+                                                  V,
+                                                  low_bounded_features=low_bounded_features,
+                                                  high_bounded_features=high_bounded_features,
+                                                  low_bounds=low_bounds,
+                                                  high_bounds=high_bounds)
 
         return self
 
-    def _compute_tpe(self,
-                     state,
-                     lul,
-                     P_v,
-                     palette_v,
-                     mask=None,
-                     distances_to_states={}):
-        """
-        Compute the transition probability estimation according to the given P_v
-        """
-        # GET VALUES
-        J_allocation, Y = self.get_values(state=state,
-                                          lul_initial=lul,
-                                          mask=mask,
-                                          explanatory_variables=True,
-                                          distances_to_states=distances_to_states)
-
-        # FEATURES SELECTOR
-        # if only one object, make a list
-        if isinstance(self.feature_selection, list):
-            feature_selection = self.feature_selection
-        else:
-            feature_selection = [self.feature_selection]
-
-        for fs in feature_selection:
-            # transform Y according to the fitting.
-            Y = fs.transform(X=Y)
-
-        # TRANSITION PROBABILITY ESTIMATION
-        P_v__u_Y = self.transition_probability_estimator.transition_probability(state,
-                                                                                Y,
-                                                                                P_v,
-                                                                                palette_v)
-
-        return J_allocation, P_v__u_Y
-
-    def compute_transition_matrix(self,
-                                 state,
-                                 lul_initial,
-                                 lul_final,
-                                 mask=None):
+    def transition_matrix(self,
+                          state,
+                          lul_initial,
+                          lul_final,
+                          mask=None):
         """
         Compute the transition matrix.
 
@@ -378,19 +392,17 @@ class Land():
 
         v_unique, n_counts = np.unique(V, return_counts=True)
         P_v = n_counts / n_counts.sum()
-        P_v = P_v[None,:]
+        P_v = P_v[None, :]
 
         palette_u = lul_initial.palette.extract(infos=[state])
         palette_v = lul_final.palette.extract(infos=v_unique)
 
-        return(TransitionMatrix(M=P_v,
-                                palette_u=palette_u,
-                                palette_v=palette_v))
+        return (TransitionMatrix(M=P_v,
+                                 palette_u=palette_u,
+                                 palette_v=palette_v))
 
     def transition_probabilities(self,
-                                 state,
-                                 P_v,
-                                 palette_v,
+                                 transition_matrix,
                                  lul,
                                  mask=None,
                                  distances_to_states={},
@@ -400,15 +412,8 @@ class Land():
 
         Parameters
         ----------
-        state : State
-            The initial state of this land.
-
-        P_v : ndarray of shape(len(palette_v,))
-            The global transition probabilities :math:`P(v)`. The order corresponds to
-            ``palette_v``
-
-        palette_v : Palette
-            The final state palette corresponding to ``P_v``.
+        transition_matrix : TransitionMatrix
+            Land transition matrix with only one state in ``tm.palette_u``.
 
         lul : LandUseLayer
             The studied land use layer.
@@ -436,24 +441,27 @@ class Land():
 
         """
 
-        if self.verbose > 0:
-            print(title_heading(self.verbose_heading_level)+'Land '+str(state)+' TPE\n')
+        # check if it is really a land transition matrix
+        transition_matrix._check_land_transition_matrix()
 
-        J, P_v__u_Y = self._compute_tpe(state=state,
+        state = transition_matrix.palette_u.states[0]
+        P_v, palette_v = transition_matrix.get_P_v(state)
+
+        if self.verbose > 0:
+            print(title_heading(self.verbose_heading_level) + 'Land ' + str(state) + ' TPE\n')
+
+        J, P_v__u_Y = self._compute_tpe(transition_matrix=transition_matrix,
                                         lul=lul,
-                                        P_v=P_v,
-                                        palette_v=palette_v,
                                         mask=mask,
                                         distances_to_states=distances_to_states)
 
         if self.verbose > 0:
-            print('Land '+str(state)+' TPE done.\n')
+            print('Land ' + str(state) + ' TPE done.\n')
 
         if path_prefix is None:
             return J, P_v__u_Y
 
         else:
-            print(path_prefix, path_split(path_prefix, prefix=True))
             folder_path, file_prefix = path_split(path_prefix, prefix=True)
 
             for id_state, state_v in enumerate(palette_v):
@@ -469,10 +477,47 @@ class Land():
 
             return True
 
+    def _compute_tpe(self,
+                     transition_matrix,
+                     lul,
+                     mask=None,
+                     distances_to_states={}):
+        """
+        Compute the transition probability estimation according to the given P_v
+        """
+        # check if it is really a land transition matrix
+        transition_matrix._check_land_transition_matrix()
+
+        state = transition_matrix.palette_u.states[0]
+
+        # GET VALUES
+        J_allocation, Y = self.get_values(state=state,
+                                          lul_initial=lul,
+                                          mask=mask,
+                                          explanatory_variables=True,
+                                          distances_to_states=distances_to_states)
+
+        # FEATURES SELECTOR
+        # if only one object, make a list
+        if isinstance(self.feature_selection, list):
+            feature_selection = self.feature_selection
+        elif self.feature_selection is None:
+            feature_selection = []
+        else:
+            feature_selection = [self.feature_selection]
+
+        for fs in feature_selection:
+            # transform Y according to the fitting.
+            Y = fs.transform(X=Y)
+
+        # TRANSITION PROBABILITY ESTIMATION
+        P_v__u_Y = self.transition_probability_estimator.transition_probability(transition_matrix,
+                                                                                Y)
+
+        return J_allocation, P_v__u_Y
+
     def allocate(self,
-                 state,
-                 P_v,
-                 palette_v,
+                 transition_matrix,
                  lul,
                  lul_origin=None,
                  mask=None,
@@ -483,15 +528,8 @@ class Land():
 
         Parameters
         ----------
-        state : State
-            The initial state of this land.
-
-        P_v : ndarray of shape(len(palette_v,))
-            The global transition probabilities :math:`P(v)`. The order corresponds to
-            ``palette_v``
-
-        palette_v : Palette
-            The final state palette corresponding to ``P_v``.
+        transition_matrix : TransitionMatrix
+            Land transition matrix with only one state in ``tm.palette_u``.
 
         lul : LandUseLayer or ndarray
             The studied land use layer. If ndarray, the matrix is directly edited (inplace).
@@ -515,21 +553,25 @@ class Land():
         lul_allocated : LandUseLayer
             Only returned if ``path`` is not ``None``. The allocated map as a land use layer.
         """
-        if ~isinstance(self.allocator, Allocator):
+        # check if it is really a land transition matrix
+        transition_matrix._check_land_transition_matrix()
+
+        state = transition_matrix.palette_u.states[0]
+
+        print(type(self.allocator))
+        if not isinstance(self.allocator, Allocator):
             raise (ValueError("Unexpected 'allocator'. A clumpy.allocation.Allocator object is expected."))
 
         if self.verbose > 0:
-            print(title_heading(self.verbose_heading_level)+'Land '+str(state)+' allocation\n')
+            print(title_heading(self.verbose_heading_level) + 'Land ' + str(state) + ' allocation\n')
 
-        self.allocator(state=state,
-                       land=self,
-                       P_v=P_v,
-                       palette_v=palette_v,
-                       lul=lul,
-                       lul_origin=lul_origin,
-                       mask=mask,
-                       distances_to_states=distances_to_states,
-                       path=path)
+        self.allocator.allocate(transition_matrix=transition_matrix,
+                                land=self,
+                                lul=lul,
+                                lul_origin=lul_origin,
+                                mask=mask,
+                                distances_to_states=distances_to_states,
+                                path=path)
 
         if self.verbose > 0:
             print('Land ' + str(state) + ' allocation done.\n')

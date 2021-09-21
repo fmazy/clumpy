@@ -30,10 +30,8 @@ class Unbiased(Allocator):
         super().__init__(verbose = verbose)
 
     def _allocate(self,
-                   state,
+                   transition_matrix,
                    land,
-                   P_v,
-                   palette_v,
                    lul_data,
                    lul_origin_data,
                    mask=None,
@@ -41,6 +39,9 @@ class Unbiased(Allocator):
         """
         allocation. lul_data and lul_origin_data are ndarrays only.
         """
+
+        state = transition_matrix.palette_u.states[0]
+        P_v, palette_v = transition_matrix.get_P_v(state)
 
         # ghost initialization
         palette_v_without_u = palette_v.remove(state)
@@ -82,10 +83,8 @@ class Unbiased(Allocator):
             if self.update_P_v__u_Y or n_try == 1:
                 lul_data_P_v__u_Y_update = lul_data.copy()
                 lul_data_P_v__u_Y_update.flat[J_used] = -1
-                J, P_v__u_Y = land._compute_tpe(state=state,
+                J, P_v__u_Y = land._compute_tpe(transition_matrix=transition_matrix,
                                                 lul=lul_data_P_v__u_Y_update,
-                                                P_v=P_v_patches,
-                                                palette_v=palette_v,
                                                 mask=mask,
                                                 distances_to_states=distances_to_states)
             else:
@@ -148,13 +147,14 @@ class Unbiased(Allocator):
         eccentricity_mean = {}
         eccentricity_std = {}
 
-        for state_v, patch in self.patches.items():
-            j = V_pivot == state_v.value
-            if j.size > 0:
-                areas[state_v], eccentricities[state_v] = patch.target_sample(j.sum())
+        for state_v in palette_v:
+            if state_v != state:
+                j = V_pivot == state_v.value
+                if j.size > 0:
+                    areas[state_v], eccentricities[state_v] = self.patches[state_v].target_sample(j.sum())
 
-                eccentricity_mean[state_v] = np.mean(eccentricities[state_v])
-                eccentricity_std[state_v] = np.std(eccentricities[state_v])
+                    eccentricity_mean[state_v] = np.mean(eccentricities[state_v])
+                    eccentricity_std[state_v] = np.std(eccentricities[state_v])
 
         P_v__u_Y_maps = {}
         for id_v, state_v in enumerate(palette_v):

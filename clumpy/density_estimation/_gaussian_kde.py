@@ -149,9 +149,15 @@ class GKDE(DensityEstimator):
         self.n_jobs_predict = n_jobs_predict
         self.n_jobs_neighbors = n_jobs_neighbors
         self.preprocessing = preprocessing
+
+        self._h = None
         
     def __repr__(self):
-        return('GKDE(h='+str(self._h)+')')
+        if self._h is None:
+            return('GKDE(h='+str(self.h)+')')
+        else:
+            return('GKDE(h='+str(self._h)+')')
+
     
     def fit(self, X, y=None):
         """
@@ -176,7 +182,7 @@ class GKDE(DensityEstimator):
             print(title_heading(self.verbose_heading_level)+'GKDE fitting...')
 
         if X.shape[0] > self.n_fit_max:
-            X = X[np.random.sample(a=X.shape[0],
+            X = X[np.random.choice(a=X.shape[0],
                                    size=self.n_fit_max,
                                    replace=False)]
 
