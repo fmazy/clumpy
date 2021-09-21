@@ -5,7 +5,7 @@
 
 from . import LandUseLayer
 from ..tools._path import path_split
-
+from ..tools._console import title_heading
 
 class Region():
     """
@@ -18,13 +18,18 @@ class Region():
 
     verbose : int, default=0
         Verbosity level.
+
+    verbose_heading_level : int, default=1
+        Verbose heading level for markdown titles. If ``0``, no markdown title are printed.
     """
 
     def __init__(self,
                  label,
-                 verbose=0):
+                 verbose=0,
+                 verbose_heading_level=1):
         self.label = label
         self.verbose = verbose
+        self.verbose_heading_level = verbose_heading_level
 
         self.lands = {}
 
@@ -104,7 +109,7 @@ class Region():
         self
         """
         if self.verbose > 0:
-            print('\n### Region '+self.label+' fitting\n')
+            print(title_heading(self.verbose_heading_level)+'Region '+self.label+' fitting\n')
 
         for state, land in self.lands.items():
             land.fit(state=state,
@@ -117,6 +122,21 @@ class Region():
             print('Region '+self.label+' fitting done.\n')
 
         return (self)
+
+    def compute_transition_matrix(self,
+                                  lul_initial,
+                                  lul_final,
+                                  mask=None):
+
+
+
+        for state, land in self.lands.items():
+            transition_matrix = land.compute_transition_matrix(state=state,
+                                                               lul_initial=lul_initial,
+                                                               lul_final=lul_final,
+                                                               mask=mask)
+            # TODO : Here !!
+
 
     def transition_probabilities(self,
                                  transition_matrix,
@@ -161,7 +181,7 @@ class Region():
         P_v__u_Y = {}
 
         if self.verbose > 0:
-            print('\n### Region '+str(self.label)+' TPE\n')
+            print(title_heading(self.verbose_heading_level)+'Region '+str(self.label)+' TPE\n')
 
         for state, land in self.lands.items():
 
@@ -229,7 +249,7 @@ class Region():
         """
 
         if self.verbose > 0:
-            print('\n### Region '+str(self.label)+' allocate\n')
+            print(title_heading(self.verbose_heading_level)+'Region '+str(self.label)+' allocate\n')
 
         if lul_origin is None:
             lul_origin = lul

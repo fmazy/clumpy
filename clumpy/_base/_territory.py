@@ -8,6 +8,7 @@ Created on Fri Sep 17 15:40:56 2021
 
 from . import LandUseLayer
 from ..tools._path import path_split
+from ..tools._console import title_heading
 
 # TODO : ajouter un self.verbosity_head_level à toutes les classes pour connaître le niveau de titre markdown.
 
@@ -20,14 +21,24 @@ class Territory():
     regions : list(Region)
         List of regions which constitute the territory. If ``None``, an empty list is created
         and can be append by ``self.add_region()``.
+    verbose : int, default=0
+        Verbosity level.
+
+    verbose_heading_level : int, default=1
+        Verbose heading level for markdown titles. If ``0``, no markdown title are printed.
     """
 
     def __init__(self,
-                 regions=None):
+                 regions=None,
+                 verbose = 0,
+                 verbose_heading_level = 1):
 
         self.regions = regions
         if self.regions is None:
             self.regions = []
+
+        self.verbose = verbose
+        self.verbose_heading_level = verbose_heading_level
 
     def add_region(self, region):
         """
@@ -99,7 +110,7 @@ class Territory():
         """
 
         if self.verbose > 0:
-            print('\n## Territory fitting\n')
+            print(title_heading(self.verbose_heading_level)+'Territory fitting\n')
 
         if masks is None:
             masks = {region: None for region in self.regions}
@@ -150,7 +161,7 @@ class Territory():
         """
 
         if self.verbose > 0:
-            print('\n## Territory TPE\n')
+            print(title_heading(self.verbose_heading_level)+'Territory TPE\n')
 
         if masks is None:
             masks = {region: None for region in self.regions}
@@ -207,7 +218,7 @@ class Territory():
         """
 
         if self.verbose > 0:
-            print('\n## Territory allocate\n')
+            print(title_heading(self.verbose_heading_level)+'Territory allocate\n')
 
         if masks is None:
             masks = {region: None for region in self.regions}

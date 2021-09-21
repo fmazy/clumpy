@@ -347,6 +347,22 @@
 <div class="viewcode-block" id="MaskLayer"><a class="viewcode-back" href="../../../generated/clumpy.MaskLayer.html#clumpy.MaskLayer">[docs]</a><span class="k">class</span> <span class="nc">MaskLayer</span><span class="p">(</span><span class="n">Layer</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Mask layer.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    label : str, default=``None``</span>
+<span class="sd">        The layer label.</span>
+<span class="sd">    time : float, default=``0``</span>
+<span class="sd">        The layer time (year unit).</span>
+<span class="sd">    path : str</span>
+<span class="sd">        The tiff file path.</span>
+<span class="sd">        If ``data`` is provided, a new tiff file will be created according to this path</span>
+<span class="sd">        and this operation overwrites the file path if exists.</span>
+<span class="sd">    data : :class:`numpy.ndarray`, defaul=None</span>
+<span class="sd">        The data to write. If ``None``, no writing is made.</span>
+<span class="sd">    copy_geo : :class:`LandUseLayer`, default=None</span>
+<span class="sd">        The layer from whose geo metadata are copied.</span>
+<span class="sd">        If ``None``, geo metadata are set to ``None``.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
                  <span class="n">label</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>

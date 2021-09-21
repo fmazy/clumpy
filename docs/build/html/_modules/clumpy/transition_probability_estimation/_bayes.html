@@ -44,6 +44,7 @@
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 <span class="kn">from</span> <span class="nn">..density_estimation._density_estimator</span> <span class="kn">import</span> <span class="n">DensityEstimator</span><span class="p">,</span> <span class="n">NullEstimator</span>
 <span class="kn">from</span> <span class="nn">..density_estimation</span> <span class="kn">import</span> <span class="n">_methods</span>
+<span class="kn">from</span> <span class="nn">..tools._console</span> <span class="kn">import</span> <span class="n">title_heading</span>
 
 <div class="viewcode-block" id="Bayes"><a class="viewcode-back" href="../../../generated/clumpy.transition_probability_estimation.Bayes.html#clumpy.transition_probability_estimation.Bayes">[docs]</a><span class="k">class</span> <span class="nc">Bayes</span><span class="p">(</span><span class="n">TransitionProbabilityEstimator</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
@@ -51,25 +52,44 @@
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
+<span class="sd">    density_estimator : {&#39;gkde&#39;} or DensityEstimator, default=&#39;gkde&#39;</span>
+<span class="sd">        Density estimator used for :math:`P(Y|u)`. If string, a new object is invoked with default parameters.</span>
+
+<span class="sd">    n_corrections_max : int, default=1000</span>
+<span class="sd">        Maximum number of corrections during the bayesian adjustment algorithm.</span>
+
+<span class="sd">    log_computations : bool, default=False</span>
+<span class="sd">        If ``True``, bayesian computations are made through log sums.</span>
+
+<span class="sd">    verbose : int, default=0</span>
+<span class="sd">        Verbosity level.</span>
+
+<span class="sd">    verbose_heading_level : int, default=1</span>
+<span class="sd">        Verbose heading level for markdown titles. If ``0``, no markdown title are printed.</span>
 
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
                  <span class="n">density_estimator</span><span class="o">=</span><span class="s1">&#39;gkde&#39;</span><span class="p">,</span>
                  <span class="n">n_corrections_max</span><span class="o">=</span><span class="mi">1000</span><span class="p">,</span>
                  <span class="n">log_computations</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
-                 <span class="n">verbose</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
+                 <span class="n">verbose</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+                 <span class="n">verbose_heading_level</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
+
+        <span class="nb">super</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">verbose</span><span class="o">=</span><span class="n">verbose</span><span class="p">,</span>
+                       <span class="n">verbose_heading_level</span><span class="o">=</span><span class="n">verbose_heading_level</span><span class="p">)</span>
 
         <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">density_estimator</span><span class="p">,</span> <span class="n">DensityEstimator</span><span class="p">):</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">density_estimator</span> <span class="o">=</span> <span class="n">density_estimator</span>
         <span class="k">elif</span> <span class="n">density_estimator</span> <span class="ow">in</span> <span class="n">_methods</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">density_estimator</span> <span class="o">=</span> <span class="n">_methods</span><span class="p">[</span><span class="n">density_estimator</span><span class="p">]()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">density_estimator</span> <span class="o">=</span> <span class="n">_methods</span><span class="p">[</span><span class="n">density_estimator</span><span class="p">](</span><span class="n">verbose</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">verbose</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span>
+                                                                 <span class="n">verbose_heading_level</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">verbose_heading_level</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="k">raise</span> <span class="p">(</span><span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;Unexpected density_estimator value.&#39;</span><span class="p">))</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">n_corrections_max</span> <span class="o">=</span> <span class="n">n_corrections_max</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">log_computations</span> <span class="o">=</span> <span class="n">log_computations</span>
 
-        <span class="nb">super</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">verbose</span><span class="o">=</span><span class="n">verbose</span><span class="p">)</span>
+
 
 <div class="viewcode-block" id="Bayes.add_conditional_density_estimator"><a class="viewcode-back" href="../../../generated/clumpy.transition_probability_estimation.Bayes.html#clumpy.transition_probability_estimation.Bayes.add_conditional_density_estimator">[docs]</a>    <span class="k">def</span> <span class="nf">add_conditional_density_estimator</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">state</span><span class="p">,</span> <span class="n">de</span><span class="o">=</span><span class="s1">&#39;gkde&#39;</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
@@ -135,13 +155,21 @@
 <span class="sd">            The fitted transition probability estimator object.</span>
 
 <span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">verbose</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="n">title_heading</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">verbose_heading_level</span><span class="p">)</span><span class="o">+</span><span class="s1">&#39;TPE fitting&#39;</span><span class="p">)</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Conditional density estimators fitting :&#39;</span><span class="p">)</span>
 
         <span class="k">for</span> <span class="n">state_v</span><span class="p">,</span> <span class="n">cde</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">conditional_density_estimators</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">verbose</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;state_v : &#39;</span><span class="o">+</span><span class="nb">str</span><span class="p">(</span><span class="n">state_v</span><span class="p">))</span>
             <span class="c1"># select X_v</span>
             <span class="n">X_v</span> <span class="o">=</span> <span class="n">X</span><span class="p">[</span><span class="n">V</span> <span class="o">==</span> <span class="n">state_v</span><span class="o">.</span><span class="n">value</span><span class="p">]</span>
 
             <span class="c1"># Density estimation fit</span>
             <span class="n">cde</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">X_v</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">verbose</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;TPE fitting done.&#39;</span><span class="p">)</span>
 
         <span class="k">return</span> <span class="p">(</span><span class="bp">self</span><span class="p">)</span></div>
 
@@ -171,26 +199,45 @@
 <span class="sd">            as ``self.list_v``, i.e. the numerical order of studied final land us states.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
 
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">verbose</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="n">title_heading</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">verbose_heading_level</span><span class="p">)</span><span class="o">+</span><span class="s1">&#39;TPE computing&#39;</span><span class="p">)</span>
+
         <span class="c1"># forbid_null_value is forced to True by default for this density estimator</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">density_estimator</span><span class="o">.</span><span class="n">set_params</span><span class="p">(</span><span class="n">forbid_null_value</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">verbose</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Density estimator fitting...&#39;</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">density_estimator</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">Y</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">verbose</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Density estimator fitting done.&#39;</span><span class="p">)</span>
 
         <span class="c1"># P(Y) estimation</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">verbose</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Density estimator predict...&#39;</span><span class="p">)</span>
         <span class="n">P_Y</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">density_estimator</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">Y</span><span class="p">)[:,</span> <span class="kc">None</span><span class="p">]</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">verbose</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Density estimator predict done.&#39;</span><span class="p">)</span>
 
         <span class="c1"># P(Y|v) estimation</span>
         <span class="c1"># first, create a list of estimators according to palette_v order</span>
         <span class="c1"># if no estimator is informed, the NullEstimator is invoked.</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">verbose</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Conditionnal density estimators predict...&#39;</span><span class="p">)</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;are concerned :&#39;</span><span class="p">)</span>
         <span class="n">conditional_density_estimators</span> <span class="o">=</span> <span class="p">[]</span>
         <span class="k">for</span> <span class="n">state_v</span> <span class="ow">in</span> <span class="n">palette_v</span><span class="p">:</span>
             <span class="k">if</span> <span class="n">state_v</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">conditional_density_estimators</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">verbose</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+                    <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;state_v &#39;</span><span class="o">+</span><span class="nb">str</span><span class="p">(</span><span class="n">state_v</span><span class="p">))</span>
                 <span class="n">conditional_density_estimators</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">conditional_density_estimators</span><span class="p">[</span><span class="n">state_v</span><span class="p">])</span>
             <span class="k">else</span><span class="p">:</span>
                 <span class="n">conditional_density_estimators</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">NullEstimator</span><span class="p">())</span>
 
         <span class="c1"># estimate P(Y|u,v). Columns with no estimators are null columns.</span>
         <span class="n">P_Y__v</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">vstack</span><span class="p">([</span><span class="n">cde</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">Y</span><span class="p">)</span> <span class="k">for</span> <span class="n">cde</span> <span class="ow">in</span> <span class="n">conditional_density_estimators</span><span class="p">])</span><span class="o">.</span><span class="n">T</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">verbose</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Conditional density estimators predict done.&#39;</span><span class="p">)</span>
 
         <span class="c1"># BAYES PROCESS</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">log_computations</span> <span class="o">==</span> <span class="kc">False</span><span class="p">:</span>
@@ -266,6 +313,9 @@
         <span class="c1"># compute the non transited column</span>
         <span class="n">state_value</span> <span class="o">=</span> <span class="n">palette_v</span><span class="o">.</span><span class="n">get_id</span><span class="p">(</span><span class="n">state</span><span class="p">)</span>
         <span class="n">P_v__Y</span><span class="p">[:,</span> <span class="n">state_value</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">-</span> <span class="n">np</span><span class="o">.</span><span class="n">delete</span><span class="p">(</span><span class="n">P_v__Y</span><span class="p">,</span> <span class="n">state_value</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">verbose</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;TPE computing done.&#39;</span><span class="p">)</span>
 
         <span class="k">return</span> <span class="p">(</span><span class="n">P_v__Y</span><span class="p">)</span></div></div>
 </pre></div>

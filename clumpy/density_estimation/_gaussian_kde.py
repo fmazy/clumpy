@@ -18,6 +18,7 @@ from . import bandwidth_selection
 from ._density_estimator import DensityEstimator
 from ._whitening_transformer import _WhiteningTransformer
 from ..utils._hyperplane import Hyperplane
+from ..tools._console import title_heading
 
 import sys
 
@@ -83,10 +84,8 @@ class GKDE(DensityEstimator):
         Note: fitting on sparse input will override the setting of this parameter, using brute force.
         
     leaf_size : int, default=30
-
         Leaf size passed to BallTree or KDTree. This can affect the speed of the construction and query, as well as the memory required to store the tree. The optimal value depends on the nature of the problem.
 
-    
     support_factor : float, default=3
         The kernel support factor, even if kernel has infinite support.
 
@@ -96,21 +95,23 @@ class GKDE(DensityEstimator):
     n_predict_max : int, default=2*10**4
         The maximum of simultaneous probability estimations.
         Several streams are consequently created.
-    
+
     forbid_null_value : bool, default=False
         If ``True``, the null value is forbiden and a correction is made if
         necessary.
-    
+
     n_jobs_predict : int, default=2
         The number of parallel jobs to predict according to streams defined
         by ``n_predict_max``.
-    
+
     n_jobs_neighbors : int, default=1
         The number of parallel jobs to run for neighbors search.
-        
-    
+
     verbose : int, default=0
         The verbosity level.
+
+    verbose_heading_level : int, default=1
+        Verbose heading level for markdown titles. If ``0``, no markdown title are printed.
 
     """
     def __init__(self,
@@ -128,14 +129,16 @@ class GKDE(DensityEstimator):
                  forbid_null_value = False,
                  n_jobs_predict=2,
                  n_jobs_neighbors=1,
-                 verbose=0):
+                 verbose=0,
+                 verbose_heading_level=1):
         
         super().__init__(low_bounded_features=low_bounded_features,
                          high_bounded_features=high_bounded_features,
                          low_bounds = low_bounds,
                          high_bounds = high_bounds,
                          forbid_null_value = forbid_null_value,
-                         verbose=verbose) 
+                         verbose=verbose,
+                         verbose_heading_level=verbose_heading_level)
         
         self.h = h
         self.algorithm = algorithm
@@ -170,7 +173,7 @@ class GKDE(DensityEstimator):
         """
 
         if self.verbose > 0:
-            print('GKDE fitting...')
+            print(title_heading(self.verbose_heading_level)+'GKDE fitting...')
 
         if X.shape[0] > self.n_fit_max:
             X = X[np.random.sample(a=X.shape[0],
@@ -251,7 +254,7 @@ class GKDE(DensityEstimator):
         
         # NEAREST NEIGHBOR FITTING
         if self.verbose > 0:
-            print('sklearn.neighbors.NearestNeighbors fitting...')
+            print(title_heading(self.verbose_heading_level)+'sklearn.neighbors.NearestNeighbors fitting...')
         self._nn = NearestNeighbors(radius = self._h * self.support_factor,
                                    algorithm = self.algorithm,
                                    leaf_size = self.leaf_size,
@@ -278,7 +281,7 @@ class GKDE(DensityEstimator):
             The estimated probabilities.
         """
         if self.verbose > 0:
-            print('GKDE Predict')
+            print(title_heading(self.verbose_heading_level)+'GKDE Predict')
 
         pdf = self._predict_with_bandwidth(X, self._h)
 
@@ -320,7 +323,8 @@ class GKDE(DensityEstimator):
         steps = np.arange(0, X.shape[0], self.n_predict_max)
 
         if self.verbose > 0:
-            print('Gaussian kernel process with '+str(steps.size)+' streams computed in parallel through '+str(self.n_jobs_predict)+' CPUs.')
+            print(title_heading(self.verbose_heading_level)+'Gaussian kernel')
+            print('process with '+str(steps.size)+' streams computed in parallel through '+str(self.n_jobs_predict)+' CPUs.')
 
         if self.n_jobs_predict == 1:
             if self.verbose > 0:
@@ -357,7 +361,7 @@ class GKDE(DensityEstimator):
         
         # boundary bias correction
         if self.verbose > 0:
-            print('Boundary bias correction...')
+            print(title_heading(self.verbose_heading_level)+'Boundary bias correction...')
 
         for bounds_hyperplanes in [self._low_bounds_hyperplanes, self._high_bounds_hyperplanes]:
             for hyperplane in bounds_hyperplanes:
@@ -377,7 +381,7 @@ class GKDE(DensityEstimator):
             # if null value is forbiden
             if self.forbid_null_value or self._force_forbid_null_value:
                 if self.verbose > 0:
-                    print('Null value correction...')
+                    print(title_heading(self.verbose_heading_level)+'Null value correction...')
                 idx = f == 0.0
 
                 new_n = self._n + idx.sum()

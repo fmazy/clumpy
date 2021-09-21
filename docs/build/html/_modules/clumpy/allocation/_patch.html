@@ -44,7 +44,7 @@
 
 <span class="k">class</span> <span class="nc">Patch</span><span class="p">():</span>
     <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Patch parameters object. Should prefer the child BootStrapPatch.</span>
+<span class="sd">    Patch parameters object. Useful for developers.</span>
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
@@ -140,19 +140,42 @@
 <div class="viewcode-block" id="BootstrapPatch"><a class="viewcode-back" href="../../../generated/clumpy.allocation.BootstrapPatch.html#clumpy.allocation.BootstrapPatch">[docs]</a><span class="k">class</span> <span class="nc">BootstrapPatch</span><span class="p">(</span><span class="n">Patch</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Bootstrap patch parameters object.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    neighbors_structure : {&#39;rook&#39;, &#39;queen&#39;}, default=&#39;rook&#39;</span>
+<span class="sd">        The neighbors structure.</span>
+
+<span class="sd">    avoid_aggregation : bool, default=True</span>
+<span class="sd">        If ``True``, the patcher will avoid patch aggregations to respect expected patch areas.</span>
+
+<span class="sd">    nb_of_neighbors_to_fill : int, default=3</span>
+<span class="sd">        The patcher will allocate cells whose the number of allocated neighbors is greater than this integer</span>
+<span class="sd">        (according to the specified ``neighbors_structure``)</span>
+
+<span class="sd">    proceed_even_if_no_probability : bool, default=True</span>
+<span class="sd">        The patcher will allocate even if the neighbors have no probabilities to transit.</span>
+
+<span class="sd">    n_tries_target_sample : int, default=10**3</span>
+<span class="sd">        Number of tries to draw samples in a biased way in order to approach the mean area.</span>
+
+<span class="sd">    equi_neighbors_proba : bool, default=False</span>
+<span class="sd">        If ``True``, all neighbors have the equiprobability to transit.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
                  <span class="n">neighbors_structure</span> <span class="o">=</span> <span class="s1">&#39;rook&#39;</span><span class="p">,</span>
                  <span class="n">avoid_aggregation</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
                  <span class="n">nb_of_neighbors_to_fill</span> <span class="o">=</span> <span class="mi">3</span><span class="p">,</span>
                  <span class="n">proceed_even_if_no_probability</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
-                 <span class="n">n_tries_target_sample</span> <span class="o">=</span> <span class="mi">1000</span><span class="p">):</span>
+                 <span class="n">n_tries_target_sample</span> <span class="o">=</span> <span class="mi">1000</span><span class="p">,</span>
+                 <span class="n">equi_neighbors_proba</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
         
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">neighbors_structure</span> <span class="o">=</span> <span class="n">neighbors_structure</span><span class="p">,</span>
                          <span class="n">avoid_aggregation</span> <span class="o">=</span> <span class="n">avoid_aggregation</span><span class="p">,</span>
                          <span class="n">nb_of_neighbors_to_fill</span> <span class="o">=</span> <span class="n">nb_of_neighbors_to_fill</span><span class="p">,</span>
                          <span class="n">proceed_even_if_no_probability</span> <span class="o">=</span> <span class="n">proceed_even_if_no_probability</span><span class="p">,</span>
-                         <span class="n">n_tries_target_sample</span><span class="o">=</span><span class="n">n_tries_target_sample</span><span class="p">)</span>
+                         <span class="n">n_tries_target_sample</span><span class="o">=</span><span class="n">n_tries_target_sample</span><span class="p">,</span>
+                         <span class="n">equi_neighbors_proba</span><span class="o">=</span><span class="n">equi_neighbors_proba</span><span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">_sample</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">n</span><span class="p">):</span>
         <span class="n">idx</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">choice</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">areas</span><span class="o">.</span><span class="n">size</span><span class="p">,</span> <span class="n">n</span><span class="p">,</span> <span class="n">replace</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>

@@ -55,6 +55,7 @@
 
 <span class="c1"># Tools</span>
 <span class="kn">from</span> <span class="nn">..tools._path</span> <span class="kn">import</span> <span class="n">path_split</span>
+<span class="kn">from</span> <span class="nn">..tools._console</span> <span class="kn">import</span> <span class="n">title_heading</span>
 
 <span class="c1"># Allocation</span>
 <span class="kn">from</span> <span class="nn">..allocation._allocator</span> <span class="kn">import</span> <span class="n">Allocator</span>
@@ -75,8 +76,11 @@
 <span class="sd">    allocator : Allocator, default=None</span>
 <span class="sd">        Allocator. If `None`, the allocation is not available.</span>
 <span class="sd">    </span>
-<span class="sd">    verbose : int, default=None</span>
+<span class="sd">    verbose : int, default=0</span>
 <span class="sd">        Verbosity level.</span>
+
+<span class="sd">    verbose_heading_level : int, default=1</span>
+<span class="sd">        Verbose heading level for markdown titles. If ``0``, no markdown title are printed.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
@@ -84,7 +88,8 @@
                  <span class="n">transition_probability_estimator</span><span class="p">,</span>
                  <span class="n">feature_selection</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
                  <span class="n">allocator</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-                 <span class="n">verbose</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
+                 <span class="n">verbose</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+                 <span class="n">verbose_heading_level</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
 
         <span class="c1"># Transition probability estimator</span>
         <span class="k">if</span> <span class="o">~</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">transition_probability_estimator</span><span class="p">,</span> <span class="n">TransitionProbabilityEstimator</span><span class="p">):</span>
@@ -104,6 +109,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">allocator</span> <span class="o">=</span> <span class="n">allocator</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">verbose</span> <span class="o">=</span> <span class="n">verbose</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">verbose_heading_level</span> <span class="o">=</span> <span class="n">verbose_heading_level</span>
 
     <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="s1">&#39;land&#39;</span>
@@ -284,11 +290,17 @@
 <span class="sd">        self</span>
 <span class="sd">        &quot;&quot;&quot;</span>
 
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">verbose</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="n">title_heading</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">verbose_heading_level</span><span class="p">)</span><span class="o">+</span><span class="s1">&#39;Land &#39;</span><span class="o">+</span><span class="nb">str</span><span class="p">(</span><span class="n">state</span><span class="p">)</span><span class="o">+</span><span class="s1">&#39; fitting</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
+
         <span class="bp">self</span><span class="o">.</span><span class="n">_fit_tpe</span><span class="p">(</span><span class="n">state</span><span class="o">=</span><span class="n">state</span><span class="p">,</span>
                       <span class="n">lul_initial</span><span class="o">=</span><span class="n">lul_initial</span><span class="p">,</span>
                       <span class="n">lul_final</span><span class="o">=</span><span class="n">lul_final</span><span class="p">,</span>
                       <span class="n">mask</span><span class="o">=</span><span class="n">mask</span><span class="p">,</span>
                       <span class="n">distances_to_states</span><span class="o">=</span><span class="n">distances_to_states</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">verbose</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Land &#39;</span><span class="o">+</span><span class="nb">str</span><span class="p">(</span><span class="n">state</span><span class="p">)</span><span class="o">+</span><span class="s1">&#39; fitting done.</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
 
         <span class="k">return</span> <span class="bp">self</span></div>
 
@@ -317,12 +329,17 @@
             <span class="n">feature_selection</span> <span class="o">=</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">feature_selection</span><span class="p">]</span>
 
         <span class="k">for</span> <span class="n">fs</span> <span class="ow">in</span> <span class="n">feature_selection</span><span class="p">:</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">verbose</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Feature selecting : &#39;</span><span class="o">+</span><span class="nb">str</span><span class="p">(</span><span class="n">fs</span><span class="p">)</span><span class="o">+</span><span class="s1">&#39;...&#39;</span><span class="p">)</span>
             <span class="c1"># check the type</span>
             <span class="k">if</span> <span class="o">~</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">fs</span><span class="p">,</span> <span class="n">FeatureSelector</span><span class="p">):</span>
                 <span class="k">raise</span> <span class="p">(</span><span class="ne">TypeError</span><span class="p">(</span>
                     <span class="s2">&quot;Unexpected &#39;feature_selection&#39; type. Should be &#39;FeatureSelector&#39; or &#39;list(FeatureSelector)&#39;&quot;</span><span class="p">))</span>
             <span class="c1"># fit and transform X</span>
             <span class="n">X</span> <span class="o">=</span> <span class="n">fs</span><span class="o">.</span><span class="n">fit_transform</span><span class="p">(</span><span class="n">X</span><span class="o">=</span><span class="n">X</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">verbose</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Feature selecting : &#39;</span><span class="o">+</span><span class="nb">str</span><span class="p">(</span><span class="n">fs</span><span class="p">)</span><span class="o">+</span><span class="s1">&#39; done.&#39;</span><span class="p">)</span>
 
         <span class="c1"># TRANSITION PROBABILITY ESTIMATOR</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">transition_probability_estimator</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">V</span><span class="p">)</span>
@@ -414,12 +431,18 @@
 
 <span class="sd">        &quot;&quot;&quot;</span>
 
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">verbose</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="n">title_heading</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">verbose_heading_level</span><span class="p">)</span><span class="o">+</span><span class="s1">&#39;Land &#39;</span><span class="o">+</span><span class="nb">str</span><span class="p">(</span><span class="n">state</span><span class="p">)</span><span class="o">+</span><span class="s1">&#39; TPE</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
+
         <span class="n">J</span><span class="p">,</span> <span class="n">P_v__u_Y</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_compute_tpe</span><span class="p">(</span><span class="n">state</span><span class="o">=</span><span class="n">state</span><span class="p">,</span>
                                         <span class="n">lul</span><span class="o">=</span><span class="n">lul</span><span class="p">,</span>
                                         <span class="n">P_v</span><span class="o">=</span><span class="n">P_v</span><span class="p">,</span>
                                         <span class="n">palette_v</span><span class="o">=</span><span class="n">palette_v</span><span class="p">,</span>
                                         <span class="n">mask</span><span class="o">=</span><span class="n">mask</span><span class="p">,</span>
                                         <span class="n">distances_to_states</span><span class="o">=</span><span class="n">distances_to_states</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">verbose</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Land &#39;</span><span class="o">+</span><span class="nb">str</span><span class="p">(</span><span class="n">state</span><span class="p">)</span><span class="o">+</span><span class="s1">&#39; TPE done.</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
 
         <span class="k">if</span> <span class="n">path_prefix</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="k">return</span> <span class="n">J</span><span class="p">,</span> <span class="n">P_v__u_Y</span>
@@ -490,6 +513,9 @@
         <span class="k">if</span> <span class="o">~</span><span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">allocator</span><span class="p">,</span> <span class="n">Allocator</span><span class="p">):</span>
             <span class="k">raise</span> <span class="p">(</span><span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Unexpected &#39;allocator&#39;. A clumpy.allocation.Allocator object is expected.&quot;</span><span class="p">))</span>
 
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">verbose</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="n">title_heading</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">verbose_heading_level</span><span class="p">)</span><span class="o">+</span><span class="s1">&#39;Land &#39;</span><span class="o">+</span><span class="nb">str</span><span class="p">(</span><span class="n">state</span><span class="p">)</span><span class="o">+</span><span class="s1">&#39; allocation</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
+
         <span class="bp">self</span><span class="o">.</span><span class="n">allocator</span><span class="p">(</span><span class="n">state</span><span class="o">=</span><span class="n">state</span><span class="p">,</span>
                        <span class="n">land</span><span class="o">=</span><span class="bp">self</span><span class="p">,</span>
                        <span class="n">P_v</span><span class="o">=</span><span class="n">P_v</span><span class="p">,</span>
@@ -498,7 +524,10 @@
                        <span class="n">lul_origin</span><span class="o">=</span><span class="n">lul_origin</span><span class="p">,</span>
                        <span class="n">mask</span><span class="o">=</span><span class="n">mask</span><span class="p">,</span>
                        <span class="n">distances_to_states</span><span class="o">=</span><span class="n">distances_to_states</span><span class="p">,</span>
-                       <span class="n">path</span><span class="o">=</span><span class="n">path</span><span class="p">)</span></div></div>
+                       <span class="n">path</span><span class="o">=</span><span class="n">path</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">verbose</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Land &#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">state</span><span class="p">)</span> <span class="o">+</span> <span class="s1">&#39; allocation done.</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span></div></div>
 
 
 <span class="k">def</span> <span class="nf">_compute_distance</span><span class="p">(</span><span class="n">state</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="n">distances_to_states</span><span class="p">):</span>

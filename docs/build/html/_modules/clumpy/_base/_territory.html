@@ -47,7 +47,9 @@
 
 <span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">LandUseLayer</span>
 <span class="kn">from</span> <span class="nn">..tools._path</span> <span class="kn">import</span> <span class="n">path_split</span>
+<span class="kn">from</span> <span class="nn">..tools._console</span> <span class="kn">import</span> <span class="n">title_heading</span>
 
+<span class="c1"># TODO : ajouter un self.verbosity_head_level à toutes les classes pour connaître le niveau de titre markdown.</span>
 
 <div class="viewcode-block" id="Territory"><a class="viewcode-back" href="../../../generated/clumpy.Territory.html#clumpy.Territory">[docs]</a><span class="k">class</span> <span class="nc">Territory</span><span class="p">():</span>
     <span class="sd">&quot;&quot;&quot;</span>
@@ -58,14 +60,24 @@
 <span class="sd">    regions : list(Region)</span>
 <span class="sd">        List of regions which constitute the territory. If ``None``, an empty list is created</span>
 <span class="sd">        and can be append by ``self.add_region()``.</span>
+<span class="sd">    verbose : int, default=0</span>
+<span class="sd">        Verbosity level.</span>
+
+<span class="sd">    verbose_heading_level : int, default=1</span>
+<span class="sd">        Verbose heading level for markdown titles. If ``0``, no markdown title are printed.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
-                 <span class="n">regions</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+                 <span class="n">regions</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                 <span class="n">verbose</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span>
+                 <span class="n">verbose_heading_level</span> <span class="o">=</span> <span class="mi">1</span><span class="p">):</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">regions</span> <span class="o">=</span> <span class="n">regions</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">regions</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">regions</span> <span class="o">=</span> <span class="p">[]</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">verbose</span> <span class="o">=</span> <span class="n">verbose</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">verbose_heading_level</span> <span class="o">=</span> <span class="n">verbose_heading_level</span>
 
 <div class="viewcode-block" id="Territory.add_region"><a class="viewcode-back" href="../../../generated/clumpy.Territory.html#clumpy.Territory.add_region">[docs]</a>    <span class="k">def</span> <span class="nf">add_region</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">region</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
@@ -136,6 +148,9 @@
 <span class="sd">        self</span>
 <span class="sd">        &quot;&quot;&quot;</span>
 
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">verbose</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="n">title_heading</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">verbose_heading_level</span><span class="p">)</span><span class="o">+</span><span class="s1">&#39;Territory fitting</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
+
         <span class="k">if</span> <span class="n">masks</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">masks</span> <span class="o">=</span> <span class="p">{</span><span class="n">region</span><span class="p">:</span> <span class="kc">None</span> <span class="k">for</span> <span class="n">region</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">regions</span><span class="p">}</span>
 
@@ -146,6 +161,9 @@
                        <span class="n">lul_final</span><span class="o">=</span><span class="n">lul_final</span><span class="p">,</span>
                        <span class="n">mask</span><span class="o">=</span><span class="n">masks</span><span class="p">[</span><span class="n">region</span><span class="p">],</span>
                        <span class="n">distances_to_states</span><span class="o">=</span><span class="n">distances_to_states</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">verbose</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Territory fitting done.</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
 
         <span class="k">return</span> <span class="p">(</span><span class="bp">self</span><span class="p">)</span></div>
 
@@ -181,6 +199,9 @@
 <span class="sd">            to transition matrix argument : ``palette_v``.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
 
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">verbose</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="n">title_heading</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">verbose_heading_level</span><span class="p">)</span><span class="o">+</span><span class="s1">&#39;Territory TPE</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
+
         <span class="k">if</span> <span class="n">masks</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">masks</span> <span class="o">=</span> <span class="p">{</span><span class="n">region</span><span class="p">:</span> <span class="kc">None</span> <span class="k">for</span> <span class="n">region</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">regions</span><span class="p">}</span>
 
@@ -198,6 +219,9 @@
                                                          <span class="n">mask</span><span class="o">=</span><span class="n">masks</span><span class="p">[</span><span class="n">region</span><span class="p">],</span>
                                                          <span class="n">distances_to_states</span><span class="o">=</span><span class="n">distances_to_states</span><span class="p">,</span>
                                                          <span class="n">path_prefix</span><span class="o">=</span><span class="n">path_prefix</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">verbose</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Territory transition probabilities estimation done.</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
 
         <span class="k">if</span> <span class="n">path_prefix</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="k">return</span> <span class="p">(</span><span class="n">tp</span><span class="p">)</span></div>
@@ -232,6 +256,9 @@
 <span class="sd">            Only returned if ``path`` is not ``None``. The allocated map as a land use layer.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
 
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">verbose</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="n">title_heading</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">verbose_heading_level</span><span class="p">)</span><span class="o">+</span><span class="s1">&#39;Territory allocate</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
+
         <span class="k">if</span> <span class="n">masks</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">masks</span> <span class="o">=</span> <span class="p">{</span><span class="n">region</span><span class="p">:</span> <span class="kc">None</span> <span class="k">for</span> <span class="n">region</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">regions</span><span class="p">}</span>
 
@@ -254,7 +281,10 @@
                                  <span class="n">data</span><span class="o">=</span><span class="n">lul_data</span><span class="p">,</span>
                                  <span class="n">copy_geo</span><span class="o">=</span><span class="n">lul</span><span class="p">,</span>
                                  <span class="n">path</span><span class="o">=</span><span class="n">path</span><span class="p">,</span>
-                                 <span class="n">palette</span><span class="o">=</span><span class="n">lul</span><span class="o">.</span><span class="n">palette</span><span class="p">))</span></div>
+                                 <span class="n">palette</span><span class="o">=</span><span class="n">lul</span><span class="o">.</span><span class="n">palette</span><span class="p">))</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">verbose</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Territory allocate done.</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="Territory.multisteps_allocation"><a class="viewcode-back" href="../../../generated/clumpy.Territory.html#clumpy.Territory.multisteps_allocation">[docs]</a>    <span class="k">def</span> <span class="nf">multisteps_allocation</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
                               <span class="n">n</span><span class="p">,</span>
@@ -290,11 +320,16 @@
 <span class="sd">            The allocated map as a land use layer.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
 
+
+
         <span class="n">multisteps_transition_matrices</span> <span class="o">=</span> <span class="p">{</span><span class="n">region</span><span class="p">:</span> <span class="n">tm</span><span class="o">.</span><span class="n">multisteps</span><span class="p">(</span><span class="n">n</span><span class="p">)</span> <span class="k">for</span> <span class="n">region</span><span class="p">,</span> <span class="n">tm</span> <span class="ow">in</span> <span class="n">transition_matrices</span><span class="o">.</span><span class="n">items</span><span class="p">()}</span>
 
         <span class="n">lul_step</span> <span class="o">=</span> <span class="n">lul</span>
 
         <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n</span><span class="p">):</span>
+
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">verbose</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1"># Territory multisteps allocate &#39;</span><span class="o">+</span><span class="nb">str</span><span class="p">(</span><span class="n">i</span><span class="p">)</span><span class="o">+</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
 
             <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">path_prefix</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
                 <span class="n">path_step</span> <span class="o">=</span> <span class="n">path_prefix</span> <span class="o">+</span> <span class="s1">&#39;_&#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">i</span><span class="p">)</span> <span class="o">+</span> <span class="s1">&#39;.tif&#39;</span>
@@ -305,6 +340,10 @@
                                        <span class="n">lul</span><span class="o">=</span><span class="n">lul_step</span><span class="p">,</span>
                                        <span class="n">masks</span><span class="o">=</span><span class="n">masks</span><span class="p">,</span>
                                        <span class="n">path</span><span class="o">=</span><span class="n">path_step</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">verbose</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Territory multisteps allocate &#39;</span><span class="o">+</span><span class="nb">str</span><span class="p">(</span><span class="n">i</span><span class="p">)</span><span class="o">+</span><span class="s1">&#39; done.</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
+
         <span class="k">if</span> <span class="n">path_prefix</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="k">return</span> <span class="n">lul_step</span></div></div>
 </pre></div>

@@ -99,10 +99,10 @@
 <tr class="row-odd"><td><p><a class="reference internal" href="generated/clumpy.Land.html#clumpy.Land" title="clumpy.Land"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Land</span></code></a>(features, transition_probability_estimator)</p></td>
 <td><p>Land object which refers to a given initial state.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="generated/clumpy.Region.html#clumpy.Region" title="clumpy.Region"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Region</span></code></a>(label[, verbose])</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="generated/clumpy.Region.html#clumpy.Region" title="clumpy.Region"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Region</span></code></a>(label[, verbose, verbose_heading_level])</p></td>
 <td><p>Define a region.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="generated/clumpy.Territory.html#clumpy.Territory" title="clumpy.Territory"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Territory</span></code></a>([regions])</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="generated/clumpy.Territory.html#clumpy.Territory" title="clumpy.Territory"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Territory</span></code></a>([regions, verbose, …])</p></td>
 <td><p>Territory.</p></td>
 </tr>
 </tbody>
@@ -192,7 +192,7 @@
 </colgroup>
 <tbody>
 <tr class="row-odd"><td><p><a class="reference internal" href="generated/clumpy.allocation.compute_bootstrap_patches.html#clumpy.allocation.compute_bootstrap_patches" title="clumpy.allocation.compute_bootstrap_patches"><code class="xref py py-obj docutils literal notranslate"><span class="pre">allocation.compute_bootstrap_patches</span></code></a>(state, …)</p></td>
-<td><p></p></td>
+<td><p>Compute bootstrap patches</p></td>
 </tr>
 </tbody>
 </table>
@@ -212,6 +212,24 @@
 </tbody>
 </table>
 </section>
+</section>
+<section id="module-clumpy.tools">
+<span id="tools"></span><h2>Tools<a class="headerlink" href="#module-clumpy.tools" title="Permalink to this headline">¶</a></h2>
+<p>Tools blabla</p>
+<table class="longtable docutils align-default">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="generated/clumpy.start_log.html#clumpy.start_log" title="clumpy.start_log"><code class="xref py py-obj docutils literal notranslate"><span class="pre">start_log</span></code></a>(filename)</p></td>
+<td><p>Start transcript, appending print output to given filename.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="generated/clumpy.stop_log.html#clumpy.stop_log" title="clumpy.stop_log"><code class="xref py py-obj docutils literal notranslate"><span class="pre">stop_log</span></code></a>()</p></td>
+<td><p>Stop transcript and return print functionality to normal</p></td>
+</tr>
+</tbody>
+</table>
 </section>
 </section>
 
@@ -249,6 +267,7 @@
 <li><a class="reference internal" href="#module-clumpy.allocation._allocator">Allocators</a></li>
 </ul>
 </li>
+<li><a class="reference internal" href="#module-clumpy.tools">Tools</a></li>
 </ul>
 </li>
 </ul>

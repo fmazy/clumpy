@@ -22,8 +22,11 @@ class TransitionProbabilityEstimator():
     """
     Transition probability estimator base class.
     """
-    def __init__(self, verbose):
+    def __init__(self,
+                 verbose=0,
+                 verbose_heading_level=1):
         self.verbose = verbose
+        self.verbose_heading_level = verbose_heading_level
 
     def check(self):
         """

@@ -137,3 +137,18 @@ Allocators
    :template: class.rst
 
    allocation.Unbiased
+
+Tools
+=====
+.. automodule:: clumpy.tools
+   :no-members:
+   :no-inherited-members:
+
+.. currentmodule:: clumpy
+
+.. autosummary::
+   :toctree: generated/
+   :template: function.rst
+
+   start_log
+   stop_log

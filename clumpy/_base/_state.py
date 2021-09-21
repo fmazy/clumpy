@@ -127,7 +127,12 @@ class Palette():
             return(info)
         else:
             raise(TypeError("Unexpected info type. Should be int or str or State"))
-        
+
+    def extract(self, infos):
+        states = [self.get(info) for info in infos]
+
+        return(Palette(states=states))
+
     def _get_id(self, state):
         """
         Get a state index.

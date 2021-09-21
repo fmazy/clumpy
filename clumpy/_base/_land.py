@@ -6,7 +6,7 @@ import numpy as np
 
 # base import
 from ._layer import Layer, FeatureLayer, LandUseLayer
-from . import State
+from . import State, TransitionMatrix
 
 # Transition Probability Estimator
 from ..transition_probability_estimation._tpe import TransitionProbabilityEstimator
@@ -16,6 +16,7 @@ from ..feature_selection._feature_selector import FeatureSelector
 
 # Tools
 from ..tools._path import path_split
+from ..tools._console import title_heading
 
 # Allocation
 from ..allocation._allocator import Allocator
@@ -36,8 +37,11 @@ class Land():
     allocator : Allocator, default=None
         Allocator. If `None`, the allocation is not available.
     
-    verbose : int, default=None
+    verbose : int, default=0
         Verbosity level.
+
+    verbose_heading_level : int, default=1
+        Verbose heading level for markdown titles. If ``0``, no markdown title are printed.
     """
 
     def __init__(self,
@@ -45,7 +49,8 @@ class Land():
                  transition_probability_estimator,
                  feature_selection=None,
                  allocator=None,
-                 verbose=0):
+                 verbose=0,
+                 verbose_heading_level=1):
 
         # Transition probability estimator
         if ~isinstance(transition_probability_estimator, TransitionProbabilityEstimator):
@@ -65,6 +70,7 @@ class Land():
         self.allocator = allocator
 
         self.verbose = verbose
+        self.verbose_heading_level = verbose_heading_level
 
     def __repr__(self):
         return 'land'
@@ -246,7 +252,7 @@ class Land():
         """
 
         if self.verbose > 0:
-            print('\n#### Land '+str(state)+' fitting\n')
+            print(title_heading(self.verbose_heading_level)+'Land '+str(state)+' fitting\n')
 
         self._fit_tpe(state=state,
                       lul_initial=lul_initial,
@@ -337,6 +343,50 @@ class Land():
 
         return J_allocation, P_v__u_Y
 
+    def compute_transition_matrix(self,
+                                 state,
+                                 lul_initial,
+                                 lul_final,
+                                 mask=None):
+        """
+        Compute the transition matrix.
+
+        Parameters
+        ----------
+        state : State
+            The initial state of this land.
+
+        lul_initial : LandUseLayer
+            The initial land use.
+
+        lul_final : LandUseLayer
+            The final land use.
+
+        mask : MaskLayer, default = None
+            The region mask layer. If ``None``, the whole area is studied.
+
+        Returns
+        -------
+        tm : TransitionMatrix
+            The computed transition matrix.
+        """
+        J, V = self.get_values(state=state,
+                               lul_initial=lul_initial,
+                               lul_final=lul_final,
+                               mask=mask,
+                               explanatory_variables=False)
+
+        v_unique, n_counts = np.unique(V, return_counts=True)
+        P_v = n_counts / n_counts.sum()
+        P_v = P_v[None,:]
+
+        palette_u = lul_initial.palette.extract(infos=[state])
+        palette_v = lul_final.palette.extract(infos=v_unique)
+
+        return(TransitionMatrix(M=P_v,
+                                palette_u=palette_u,
+                                palette_v=palette_v))
+
     def transition_probabilities(self,
                                  state,
                                  P_v,
@@ -387,7 +437,7 @@ class Land():
         """
 
         if self.verbose > 0:
-            print('\n#### Land '+str(state)+' TPE\n')
+            print(title_heading(self.verbose_heading_level)+'Land '+str(state)+' TPE\n')
 
         J, P_v__u_Y = self._compute_tpe(state=state,
                                         lul=lul,
@@ -469,7 +519,7 @@ class Land():
             raise (ValueError("Unexpected 'allocator'. A clumpy.allocation.Allocator object is expected."))
 
         if self.verbose > 0:
-            print('\n#### Land '+str(state)+' allocation\n')
+            print(title_heading(self.verbose_heading_level)+'Land '+str(state)+' allocation\n')
 
         self.allocator(state=state,
                        land=self,

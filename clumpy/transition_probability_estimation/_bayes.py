@@ -5,6 +5,7 @@ from ..density_estimation import GKDE
 import numpy as np
 from ..density_estimation._density_estimator import DensityEstimator, NullEstimator
 from ..density_estimation import _methods
+from ..tools._console import title_heading
 
 class Bayes(TransitionProbabilityEstimator):
     """
@@ -12,25 +13,44 @@ class Bayes(TransitionProbabilityEstimator):
 
     Parameters
     ----------
+    density_estimator : {'gkde'} or DensityEstimator, default='gkde'
+        Density estimator used for :math:`P(Y|u)`. If string, a new object is invoked with default parameters.
+
+    n_corrections_max : int, default=1000
+        Maximum number of corrections during the bayesian adjustment algorithm.
+
+    log_computations : bool, default=False
+        If ``True``, bayesian computations are made through log sums.
+
+    verbose : int, default=0
+        Verbosity level.
+
+    verbose_heading_level : int, default=1
+        Verbose heading level for markdown titles. If ``0``, no markdown title are printed.
 
     """
     def __init__(self,
                  density_estimator='gkde',
                  n_corrections_max=1000,
                  log_computations=False,
-                 verbose=0):
+                 verbose=0,
+                 verbose_heading_level=1):
+
+        super.__init__(verbose=verbose,
+                       verbose_heading_level=verbose_heading_level)
 
         if isinstance(density_estimator, DensityEstimator):
             self.density_estimator = density_estimator
         elif density_estimator in _methods:
-            self.density_estimator = _methods[density_estimator]()
+            self.density_estimator = _methods[density_estimator](verbose = self.verbose - 1,
+                                                                 verbose_heading_level = self.verbose_heading_level + 1)
         else:
             raise (ValueError('Unexpected density_estimator value.'))
 
         self.n_corrections_max = n_corrections_max
         self.log_computations = log_computations
 
-        super.__init__(verbose=verbose)
+
 
     def add_conditional_density_estimator(self, state, de='gkde'):
         """
@@ -97,7 +117,7 @@ class Bayes(TransitionProbabilityEstimator):
 
         """
         if self.verbose > 0:
-            print('TPE fitting...')
+            print(title_heading(self.verbose_heading_level)+'TPE fitting')
             print('Conditional density estimators fitting :')
 
         for state_v, cde in self.conditional_density_estimators.items():
@@ -141,7 +161,7 @@ class Bayes(TransitionProbabilityEstimator):
         """
 
         if self.verbose > 0:
-            print('TPE computing...')
+            print(title_heading(self.verbose_heading_level)+'TPE computing')
 
         # forbid_null_value is forced to True by default for this density estimator
         self.density_estimator.set_params(forbid_null_value=True)

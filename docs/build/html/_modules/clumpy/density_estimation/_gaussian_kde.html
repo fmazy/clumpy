@@ -57,6 +57,7 @@
 <span class="kn">from</span> <span class="nn">._density_estimator</span> <span class="kn">import</span> <span class="n">DensityEstimator</span>
 <span class="kn">from</span> <span class="nn">._whitening_transformer</span> <span class="kn">import</span> <span class="n">_WhiteningTransformer</span>
 <span class="kn">from</span> <span class="nn">..utils._hyperplane</span> <span class="kn">import</span> <span class="n">Hyperplane</span>
+<span class="kn">from</span> <span class="nn">..tools._console</span> <span class="kn">import</span> <span class="n">title_heading</span>
 
 <span class="kn">import</span> <span class="nn">sys</span>
 
@@ -122,31 +123,34 @@
 <span class="sd">        Note: fitting on sparse input will override the setting of this parameter, using brute force.</span>
 <span class="sd">        </span>
 <span class="sd">    leaf_size : int, default=30</span>
-
 <span class="sd">        Leaf size passed to BallTree or KDTree. This can affect the speed of the construction and query, as well as the memory required to store the tree. The optimal value depends on the nature of the problem.</span>
 
-<span class="sd">    </span>
 <span class="sd">    support_factor : float, default=3</span>
 <span class="sd">        The kernel support factor, even if kernel has infinite support.</span>
-<span class="sd">    </span>
+
+<span class="sd">    n_fit_max : int, default=np.inf</span>
+<span class="sd">        The maximum number of training samples. A random sampling is done if necessary.</span>
+
 <span class="sd">    n_predict_max : int, default=2*10**4</span>
 <span class="sd">        The maximum of simultaneous probability estimations.</span>
 <span class="sd">        Several streams are consequently created.</span>
-<span class="sd">    </span>
+
 <span class="sd">    forbid_null_value : bool, default=False</span>
 <span class="sd">        If ``True``, the null value is forbiden and a correction is made if</span>
 <span class="sd">        necessary.</span>
-<span class="sd">    </span>
+
 <span class="sd">    n_jobs_predict : int, default=2</span>
 <span class="sd">        The number of parallel jobs to predict according to streams defined</span>
 <span class="sd">        by ``n_predict_max``.</span>
-<span class="sd">    </span>
+
 <span class="sd">    n_jobs_neighbors : int, default=1</span>
 <span class="sd">        The number of parallel jobs to run for neighbors search.</span>
-<span class="sd">        </span>
-<span class="sd">    </span>
+
 <span class="sd">    verbose : int, default=0</span>
 <span class="sd">        The verbosity level.</span>
+
+<span class="sd">    verbose_heading_level : int, default=1</span>
+<span class="sd">        Verbose heading level for markdown titles. If ``0``, no markdown title are printed.</span>
 
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
@@ -159,23 +163,27 @@
                  <span class="n">algorithm</span><span class="o">=</span><span class="s1">&#39;kd_tree&#39;</span><span class="p">,</span>
                  <span class="n">leaf_size</span><span class="o">=</span><span class="mi">30</span><span class="p">,</span>
                  <span class="n">support_factor</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span>
+                 <span class="n">n_fit_max</span> <span class="o">=</span> <span class="mi">2</span><span class="o">*</span><span class="mi">10</span><span class="o">**</span><span class="mi">4</span><span class="p">,</span>
                  <span class="n">n_predict_max</span> <span class="o">=</span> <span class="mi">2</span><span class="o">*</span><span class="mi">10</span><span class="o">**</span><span class="mi">4</span><span class="p">,</span>
                  <span class="n">forbid_null_value</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
                  <span class="n">n_jobs_predict</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
                  <span class="n">n_jobs_neighbors</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
-                 <span class="n">verbose</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
+                 <span class="n">verbose</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+                 <span class="n">verbose_heading_level</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
         
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">low_bounded_features</span><span class="o">=</span><span class="n">low_bounded_features</span><span class="p">,</span>
                          <span class="n">high_bounded_features</span><span class="o">=</span><span class="n">high_bounded_features</span><span class="p">,</span>
                          <span class="n">low_bounds</span> <span class="o">=</span> <span class="n">low_bounds</span><span class="p">,</span>
                          <span class="n">high_bounds</span> <span class="o">=</span> <span class="n">high_bounds</span><span class="p">,</span>
                          <span class="n">forbid_null_value</span> <span class="o">=</span> <span class="n">forbid_null_value</span><span class="p">,</span>
-                         <span class="n">verbose</span><span class="o">=</span><span class="n">verbose</span><span class="p">)</span> 
+                         <span class="n">verbose</span><span class="o">=</span><span class="n">verbose</span><span class="p">,</span>
+                         <span class="n">verbose_heading_level</span><span class="o">=</span><span class="n">verbose_heading_level</span><span class="p">)</span>
         
         <span class="bp">self</span><span class="o">.</span><span class="n">h</span> <span class="o">=</span> <span class="n">h</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">algorithm</span> <span class="o">=</span> <span class="n">algorithm</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">leaf_size</span> <span class="o">=</span> <span class="n">leaf_size</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">support_factor</span> <span class="o">=</span> <span class="n">support_factor</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">n_fit_max</span> <span class="o">=</span> <span class="n">n_fit_max</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">n_predict_max</span> <span class="o">=</span> <span class="n">n_predict_max</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">n_jobs_predict</span> <span class="o">=</span> <span class="n">n_jobs_predict</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">n_jobs_neighbors</span> <span class="o">=</span> <span class="n">n_jobs_neighbors</span>
@@ -202,6 +210,20 @@
 <span class="sd">            The fitted GKDE object.</span>
 
 <span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">verbose</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="n">title_heading</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">verbose_heading_level</span><span class="p">)</span><span class="o">+</span><span class="s1">&#39;GKDE fitting...&#39;</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">X</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">&gt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">n_fit_max</span><span class="p">:</span>
+            <span class="n">X</span> <span class="o">=</span> <span class="n">X</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">sample</span><span class="p">(</span><span class="n">a</span><span class="o">=</span><span class="n">X</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>
+                                   <span class="n">size</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">n_fit_max</span><span class="p">,</span>
+                                   <span class="n">replace</span><span class="o">=</span><span class="kc">False</span><span class="p">)]</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">_force_forbid_null_value</span> <span class="o">=</span> <span class="kc">True</span>
+
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">verbose</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;n_fit_max overshoot. Random sampling done.&#39;</span><span class="p">)</span>
+
         <span class="c1"># preprocessing</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">preprocessing</span> <span class="o">==</span> <span class="s1">&#39;standard&#39;</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_preprocessor</span> <span class="o">=</span> <span class="n">StandardScaler</span><span class="p">()</span>
@@ -213,6 +235,9 @@
         
         <span class="k">else</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_data</span> <span class="o">=</span> <span class="n">X</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">verbose</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Preprocessing done.&#39;</span><span class="p">)</span>
         
         <span class="c1"># get data dimensions</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_n</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_data</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
@@ -231,7 +256,7 @@
             <span class="n">A_wt</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_preprocessor</span><span class="o">.</span><span class="n">transform</span><span class="p">(</span><span class="n">A</span><span class="p">)</span>
             
             <span class="bp">self</span><span class="o">.</span><span class="n">_low_bounds_hyperplanes</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">Hyperplane</span><span class="p">()</span><span class="o">.</span><span class="n">set_by_points</span><span class="p">(</span><span class="n">A_wt</span><span class="p">))</span>
-        
+
         <span class="c1"># high bounds</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">high_bounds</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">high_bounds</span><span class="p">)</span> <span class="o">!=</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">high_bounded_features</span><span class="p">):</span>
             <span class="k">raise</span><span class="p">(</span><span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;unexpected low bounds value&quot;</span><span class="p">))</span>
@@ -245,7 +270,9 @@
             
             <span class="bp">self</span><span class="o">.</span><span class="n">_high_bounds_hyperplanes</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">Hyperplane</span><span class="p">()</span><span class="o">.</span><span class="n">set_by_points</span><span class="p">(</span><span class="n">A_wt</span><span class="p">))</span>
             
-        
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">verbose</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Boundaries initialization done.&#39;</span><span class="p">)</span>
+
         <span class="c1"># BANDWIDTH SELECTION</span>
         <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">h</span><span class="p">)</span> <span class="ow">is</span> <span class="nb">int</span> <span class="ow">or</span> <span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">h</span><span class="p">)</span> <span class="ow">is</span> <span class="nb">float</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_h</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">h</span><span class="p">)</span>
@@ -257,17 +284,25 @@
                 <span class="k">raise</span><span class="p">(</span><span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Unexpected bandwidth selection method.&quot;</span><span class="p">))</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="k">raise</span><span class="p">(</span><span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;Unexpected bandwidth type.&quot;</span><span class="p">))</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">verbose</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Bandwidth selection done : h=&#39;</span><span class="o">+</span><span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_h</span><span class="p">))</span>
         
         <span class="c1"># NORMALIZATION FACTOR</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_normalization</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">/</span> <span class="p">((</span><span class="mi">2</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="p">)</span><span class="o">**</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_d</span><span class="o">/</span><span class="mi">2</span><span class="p">)</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">_h</span><span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">_d</span><span class="p">)</span>
         
         <span class="c1"># NEAREST NEIGHBOR FITTING</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">verbose</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="n">title_heading</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">verbose_heading_level</span><span class="p">)</span><span class="o">+</span><span class="s1">&#39;sklearn.neighbors.NearestNeighbors fitting...&#39;</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_nn</span> <span class="o">=</span> <span class="n">NearestNeighbors</span><span class="p">(</span><span class="n">radius</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_h</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">support_factor</span><span class="p">,</span>
                                    <span class="n">algorithm</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">algorithm</span><span class="p">,</span>
                                    <span class="n">leaf_size</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">leaf_size</span><span class="p">,</span>
                                    <span class="n">n_jobs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">n_jobs_neighbors</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_nn</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_data</span><span class="p">)</span>
-        
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">verbose</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;sklearn.neighbors.NearestNeighbors fitting done.&#39;</span><span class="p">)</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;GKDE fitting done.&#39;</span><span class="p">)</span>
         <span class="k">return</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span></div>
         
 <div class="viewcode-block" id="GKDE.predict"><a class="viewcode-back" href="../../../generated/clumpy.density_estimation.GKDE.html#clumpy.density_estimation.GKDE.predict">[docs]</a>    <span class="k">def</span> <span class="nf">predict</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">):</span>
@@ -284,7 +319,13 @@
 <span class="sd">        f : ndarray of shape (n_samples,)</span>
 <span class="sd">            The estimated probabilities.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">verbose</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="n">title_heading</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">verbose_heading_level</span><span class="p">)</span><span class="o">+</span><span class="s1">&#39;GKDE Predict&#39;</span><span class="p">)</span>
+
         <span class="n">pdf</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_predict_with_bandwidth</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_h</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">verbose</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;GKDE predict done.&#39;</span><span class="p">)</span>
         <span class="k">return</span><span class="p">(</span><span class="n">pdf</span><span class="p">)</span></div>
     
     <span class="k">def</span> <span class="nf">_predict_with_bandwidth</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span> <span class="n">h</span><span class="p">):</span>
@@ -313,14 +354,17 @@
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">preprocessing</span> <span class="o">!=</span> <span class="s1">&#39;none&#39;</span><span class="p">:</span>
             <span class="n">X</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_preprocessor</span><span class="o">.</span><span class="n">transform</span><span class="p">(</span><span class="n">X</span><span class="p">)</span>
         
-        
-        
+
         <span class="c1"># STEPS INITIALIZATION</span>
         <span class="c1"># requested elements are not estimated alltogether in order to</span>
         <span class="c1"># improve numerical computations.</span>
         <span class="c1"># the limit is given by n_predict_max</span>
         <span class="n">steps</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">X</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">n_predict_max</span><span class="p">)</span>
-        
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">verbose</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="n">title_heading</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">verbose_heading_level</span><span class="p">)</span><span class="o">+</span><span class="s1">&#39;Gaussian kernel&#39;</span><span class="p">)</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;process with &#39;</span><span class="o">+</span><span class="nb">str</span><span class="p">(</span><span class="n">steps</span><span class="o">.</span><span class="n">size</span><span class="p">)</span><span class="o">+</span><span class="s1">&#39; streams computed in parallel through &#39;</span><span class="o">+</span><span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">n_jobs_predict</span><span class="p">)</span><span class="o">+</span><span class="s1">&#39; CPUs.&#39;</span><span class="p">)</span>
+
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">n_jobs_predict</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
             <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">verbose</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
                 <span class="n">steps</span> <span class="o">=</span> <span class="n">tqdm</span><span class="p">(</span><span class="n">steps</span><span class="p">)</span>
@@ -347,11 +391,17 @@
                 <span class="n">restart_line</span><span class="p">()</span>
                 <span class="n">sys</span><span class="o">.</span><span class="n">stdout</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;done</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
                 <span class="n">sys</span><span class="o">.</span><span class="n">stdout</span><span class="o">.</span><span class="n">flush</span><span class="p">()</span>
-        
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">verbose</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Gaussian kernel process done.&#39;</span><span class="p">)</span>
+
         <span class="c1"># Normalization</span>
         <span class="n">f</span> <span class="o">*=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_normalization</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">_n</span>
         
         <span class="c1"># boundary bias correction</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">verbose</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="n">title_heading</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">verbose_heading_level</span><span class="p">)</span><span class="o">+</span><span class="s1">&#39;Boundary bias correction...&#39;</span><span class="p">)</span>
+
         <span class="k">for</span> <span class="n">bounds_hyperplanes</span> <span class="ow">in</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">_low_bounds_hyperplanes</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_high_bounds_hyperplanes</span><span class="p">]:</span>
             <span class="k">for</span> <span class="n">hyperplane</span> <span class="ow">in</span> <span class="n">bounds_hyperplanes</span><span class="p">:</span>
                 <span class="n">f</span> <span class="o">/=</span> <span class="mi">1</span> <span class="o">/</span> <span class="mi">2</span> <span class="o">*</span> <span class="p">(</span><span class="mi">1</span> <span class="o">+</span> <span class="n">erf</span><span class="p">(</span><span class="n">hyperplane</span><span class="o">.</span><span class="n">distance</span><span class="p">(</span><span class="n">X</span><span class="p">)</span> <span class="o">/</span> <span class="n">h</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="mi">2</span><span class="p">)))</span>
@@ -359,23 +409,30 @@
         <span class="c1"># outside bounds : equal to 0</span>
         <span class="n">f</span><span class="p">[</span><span class="n">id_out_of_low_bounds</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
         <span class="n">f</span><span class="p">[</span><span class="n">id_out_of_high_bounds</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
-            
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">verbose</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Boundary bias correction done.&#39;</span><span class="p">)</span>
         
         <span class="c1"># Preprocessing correction</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">preprocessing</span> <span class="o">!=</span> <span class="s1">&#39;none&#39;</span><span class="p">:</span>
             <span class="n">f</span> <span class="o">/=</span> <span class="n">np</span><span class="o">.</span><span class="n">product</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_preprocessor</span><span class="o">.</span><span class="n">scale_</span><span class="p">)</span>
-        
-        <span class="c1"># if null value is forbiden</span>
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">forbid_null_value</span><span class="p">:</span>
-            <span class="n">idx</span> <span class="o">=</span> <span class="n">f</span> <span class="o">==</span> <span class="mf">0.0</span>
-            
-            <span class="n">new_n</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_n</span> <span class="o">+</span> <span class="n">idx</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span>
-            
-            <span class="n">f</span> <span class="o">=</span> <span class="n">f</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">_n</span> <span class="o">/</span> <span class="n">new_n</span>
-            
-            <span class="n">min_value</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">/</span> <span class="n">new_n</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">_normalization</span> <span class="o">*</span> <span class="n">_gaussian</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
-            <span class="n">f</span><span class="p">[</span><span class="n">f</span> <span class="o">==</span> <span class="mf">0.0</span><span class="p">]</span> <span class="o">=</span> <span class="n">min_value</span>
-        
+
+            <span class="c1"># if null value is forbiden</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">forbid_null_value</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">_force_forbid_null_value</span><span class="p">:</span>
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">verbose</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+                    <span class="nb">print</span><span class="p">(</span><span class="n">title_heading</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">verbose_heading_level</span><span class="p">)</span><span class="o">+</span><span class="s1">&#39;Null value correction...&#39;</span><span class="p">)</span>
+                <span class="n">idx</span> <span class="o">=</span> <span class="n">f</span> <span class="o">==</span> <span class="mf">0.0</span>
+
+                <span class="n">new_n</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_n</span> <span class="o">+</span> <span class="n">idx</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span>
+
+                <span class="n">f</span> <span class="o">=</span> <span class="n">f</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">_n</span> <span class="o">/</span> <span class="n">new_n</span>
+
+                <span class="n">min_value</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">/</span> <span class="n">new_n</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">_normalization</span> <span class="o">*</span> <span class="n">_gaussian</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+                <span class="n">f</span><span class="p">[</span><span class="n">f</span> <span class="o">==</span> <span class="mf">0.0</span><span class="p">]</span> <span class="o">=</span> <span class="n">min_value</span>
+
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">verbose</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+                    <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Null value correction done.&#39;</span><span class="p">)</span>
+
         <span class="k">return</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
             
 <div class="viewcode-block" id="GKDE.marginal"><a class="viewcode-back" href="../../../generated/clumpy.density_estimation.GKDE.html#clumpy.density_estimation.GKDE.marginal">[docs]</a>    <span class="k">def</span> <span class="nf">marginal</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>

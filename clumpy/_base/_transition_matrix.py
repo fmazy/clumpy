@@ -263,9 +263,13 @@ class TransitionMatrix():
         
         return(full_M)
 
-def compute_transition_matrix(V_u, palette_u, palette_v):
+def compute_transition_matrix(V_state, palette_u, palette_v):
     """
     Compute the transition matrix from final states vectors.
+
+    Parameters
+    ----------
+
     """
     list_u = palette_u.get_list_of_values()
     list_v = palette_v.get_list_of_values()
@@ -297,9 +301,7 @@ def load_transition_matrix(path, palette):
     
     list_u = list(data[1:,0].astype(int))
     list_v = list(data[0,1:].astype(int))
-    
-    
-    
+
     M = data[1:,1:]
     
     return(TransitionMatrix(M, list_u, list_v))

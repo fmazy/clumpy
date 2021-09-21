@@ -52,6 +52,20 @@
 <em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">clumpy.</span></span><span class="sig-name descname"><span class="pre">MaskLayer</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">label</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">time</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">path</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">data</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">copy_geo</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/clumpy/_base/_layer.html#MaskLayer"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#clumpy.MaskLayer" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">clumpy._base._layer.Layer</span></code></p>
 <p>Mask layer.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>label</strong> (<em>str</em><em>, </em><em>default=``None``</em>) – The layer label.</p></li>
+<li><p><strong>time</strong> (<em>float</em><em>, </em><em>default=``0``</em>) – The layer time (year unit).</p></li>
+<li><p><strong>path</strong> (<em>str</em>) – The tiff file path.
+If <code class="docutils literal notranslate"><span class="pre">data</span></code> is provided, a new tiff file will be created according to this path
+and this operation overwrites the file path if exists.</p></li>
+<li><p><strong>data</strong> (<a class="reference external" href="https://numpy.org/doc/1.19/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.19)"><code class="xref py py-class docutils literal notranslate"><span class="pre">numpy.ndarray</span></code></a>, defaul=None) – The data to write. If <code class="docutils literal notranslate"><span class="pre">None</span></code>, no writing is made.</p></li>
+<li><p><strong>copy_geo</strong> (<a class="reference internal" href="clumpy.LandUseLayer.html#clumpy.LandUseLayer" title="clumpy.LandUseLayer"><code class="xref py py-class docutils literal notranslate"><span class="pre">LandUseLayer</span></code></a>, default=None) – The layer from whose geo metadata are copied.
+If <code class="docutils literal notranslate"><span class="pre">None</span></code>, geo metadata are set to <code class="docutils literal notranslate"><span class="pre">None</span></code>.</p></li>
+</ul>
+</dd>
+</dl>
 <p class="rubric">Methods</p>
 <table class="longtable docutils align-default">
 <colgroup>
