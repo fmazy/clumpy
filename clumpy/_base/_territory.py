@@ -9,6 +9,7 @@ Created on Fri Sep 17 15:40:56 2021
 from . import LandUseLayer
 from ..tools._path import path_split
 
+# TODO : ajouter un self.verbosity_head_level à toutes les classes pour connaître le niveau de titre markdown.
 
 class Territory():
     """
