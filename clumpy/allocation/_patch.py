@@ -41,7 +41,11 @@ class Patch():
         self.proceed_even_if_no_probability = proceed_even_if_no_probability
         self.n_tries_target_sample = n_tries_target_sample
         self.equi_neighbors_proba = equi_neighbors_proba
-    
+
+        # for compatibility, set mean area and eccentricities to 1.0 by default.
+        self.area_mean = 1.0
+        self.eccentricities_mean = 1.0
+
     def sample(self, n):
         """
         draws patches.
@@ -161,11 +165,12 @@ class BootstrapPatch(Patch):
         self
         """
 
-        self.areas = areas
-        self.eccentricities = eccentricities
+        if areas.size > 0 and areas.size == eccentricities.size:
+            self.areas = areas
+            self.eccentricities = eccentricities
 
-        self.area_mean = np.mean(areas)
-        self.eccentricities_mean = np.mean(eccentricities)
+            self.area_mean = np.mean(areas)
+            self.eccentricities_mean = np.mean(eccentricities)
 
         return(self)
 

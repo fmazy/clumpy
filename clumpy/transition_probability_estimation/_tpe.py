@@ -28,6 +28,10 @@ class TransitionProbabilityEstimator():
         self.verbose = verbose
         self.verbose_heading_level = verbose_heading_level
 
+        # list of fitted final states.
+        # this list is used by allocators
+        self._fitted_final_states = []
+
     def check(self):
         """
         Check the density estimators uniqueness.

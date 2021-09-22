@@ -140,14 +140,17 @@ class TransitionMatrix():
 
         Parameters
         ----------
-        infos : list(int or State)
-            List of initial state information which can be the object, the state's value or the state's label.
+        infos : int or state or list(int or State)
+            Initial state information which can be the object, the state's value or the state's label or a list of them. It will constitutes the initial palette.
 
         Returns
         -------
         tm : TransitionMatrix
             The extracted transition matrix object.
         """
+        if not isinstance(infos, list):
+            infos = [infos]
+
         states_id = [self.palette_u.get_id(info) for info in infos]
         states = [self.palette_u.states[i] for i in states_id]
 
@@ -155,7 +158,7 @@ class TransitionMatrix():
 
         return (TransitionMatrix(M, Palette(states), self.palette_v))
 
-    def merge(self, tm, inplace=True):
+    def merge(self, tm, inplace=False):
         """
         Merge the transition matrix to another.
 
@@ -166,6 +169,11 @@ class TransitionMatrix():
 
         inplace : bool, default=True
             Inplace operation
+
+        Returns
+        -------
+        tm : TransitionMatrix
+            The merged transition matrix. If ``inplace=True``, it is the self object. Else, it is a new object.
         """
         # if one is empty:
         if len(self.palette_u) == 0:
@@ -243,7 +251,7 @@ class TransitionMatrix():
 
         return (p, self.palette_v)
 
-    def multisteps(self, n):
+    def multisteps(self, n, inplace=False):
         """
         Computes multisteps transition matrix.
         
@@ -251,11 +259,14 @@ class TransitionMatrix():
         ----------
         n : int
             Number of steps.
+
+        inplace : bool, default=True
+            Inplace operation
         
         Returns
         -------
         tm : TransitionMatrix
-            The computed multistep transition matrix.
+            The multistep transition matrix. If ``inplace=True``, it is the self object. Else, it is a new object.
         """
         tp, _ = self._full_matrix()
 
@@ -269,7 +280,56 @@ class TransitionMatrix():
                                                palette_u=self.palette_u,
                                                palette_v=self.palette_u)
 
-        return (TransitionMatrix(compact_M, self.palette_u, self.palette_v))
+        if inplace:
+            self.M = compact_M
+            return(self)
+        else:
+            return (TransitionMatrix(compact_M, self.palette_u, self.palette_v))
+
+    def patches(self, patches, inplace=False):
+        """
+        divide transition matrix by patches mean area. Useful for allocators.
+        Only available for land transition matrix.
+
+        Parameters
+        ----------
+        patches : dict(State:Patch)
+            Dict of patches with states as keys.
+
+        inplace : bool, default=True
+            Inplace operation
+
+        Returns
+        -------
+        tm : TransitionMatrix
+            The computed transition matrix. If ``inplace=True``, it is the self object. Else, it is a new object.
+        """
+        # P_v is divided by patch area mean
+        # P_v_patches is then largely smaller.
+        # one keep P_v to update it after the allocation try.
+
+        self._check_land_transition_matrix()
+
+        # get the unique palette_u state
+        state_u = self.palette_u.states[0]
+        # get the index of state_u in palette_v
+        id_state = self.palette_v.get_id(state_u)
+
+        M_patches = self.M.copy()
+        M_patches[0,id_state] = 1
+        for id_state_v, state_v in enumerate(self.palette_v):
+            if state_v != state_u:
+                if state_v in patches.keys():
+                    M_patches[0,id_state_v] /= patches[state_v].area_mean
+                M_patches[0,id_state] -= M_patches[0,id_state_v]
+
+        if inplace:
+            self.M = M_patches
+            return(self)
+        else:
+            return(TransitionMatrix(M=M_patches,
+                                    palette_u=self.palette_u,
+                                    palette_v=self.palette_v))
 
     def _full_matrix(self):
         """

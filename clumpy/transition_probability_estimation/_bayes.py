@@ -148,6 +148,9 @@ class Bayes(TransitionProbabilityEstimator):
             print(title_heading(self.verbose_heading_level) + 'TPE fitting')
             print('Conditional density estimators fitting :')
 
+        # re-initialize the list of fitted final states
+        self._fitted_final_states
+
         for state_v, cde in self.conditional_density_estimators.items():
             if self.verbose > 0:
                 print('state_v : ' + str(state_v))
@@ -165,6 +168,8 @@ class Bayes(TransitionProbabilityEstimator):
             if idx_v.mean() > self.P_v_min[state_v] and idx_v.sum() > self.n_samples_min[state_v]:
                 # Density estimation fit
                 cde.fit(X[idx_v])
+                # add to the list of fitted final states
+                self._fitted_final_states.append(state_v)
             else:
                 # fitting conditions are not satisfying
                 # change the density estimator to the null estimator.

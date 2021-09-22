@@ -9,11 +9,21 @@ from ..tools._path import path_split
 class Allocator():
     """
     Allocator
+
+    Parameters
+    ----------
+    verbose : int, default=0
+        Verbosity level.
+
+    verbose_heading_level : int, default=1
+        Verbose heading level for markdown titles. If ``0``, no markdown title are printed.
     """
     def __init__(self,
-                 verbose=0):
+                 verbose=0,
+                 verbose_heading_level=1):
         self.patches = {}
         self.verbose = verbose
+        self.verbose_heading_level = verbose_heading_level
 
     def add_patch(self,
                   state,
