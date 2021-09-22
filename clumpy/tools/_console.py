@@ -22,16 +22,16 @@ class Transcript(object):
         # you might want to specify some extra behavior here.
         pass
 
-def start_log(filename):
+def start_log(path):
     """
     Start transcript, appending print output to given filename.
 
     Parameters
     ----------
-    filename : str
+    path : str
         Log file path.
     """
-    sys.stdout = Transcript(filename)
+    sys.stdout = Transcript(path)
 
 def stop_log():
     """

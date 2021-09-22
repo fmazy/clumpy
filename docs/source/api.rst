@@ -78,6 +78,21 @@ Transition matrix
 
 Estimation
 ==========
+Feature selection
+-----------------
+.. automodule:: clumpy.feature_selection
+   :no-members:
+   :no-inherited-members:
+
+.. currentmodule:: clumpy
+
+.. autosummary::
+   :toctree: generated/
+   :template: class.rst
+
+   feature_selection.VarianceThreshold
+   feature_selection.CorrelationThreshold
+
 Density Estimation
 ------------------
 

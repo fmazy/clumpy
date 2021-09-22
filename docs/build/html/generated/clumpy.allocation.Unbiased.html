@@ -6,14 +6,13 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
 
-    <title>clumpy.allocation.Unbiased &#8212; clumpy 1.0.0 documentation</title>
+    <title>clumpy.allocation.Unbiased &#8212; clumpy 1.0.1 documentation</title>
     <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
     <link rel="stylesheet" type="text/css" href="../_static/nature.css" />
     <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
     <script src="../_static/jquery.js"></script>
     <script src="../_static/underscore.js"></script>
     <script src="../_static/doctools.js"></script>
-    <script async="async" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
     <link rel="shortcut icon" href="../_static/logo.ico"/>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
@@ -35,7 +34,7 @@
         <li class="right" >
           <a href="clumpy.allocation.compute_bootstrap_patches.html" title="clumpy.allocation.compute_bootstrap_patches"
              accesskey="P">previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="../index.html">clumpy 1.0.0 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">clumpy 1.0.1 documentation</a> &#187;</li>
           <li class="nav-item nav-item-1"><a href="../api.html" accesskey="U">Clumpy API</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href=""><code class="xref py py-mod docutils literal notranslate"><span class="pre">clumpy.allocation</span></code>.Unbiased</a></li> 
       </ul>
@@ -50,14 +49,16 @@
 <h1><code class="xref py py-mod docutils literal notranslate"><span class="pre">clumpy.allocation</span></code>.Unbiased<a class="headerlink" href="#clumpy-allocation-unbiased" title="Permalink to this headline">¶</a></h1>
 <dl class="py class">
 <dt class="sig sig-object py" id="clumpy.allocation.Unbiased">
-<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">clumpy.allocation.</span></span><span class="sig-name descname"><span class="pre">Unbiased</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">update_P_v__u_Y</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_allocation_try</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1000</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">verbose</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/clumpy/allocation/_unbiased.html#Unbiased"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#clumpy.allocation.Unbiased" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">clumpy.allocation.</span></span><span class="sig-name descname"><span class="pre">Unbiased</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">update_P_Y</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_allocation_try</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1000</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">verbose</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">verbose_heading_level</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/clumpy/allocation/_unbiased.html#Unbiased"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#clumpy.allocation.Unbiased" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">clumpy.allocation._allocator.Allocator</span></code></p>
 <p>Unbiased method.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>update_P_v__u_Y</strong> (<em>bool</em><em>, </em><em>default=True</em>) – If <code class="docutils literal notranslate"><span class="pre">True</span></code>, P(v|u,Y) is updated at each iteration.</p></li>
+<li><p><strong>update_P_Y</strong> (<em>bool</em><em>, </em><em>default=True</em>) – If <code class="docutils literal notranslate"><span class="pre">True</span></code>, P(Y) is updated at each iteration.</p></li>
 <li><p><strong>n_allocation_try</strong> (<em>int</em><em>, </em><em>default=10**3</em>) – Maximum number of iterations.</p></li>
+<li><p><strong>verbose</strong> (<em>int</em><em>, </em><em>default=0</em>) – Verbosity level.</p></li>
+<li><p><strong>verbose_heading_level</strong> (<em>int</em><em>, </em><em>default=1</em>) – Verbose heading level for markdown titles. If <code class="docutils literal notranslate"><span class="pre">0</span></code>, no markdown title are printed.</p></li>
 </ul>
 </dd>
 </dl>
@@ -71,11 +72,22 @@
 <tr class="row-odd"><td><p><a class="reference internal" href="#clumpy.allocation.Unbiased.add_patch" title="clumpy.allocation.Unbiased.add_patch"><code class="xref py py-obj docutils literal notranslate"><span class="pre">add_patch</span></code></a>(state, patch)</p></td>
 <td><p>Add a patch object for a given final state.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#clumpy.allocation.Unbiased.allocate" title="clumpy.allocation.Unbiased.allocate"><code class="xref py py-obj docutils literal notranslate"><span class="pre">allocate</span></code></a>(state, land, P_v, palette_v, lul[, …])</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#clumpy.allocation.Unbiased.allocate" title="clumpy.allocation.Unbiased.allocate"><code class="xref py py-obj docutils literal notranslate"><span class="pre">allocate</span></code></a>(transition_matrix, land, lul[, …])</p></td>
 <td><p>Allocate</p></td>
 </tr>
 <tr class="row-odd"><td><p><a class="reference internal" href="#clumpy.allocation.Unbiased.set_patches" title="clumpy.allocation.Unbiased.set_patches"><code class="xref py py-obj docutils literal notranslate"><span class="pre">set_patches</span></code></a>(patches)</p></td>
 <td><p>Set patches</p></td>
+</tr>
+</tbody>
+</table>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 58%" />
+<col style="width: 42%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><strong>set_params</strong></p></td>
+<td></td>
 </tr>
 </tbody>
 </table>
@@ -101,16 +113,13 @@
 
 <dl class="py method">
 <dt class="sig sig-object py" id="clumpy.allocation.Unbiased.allocate">
-<span class="sig-name descname"><span class="pre">allocate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">state</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">land</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">P_v</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">palette_v</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lul</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lul_origin</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mask</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">distances_to_states</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">{}</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">path</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#clumpy.allocation.Unbiased.allocate" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">allocate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">transition_matrix</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">land</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lul</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lul_origin</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mask</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">distances_to_states</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">{}</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">path</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#clumpy.allocation.Unbiased.allocate" title="Permalink to this definition">¶</a></dt>
 <dd><p>Allocate</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>state</strong> (<a class="reference internal" href="clumpy.State.html#clumpy.State" title="clumpy.State"><em>State</em></a>) – The initial state of this land.</p></li>
+<li><p><strong>transition_matrix</strong> (<a class="reference internal" href="clumpy.TransitionMatrix.html#clumpy.TransitionMatrix" title="clumpy.TransitionMatrix"><em>TransitionMatrix</em></a>) – Land transition matrix with only one state in <code class="docutils literal notranslate"><span class="pre">tm.palette_u</span></code>.</p></li>
 <li><p><strong>land</strong> (<a class="reference internal" href="clumpy.Land.html#clumpy.Land" title="clumpy.Land"><em>Land</em></a>) – The studied land object.</p></li>
-<li><p><strong>P_v</strong> (<em>ndarray of shape</em><em>(</em><em>len</em><em>(</em><em>palette_v</em><em>,</em><em>)</em><em>)</em>) – The global transition probabilities <span class="math notranslate nohighlight">\(P(v)\)</span>. The order corresponds to
-<code class="docutils literal notranslate"><span class="pre">palette_v</span></code></p></li>
-<li><p><strong>palette_v</strong> (<a class="reference internal" href="clumpy.Palette.html#clumpy.Palette" title="clumpy.Palette"><em>Palette</em></a>) – The final state palette corresponding to <code class="docutils literal notranslate"><span class="pre">P_v</span></code>.</p></li>
 <li><p><strong>lul</strong> (<a class="reference internal" href="clumpy.LandUseLayer.html#clumpy.LandUseLayer" title="clumpy.LandUseLayer"><em>LandUseLayer</em></a><em> or </em><em>ndarray</em>) – The studied land use layer. If ndarray, the matrix is directly edited (inplace).</p></li>
 <li><p><strong>lul_origin</strong> (<a class="reference internal" href="clumpy.LandUseLayer.html#clumpy.LandUseLayer" title="clumpy.LandUseLayer"><em>LandUseLayer</em></a>) – Original land use layer. Usefull in case of regional allocations. If <code class="docutils literal notranslate"><span class="pre">None</span></code>, the  <code class="docutils literal notranslate"><span class="pre">lul</span></code> layer is copied.</p></li>
 <li><p><strong>mask</strong> (<a class="reference internal" href="clumpy.MaskLayer.html#clumpy.MaskLayer" title="clumpy.MaskLayer"><em>MaskLayer</em></a><em>, </em><em>default = None</em>) – The region mask layer. If <code class="docutils literal notranslate"><span class="pre">None</span></code>, the whole map is studied.</p></li>
@@ -136,6 +145,12 @@ Note that if <code class="docutils literal notranslate"><span class="pre">path</
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><p><strong>patches</strong> (<em>dict</em><em>(</em><em>State:Patch</em><em>)</em>) – Dict of patches with states as keys.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p></p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>self</p>
 </dd>
 </dl>
 </dd></dl>
@@ -196,7 +211,7 @@ Note that if <code class="docutils literal notranslate"><span class="pre">path</
         <li class="right" >
           <a href="clumpy.allocation.compute_bootstrap_patches.html" title="clumpy.allocation.compute_bootstrap_patches"
              >previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="../index.html">clumpy 1.0.0 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">clumpy 1.0.1 documentation</a> &#187;</li>
           <li class="nav-item nav-item-1"><a href="../api.html" >Clumpy API</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href=""><code class="xref py py-mod docutils literal notranslate"><span class="pre">clumpy.allocation</span></code>.Unbiased</a></li> 
       </ul>

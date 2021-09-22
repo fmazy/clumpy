@@ -6,7 +6,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
 
-    <title>clumpy.Region &#8212; clumpy 1.0.0 documentation</title>
+    <title>clumpy.Region &#8212; clumpy 1.0.1 documentation</title>
     <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
     <link rel="stylesheet" type="text/css" href="../_static/nature.css" />
     <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
@@ -34,7 +34,7 @@
         <li class="right" >
           <a href="clumpy.Land.html" title="clumpy.Land"
              accesskey="P">previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="../index.html">clumpy 1.0.0 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">clumpy 1.0.1 documentation</a> &#187;</li>
           <li class="nav-item nav-item-1"><a href="../api.html" accesskey="U">Clumpy API</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href=""><code class="xref py py-mod docutils literal notranslate"><span class="pre">clumpy</span></code>.Region</a></li> 
       </ul>
@@ -71,7 +71,7 @@
 <tr class="row-odd"><td><p><a class="reference internal" href="#clumpy.Region.add_land" title="clumpy.Region.add_land"><code class="xref py py-obj docutils literal notranslate"><span class="pre">add_land</span></code></a>(state, land)</p></td>
 <td><p>Add a land for a given state.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#clumpy.Region.allocation" title="clumpy.Region.allocation"><code class="xref py py-obj docutils literal notranslate"><span class="pre">allocation</span></code></a>(transition_matrix, lul[, …])</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#clumpy.Region.allocate" title="clumpy.Region.allocate"><code class="xref py py-obj docutils literal notranslate"><span class="pre">allocate</span></code></a>(transition_matrix, lul[, …])</p></td>
 <td><p>allocation.</p></td>
 </tr>
 <tr class="row-odd"><td><p><a class="reference internal" href="#clumpy.Region.check" title="clumpy.Region.check"><code class="xref py py-obj docutils literal notranslate"><span class="pre">check</span></code></a>()</p></td>
@@ -109,8 +109,8 @@
 </dd></dl>
 
 <dl class="py method">
-<dt class="sig sig-object py" id="clumpy.Region.allocation">
-<span class="sig-name descname"><span class="pre">allocation</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">transition_matrix</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lul</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lul_origin</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mask</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">distances_to_states</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">{}</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">path</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/clumpy/_base/_region.html#Region.allocation"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#clumpy.Region.allocation" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="clumpy.Region.allocate">
+<span class="sig-name descname"><span class="pre">allocate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">transition_matrix</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lul</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lul_origin</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mask</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">distances_to_states</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">{}</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">path</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/clumpy/_base/_region.html#Region.allocate"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#clumpy.Region.allocate" title="Permalink to this definition">¶</a></dt>
 <dd><p>allocation.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -268,7 +268,7 @@ ordered as <code class="docutils literal notranslate"><span class="pre">palette_
         <li class="right" >
           <a href="clumpy.Land.html" title="clumpy.Land"
              >previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="../index.html">clumpy 1.0.0 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">clumpy 1.0.1 documentation</a> &#187;</li>
           <li class="nav-item nav-item-1"><a href="../api.html" >Clumpy API</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href=""><code class="xref py py-mod docutils literal notranslate"><span class="pre">clumpy</span></code>.Region</a></li> 
       </ul>

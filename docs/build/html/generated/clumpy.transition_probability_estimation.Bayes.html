@@ -6,7 +6,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
 
-    <title>clumpy.transition_probability_estimation.Bayes &#8212; clumpy 1.0.0 documentation</title>
+    <title>clumpy.transition_probability_estimation.Bayes &#8212; clumpy 1.0.1 documentation</title>
     <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
     <link rel="stylesheet" type="text/css" href="../_static/nature.css" />
     <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
@@ -35,7 +35,7 @@
         <li class="right" >
           <a href="clumpy.density_estimation.GKDE.html" title="clumpy.density_estimation.GKDE"
              accesskey="P">previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="../index.html">clumpy 1.0.0 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">clumpy 1.0.1 documentation</a> &#187;</li>
           <li class="nav-item nav-item-1"><a href="../api.html" accesskey="U">Clumpy API</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href=""><code class="xref py py-mod docutils literal notranslate"><span class="pre">clumpy.transition_probability_estimation</span></code>.Bayes</a></li> 
       </ul>
@@ -71,13 +71,13 @@
 <col style="width: 90%" />
 </colgroup>
 <tbody>
-<tr class="row-odd"><td><p><a class="reference internal" href="#clumpy.transition_probability_estimation.Bayes.add_conditional_density_estimator" title="clumpy.transition_probability_estimation.Bayes.add_conditional_density_estimator"><code class="xref py py-obj docutils literal notranslate"><span class="pre">add_conditional_density_estimator</span></code></a>(state[, de])</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#clumpy.transition_probability_estimation.Bayes.add_conditional_density_estimator" title="clumpy.transition_probability_estimation.Bayes.add_conditional_density_estimator"><code class="xref py py-obj docutils literal notranslate"><span class="pre">add_conditional_density_estimator</span></code></a>(state[, …])</p></td>
 <td><p>Add conditional density for a given final state.</p></td>
 </tr>
 <tr class="row-even"><td><p><a class="reference internal" href="#clumpy.transition_probability_estimation.Bayes.check" title="clumpy.transition_probability_estimation.Bayes.check"><code class="xref py py-obj docutils literal notranslate"><span class="pre">check</span></code></a>()</p></td>
 <td><p>Check the density estimators uniqueness.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#clumpy.transition_probability_estimation.Bayes.fit" title="clumpy.transition_probability_estimation.Bayes.fit"><code class="xref py py-obj docutils literal notranslate"><span class="pre">fit</span></code></a>(X, V)</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#clumpy.transition_probability_estimation.Bayes.fit" title="clumpy.transition_probability_estimation.Bayes.fit"><code class="xref py py-obj docutils literal notranslate"><span class="pre">fit</span></code></a>(X, V[, low_bounded_features, …])</p></td>
 <td><p>Fit the transition probability estimators.</p></td>
 </tr>
 <tr class="row-even"><td><p><a class="reference internal" href="#clumpy.transition_probability_estimation.Bayes.transition_probability" title="clumpy.transition_probability_estimation.Bayes.transition_probability"><code class="xref py py-obj docutils literal notranslate"><span class="pre">transition_probability</span></code></a>(transition_matrix, Y)</p></td>
@@ -87,7 +87,7 @@
 </table>
 <dl class="py method">
 <dt class="sig sig-object py" id="clumpy.transition_probability_estimation.Bayes.add_conditional_density_estimator">
-<span class="sig-name descname"><span class="pre">add_conditional_density_estimator</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">state</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">de</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'gkde'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/clumpy/transition_probability_estimation/_bayes.html#Bayes.add_conditional_density_estimator"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#clumpy.transition_probability_estimation.Bayes.add_conditional_density_estimator" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">add_conditional_density_estimator</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">state</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">de</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'gkde'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">P_v_min</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">5e-05</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_samples_min</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">500</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/clumpy/transition_probability_estimation/_bayes.html#Bayes.add_conditional_density_estimator"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#clumpy.transition_probability_estimation.Bayes.add_conditional_density_estimator" title="Permalink to this definition">¶</a></dt>
 <dd><p>Add conditional density for a given final state.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -98,6 +98,9 @@
 </dd>
 </dl>
 </p></li>
+<li><p><strong>P_v_min</strong> (<em>float</em><em>, </em><em>default=5*10**</em><em>(</em><em>-5</em><em>)</em>) – </p></li>
+<li><p><strong>global probability to learn.</strong> (<em>Minimum</em>) – </p></li>
+<li><p><strong>n_samples_min</strong> (<em>int</em><em>, </em><em>default=500</em>) – Minimum number of samples to learn.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>
@@ -117,7 +120,7 @@
 
 <dl class="py method">
 <dt class="sig sig-object py" id="clumpy.transition_probability_estimation.Bayes.fit">
-<span class="sig-name descname"><span class="pre">fit</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">X</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">V</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/clumpy/transition_probability_estimation/_bayes.html#Bayes.fit"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#clumpy.transition_probability_estimation.Bayes.fit" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">fit</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">X</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">V</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">low_bounded_features</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">[]</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">high_bounded_features</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">[]</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">low_bounds</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">[]</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">high_bounds</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">[]</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/clumpy/transition_probability_estimation/_bayes.html#Bayes.fit"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#clumpy.transition_probability_estimation.Bayes.fit" title="Permalink to this definition">¶</a></dt>
 <dd><p>Fit the transition probability estimators. Only <span class="math notranslate nohighlight">\(P(Y|u,v)\)</span> is
 concerned.</p>
 <dl class="field-list simple">
@@ -139,7 +142,7 @@ concerned.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="clumpy.transition_probability_estimation.Bayes.transition_probability">
-<span class="sig-name descname"><span class="pre">transition_probability</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">transition_matrix</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Y</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/clumpy/transition_probability_estimation/_bayes.html#Bayes.transition_probability"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#clumpy.transition_probability_estimation.Bayes.transition_probability" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">transition_probability</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">transition_matrix</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Y</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">id_J</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">compute_P_Y__v</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">compute_P_Y</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">save_P_Y__v</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">save_P_Y</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/clumpy/transition_probability_estimation/_bayes.html#Bayes.transition_probability"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#clumpy.transition_probability_estimation.Bayes.transition_probability" title="Permalink to this definition">¶</a></dt>
 <dd><p>Estimates transition probability. Non estimated final states transition probabilities are filled to the null value.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -214,7 +217,7 @@ as <code class="docutils literal notranslate"><span class="pre">transition_matri
         <li class="right" >
           <a href="clumpy.density_estimation.GKDE.html" title="clumpy.density_estimation.GKDE"
              >previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="../index.html">clumpy 1.0.0 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">clumpy 1.0.1 documentation</a> &#187;</li>
           <li class="nav-item nav-item-1"><a href="../api.html" >Clumpy API</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href=""><code class="xref py py-mod docutils literal notranslate"><span class="pre">clumpy.transition_probability_estimation</span></code>.Bayes</a></li> 
       </ul>

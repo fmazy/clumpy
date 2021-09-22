@@ -165,6 +165,42 @@
 
         <span class="k">return</span> <span class="p">(</span><span class="bp">self</span><span class="p">)</span></div>
 
+<div class="viewcode-block" id="Territory.transition_matrices"><a class="viewcode-back" href="../../../generated/clumpy.Territory.html#clumpy.Territory.transition_matrices">[docs]</a>    <span class="k">def</span> <span class="nf">transition_matrices</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
+                            <span class="n">lul_initial</span><span class="p">,</span>
+                            <span class="n">lul_final</span><span class="p">,</span>
+                            <span class="n">masks</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Compute transition matrices</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        lul_initial : LandUseLayer</span>
+<span class="sd">            The initial land use.</span>
+
+<span class="sd">        lul_final : LandUseLayer</span>
+<span class="sd">            The final land use.</span>
+
+<span class="sd">        mask : MaskLayer, default = None</span>
+<span class="sd">            The region mask layer. If ``None``, the whole area is studied.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        tms : dict(Region:TransitionMatrix)</span>
+<span class="sd">            A dict of transition matrices with regions as keys.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">masks</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">masks</span> <span class="o">=</span> <span class="p">{</span><span class="n">region</span><span class="p">:</span> <span class="kc">None</span> <span class="k">for</span> <span class="n">region</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">regions</span><span class="p">}</span>
+
+        <span class="n">tms</span> <span class="o">=</span> <span class="p">{}</span>
+
+        <span class="k">for</span> <span class="n">region</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">regions</span><span class="p">:</span>
+            <span class="n">tms</span><span class="p">[</span><span class="n">region</span><span class="p">]</span> <span class="o">=</span> <span class="n">region</span><span class="o">.</span><span class="n">transition_matrix</span><span class="p">(</span><span class="n">lul_initial</span><span class="o">=</span><span class="n">lul_initial</span><span class="p">,</span>
+                                                                   <span class="n">lul_final</span><span class="o">=</span><span class="n">lul_final</span><span class="p">,</span>
+                                                                   <span class="n">mask</span><span class="o">=</span><span class="n">masks</span><span class="p">[</span><span class="n">region</span><span class="p">])</span>
+
+        <span class="k">return</span><span class="p">(</span><span class="n">tms</span><span class="p">)</span></div>
+
+
 <div class="viewcode-block" id="Territory.transition_probabilities"><a class="viewcode-back" href="../../../generated/clumpy.Territory.html#clumpy.Territory.transition_probabilities">[docs]</a>    <span class="k">def</span> <span class="nf">transition_probabilities</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
                                  <span class="n">transition_matrices</span><span class="p">,</span>
                                  <span class="n">lul</span><span class="p">,</span>
@@ -210,13 +246,15 @@
         <span class="k">for</span> <span class="n">region</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">regions</span><span class="p">:</span>
 
             <span class="k">if</span> <span class="n">path_prefix</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-                <span class="n">path_prefix</span> <span class="o">+=</span> <span class="s1">&#39;_&#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">region</span><span class="o">.</span><span class="n">label</span><span class="p">)</span>
+                <span class="n">region_path_prefix</span> <span class="o">=</span> <span class="n">path_prefix</span> <span class="o">+</span> <span class="s1">&#39;_&#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">region</span><span class="o">.</span><span class="n">label</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">region_path_prefix</span> <span class="o">=</span> <span class="kc">None</span>
 
             <span class="n">tp</span><span class="p">[</span><span class="n">region</span><span class="p">]</span> <span class="o">=</span> <span class="n">region</span><span class="o">.</span><span class="n">transition_probabilities</span><span class="p">(</span><span class="n">transition_matrix</span><span class="o">=</span><span class="n">transition_matrices</span><span class="p">[</span><span class="n">region</span><span class="p">],</span>
                                                          <span class="n">lul</span><span class="o">=</span><span class="n">lul</span><span class="p">,</span>
                                                          <span class="n">mask</span><span class="o">=</span><span class="n">masks</span><span class="p">[</span><span class="n">region</span><span class="p">],</span>
                                                          <span class="n">distances_to_states</span><span class="o">=</span><span class="n">distances_to_states</span><span class="p">,</span>
-                                                         <span class="n">path_prefix</span><span class="o">=</span><span class="n">path_prefix</span><span class="p">)</span>
+                                                         <span class="n">path_prefix</span><span class="o">=</span><span class="n">region_path_prefix</span><span class="p">)</span>
 
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">verbose</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
             <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Territory transition probabilities estimation done.</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>

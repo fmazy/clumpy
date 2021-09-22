@@ -6,7 +6,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
 
-    <title>clumpy.allocation.compute_bootstrap_patches &#8212; clumpy 1.0.0 documentation</title>
+    <title>clumpy.allocation.compute_bootstrap_patches &#8212; clumpy 1.0.1 documentation</title>
     <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
     <link rel="stylesheet" type="text/css" href="../_static/nature.css" />
     <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
@@ -34,7 +34,7 @@
         <li class="right" >
           <a href="clumpy.allocation.BootstrapPatch.html" title="clumpy.allocation.BootstrapPatch"
              accesskey="P">previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="../index.html">clumpy 1.0.0 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">clumpy 1.0.1 documentation</a> &#187;</li>
           <li class="nav-item nav-item-1"><a href="../api.html" accesskey="U">Clumpy API</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href=""><code class="xref py py-mod docutils literal notranslate"><span class="pre">clumpy.allocation</span></code>.compute_bootstrap_patches</a></li> 
       </ul>
@@ -49,12 +49,13 @@
 <h1><code class="xref py py-mod docutils literal notranslate"><span class="pre">clumpy.allocation</span></code>.compute_bootstrap_patches<a class="headerlink" href="#clumpy-allocation-compute-bootstrap-patches" title="Permalink to this headline">¶</a></h1>
 <dl class="py function">
 <dt class="sig sig-object py" id="clumpy.allocation.compute_bootstrap_patches">
-<span class="sig-prename descclassname"><span class="pre">clumpy.allocation.</span></span><span class="sig-name descname"><span class="pre">compute_bootstrap_patches</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">state</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">land</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lul_initial</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lul_final</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mask</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">neighbors_structure</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'rook'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/clumpy/allocation/_compute_patches.html#compute_bootstrap_patches"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#clumpy.allocation.compute_bootstrap_patches" title="Permalink to this definition">¶</a></dt>
+<span class="sig-prename descclassname"><span class="pre">clumpy.allocation.</span></span><span class="sig-name descname"><span class="pre">compute_bootstrap_patches</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">state</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">palette_v</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">land</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lul_initial</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lul_final</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mask</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">neighbors_structure</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'rook'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/clumpy/allocation/_compute_patches.html#compute_bootstrap_patches"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#clumpy.allocation.compute_bootstrap_patches" title="Permalink to this definition">¶</a></dt>
 <dd><p>Compute bootstrap patches</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>state</strong> (<a class="reference internal" href="clumpy.State.html#clumpy.State" title="clumpy.State"><em>State</em></a>) – The initial state of this land.</p></li>
+<li><p><strong>palette_v</strong> (<a class="reference internal" href="clumpy.Palette.html#clumpy.Palette" title="clumpy.Palette"><em>Palette</em></a>) – The final palette.</p></li>
 <li><p><strong>land</strong> (<a class="reference internal" href="clumpy.Land.html#clumpy.Land" title="clumpy.Land"><em>Land</em></a>) – The studied land object.</p></li>
 <li><p><strong>lul_initial</strong> (<a class="reference internal" href="clumpy.LandUseLayer.html#clumpy.LandUseLayer" title="clumpy.LandUseLayer"><em>LandUseLayer</em></a>) – The initial land use.</p></li>
 <li><p><strong>lul_final</strong> (<a class="reference internal" href="clumpy.LandUseLayer.html#clumpy.LandUseLayer" title="clumpy.LandUseLayer"><em>LandUseLayer</em></a>) – The final land use.</p></li>
@@ -125,7 +126,7 @@
         <li class="right" >
           <a href="clumpy.allocation.BootstrapPatch.html" title="clumpy.allocation.BootstrapPatch"
              >previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="../index.html">clumpy 1.0.0 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">clumpy 1.0.1 documentation</a> &#187;</li>
           <li class="nav-item nav-item-1"><a href="../api.html" >Clumpy API</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href=""><code class="xref py py-mod docutils literal notranslate"><span class="pre">clumpy.allocation</span></code>.compute_bootstrap_patches</a></li> 
       </ul>

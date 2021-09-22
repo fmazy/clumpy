@@ -5,7 +5,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>clumpy.allocation._compute_patches &#8212; clumpy 0.1.0 documentation</title>
+    <title>clumpy.allocation._compute_patches &#8212; clumpy 1.0.0 documentation</title>
     <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css" />
     <link rel="stylesheet" type="text/css" href="../../../_static/nature.css" />
     <script data-url_root="../../../" id="documentation_options" src="../../../_static/documentation_options.js"></script>
@@ -25,7 +25,7 @@
         <li class="right" >
           <a href="../../../py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
-        <li class="nav-item nav-item-0"><a href="../../../index.html">clumpy 0.1.0 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="../../../index.html">clumpy 1.0.0 documentation</a> &#187;</li>
           <li class="nav-item nav-item-1"><a href="../../index.html" accesskey="U">Module code</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href="">clumpy.allocation._compute_patches</a></li> 
       </ul>
@@ -45,17 +45,21 @@
 <span class="kn">from</span> <span class="nn">._patch</span> <span class="kn">import</span> <span class="n">BootstrapPatch</span>
 
 <div class="viewcode-block" id="compute_bootstrap_patches"><a class="viewcode-back" href="../../../generated/clumpy.allocation.compute_bootstrap_patches.html#clumpy.allocation.compute_bootstrap_patches">[docs]</a><span class="k">def</span> <span class="nf">compute_bootstrap_patches</span><span class="p">(</span><span class="n">state</span><span class="p">,</span>
-                               <span class="n">land</span><span class="p">,</span>
-                               <span class="n">lul_initial</span><span class="p">,</span>
-                               <span class="n">lul_final</span><span class="p">,</span>
-                               <span class="n">mask</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-                               <span class="n">neighbors_structure</span><span class="o">=</span><span class="s1">&#39;rook&#39;</span><span class="p">):</span>
+                              <span class="n">palette_v</span><span class="p">,</span>
+                              <span class="n">land</span><span class="p">,</span>
+                              <span class="n">lul_initial</span><span class="p">,</span>
+                              <span class="n">lul_final</span><span class="p">,</span>
+                              <span class="n">mask</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                              <span class="n">neighbors_structure</span><span class="o">=</span><span class="s1">&#39;rook&#39;</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Compute bootstrap patches</span>
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
 <span class="sd">    state : State</span>
-<span class="sd">            The initial state of this land.</span>
+<span class="sd">        The initial state of this land.</span>
+
+<span class="sd">    palette_v : Palette</span>
+<span class="sd">        The final palette.</span>
 
 <span class="sd">    land : Land</span>
 <span class="sd">        The studied land object.</span>
@@ -93,17 +97,16 @@
     <span class="n">u</span> <span class="o">=</span> <span class="n">state</span><span class="o">.</span><span class="n">value</span>
 
     <span class="n">J</span><span class="p">,</span> <span class="n">V</span> <span class="o">=</span> <span class="n">land</span><span class="o">.</span><span class="n">get_values</span><span class="p">(</span><span class="n">state</span><span class="o">=</span><span class="n">state</span><span class="p">,</span>
-                          <span class="n">lul_initial</span><span class="o">=</span><span class="n">lul_initial</span><span class="p">,</span>
-                          <span class="n">lul_final</span><span class="o">=</span><span class="n">lul_final</span><span class="p">,</span>
-                          <span class="n">mask</span><span class="o">=</span><span class="n">mask</span><span class="p">,</span>
-                          <span class="n">explanatory_variables</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+                           <span class="n">lul_initial</span><span class="o">=</span><span class="n">lul_initial</span><span class="p">,</span>
+                           <span class="n">lul_final</span><span class="o">=</span><span class="n">lul_final</span><span class="p">,</span>
+                           <span class="n">mask</span><span class="o">=</span><span class="n">mask</span><span class="p">,</span>
+                           <span class="n">explanatory_variables</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
 
-    <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">np</span><span class="o">.</span><span class="n">unique</span><span class="p">(</span><span class="n">V</span><span class="p">):</span>
-        <span class="n">state_v</span> <span class="o">=</span> <span class="n">lul_initial</span><span class="o">.</span><span class="n">palette</span><span class="o">.</span><span class="n">get_id_by_value</span><span class="p">(</span><span class="n">info</span><span class="o">=</span><span class="n">v</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">state_v</span> <span class="ow">in</span> <span class="n">palette_v</span><span class="p">:</span>
         <span class="k">if</span> <span class="n">state_v</span> <span class="o">!=</span> <span class="n">state</span><span class="p">:</span>
-            <span class="c1">#print(str(u) + &#39; -&gt; &#39; + str(v))</span>
+            <span class="c1"># print(str(u) + &#39; -&gt; &#39; + str(v))</span>
             <span class="n">M</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">M_shape</span><span class="p">)</span>
-            <span class="n">M</span><span class="o">.</span><span class="n">flat</span><span class="p">[</span><span class="n">J</span><span class="p">[</span><span class="n">V</span> <span class="o">==</span> <span class="n">v</span><span class="p">]]</span> <span class="o">=</span> <span class="mi">1</span>
+            <span class="n">M</span><span class="o">.</span><span class="n">flat</span><span class="p">[</span><span class="n">J</span><span class="p">[</span><span class="n">V</span> <span class="o">==</span> <span class="n">state_v</span><span class="o">.</span><span class="n">value</span><span class="p">]]</span> <span class="o">=</span> <span class="mi">1</span>
 
             <span class="n">lw</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">ndimage</span><span class="o">.</span><span class="n">measurements</span><span class="o">.</span><span class="n">label</span><span class="p">(</span><span class="n">M</span><span class="p">,</span> <span class="n">structure</span><span class="o">=</span><span class="n">structure</span><span class="p">)</span>
             <span class="n">patch_id</span> <span class="o">=</span> <span class="n">lw</span><span class="o">.</span><span class="n">flat</span><span class="p">[</span><span class="n">J</span><span class="p">]</span>
@@ -121,10 +124,10 @@
             <span class="n">areas</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">rpt</span><span class="p">[</span><span class="s1">&#39;area&#39;</span><span class="p">])</span>
 
             <span class="c1"># return(patches, rpt)</span>
-            <span class="n">l1_patch</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">rpt</span><span class="p">[</span><span class="s1">&#39;inertia_tensor_eigvals-0&#39;</span><span class="p">])[</span><span class="n">patches</span><span class="p">[</span><span class="n">u</span><span class="p">][</span><span class="n">v</span><span class="p">][</span><span class="s1">&#39;patch_id&#39;</span><span class="p">]]</span>
-            <span class="n">l2_patch</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">rpt</span><span class="p">[</span><span class="s1">&#39;inertia_tensor_eigvals-1&#39;</span><span class="p">])[</span><span class="n">patches</span><span class="p">[</span><span class="n">u</span><span class="p">][</span><span class="n">v</span><span class="p">][</span><span class="s1">&#39;patch_id&#39;</span><span class="p">]]</span>
+            <span class="n">l1_patch</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">rpt</span><span class="p">[</span><span class="s1">&#39;inertia_tensor_eigvals-0&#39;</span><span class="p">])</span>
+            <span class="n">l2_patch</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">rpt</span><span class="p">[</span><span class="s1">&#39;inertia_tensor_eigvals-1&#39;</span><span class="p">])</span>
 
-            <span class="n">eccentricities</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">patches</span><span class="p">[</span><span class="n">u</span><span class="p">][</span><span class="n">v</span><span class="p">][</span><span class="s1">&#39;area&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+            <span class="n">eccentricities</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">areas</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
             <span class="n">id_none_mono_pixel_patches</span> <span class="o">=</span> <span class="n">areas</span> <span class="o">&gt;</span> <span class="mi">1</span>
 
             <span class="n">eccentricities</span><span class="p">[</span><span class="n">id_none_mono_pixel_patches</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">-</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span>
@@ -172,13 +175,13 @@
         <li class="right" >
           <a href="../../../py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
-        <li class="nav-item nav-item-0"><a href="../../../index.html">clumpy 0.1.0 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="../../../index.html">clumpy 1.0.0 documentation</a> &#187;</li>
           <li class="nav-item nav-item-1"><a href="../../index.html" >Module code</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href="">clumpy.allocation._compute_patches</a></li> 
       </ul>
     </div>
     <div class="footer" role="contentinfo">
-        &#169; Copyright 2020, François-Rémi Mazy.
+        &#169; Copyright 2021, François-Rémi Mazy.
       Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 4.0.2.
     </div>
   </body>
