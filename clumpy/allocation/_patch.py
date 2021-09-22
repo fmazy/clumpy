@@ -200,5 +200,3 @@ class BootstrapPatch(Patch):
         else:
             return(BootstrapPatch().set(areas=self.areas[idx],
                                         eccentricities=self.eccentricities[idx]))
-
-

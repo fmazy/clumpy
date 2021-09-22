@@ -6,11 +6,7 @@ Created on Tue Sep 14 14:03:33 2021
 @author: frem
 """
 
-from ..density_estimation import GKDE
-
-import numpy as np
-from ..density_estimation._density_estimator import DensityEstimator
-from ..density_estimation import _methods
+from .._base import Palette
 
 # READ ME
 # Transition Probability Estimators (TPE) must have these methods :
@@ -29,8 +25,7 @@ class TransitionProbabilityEstimator():
         self.verbose_heading_level = verbose_heading_level
 
         # list of fitted final states.
-        # this list is used by allocators
-        self._fitted_final_states = []
+        self._palette_fitted_states = Palette()
 
     def check(self):
         """

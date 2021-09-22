@@ -7,6 +7,7 @@ from ..density_estimation._density_estimator import DensityEstimator, NullEstima
 from ..density_estimation import _methods
 from ..tools._console import title_heading
 
+from .._base import Palette
 
 class Bayes(TransitionProbabilityEstimator):
     """
@@ -45,7 +46,7 @@ class Bayes(TransitionProbabilityEstimator):
             self.density_estimator = density_estimator
         elif density_estimator in _methods:
             self.density_estimator = _methods[density_estimator](verbose=self.verbose - 1,
-                                                   verbose_heading_level=self.verbose_heading_level + 1)
+                                                                 verbose_heading_level=self.verbose_heading_level + 1)
         else:
             raise (ValueError('Unexpected density_estimator value.'))
 
@@ -57,11 +58,10 @@ class Bayes(TransitionProbabilityEstimator):
         self.n_corrections_max = n_corrections_max
         self.log_computations = log_computations
 
-
     def add_conditional_density_estimator(self,
                                           state,
                                           de='gkde',
-                                          P_v_min=5*10**(-5),
+                                          P_v_min=5 * 10 ** (-5),
                                           n_samples_min=500):
         """
         Add conditional density for a given final state.
@@ -91,7 +91,7 @@ class Bayes(TransitionProbabilityEstimator):
             self.conditional_density_estimators[state] = de
         elif de in _methods:
             self.conditional_density_estimators[state] = _methods[de](verbose=self.verbose - 1,
-                                                   verbose_heading_level=self.verbose_heading_level + 1)
+                                                                      verbose_heading_level=self.verbose_heading_level + 1)
         else:
             raise (ValueError('Unexpected de value.'))
 
@@ -148,8 +148,7 @@ class Bayes(TransitionProbabilityEstimator):
             print(title_heading(self.verbose_heading_level) + 'TPE fitting')
             print('Conditional density estimators fitting :')
 
-        # re-initialize the list of fitted final states
-        self._fitted_final_states
+        self._palette_fitted_states = Palette()
 
         for state_v, cde in self.conditional_density_estimators.items():
             if self.verbose > 0:
@@ -165,11 +164,11 @@ class Bayes(TransitionProbabilityEstimator):
             idx_v = V == state_v.value
 
             # check fitting conditions
-            if idx_v.mean() > self.P_v_min[state_v] and idx_v.sum() > self.n_samples_min[state_v]:
+            if np.mean(idx_v) > self.P_v_min[state_v] and np.sum(idx_v) > self.n_samples_min[state_v]:
                 # Density estimation fit
                 cde.fit(X[idx_v])
-                # add to the list of fitted final states
-                self._fitted_final_states.append(state_v)
+
+                self._palette_fitted_states.add(state_v)
             else:
                 # fitting conditions are not satisfying
                 # change the density estimator to the null estimator.
@@ -182,7 +181,12 @@ class Bayes(TransitionProbabilityEstimator):
 
     def transition_probability(self,
                                transition_matrix,
-                               Y):
+                               Y,
+                               id_J=None,
+                               compute_P_Y__v=True,
+                               compute_P_Y = True,
+                               save_P_Y__v=False,
+                               save_P_Y=False):
         """
         Estimates transition probability. Non estimated final states transition probabilities are filled to the null value.
 
@@ -200,17 +204,44 @@ class Bayes(TransitionProbabilityEstimator):
             Transition probabilities for each studied final land use states ordered
             as ``transition_matrix.palette_v``.
         """
+        if id_J is None:
+            id_J = np.ones(Y.shape[0]).astype(bool)
 
         # check if it is really a land transition matrix
         transition_matrix._check_land_transition_matrix()
 
-        state = transition_matrix.palette_u.states[0]
-        palette_v = transition_matrix.palette_v
-        P_v = transition_matrix.M[0,:]
-
         if self.verbose > 0:
             print(title_heading(self.verbose_heading_level) + 'TPE computing')
 
+        # P(Y) estimation
+        if compute_P_Y:
+            P_Y = self._compute_P_Y(Y=Y[id_J])
+        else:
+            P_Y = self.P_Y[id_J]
+
+        # P(Y|v) estimation
+        if compute_P_Y__v:
+            P_Y__v = self._compute_P_Y__v(Y=Y[id_J], transition_matrix=transition_matrix)
+        else:
+            P_Y__v = self.P_Y__v[id_J]
+
+        # BAYES ADJUSTMENT PROCESS
+        P_v__Y = self._bayes_adjustment(P_Y__v=P_Y__v,
+                                        P_Y=P_Y,
+                                        transition_matrix=transition_matrix)
+
+        if self.verbose > 0:
+            print('TPE computing done.')
+
+        if save_P_Y__v:
+            self.P_Y__v = P_Y__v
+
+        if save_P_Y:
+            self.P_Y = P_Y
+
+        return (P_v__Y)
+
+    def _compute_P_Y(self, Y):
         # forbid_null_value is forced to True by default for this density estimator
         self.density_estimator.set_params(forbid_null_value=True)
 
@@ -227,15 +258,19 @@ class Bayes(TransitionProbabilityEstimator):
         if self.verbose > 0:
             print('Density estimator predict done.')
 
-        # P(Y|v) estimation
+        return(P_Y)
+
+    def _compute_P_Y__v(self, Y, transition_matrix):
+        state_u = transition_matrix.palette_u.states[0]
+
         # first, create a list of estimators according to palette_v order
         # if no estimator is informed, the NullEstimator is invoked.
         if self.verbose > 0:
             print('Conditionnal density estimators predict...')
             print('are concerned :')
         conditional_density_estimators = []
-        for state_v in palette_v:
-            if state_v in self.conditional_density_estimators.keys():
+        for state_v in transition_matrix.palette_v:
+            if state_v != state_u and state_v in self.conditional_density_estimators.keys():
                 if self.verbose > 0:
                     print('state_v ' + str(state_v))
                 conditional_density_estimators.append(self.conditional_density_estimators[state_v])
@@ -248,7 +283,15 @@ class Bayes(TransitionProbabilityEstimator):
         if self.verbose > 0:
             print('Conditional density estimators predict done.')
 
-        # BAYES PROCESS
+        return(P_Y__v)
+
+    def _bayes_adjustment(self,
+                          P_Y__v,
+                          P_Y,
+                          transition_matrix):
+
+        P_v = transition_matrix.M[0,:]
+
         if self.log_computations == False:
             # if no log computation
             P_v__Y = P_Y__v / P_Y
@@ -257,7 +300,7 @@ class Bayes(TransitionProbabilityEstimator):
             multiply_cols = P_v__Y_mean != 0
             P_v__Y[:, multiply_cols] *= P_v[multiply_cols] / P_v__Y_mean[multiply_cols]
 
-            #P_v__Y *= P_v / P_v__Y.mean(axis=0)
+            # P_v__Y *= P_v / P_v__Y.mean(axis=0)
 
             s = P_v__Y.sum(axis=1)
 
@@ -296,7 +339,7 @@ class Bayes(TransitionProbabilityEstimator):
                     multiply_cols = P_v__Y_mean != 0
                     P_v__Y[:, multiply_cols] *= P_v[multiply_cols] / P_v__Y_mean[multiply_cols]
 
-                    #P_v__Y *= P_v / P_v__Y.mean(axis=0)
+                    # P_v__Y *= P_v / P_v__Y.mean(axis=0)
 
                     s = np.sum(P_v__Y, axis=1)
                 else:
@@ -329,10 +372,8 @@ class Bayes(TransitionProbabilityEstimator):
         P_v__Y = np.nan_to_num(P_v__Y)
 
         # compute the non transited column
-        state_value = palette_v.get_id(state)
-        P_v__Y[:, state_value] = 1 - np.delete(P_v__Y, state_value, axis=1).sum(axis=1)
+        state_u = transition_matrix.palette_u.states[0]
+        id_state_u = transition_matrix.palette_v.get_id(state_u)
+        P_v__Y[:, id_state_u] = 1 - np.delete(P_v__Y, id_state_u, axis=1).sum(axis=1)
 
-        if self.verbose > 0:
-            print('TPE computing done.')
-
-        return (P_v__Y)
+        return(P_v__Y)

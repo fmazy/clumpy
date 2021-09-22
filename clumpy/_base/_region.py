@@ -149,17 +149,16 @@ class Region():
         tm : TransitionMatrix
             The computed transition matrix.
         """
-        palette_u = Palette()
-        palette_v = Palette()
-
-        tm = TransitionMatrix(np.ones((1, 1)), palette_u, palette_v)
-
+        tm = None
         for state, land in self.lands.items():
-            tm.merge(tm=land.transition_matrix(state=state,
-                                               lul_initial=lul_initial,
-                                               lul_final=lul_final,
-                                               mask=mask),
-                     inplace=True)
+            tm_to_merge = land.transition_matrix(state=state,
+                                                 lul_initial=lul_initial,
+                                                 lul_final=lul_final,
+                                                 mask=mask)
+            if tm is None:
+                tm = tm_to_merge
+            else:
+                tm.merge(tm=tm_to_merge, inplace=True)
 
         return (tm)
 

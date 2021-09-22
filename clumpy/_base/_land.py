@@ -21,6 +21,7 @@ from ..tools._console import title_heading
 
 # Allocation
 from ..allocation._allocator import Allocator
+from ..allocation._compute_patches import compute_bootstrap_patches
 
 
 class Land():
@@ -38,6 +39,9 @@ class Land():
     feature_selection : FeatureSelection or list(FeatureSelection)
         List of features selection methods.
 
+    fit_bootstrap_patches : bool, default=True
+        If ``True``, make bootstrap patches when fitting.
+
     allocator : Allocator, default=None
         Allocator. If `None`, the allocation is not available.
     
@@ -52,6 +56,7 @@ class Land():
                  features=[],
                  transition_probability_estimator=None,
                  feature_selection=None,
+                 fit_bootstrap_patches=False,
                  allocator=None,
                  verbose=0,
                  verbose_heading_level=1):
@@ -71,6 +76,9 @@ class Land():
         # Features selection
         self.feature_selection = feature_selection
 
+        # fit bootstrap patches
+        self.fit_bootstrap_patches = fit_bootstrap_patches
+
         # allocator
         self.allocator = allocator
 
@@ -79,6 +87,11 @@ class Land():
 
     def __repr__(self):
         return 'land'
+
+    def set_params(self,
+                   **params):
+        for key, param in params.items():
+            setattr(self, key, param)
 
     def check(self):
         """
@@ -276,6 +289,14 @@ class Land():
                       mask=mask,
                       distances_to_states=distances_to_states)
 
+        if self.fit_bootstrap_patches:
+            self.compute_bootstrap_patches(
+                state=state,
+                palette_v=self.transition_probability_estimator._palette_fitted_states,
+                lul_initial=lul_initial,
+                lul_final=lul_final,
+                mask=mask)
+
         if self.verbose > 0:
             print('Land ' + str(state) + ' fitting done.\n')
 
@@ -334,17 +355,21 @@ class Land():
         high_bounded_features = []
         low_bounds = []
         high_bounds = []
-        for idx in features_idx:
+        for id_col, idx in enumerate(features_idx):
             if isinstance(self.features[idx], FeatureLayer):
                 if self.features[idx].low_bound is not None:
-                    low_bounded_features.append(idx)
+                    # low_bounded_features takes as parameter the column id of
+                    # bounded features AFTER feature selection !
+                    # So, the right col index is id_col.
+                    # idx is used to get the corresponding feature layer.
+                    low_bounded_features.append(id_col)
                     low_bounds.append(self.features[idx].low_bound)
 
                 if self.features[idx].high_bound is not None:
-                    high_bounded_features.append(idx)
+                    high_bounded_features.append(id_col)
                     high_bounds.append(self.features[idx].high_bound)
             if isinstance(self.features[idx], State) or isinstance(self.features[idx], int):
-                low_bounded_features.append(idx)
+                low_bounded_features.append(id_col)
                 low_bounds.append(0.0)
 
         # TRANSITION PROBABILITY ESTIMATOR
@@ -481,7 +506,10 @@ class Land():
                      transition_matrix,
                      lul,
                      mask=None,
-                     distances_to_states={}):
+                     distances_to_states={},
+                     save_P_Y__v=False,
+                     save_P_Y=False,
+                     return_Y=False):
         """
         Compute the transition probability estimation according to the given P_v
         """
@@ -511,10 +539,37 @@ class Land():
             Y = fs.transform(X=Y)
 
         # TRANSITION PROBABILITY ESTIMATION
-        P_v__u_Y = self.transition_probability_estimator.transition_probability(transition_matrix,
-                                                                                Y)
+        P_v__u_Y = self.transition_probability_estimator.transition_probability(
+            transition_matrix=transition_matrix,
+            Y=Y,
+            compute_P_Y__v=True,
+            compute_P_Y=True,
+            save_P_Y__v=save_P_Y__v,
+            save_P_Y=save_P_Y)
 
-        return J_allocation, P_v__u_Y
+        if return_Y:
+            return J_allocation, P_v__u_Y, Y
+        else:
+            return J_allocation, P_v__u_Y
+
+    def compute_bootstrap_patches(self,
+                                  state,
+                                  palette_v,
+                                  lul_initial,
+                                  lul_final,
+                                  mask):
+        """
+        Compute Bootstrap patches
+
+        """
+        patches = compute_bootstrap_patches(state=state,
+                                            palette_v=palette_v,
+                                            land=self,
+                                            lul_initial=lul_initial,
+                                            lul_final=lul_final,
+                                            mask=mask)
+
+        self.allocator.set_params(patches=patches)
 
     def allocate(self,
                  transition_matrix,

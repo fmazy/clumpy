@@ -6,17 +6,21 @@ from ..tools._data import np_drop_duplicates_from_column
 from ._patch import BootstrapPatch
 
 def compute_bootstrap_patches(state,
-                               land,
-                               lul_initial,
-                               lul_final,
-                               mask=None,
-                               neighbors_structure='rook'):
+                              palette_v,
+                              land,
+                              lul_initial,
+                              lul_final,
+                              mask=None,
+                              neighbors_structure='rook'):
     """Compute bootstrap patches
 
     Parameters
     ----------
     state : State
-            The initial state of this land.
+        The initial state of this land.
+
+    palette_v : Palette
+        The final palette.
 
     land : Land
         The studied land object.
@@ -54,17 +58,16 @@ def compute_bootstrap_patches(state,
     u = state.value
 
     J, V = land.get_values(state=state,
-                          lul_initial=lul_initial,
-                          lul_final=lul_final,
-                          mask=mask,
-                          explanatory_variables=False)
+                           lul_initial=lul_initial,
+                           lul_final=lul_final,
+                           mask=mask,
+                           explanatory_variables=False)
 
-    for v in np.unique(V):
-        state_v = lul_initial.palette._get_by_value(value=v)
+    for state_v in palette_v:
         if state_v != state:
-            #print(str(u) + ' -> ' + str(v))
+            # print(str(u) + ' -> ' + str(v))
             M = np.zeros(M_shape)
-            M.flat[J[V == v]] = 1
+            M.flat[J[V == state_v.value]] = 1
 
             lw, _ = ndimage.measurements.label(M, structure=structure)
             patch_id = lw.flat[J]

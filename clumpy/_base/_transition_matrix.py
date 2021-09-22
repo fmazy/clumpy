@@ -429,3 +429,4 @@ def _compact_transition_matrix(full_M, palette_u=None, palette_v=None):
                                            list_v_full_matrix.index(v)]
 
     return (compact_M)
+

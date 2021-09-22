@@ -25,6 +25,11 @@ class Allocator():
         self.verbose = verbose
         self.verbose_heading_level = verbose_heading_level
 
+    def set_params(self,
+                   **params):
+        for key, param in params.items():
+            setattr(self, key, param)
+
     def add_patch(self,
                   state,
                   patch):
@@ -150,3 +155,23 @@ def _check_patches(patches):
     for state, patch in patches.items():
         if not isinstance(state, State) or not isinstance(patch, Patch):
             raise("Unexpected 'patches' type. A dict(State:Patch) is expected.")
+
+def _update_P_v__Y_u(P_v__u_Y, transition_matrix, inplace=True):
+    if not inplace:
+        P_v__u_Y = P_v__u_Y.copy()
+
+    transition_matrix._check_land_transition_matrix()
+
+    state_u = transition_matrix.palette_u.states[0]
+    id_state_u = transition_matrix.palette_v.get_id(state_u)
+
+    # then, the new P_v is
+    P_v__u_Y_mean = P_v__u_Y.mean(axis=0)
+    multiply_cols = P_v__u_Y_mean != 0
+    P_v__u_Y[:, multiply_cols] *= transition_matrix.M[0, multiply_cols] / P_v__u_Y_mean[
+        multiply_cols]
+    # set the closure with the non transition column
+    P_v__u_Y[:, id_state_u] = 0.0
+    P_v__u_Y[:, id_state_u] = 1 - P_v__u_Y.sum(axis=1)
+
+    return(P_v__u_Y)

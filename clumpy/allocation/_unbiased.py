@@ -2,7 +2,7 @@ import numpy as np
 
 from .._base._transition_matrix import TransitionMatrix
 
-from ._allocator import Allocator
+from ._allocator import Allocator, _update_P_v__Y_u
 from ._gart import generalized_allocation_rejection_test
 from ._patcher import _weighted_neighbors_patcher
 from tqdm import tqdm
@@ -14,8 +14,8 @@ class Unbiased(Allocator):
 
     Parameters
     ----------
-    update_P_v__u_Y : bool, default=True
-        If ``True``, P(v|u,Y) is updated at each iteration.
+    update_P_Y : bool, default=True
+        If ``True``, P(Y) is updated at each iteration.
 
     n_allocation_try : int, default=10**3
         Maximum number of iterations.
@@ -28,12 +28,12 @@ class Unbiased(Allocator):
     """
 
     def __init__(self,
-                 update_P_v__u_Y=True,
+                 update_P_Y=True,
                  n_allocation_try=10 ** 3,
                  verbose=0,
                  verbose_heading_level=1):
 
-        self.update_P_v__u_Y = update_P_v__u_Y
+        self.update_P_Y = update_P_Y
         self.n_allocation_try = n_allocation_try
 
         super().__init__(verbose=verbose,
@@ -59,7 +59,6 @@ class Unbiased(Allocator):
 
         state = transition_matrix.palette_u.states[0]
         palette_v = transition_matrix.palette_v
-        # P_v, palette_v = transition_matrix.get_P_v(state)
 
         # ghost initialization
         palette_v_without_u = palette_v.remove(state)
@@ -70,15 +69,13 @@ class Unbiased(Allocator):
 
         cols_v = np.delete(np.arange(len(palette_v)), id_state)
 
-        # first_len_J initialization
-        first_len_J = None
-
+        # J_used may have redundant cells indices
         J_used = []
 
         if self.verbose > 0:
             print('Allocation start...')
             print('P_v : ' + str(transition_matrix.M[0]))
-            print('update_P_v__u_Y : ' + str(self.update_P_v__u_Y) + '\n')
+            print('update_P_Y : ' + str(self.update_P_Y) + '\n')
 
         n_try = 0
         while np.sum(list(n_ghost.values())) > 0 and n_try < self.n_allocation_try:
@@ -93,42 +90,37 @@ class Unbiased(Allocator):
             # if P_v__u_Y has to be updated
             # or if it is the first loop
             # compute P(v|u,Y)
-            if self.update_P_v__u_Y or n_try == 1:
-                lul_data_P_v__u_Y_update = lul_data.copy()
-                lul_data_P_v__u_Y_update.flat[J_used] = -1
-                J, P_v__u_Y = land._compute_tpe(transition_matrix=transition_matrix_patches,
-                                                lul=lul_data_P_v__u_Y_update,
-                                                mask=mask,
-                                                distances_to_states=distances_to_states)
+            if n_try == 1:
+                J, P_v__u_Y, Y = land._compute_tpe(transition_matrix=transition_matrix_patches,
+                                                   lul=lul_data,
+                                                   mask=mask,
+                                                   distances_to_states=distances_to_states,
+                                                   save_P_Y__v=True,
+                                                   save_P_Y=~self.update_P_Y,
+                                                   return_Y=True)
 
-                # save the original number of pixels in this land
-                # it is used to edit P(v)
-                if first_len_J is None:
-                    first_len_J = len(J)
+                n_idx_J_unused = len(J)
+                idx_J_unused = np.arange(n_idx_J_unused)
 
             else:
-                # else
-                # it is faster but implies a bias.
-                # the new P_v__u_Y is computed.
-                # first it is restricted to unused J
-                P_v__u_Y = P_v__u_Y[idx_to_keep]
-                # then, the new P_v is
-                P_v__u_Y_mean = P_v__u_Y.mean(axis=0)
-                multiply_cols = P_v__u_Y_mean != 0
-                P_v__u_Y[:, multiply_cols] *= transition_matrix_patches.M[0, multiply_cols] / P_v__u_Y_mean[
-                    multiply_cols]
-                # set the closure with the non transition column
-                P_v__u_Y[:, id_state] = 0.0
-                P_v__u_Y[:, id_state] = 1 - P_v__u_Y.sum(axis=1)
+                P_v__u_Y = land.transition_probability_estimator.transition_probability(
+                    transition_matrix=transition_matrix_patches,
+                    Y=Y,
+                    id_J=idx_J_unused,
+                    compute_P_Y__v=False,
+                    compute_P_Y=self.update_P_Y,
+                    save_P_Y__v=False,
+                    save_P_Y=False)
 
-            expected_allocated = {state_v: J.size * transition_matrix.M[0, id_state_v] for id_state_v, state_v in
+            expected_allocated = {state_v: n_idx_J_unused * transition_matrix.M[0, id_state_v] for id_state_v, state_v
+                                  in
                                   enumerate(palette_v)}
 
             # Allocation try
             # results are : all pixels used, number of allocation for each state
             # and numbre of ghost pixels for each states.
             J_used_last, n_allocated, n_ghost = self._try_allocate(state=state,
-                                                                   J=J,
+                                                                   J=J[idx_J_unused],
                                                                    P_v__u_Y=P_v__u_Y,
                                                                    palette_v=palette_v,
                                                                    lul_origin_data=lul_origin_data,
@@ -142,32 +134,17 @@ class Unbiased(Allocator):
                     np.sum(list(n_ghost.values()))))
 
             # update J by removing used pixels.
-            idx_to_keep = ~np.isin(J, J_used)
-            J = J[idx_to_keep]
-
-            if len(J) == 0:
+            idx_J_unused = ~np.isin(J, J_used)
+            n_idx_J_unused = np.sum(idx_J_unused)
+            if n_idx_J_unused == 0:
                 print('/!\\ No more pixels available for allocation /!\\')
                 break
 
-            transition_matrix.M[0, id_state] = 1
-            for id_state_v, state_v in enumerate(palette_v):
-                if state_v != state:
-                    expected_allocated[state_v] -= n_allocated[state_v]
-                    if expected_allocated[state_v] < 0:
-                        expected_allocated[state_v] = 0
-                    transition_matrix.M[0, id_state_v] = expected_allocated[state_v] / len(J)
-                    transition_matrix.M[0, id_state] -= transition_matrix.M[0, id_state_v]
-
-            print('transition_matrix.M.sum()', transition_matrix.M.sum())
-
-            # P_v update : for the next loop, one need less pixels
-            # transition_matrix.M[0,id_state] = 1
-            # for id_state_v, state_v in enumerate(palette_v):
-            #    if state_v != state:
-            #        transition_matrix.M[0,id_state_v] -= n_allocated[state_v] / first_len_J
-            #        if transition_matrix.M[0,id_state_v] < 0:
-            #            transition_matrix.M[0, id_state_v] = 0
-            #        transition_matrix.M[0,id_state] -= transition_matrix.M[0,id_state_v]
+            # update the transition matrix
+            _reduce_transition_matrix(transition_matrix,
+                                      expected_allocated,
+                                      n_allocated,
+                                      n_idx_J_unused)
 
     def _try_allocate(self,
                       state,
@@ -181,9 +158,6 @@ class Unbiased(Allocator):
         """
         palette_v_without_u = palette_v.remove(state)
 
-        print('P_v__u_Y min', P_v__u_Y.min())
-        print('P_v__u_Y.sum(axis=1).min()', P_v__u_Y.sum(axis=1).min())
-        print('P_v__u_Y.sum(axis=1).max()', P_v__u_Y.sum(axis=1).max())
         print('gart parameters', P_v__u_Y.sum(axis=0).astype(int), palette_v.get_list_of_values())
         # GART
         V = generalized_allocation_rejection_test(P_v__u_Y, palette_v.get_list_of_values())
@@ -270,3 +244,23 @@ class Unbiased(Allocator):
                 n_ghost[state_v] += 1
 
         return (J_used, n_allocated, n_ghost)
+
+
+def _reduce_transition_matrix(transition_matrix,
+                              expected_allocated,
+                              n_allocated,
+                              n_idx_J_unused):
+
+    state = transition_matrix.palette_u.states[0]
+    palette_v = transition_matrix.palette_v
+    # get the id of the initial state
+    id_state = palette_v.get_id(state)
+
+    transition_matrix.M[0, id_state] = 1
+    for id_state_v, state_v in enumerate(palette_v):
+        if state_v != state:
+            expected_allocated[state_v] -= n_allocated[state_v]
+            if expected_allocated[state_v] < 0:
+                expected_allocated[state_v] = 0
+            transition_matrix.M[0, id_state_v] = expected_allocated[state_v] / n_idx_J_unused
+            transition_matrix.M[0, id_state] -= transition_matrix.M[0, id_state_v]
