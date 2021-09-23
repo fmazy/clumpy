@@ -45,7 +45,8 @@ class Unbiased(Allocator):
                   lul_data,
                   lul_origin_data,
                   mask=None,
-                  distances_to_states={}):
+                  distances_to_states={},
+                  path_prefix_transition_probabilities=None):
         """
         allocation. lul_data and lul_origin_data are ndarrays only.
         """
@@ -91,13 +92,22 @@ class Unbiased(Allocator):
             # or if it is the first loop
             # compute P(v|u,Y)
             if n_try == 1:
-                J, P_v__u_Y, Y = land._compute_tpe(transition_matrix=transition_matrix_patches,
-                                                   lul=lul_data,
-                                                   mask=mask,
-                                                   distances_to_states=distances_to_states,
-                                                   save_P_Y__v=True,
-                                                   save_P_Y=~self.update_P_Y,
-                                                   return_Y=True)
+                J, P_v__u_Y, Y = land.transition_probabilities(
+                    transition_matrix=transition_matrix_patches,
+                    lul=lul_data,
+                    mask=mask,
+                    distances_to_states=distances_to_states,
+                    path_prefix=path_prefix_transition_probabilities,
+                    save_P_Y__v=True,
+                    save_P_Y=~self.update_P_Y,
+                    return_Y=True)
+                #J, P_v__u_Y, Y = land._compute_tpe(transition_matrix=transition_matrix_patches,
+                #                                   lul=lul_data,
+                #                                   mask=mask,
+                #                                   distances_to_states=distances_to_states,
+                #                                   save_P_Y__v=True,
+                #                                   save_P_Y=~self.update_P_Y,
+                #                                   return_Y=True)
 
                 n_idx_J_unused = len(J)
                 idx_J_unused = np.arange(n_idx_J_unused)
@@ -250,7 +260,6 @@ def _reduce_transition_matrix(transition_matrix,
                               expected_allocated,
                               n_allocated,
                               n_idx_J_unused):
-
     state = transition_matrix.palette_u.states[0]
     palette_v = transition_matrix.palette_v
     # get the id of the initial state

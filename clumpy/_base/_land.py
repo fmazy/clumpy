@@ -431,7 +431,10 @@ class Land():
                                  lul,
                                  mask=None,
                                  distances_to_states={},
-                                 path_prefix=None):
+                                 path_prefix=None,
+                                 save_P_Y__v=False,
+                                 save_P_Y=False,
+                                 return_Y=False):
         """
         Computes transition probabilities.
 
@@ -451,19 +454,30 @@ class Land():
 
         path_prefix : str, default=None
             The path prefix to save result as ``path_prefix+'_'+str(state_v.value)+'.tif'.
-            If None, the result is returned.
             Note that if ``path_prefix is not None``, ``lul`` must be LandUseLayer
+
+        save_P_Y__v : bool, default=False
+            Save P_Y__v.
+
+        save_P_Y : bool, default=False
+            Save P_Y
+
+        return_Y : bool, default=False
+            If ``True`` and ``path_prefix`` is ``None``, return Y.
 
         Returns
         -------
         J_allocation : ndarray of shape (n_samples,)
-            Only returned if ``path_prefix=False``. Element indexes in the flattened
+            Element indexes in the flattened
             matrix.
 
         P_v__u_Y : ndarray of shape (n_samples, len(palette_v))
             The transition probabilities of each elements. Columns are
             ordered as ``palette_v``.
 
+        Y : ndarray of shape (n_samples, n_features)
+            Only returned if ``return_Y=True``.
+            The features values.
         """
 
         # check if it is really a land transition matrix
@@ -475,18 +489,24 @@ class Land():
         if self.verbose > 0:
             print(title_heading(self.verbose_heading_level) + 'Land ' + str(state) + ' TPE\n')
 
-        J, P_v__u_Y = self._compute_tpe(transition_matrix=transition_matrix,
-                                        lul=lul,
-                                        mask=mask,
-                                        distances_to_states=distances_to_states)
+        J_P_v__u_Y_Y = self._compute_tpe(transition_matrix=transition_matrix,
+                                         lul=lul,
+                                         mask=mask,
+                                         distances_to_states=distances_to_states,
+                                         save_P_Y__v=save_P_Y__v,
+                                         save_P_Y=save_P_Y,
+                                         return_Y=return_Y)
 
         if self.verbose > 0:
             print('Land ' + str(state) + ' TPE done.\n')
 
         if path_prefix is None:
-            return J, P_v__u_Y
+            return J_P_v__u_Y_Y
 
         else:
+            J = J_P_v__u_Y_Y[0]
+            P_v__u_Y = J_P_v__u_Y_Y[1]
+
             folder_path, file_prefix = path_split(path_prefix, prefix=True)
 
             for id_state, state_v in enumerate(palette_v):
@@ -500,7 +520,7 @@ class Land():
                              copy_geo=lul,
                              path=folder_path + '/' + file_name)
 
-            return True
+            return J_P_v__u_Y_Y
 
     def _compute_tpe(self,
                      transition_matrix,
@@ -577,7 +597,8 @@ class Land():
                  lul_origin=None,
                  mask=None,
                  distances_to_states={},
-                 path=None):
+                 path=None,
+                 path_prefix_transition_probabilities=None):
         """
         allocation.
 
@@ -603,6 +624,9 @@ class Land():
             If None, the allocation is only saved within `lul`, if `lul` is a ndarray.
             Note that if ``path`` is not ``None``, ``lul`` must be LandUseLayer.
 
+        path_prefix_transition_probabilities : str, default=None
+            The path prefix to save transition probabilities.
+
         Returns
         -------
         lul_allocated : LandUseLayer
@@ -626,7 +650,8 @@ class Land():
                                 lul_origin=lul_origin,
                                 mask=mask,
                                 distances_to_states=distances_to_states,
-                                path=path)
+                                path=path,
+                                path_prefix_transition_probabilities=path_prefix_transition_probabilities)
 
         if self.verbose > 0:
             print('Land ' + str(state) + ' allocation done.\n')
