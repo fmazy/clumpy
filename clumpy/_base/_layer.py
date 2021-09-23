@@ -43,9 +43,6 @@ class Layer:
             elif len(data.shape) > 3:
                 raise(ValueError("len(data.shape) is expected to be lower or equal to 3."))
 
-            # choose an appropriate dtype.
-            data = ndarray_suitable_integer_type(data)
-
             driver = None
             crs = None
             transform = None
@@ -225,6 +222,10 @@ class LandUseLayer(Layer):
                  data=None,
                  copy_geo=None,
                  palette=None):
+
+        if data is not None:
+            # choose an appropriate dtype.
+            data = ndarray_suitable_integer_type(data)
         
         super().__init__(label=label,
                          time=time,

@@ -22,7 +22,8 @@ class TransitionMatrix():
     def __init__(self, M, palette_u, palette_v):
 
         if len(palette_u) != M.shape[0] or len(palette_v) != M.shape[1]:
-            raise(ValueError('palette_u and palette_v should describe exactly M.shape !'))
+            raise (ValueError('palette_u (len=' + str(len(palette_u)) + ') and palette_v (len=' + str(
+                len(palette_v)) + ') should describe exactly M.shape=' + str(M.shape) + ' !'))
 
         M = np.nan_to_num(M)
 
@@ -184,7 +185,7 @@ class TransitionMatrix():
                 self.palette_u = palette_u
                 self.palette_v = palette_v
                 self.M = M
-                return(self)
+                return (self)
             else:
                 return (TransitionMatrix(M=M,
                                          palette_u=palette_u,
@@ -210,23 +211,21 @@ class TransitionMatrix():
 
         # fill diagonal to have sum(axis=1) = 1
         np.fill_diagonal(full_M, 0)
-        np.fill_diagonal(full_M, 1-full_M.sum(axis=1))
+        np.fill_diagonal(full_M, 1 - full_M.sum(axis=1))
 
         palette_u = self.palette_u.merge(tm.palette_u, inplace=False)
         palette_v = self.palette_v.merge(tm.palette_v, inplace=False)
 
-        M = _compact_transition_matrix(full_M, palette_u, palette_v)
+        merged_tm = _full_M_to_transition_matrix(full_M, palette_u, palette_v)
 
         if inplace:
-            self.M = M
+            self.M = merged_tm.M
             self.palette_u = palette_u
             self.palette_v = palette_v
 
-            return(self)
+            return (self)
         else:
-            return(TransitionMatrix(M=M,
-                                    palette_u=palette_u,
-                                    palette_v=palette_v))
+            return (merged_tm)
 
     def get_P_v(self, info_u):
         """
@@ -276,15 +275,15 @@ class TransitionMatrix():
 
         full_M = np.dot(np.dot(P, np.diag(eigen_values)), np.linalg.inv(P))
 
-        compact_M = _compact_transition_matrix(full_M=full_M,
-                                               palette_u=self.palette_u,
-                                               palette_v=self.palette_u)
+        multisteps_tm = _full_M_to_transition_matrix(full_M=full_M,
+                                                     palette_u=self.palette_u,
+                                                     palette_v=self.palette_v)
 
         if inplace:
-            self.M = compact_M
-            return(self)
+            self.M = multisteps_tm.M
+            return (self)
         else:
-            return (TransitionMatrix(compact_M, self.palette_u, self.palette_v))
+            return (multisteps_tm)
 
     def patches(self, patches, inplace=False):
         """
@@ -316,20 +315,20 @@ class TransitionMatrix():
         id_state = self.palette_v.get_id(state_u)
 
         M_patches = self.M.copy()
-        M_patches[0,id_state] = 1
+        M_patches[0, id_state] = 1
         for id_state_v, state_v in enumerate(self.palette_v):
             if state_v != state_u:
                 if state_v in patches.keys():
-                    M_patches[0,id_state_v] /= patches[state_v].area_mean
-                M_patches[0,id_state] -= M_patches[0,id_state_v]
+                    M_patches[0, id_state_v] /= patches[state_v].area_mean
+                M_patches[0, id_state] -= M_patches[0, id_state_v]
 
         if inplace:
             self.M = M_patches
-            return(self)
+            return (self)
         else:
-            return(TransitionMatrix(M=M_patches,
-                                    palette_u=self.palette_u,
-                                    palette_v=self.palette_v))
+            return (TransitionMatrix(M=M_patches,
+                                     palette_u=self.palette_u,
+                                     palette_v=self.palette_v))
 
     def _full_matrix(self):
         """
@@ -365,7 +364,9 @@ class TransitionMatrix():
 
     def _check_land_transition_matrix(self):
         if len(self.palette_u) != 1 or self.M.shape[0] != 1:
-            raise(ValueError("Unexpected transition matrix. Expected a land transition matrix with only one initial state."))
+            raise (ValueError(
+                "Unexpected transition matrix. Expected a land transition matrix with only one initial state."))
+
 
 def load_transition_matrix(path, palette):
     """
@@ -394,10 +395,20 @@ def load_transition_matrix(path, palette):
                              palette_v=palette_v))
 
 
-def _compact_transition_matrix(full_M, palette_u=None, palette_v=None):
+def _full_M_to_transition_matrix(full_M, palette_u, palette_v):
     """
     Extract compact transition matrix from full_M
     """
+    M = np.zeros((len(palette_u), len(palette_v)))
+
+    for id_u, state_u in enumerate(palette_u):
+        u = state_u.value
+        for id_v, state_v in enumerate(palette_v):
+            v = state_v.value
+            M[id_u, id_v] = full_M[u, v]
+
+    return (TransitionMatrix(M=M, palette_u=palette_u, palette_v=palette_v))
+
     list_u = palette_u.get_list_of_values()
     list_v = palette_v.get_list_of_values()
 
@@ -429,4 +440,3 @@ def _compact_transition_matrix(full_M, palette_u=None, palette_v=None):
                                            list_v_full_matrix.index(v)]
 
     return (compact_M)
-

@@ -432,6 +432,7 @@ class Land():
                                  mask=None,
                                  distances_to_states={},
                                  path_prefix=None,
+                                 copy_geo=None,
                                  save_P_Y__v=False,
                                  save_P_Y=False,
                                  return_Y=False):
@@ -500,27 +501,30 @@ class Land():
         if self.verbose > 0:
             print('Land ' + str(state) + ' TPE done.\n')
 
-        if path_prefix is None:
-            return J_P_v__u_Y_Y
-
-        else:
+        if path_prefix is not None:
             J = J_P_v__u_Y_Y[0]
             P_v__u_Y = J_P_v__u_Y_Y[1]
 
             folder_path, file_prefix = path_split(path_prefix, prefix=True)
 
             for id_state, state_v in enumerate(palette_v):
-                M = np.zeros(lul.get_data().shape)
+                if isinstance(lul, LandUseLayer):
+                    shape = lul.get_data().shape
+                    copy_geo = lul
+                else:
+                    shape = lul.shape
+                M = np.zeros(shape)
                 M.flat[J] = P_v__u_Y[:, id_state]
 
                 file_name = file_prefix + '_' + str(state_v.value) + '.tif'
 
                 FeatureLayer(label=file_name,
                              data=M,
-                             copy_geo=lul,
+                             copy_geo=copy_geo,
                              path=folder_path + '/' + file_name)
 
-            return J_P_v__u_Y_Y
+        # even if path prefix is not None, return J, P_v__u_Y, Y
+        return J_P_v__u_Y_Y
 
     def _compute_tpe(self,
                      transition_matrix,
@@ -598,7 +602,8 @@ class Land():
                  mask=None,
                  distances_to_states={},
                  path=None,
-                 path_prefix_transition_probabilities=None):
+                 path_prefix_transition_probabilities=None,
+                 copy_geo=None):
         """
         allocation.
 
@@ -651,7 +656,8 @@ class Land():
                                 mask=mask,
                                 distances_to_states=distances_to_states,
                                 path=path,
-                                path_prefix_transition_probabilities=path_prefix_transition_probabilities)
+                                path_prefix_transition_probabilities=path_prefix_transition_probabilities,
+                                copy_geo=copy_geo)
 
         if self.verbose > 0:
             print('Land ' + str(state) + ' allocation done.\n')

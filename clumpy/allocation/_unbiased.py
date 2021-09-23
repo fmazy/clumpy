@@ -46,7 +46,8 @@ class Unbiased(Allocator):
                   lul_origin_data,
                   mask=None,
                   distances_to_states={},
-                  path_prefix_transition_probabilities=None):
+                  path_prefix_transition_probabilities=None,
+                  copy_geo=None):
         """
         allocation. lul_data and lul_origin_data are ndarrays only.
         """
@@ -98,16 +99,10 @@ class Unbiased(Allocator):
                     mask=mask,
                     distances_to_states=distances_to_states,
                     path_prefix=path_prefix_transition_probabilities,
+                    copy_geo=copy_geo,
                     save_P_Y__v=True,
                     save_P_Y=~self.update_P_Y,
                     return_Y=True)
-                #J, P_v__u_Y, Y = land._compute_tpe(transition_matrix=transition_matrix_patches,
-                #                                   lul=lul_data,
-                #                                   mask=mask,
-                #                                   distances_to_states=distances_to_states,
-                #                                   save_P_Y__v=True,
-                #                                   save_P_Y=~self.update_P_Y,
-                #                                   return_Y=True)
 
                 n_idx_J_unused = len(J)
                 idx_J_unused = np.arange(n_idx_J_unused)

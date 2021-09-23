@@ -10,6 +10,7 @@ from ._layer import LandUseLayer
 from ..tools._path import path_split
 from ..tools._console import title_heading
 
+
 class Territory():
     """
     Territory.
@@ -28,8 +29,8 @@ class Territory():
 
     def __init__(self,
                  regions=None,
-                 verbose = 0,
-                 verbose_heading_level = 1):
+                 verbose=0,
+                 verbose_heading_level=1):
 
         self.regions = regions
         if self.regions is None:
@@ -108,7 +109,7 @@ class Territory():
         """
 
         if self.verbose > 0:
-            print(title_heading(self.verbose_heading_level)+'Territory fitting\n')
+            print(title_heading(self.verbose_heading_level) + 'Territory fitting\n')
 
         if masks is None:
             masks = {region: None for region in self.regions}
@@ -156,11 +157,10 @@ class Territory():
 
         for region in self.regions:
             tms[region] = region.transition_matrix(lul_initial=lul_initial,
-                                                                   lul_final=lul_final,
-                                                                   mask=masks[region])
+                                                   lul_final=lul_final,
+                                                   mask=masks[region])
 
-        return(tms)
-
+        return (tms)
 
     def transition_probabilities(self,
                                  transition_matrices,
@@ -195,7 +195,7 @@ class Territory():
         """
 
         if self.verbose > 0:
-            print(title_heading(self.verbose_heading_level)+'Territory TPE\n')
+            print(title_heading(self.verbose_heading_level) + 'Territory TPE\n')
 
         if masks is None:
             masks = {region: None for region in self.regions}
@@ -215,7 +215,8 @@ class Territory():
                                                          lul=lul,
                                                          mask=masks[region],
                                                          distances_to_states=distances_to_states,
-                                                         path_prefix=region_path_prefix)
+                                                         path_prefix=region_path_prefix,
+                                                         copy_geo=lul)
 
         if self.verbose > 0:
             print('Territory transition probabilities estimation done.\n')
@@ -227,7 +228,8 @@ class Territory():
                  transition_matrices,
                  lul,
                  masks=None,
-                 path=None):
+                 path=None,
+                 path_prefix_transition_probabilities=None):
         """
         Allocate.
 
@@ -236,7 +238,7 @@ class Territory():
         transition_matrices : dict(Region:TransitionMatrix)
             Dict of transition matrix with the corresponding region as key.
 
-        lul : LandUseLayer or ndarray
+        lul : LandUseLayer
             The studied land use layer.
 
         masks : dict(Region:MaskLayer), default=None
@@ -247,6 +249,9 @@ class Territory():
             If None, the allocation is only saved within `lul`, if `lul` is a ndarray.
             Note that if ``path`` is not ``None``, ``lul`` must be LandUseLayer.
 
+        path_prefix_transition_probabilities : str, default=None
+            The path prefix to save transition probabilities.
+
         Returns
         -------
         lul_allocated : LandUseLayer
@@ -254,7 +259,7 @@ class Territory():
         """
 
         if self.verbose > 0:
-            print(title_heading(self.verbose_heading_level)+'Territory allocate\n')
+            print(title_heading(self.verbose_heading_level) + 'Territory allocation\n')
 
         if masks is None:
             masks = {region: None for region in self.regions}
@@ -264,12 +269,21 @@ class Territory():
         lul_data = lul.get_data().copy()
 
         for region in self.regions:
+
+            if path_prefix_transition_probabilities is not None:
+                region_path_prefix_transition_probabilities = path_prefix_transition_probabilities + '_' + str(
+                    region.label)
+            else:
+                region_path_prefix_transition_probabilities = None
+
             region.allocate(transition_matrix=transition_matrices[region],
                             lul=lul_data,
                             lul_origin=lul,
                             mask=masks[region],
                             distances_to_states=distances_to_states,
-                            path=None)
+                            path=None,
+                            path_prefix_transition_probabilities=region_path_prefix_transition_probabilities,
+                            copy_geo=lul)
             # Note that the path is set to None above in order to allocate through all regions and save in a second time !
 
         if path is not None:
@@ -283,19 +297,20 @@ class Territory():
         if self.verbose > 0:
             print('Territory allocate done.\n')
 
-    def multisteps_allocation(self,
-                              n,
-                              transition_matrices,
-                              lul,
-                              masks=None,
-                              path_prefix=None):
+    def iterative_allocate(self,
+                           n_iter,
+                           transition_matrices,
+                           lul,
+                           masks=None,
+                           path_prefix=None,
+                           path_prefix_transition_probabilities=None):
         """
         Multisteps allocation
 
         Parameters
         ----------
-        n : int
-            Number of steps.
+        n_iter : int
+            Number of iterations to allocate.
 
         transition_matrices : dict(Region:TransitionMatrix)
             Dict of transition matrix with the corresponding region as key.
@@ -306,10 +321,18 @@ class Territory():
         masks : dict(Region:MaskLayer), default=None
             Dict of masks layer with the corresponding region as key. If None, the whole map is used for each region.
 
-        path_prefix : str, default=None
-            The path to save every allocated step map as ``path_prefix+'_'+str(i)+'.tif'``.
+        path_prefix : str or callable, default=None
+            The path to save every allocated step map as ``path_prefix+'_iter'+str(i)+'.tif'``.
+            If callable, it has to be a function with the iteration ``i`` in entry
+            which returns the tif file path as a string.
             If None, the allocation is only saved within `lul`, if `lul` is a ndarray.
             Note that if ``path`` is not ``None``, ``lul`` must be LandUseLayer.
+
+        path_prefix_transition_probabilities : str or callable, default=None
+            The patch to save every transition probabilities step map
+            as ``path_prefix_transition_probabilities+'_iter'+str(i)+'_'+region.label+'_'+u+'_'+v+'.tif'.``
+            If callable, it has to be a function with the iteration ``i`` in entry
+            which returns the path prefix as a string.
 
         Returns
         -------
@@ -317,29 +340,35 @@ class Territory():
             The allocated map as a land use layer.
         """
 
-
-
-        multisteps_transition_matrices = {region: tm.multisteps(n) for region, tm in transition_matrices.items()}
+        if self.verbose > 0:
+            print(title_heading(self.verbose_heading_level) + 'Territory iterative allocation\n')
 
         lul_step = lul
 
-        for i in range(n):
-
-            if self.verbose > 0:
-                print('\n# Territory multisteps allocate '+str(i)+'\n')
+        self.verbose_heading_level += 1
+        for i in range(1,n_iter+1):
 
             if isinstance(path_prefix, str):
-                path_step = path_prefix + '_' + str(i) + '.tif'
+                iter_path = path_prefix + '_iter' + str(i) + '.tif'
             elif callable(path_prefix):
-                path_step = path_prefix(i)
+                iter_path = path_prefix(i)
+            else:
+                iter_path = None
 
-            lul_step = self.allocation(transition_matrices=multisteps_transition_matrices,
-                                       lul=lul_step,
-                                       masks=masks,
-                                       path=path_step)
+            if isinstance(path_prefix_transition_probabilities, str):
+                iter_path_prefix_transition_probabilities = path_prefix_transition_probabilities + '_iter' + str(i) + '.tif'
+            elif callable(path_prefix_transition_probabilities):
+                iter_path_prefix_transition_probabilities = path_prefix_transition_probabilities(i)
+            else:
+                iter_path_prefix_transition_probabilities = None
 
-            if self.verbose > 0:
-                print('Territory multisteps allocate '+str(i)+' done.\n')
+            lul_step = self.allocate(transition_matrices=transition_matrices,
+                                     lul=lul_step,
+                                     masks=masks,
+                                     path=iter_path,
+                                     path_prefix_transition_probabilities=iter_path_prefix_transition_probabilities)
+
+        self.verbose_heading_level -= 1
 
         if path_prefix is not None:
             return lul_step

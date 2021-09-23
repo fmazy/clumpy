@@ -167,7 +167,8 @@ class Region():
                                  lul,
                                  mask=None,
                                  distances_to_states={},
-                                 path_prefix=None):
+                                 path_prefix=None,
+                                 copy_geo=None):
         """
         Compute transition probabilities.
 
@@ -188,7 +189,6 @@ class Region():
         path_prefix : str, default=None
             The path prefix to save result as ``path_prefix+'_'+ str(state_u.value)+'_'+str(state_v.value)+'.tif'.
             If None, the result is returned.
-            Note that if ``path_prefix is not None``, ``lul`` must be LandUseLayer
 
         Returns
         -------
@@ -207,6 +207,9 @@ class Region():
         if self.verbose > 0:
             print(title_heading(self.verbose_heading_level) + 'Region ' + str(self.label) + ' TPE\n')
 
+        if isinstance(lul, LandUseLayer):
+            copy_geo = lul
+
         for state, land in self.lands.items():
 
             if self.verbose > 0:
@@ -221,7 +224,8 @@ class Region():
                                                 lul=lul,
                                                 mask=mask,
                                                 distances_to_states=distances_to_states,
-                                                path_prefix=land_path_prefix)
+                                                path_prefix=land_path_prefix,
+                                                copy_geo=copy_geo)
 
             if path_prefix is None:
                 J[state] = ltp[0]
@@ -238,7 +242,9 @@ class Region():
                  lul_origin=None,
                  mask=None,
                  distances_to_states={},
-                 path=None):
+                 path=None,
+                 path_prefix_transition_probabilities=None,
+                 copy_geo=None):
         """
         allocation.
 
@@ -264,6 +270,9 @@ class Region():
             If None, the allocation is only saved within `lul`, if `lul` is a ndarray.
             Note that if ``path`` is not ``None``, ``lul`` must be LandUseLayer.
 
+        path_prefix_transition_probabilities : str, default=None
+            The path prefix to save transition probabilities.
+
         Returns
         -------
         lul_allocated : LandUseLayer
@@ -278,6 +287,7 @@ class Region():
 
         if isinstance(lul_origin, LandUseLayer):
             lul_origin_data = lul_origin.get_data()
+            copy_geo = lul_origin
         else:
             lul_origin_data = lul_origin
 
@@ -287,12 +297,20 @@ class Region():
             lul_data = lul
 
         for state, land in self.lands.items():
+
+            if path_prefix_transition_probabilities is not None:
+                land_path_prefix_transition_probabilities = path_prefix_transition_probabilities + '_' + str(state.value)
+            else:
+                land_path_prefix_transition_probabilities = None
+
             land.allocate(transition_matrix=transition_matrix.extract(infos=[state]),
                           lul=lul_data,
                           lul_origin=lul_origin_data,
                           mask=mask,
                           distances_to_states=distances_to_states,
-                          path=None)
+                          path=None,
+                          path_prefix_transition_probabilities=land_path_prefix_transition_probabilities,
+                          copy_geo=copy_geo)
             # Note that the path is set to None in the line above in order to allocate through all regions and save in a second time !
 
         if self.verbose > 0:
@@ -302,6 +320,6 @@ class Region():
             folder_path, file_name, file_ext = path_split(path)
             return (LandUseLayer(label=file_name,
                                  data=lul_data,
-                                 copy_geo=lul_origin,
+                                 copy_geo=copy_geo,
                                  path=path,
                                  palette=lul_origin.palette))

@@ -86,7 +86,8 @@ class Allocator():
                  mask=None,
                  distances_to_states={},
                  path=None,
-                 path_prefix_transition_probabilities=None):
+                 path_prefix_transition_probabilities=None,
+                 copy_geo=None):
         """
         Allocate
 
@@ -132,6 +133,7 @@ class Allocator():
 
         if isinstance(lul_origin, LandUseLayer):
             lul_origin_data = lul_origin.get_data()
+            copy_geo = lul_origin
         else:
             lul_origin_data = lul_origin
 
@@ -146,7 +148,8 @@ class Allocator():
                        lul_origin_data=lul_origin_data,
                        mask=mask,
                        distances_to_states=distances_to_states,
-                       path_prefix_transition_probabilities=path_prefix_transition_probabilities)
+                       path_prefix_transition_probabilities=path_prefix_transition_probabilities,
+                       copy_geo=copy_geo)
 
         if path is not None:
             folder_path, file_name, file_ext = path_split(path)

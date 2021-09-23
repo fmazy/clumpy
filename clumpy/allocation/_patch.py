@@ -192,7 +192,7 @@ class BootstrapPatch(Patch):
         -------
         self
         """
-        idx = self.areas >= min_area & self.areas <= max_area
+        idx = (self.areas >= min_area) & (self.areas <= max_area)
 
         if inplace:
             self.areas = self.areas[idx]

@@ -377,3 +377,7 @@ class Bayes(TransitionProbabilityEstimator):
         P_v__Y[:, id_state_u] = 1 - np.delete(P_v__Y, id_state_u, axis=1).sum(axis=1)
 
         return(P_v__Y)
+
+#def marginals(self):
+
+
