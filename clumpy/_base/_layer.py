@@ -191,6 +191,8 @@ class LandUseLayer(Layer):
     
     Parameters
     ----------
+    palette : Palette
+        The states palette.
     label : str, default=``None``
         The layer label.
     time : float, default=``0``
@@ -204,8 +206,7 @@ class LandUseLayer(Layer):
     copy_geo : :class:`LandUseLayer`, default=None
         The layer from whose geo metadata are copied.
         If ``None``, geo metadata are set to ``None``.
-    palette : Palette
-        The states palette.
+
 
     Attributes
     ----------
@@ -216,12 +217,12 @@ class LandUseLayer(Layer):
     """
     
     def __init__(self,
+                 palette,
                  label=None,
                  time=0,
                  path=None,
                  data=None,
-                 copy_geo=None,
-                 palette=None):
+                 copy_geo=None):
 
         if data is not None:
             # choose an appropriate dtype.
