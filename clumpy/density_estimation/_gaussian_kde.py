@@ -89,7 +89,7 @@ class GKDE(DensityEstimator):
     support_factor : float, default=3
         The kernel support factor, even if kernel has infinite support.
 
-    n_fit_max : int, default=np.inf
+    n_fit_max : int, default=2*10**4
         The maximum number of training samples. A random sampling is done if necessary.
 
     n_predict_max : int, default=2*10**4

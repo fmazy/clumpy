@@ -79,33 +79,49 @@ class Layer:
 
     def __repr__(self):
         return(self.label)
-        
-    def export_asc(self, path, verbose=0):
+
+    def export(self, path):
+        """Export the layer according to the file extension. See GDAL for available extenstions.
+        For floating rst, the data should be np.float32.
+        Parameters
+        ----------
+        path : str
+            path to the file.
+        """
+        # create folder if not exists
+        folder_path, file_name, file_ext = path_split(path)
+        create_directories(folder_path)
+
+        os.system('rio convert '+self.path+' '+path+' --overwrite')
+
+    def export_asc(self, path, round=4):
         """Export the layer data as an ``asc`` file in order to use it through CLUES and CLUMondo.
         
         Parameters
         ----------
         path : str
             path to the file.
-        verbose : int, default=0
-            level of verbosity.
+        round : int, default=4
+            Number of decimals to keep if data is not an dtype integer array.
         """
-        if verbose>0:
-            print("[" + self.label + "] exporting tiff file in " + path + "...")
         
          # create folder if not exists
-        folder_label = os.path.dirlabel(path)
-        if not os.path.exists(folder_label) and folder_label!= '':
-            os.makedirs(folder_label)
+        folder_path, file_name, file_ext = path_split(path)
+        create_directories(folder_path)
         
-        data = self.raster_.read(1)
-        
-        np.savetxt(path, data.astype(int), delimiter=' ', fmt='%i')
+        data = self.get_data()
+
+        if np.issubdtype(data.dtype, np.integer):
+            fmt = '%i'
+        else:
+            fmt = '%.'+str(round)+'f'
+
+        np.savetxt(path, data, delimiter=' ', fmt=fmt)
         
         f= open(path,"r")
         
-        data = f.read()
-        
+        text_data = f.read()
+
         entete =  "ncols        "+str(data.shape[0])+"\n"
         entete += "nrows        "+str(data.shape[1])+"\n"
         entete += "xllcorner    0.0\n"
@@ -114,11 +130,8 @@ class Layer:
         
         f= open(path,"w")
         
-        f.write(entete+data)
+        f.write(entete+text_data)
         f.close()
-        
-        if verbose>0:
-            print('done')
             
     def display(self,
                 center,
@@ -395,3 +408,5 @@ class FeatureLayer(Layer):
         self.low_bound = low_bound
         self.high_bound = high_bound
 
+def convert_raster_file(path_in, path_out):
+    os.system('rio convert '+path_in+' '+path_out+' --overwrite')
