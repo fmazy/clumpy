@@ -354,8 +354,8 @@ class MaskLayer(Layer):
                          data=data,
                          copy_geo=copy_geo)
 
-        if ~np.all(np.equal(np.unique(self.get_data()), np.array([0,1]))):
-            raise(ValueError("Unexpected mask layer. Mask layer should be only composed by '0' and '1' values."))
+        # if ~np.all(np.equal(np.unique(self.get_data()), np.array([0,1]))):
+        #     raise(ValueError("Unexpected mask layer. Mask layer should be only composed by '0' and '1' values."))
 
 class FeatureLayer(Layer):
     """Define a feature layer.
