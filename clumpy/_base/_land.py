@@ -662,7 +662,77 @@ class Land():
         if self.verbose > 0:
             print('Land ' + str(state) + ' allocation done.\n')
 
+    def dinamica_determine_ranges(self,
+                                  state,
+                                  lul_initial,
+                                  params,
+                                  mask=None):
+        J, X = self.get_values(state=state,
+                               lul_initial=lul_initial,
+                               mask=mask,
+                               explanatory_variables=True)
+
+        ranges = {}
+        delta = {}
+
+        for id_feature, feature in enumerate(self.features):
+            param = params[feature]
+
+            x = X[:, id_feature].copy()
+            n_round = _get_n_decimals(param['increment'])
+            x = np.sort(x)
+            x = np.round(x, n_round)
+
+            ranges[feature] = [np.round(x[0], n_round)]
+            delta[feature] = [0, 0]
+
+            for i, xi in enumerate(x):
+                if delta[feature][-1] >= param['maximum_delta']:
+                    ranges[feature].append(xi)
+                    delta[feature].append(1)
+                elif xi - ranges[feature][-1] > param['increment'] and delta[feature][-1] >= param['minimum_delta']:
+                    ranges[feature].append(ranges[feature][-1] + param['increment'])
+                    delta[feature].append(1)
+
+                elif len(ranges[feature]) > 1:
+                    v1 = np.array([ranges[feature][-1] - ranges[feature][-2],
+                                   (delta[feature][-2] - delta[feature][-3])])
+                    v2 = np.array([xi - ranges[feature][-1],
+                                   (delta[feature][-1] + 1 - delta[feature][-2])])
+
+                    norm_v1 = np.linalg.norm(v1)
+                    norm_v2 = np.linalg.norm(v2)
+                    if norm_v1 > 0 and norm_v2 > 0:
+                        v1 /= norm_v1
+                        v2 /= norm_v2
+
+                        dot = v1[0] * v2[0] + v1[1] * v2[1]
+                        if dot >= 0 and dot <= 1:
+                            angle = np.arccos(np.abs(v1[0] * v2[0] + v1[1] * v2[1])) * 180 / np.pi
+                        else:
+                            angle=0
+                    else:
+                        angle = 0
+
+                    if angle > param['tolerance_angle'] and delta[feature][-1] >= param['minimum_delta']:
+                        ranges[feature].append(xi)
+                        delta[feature].append(1)
+                    else:
+                        delta[feature][-1] += 1
+                else:
+                    delta[feature][-1] += 1
+
+        return (ranges, delta)
+
 
 def _compute_distance(state, data, distances_to_states):
     v_matrix = (data == state.value).astype(int)
     distances_to_states[state] = ndimage.distance_transform_edt(1 - v_matrix)
+
+
+def _get_n_decimals(s):
+    try:
+        int(s.rstrip('0').rstrip('.'))
+        return 0
+    except:
+        return len(str(float(s)).split('.')[-1])
