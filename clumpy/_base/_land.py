@@ -3,6 +3,7 @@
 
 from scipy import ndimage
 import numpy as np
+from time import time
 
 # base import
 from ._layer import Layer, FeatureLayer, LandUseLayer
@@ -276,7 +277,8 @@ class Land():
         -------
         self
         """
-
+        self._time_fit = {}
+        st0 = time()
         if self.verbose > 0:
             print(title_heading(self.verbose_heading_level) + 'Land ' + str(state) + ' fitting\n')
 
@@ -290,15 +292,19 @@ class Land():
                       distances_to_states=distances_to_states)
 
         if self.fit_bootstrap_patches:
+            st = time()
             self.compute_bootstrap_patches(
                 state=state,
                 palette_v=self.transition_probability_estimator._palette_fitted_states,
                 lul_initial=lul_initial,
                 lul_final=lul_final,
                 mask=mask)
+            self._time_fit['compute_bootstrap_patches'] = time()-st
 
         if self.verbose > 0:
             print('Land ' + str(state) + ' fitting done.\n')
+
+        self._time_fit['all'] = time()-st0
 
         return self
 
@@ -311,6 +317,8 @@ class Land():
         """
         Fit the transition probability estimator
         """
+        # TIME
+        st = time()
         # GET VALUES
         J_calibration, X, V = self.get_values(state=state,
                                               lul_initial=lul_initial,
@@ -318,6 +326,8 @@ class Land():
                                               mask=mask,
                                               explanatory_variables=True,
                                               distances_to_states=distances_to_states)
+        self._time_fit['get_values'] = time()-st
+        st = time()
 
         # FEATURE SELECTORS
         # if only one object, make a list
@@ -350,6 +360,9 @@ class Land():
 
         features_idx = features_idx[0, :]
 
+        self._time_fit['feature_selection'] = time()-st
+        st=time()
+
         # BOUNDARIES PARAMETERS
         low_bounded_features = []
         high_bounded_features = []
@@ -371,14 +384,17 @@ class Land():
             if isinstance(self.features[idx], State) or isinstance(self.features[idx], int):
                 low_bounded_features.append(id_col)
                 low_bounds.append(0.0)
+        self._time_fit['boundaties_parameters_init'] = time()-st
 
         # TRANSITION PROBABILITY ESTIMATOR
+        st = time()
         self.transition_probability_estimator.fit(X,
                                                   V,
                                                   low_bounded_features=low_bounded_features,
                                                   high_bounded_features=high_bounded_features,
                                                   low_bounds=low_bounds,
                                                   high_bounds=high_bounds)
+        self._time_fit['tpe_fit'] = time()-st
 
         return self
 
@@ -710,7 +726,7 @@ class Land():
                         if dot >= 0 and dot <= 1:
                             angle = np.arccos(np.abs(v1[0] * v2[0] + v1[1] * v2[1])) * 180 / np.pi
                         else:
-                            angle=0
+                            angle = 0
                     else:
                         angle = 0
 
