@@ -497,6 +497,8 @@ class Land():
             The features values.
         """
 
+        self._time_tp = {}
+        st = time()
         # check if it is really a land transition matrix
         transition_matrix._check_land_transition_matrix()
 
@@ -540,6 +542,7 @@ class Land():
                              path=folder_path + '/' + file_name)
 
         # even if path prefix is not None, return J, P_v__u_Y, Y
+        self._time_tp['all'] = time()-st
         return J_P_v__u_Y_Y
 
     def _compute_tpe(self,
@@ -559,11 +562,13 @@ class Land():
         state = transition_matrix.palette_u.states[0]
 
         # GET VALUES
+        st = time()
         J_allocation, Y = self.get_values(state=state,
                                           lul_initial=lul,
                                           mask=mask,
                                           explanatory_variables=True,
                                           distances_to_states=distances_to_states)
+        self._time_tp['get_values'] = time() - st
 
         # FEATURES SELECTOR
         # if only one object, make a list
@@ -579,6 +584,7 @@ class Land():
             Y = fs.transform(X=Y)
 
         # TRANSITION PROBABILITY ESTIMATION
+        st = time()
         P_v__u_Y = self.transition_probability_estimator.transition_probability(
             transition_matrix=transition_matrix,
             Y=Y,
@@ -586,7 +592,7 @@ class Land():
             compute_P_Y=True,
             save_P_Y__v=save_P_Y__v,
             save_P_Y=save_P_Y)
-
+        self._time_tp['estimation'] = time() - st
         if return_Y:
             return J_allocation, P_v__u_Y, Y
         else:
