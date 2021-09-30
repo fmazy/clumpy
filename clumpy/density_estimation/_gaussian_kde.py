@@ -70,7 +70,7 @@ class GKDE(DensityEstimator):
         
             whitening : Whitening transformation to get a covariance matrix equal to the identity matrix.
     
-    algorithm : {'auto', 'ball_tree', 'kd_tree', 'brute'}, default=``'auto'``
+    algorithm : {'auto', 'ball_tree', 'kd_tree', 'brute'}, default=``'kd_tree'``
         Algorithm used to compute the nearest neighbors as sklearn.
         
             'ball_tree' will use BallTree
@@ -382,21 +382,21 @@ class GKDE(DensityEstimator):
         if self.preprocessing != 'none':
             f /= np.product(self._preprocessor.scale_)
 
-            # if null value is forbiden
-            if self.forbid_null_value or self._force_forbid_null_value:
-                if self.verbose > 0:
-                    print(title_heading(self.verbose_heading_level)+'Null value correction...')
-                idx = f == 0.0
+        # if null value is forbiden
+        if self.forbid_null_value or self._force_forbid_null_value:
+            if self.verbose > 0:
+                print(title_heading(self.verbose_heading_level)+'Null value correction...')
+            idx = f == 0.0
 
-                new_n = self._n + idx.sum()
+            new_n = self._n + idx.sum()
 
-                f = f * self._n / new_n
+            f = f * self._n / new_n
 
-                min_value = 1 / new_n / self._normalization * _gaussian(0)
-                f[f == 0.0] = min_value
+            min_value = 1 / new_n / self._normalization * _gaussian(0)
+            f[f == 0.0] = min_value
 
-                if self.verbose > 0:
-                    print('Null value correction done.')
+            if self.verbose > 0:
+                print('Null value correction done.')
 
         return(f)
 
