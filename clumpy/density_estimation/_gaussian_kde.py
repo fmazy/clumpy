@@ -369,9 +369,7 @@ class GKDE(DensityEstimator):
         if self.verbose > 0:
             print(title_heading(self.verbose_heading_level)+'Boundary bias correction...')
 
-        for bounds_hyperplanes in [self._low_bounds_hyperplanes, self._high_bounds_hyperplanes]:
-            for hyperplane in bounds_hyperplanes:
-                f /= 1 / 2 * (1 + erf(hyperplane.distance(X) / h / np.sqrt(2)))
+        f *= self._boundary_correction(X, h)
             
         # outside bounds : equal to 0
         f[id_out_of_low_bounds] = 0
@@ -401,7 +399,17 @@ class GKDE(DensityEstimator):
                     print('Null value correction done.')
 
         return(f)
-            
+
+    def _boundary_correction(self, X, h):
+        """
+        X in the WT space.
+        """
+        correction = np.ones(X.shape[0])
+        for hyperplane in self._low_bounds_hyperplanes + self._high_bounds_hyperplanes:
+            correction /= 1 / 2 * (1 + erf(hyperplane.distance(X) / h / np.sqrt(2)))
+
+        return(correction)
+
     def marginal(self,
                  x,
                  k):

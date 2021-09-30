@@ -150,15 +150,21 @@ class Bayes(TransitionProbabilityEstimator):
 
         self._palette_fitted_states = Palette()
 
+        # set de params
+        self.density_estimator.set_params(low_bounded_features = low_bounded_features,
+                                          high_bounded_features = high_bounded_features,
+                                          low_bounds = low_bounds,
+                                          high_bounds = high_bounds)
+
         for state_v, cde in self.conditional_density_estimators.items():
             if self.verbose > 0:
                 print('state_v : ' + str(state_v))
 
-            # set params
-            cde.low_bounded_features = low_bounded_features
-            cde.high_bounded_features = high_bounded_features
-            cde.low_bounds = low_bounds
-            cde.high_bounds = high_bounds
+            # set cde params
+            cde.set_params(low_bounded_features = low_bounded_features,
+                           high_bounded_features = high_bounded_features,
+                           low_bounds = low_bounds,
+                           high_bounds = high_bounds)
 
             # select X_v
             idx_v = V == state_v.value
