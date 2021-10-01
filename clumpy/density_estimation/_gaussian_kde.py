@@ -388,15 +388,22 @@ class GKDE(DensityEstimator):
                 print(title_heading(self.verbose_heading_level)+'Null value correction...')
             idx = f == 0.0
 
-            new_n = self._n + idx.sum()
+            m_0 = idx.sum()
+
+            new_n = self._n + m_0
 
             f = f * self._n / new_n
 
             min_value = 1 / new_n / self._normalization * _gaussian(0)
             f[f == 0.0] = min_value
 
+            # Warning flag
+            # check the relative number of corrected probabilities
+            if m_0 / self._n > 0.01:
+                print('WARNING : m_0='+str(m_0)+', m='+str(self._n)+', m_0/m='+str(np.round(m_0/self._n,4))+' > 0.01. The parameter `n_fit_max` should be higher.')
+
             if self.verbose > 0:
-                print('Null value correction done.')
+                print('Null value correction done for '+str(m_0)+' elements.')
 
         return(f)
 

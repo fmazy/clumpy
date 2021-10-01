@@ -47,8 +47,10 @@ class DensityEstimator(BaseEstimator):
         for param, value in params.items():
             setattr(self, param, value)
 
+class NullEstimator(DensityEstimator):
+    def __init__(self):
+        super().__init__()
 
-class NullEstimator(BaseEstimator):
     def fit(self, X, y):
         return (self)
 
