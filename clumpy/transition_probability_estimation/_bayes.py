@@ -327,7 +327,8 @@ class Bayes(TransitionProbabilityEstimator):
 
         if np.sum(s > 1) > 0:
             if self.verbose > 0:
-                print('Warning, uncorrect probabilities have been detected.')
+                s_sum = np.sum(s>1)
+                print('Warning, '+str(s_sum)+'/'+str(s.size)+' ('+str(np.round(s_sum/s.size*100,2))+' %) uncorrect probabilities have been detected.')
                 print('Some global probabilities may be to high.')
                 print('For now, some corrections are made.')
 

@@ -399,8 +399,12 @@ class GKDE(DensityEstimator):
 
             # Warning flag
             # check the relative number of corrected probabilities
+            if self.verbose > 0:
+                print('m_0 = '+str(m_0)+', m = '+str(self._n)+', m_0 / m = '+str(np.round(m_0/self._n,4)))
+
+            # warning flag
             if m_0 / self._n > 0.01:
-                print('WARNING : m_0='+str(m_0)+', m='+str(self._n)+', m_0/m='+str(np.round(m_0/self._n,4))+' > 0.01. The parameter `n_fit_max` should be higher.')
+                print('WARNING : m_0/m > 0.01. The parameter `n_fit_max` should be higher.')
 
             if self.verbose > 0:
                 print('Null value correction done for '+str(m_0)+' elements.')
