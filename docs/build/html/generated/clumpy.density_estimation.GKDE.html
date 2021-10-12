@@ -73,7 +73,7 @@ specified here.</p></li>
 <div><p>whitening : Whitening transformation to get a covariance matrix equal to the identity matrix.</p>
 </div></blockquote>
 </p></li>
-<li><p><strong>algorithm</strong> (<em>{'auto'</em><em>, </em><em>'ball_tree'</em><em>, </em><em>'kd_tree'</em><em>, </em><em>'brute'}</em><em>, </em><em>default=``'auto'``</em>) – <p>Algorithm used to compute the nearest neighbors as sklearn.</p>
+<li><p><strong>algorithm</strong> (<em>{'auto'</em><em>, </em><em>'ball_tree'</em><em>, </em><em>'kd_tree'</em><em>, </em><em>'brute'}</em><em>, </em><em>default=``'kd_tree'``</em>) – <p>Algorithm used to compute the nearest neighbors as sklearn.</p>
 <blockquote>
 <div><p>’ball_tree’ will use BallTree</p>
 <p>’kd_tree’ will use KDTree</p>
@@ -84,7 +84,7 @@ specified here.</p></li>
 </p></li>
 <li><p><strong>leaf_size</strong> (<em>int</em><em>, </em><em>default=30</em>) – Leaf size passed to BallTree or KDTree. This can affect the speed of the construction and query, as well as the memory required to store the tree. The optimal value depends on the nature of the problem.</p></li>
 <li><p><strong>support_factor</strong> (<em>float</em><em>, </em><em>default=3</em>) – The kernel support factor, even if kernel has infinite support.</p></li>
-<li><p><strong>n_fit_max</strong> (<em>int</em><em>, </em><em>default=np.inf</em>) – The maximum number of training samples. A random sampling is done if necessary.</p></li>
+<li><p><strong>n_fit_max</strong> (<em>int</em><em>, </em><em>default=2*10**4</em>) – The maximum number of training samples. A random sampling is done if necessary.</p></li>
 <li><p><strong>n_predict_max</strong> (<em>int</em><em>, </em><em>default=2*10**4</em>) – The maximum of simultaneous probability estimations.
 Several streams are consequently created.</p></li>
 <li><p><strong>forbid_null_value</strong> (<em>bool</em><em>, </em><em>default=False</em>) – If <code class="docutils literal notranslate"><span class="pre">True</span></code>, the null value is forbiden and a correction is made if

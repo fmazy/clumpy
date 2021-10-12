@@ -72,7 +72,7 @@ and can be append by <code class="docutils literal notranslate"><span class="pre
 <tr class="row-odd"><td><p><a class="reference internal" href="#clumpy.Territory.add_region" title="clumpy.Territory.add_region"><code class="xref py py-obj docutils literal notranslate"><span class="pre">add_region</span></code></a>(region)</p></td>
 <td><p>Add a region.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#clumpy.Territory.allocate" title="clumpy.Territory.allocate"><code class="xref py py-obj docutils literal notranslate"><span class="pre">allocate</span></code></a>(transition_matrices, lul[, masks, path])</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#clumpy.Territory.allocate" title="clumpy.Territory.allocate"><code class="xref py py-obj docutils literal notranslate"><span class="pre">allocate</span></code></a>(transition_matrices, lul[, masks, …])</p></td>
 <td><p>Allocate.</p></td>
 </tr>
 <tr class="row-odd"><td><p><a class="reference internal" href="#clumpy.Territory.check" title="clumpy.Territory.check"><code class="xref py py-obj docutils literal notranslate"><span class="pre">check</span></code></a>()</p></td>
@@ -81,7 +81,7 @@ and can be append by <code class="docutils literal notranslate"><span class="pre
 <tr class="row-even"><td><p><a class="reference internal" href="#clumpy.Territory.fit" title="clumpy.Territory.fit"><code class="xref py py-obj docutils literal notranslate"><span class="pre">fit</span></code></a>(lul_initial, lul_final[, masks])</p></td>
 <td><p>Fit the territory.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#clumpy.Territory.multisteps_allocation" title="clumpy.Territory.multisteps_allocation"><code class="xref py py-obj docutils literal notranslate"><span class="pre">multisteps_allocation</span></code></a>(n, …[, masks, …])</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#clumpy.Territory.iterative_allocate" title="clumpy.Territory.iterative_allocate"><code class="xref py py-obj docutils literal notranslate"><span class="pre">iterative_allocate</span></code></a>(n_iter, …[, masks, …])</p></td>
 <td><p>Multisteps allocation</p></td>
 </tr>
 <tr class="row-even"><td><p><a class="reference internal" href="#clumpy.Territory.remove_region" title="clumpy.Territory.remove_region"><code class="xref py py-obj docutils literal notranslate"><span class="pre">remove_region</span></code></a>(region)</p></td>
@@ -114,17 +114,18 @@ and can be append by <code class="docutils literal notranslate"><span class="pre
 
 <dl class="py method">
 <dt class="sig sig-object py" id="clumpy.Territory.allocate">
-<span class="sig-name descname"><span class="pre">allocate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">transition_matrices</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lul</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">masks</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">path</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/clumpy/_base/_territory.html#Territory.allocate"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#clumpy.Territory.allocate" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">allocate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">transition_matrices</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lul</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">masks</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">path</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">path_prefix_transition_probabilities</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/clumpy/_base/_territory.html#Territory.allocate"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#clumpy.Territory.allocate" title="Permalink to this definition">¶</a></dt>
 <dd><p>Allocate.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>transition_matrices</strong> (<em>dict</em><em>(</em><em>Region:TransitionMatrix</em><em>)</em>) – Dict of transition matrix with the corresponding region as key.</p></li>
-<li><p><strong>lul</strong> (<a class="reference internal" href="clumpy.LandUseLayer.html#clumpy.LandUseLayer" title="clumpy.LandUseLayer"><em>LandUseLayer</em></a><em> or </em><em>ndarray</em>) – The studied land use layer.</p></li>
+<li><p><strong>lul</strong> (<a class="reference internal" href="clumpy.LandUseLayer.html#clumpy.LandUseLayer" title="clumpy.LandUseLayer"><em>LandUseLayer</em></a>) – The studied land use layer.</p></li>
 <li><p><strong>masks</strong> (<em>dict</em><em>(</em><em>Region:MaskLayer</em><em>)</em><em>, </em><em>default=None</em>) – Dict of masks layer with the corresponding region as key. If None, the whole map is used for each region.</p></li>
 <li><p><strong>path</strong> (<em>str</em><em>, </em><em>default=None</em>) – The path to save result as a tif file.
 If None, the allocation is only saved within <cite>lul</cite>, if <cite>lul</cite> is a ndarray.
 Note that if <code class="docutils literal notranslate"><span class="pre">path</span></code> is not <code class="docutils literal notranslate"><span class="pre">None</span></code>, <code class="docutils literal notranslate"><span class="pre">lul</span></code> must be LandUseLayer.</p></li>
+<li><p><strong>path_prefix_transition_probabilities</strong> (<em>str</em><em>, </em><em>default=None</em>) – The path prefix to save transition probabilities.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>
@@ -165,19 +166,25 @@ Notably, estimators uniqueness are checked to avoid malfunctioning during transi
 </dd></dl>
 
 <dl class="py method">
-<dt class="sig sig-object py" id="clumpy.Territory.multisteps_allocation">
-<span class="sig-name descname"><span class="pre">multisteps_allocation</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">n</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">transition_matrices</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lul</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">masks</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">path_prefix</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/clumpy/_base/_territory.html#Territory.multisteps_allocation"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#clumpy.Territory.multisteps_allocation" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="clumpy.Territory.iterative_allocate">
+<span class="sig-name descname"><span class="pre">iterative_allocate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">n_iter</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">transition_matrices</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lul</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">masks</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">path_prefix</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">path_prefix_transition_probabilities</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/clumpy/_base/_territory.html#Territory.iterative_allocate"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#clumpy.Territory.iterative_allocate" title="Permalink to this definition">¶</a></dt>
 <dd><p>Multisteps allocation</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>n</strong> (<em>int</em>) – Number of steps.</p></li>
+<li><p><strong>n_iter</strong> (<em>int</em>) – Number of iterations to allocate.</p></li>
 <li><p><strong>transition_matrices</strong> (<em>dict</em><em>(</em><em>Region:TransitionMatrix</em><em>)</em>) – Dict of transition matrix with the corresponding region as key.</p></li>
 <li><p><strong>lul</strong> (<a class="reference internal" href="clumpy.LandUseLayer.html#clumpy.LandUseLayer" title="clumpy.LandUseLayer"><em>LandUseLayer</em></a><em> or </em><em>ndarray</em>) – The studied land use layer.</p></li>
 <li><p><strong>masks</strong> (<em>dict</em><em>(</em><em>Region:MaskLayer</em><em>)</em><em>, </em><em>default=None</em>) – Dict of masks layer with the corresponding region as key. If None, the whole map is used for each region.</p></li>
-<li><p><strong>path_prefix</strong> (<em>str</em><em>, </em><em>default=None</em>) – The path to save every allocated step map as <code class="docutils literal notranslate"><span class="pre">path_prefix+'_'+str(i)+'.tif'</span></code>.
+<li><p><strong>path_prefix</strong> (<em>str</em><em> or </em><em>callable</em><em>, </em><em>default=None</em>) – The path to save every allocated step map as <code class="docutils literal notranslate"><span class="pre">path_prefix+'_iter'+str(i)+'.tif'</span></code>.
+If callable, it has to be a function with the iteration <code class="docutils literal notranslate"><span class="pre">i</span></code> in entry
+which returns the tif file path as a string.
 If None, the allocation is only saved within <cite>lul</cite>, if <cite>lul</cite> is a ndarray.
 Note that if <code class="docutils literal notranslate"><span class="pre">path</span></code> is not <code class="docutils literal notranslate"><span class="pre">None</span></code>, <code class="docutils literal notranslate"><span class="pre">lul</span></code> must be LandUseLayer.</p></li>
+<li><p><strong>path_prefix_transition_probabilities</strong> (<em>str</em><em> or </em><em>callable</em><em>, </em><em>default=None</em>) – The patch to save every transition probabilities step map
+as <code class="docutils literal notranslate"><span class="pre">path_prefix_transition_probabilities+'_iter'+str(i)+'_'+region.label+'_'+u+'_'+v+'.tif'.</span></code>
+If callable, it has to be a function with the iteration <code class="docutils literal notranslate"><span class="pre">i</span></code> in entry
+which returns the path prefix as a string.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>

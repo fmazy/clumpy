@@ -381,6 +381,7 @@ class Land():
                 if self.features[idx].high_bound is not None:
                     high_bounded_features.append(id_col)
                     high_bounds.append(self.features[idx].high_bound)
+            # if it is a state distance, add a low bound set to 0.0
             if isinstance(self.features[idx], State) or isinstance(self.features[idx], int):
                 low_bounded_features.append(id_col)
                 low_bounds.append(0.0)

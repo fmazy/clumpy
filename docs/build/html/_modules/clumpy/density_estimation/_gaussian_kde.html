@@ -5,7 +5,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>clumpy.density_estimation._gaussian_kde &#8212; clumpy 1.0.0 documentation</title>
+    <title>clumpy.density_estimation._gaussian_kde &#8212; clumpy 1.0.1 documentation</title>
     <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css" />
     <link rel="stylesheet" type="text/css" href="../../../_static/nature.css" />
     <script data-url_root="../../../" id="documentation_options" src="../../../_static/documentation_options.js"></script>
@@ -25,7 +25,7 @@
         <li class="right" >
           <a href="../../../py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
-        <li class="nav-item nav-item-0"><a href="../../../index.html">clumpy 1.0.0 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="../../../index.html">clumpy 1.0.1 documentation</a> &#187;</li>
           <li class="nav-item nav-item-1"><a href="../../index.html" accesskey="U">Module code</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href="">clumpy.density_estimation._gaussian_kde</a></li> 
       </ul>
@@ -109,7 +109,7 @@
 <span class="sd">        </span>
 <span class="sd">            whitening : Whitening transformation to get a covariance matrix equal to the identity matrix.</span>
 <span class="sd">    </span>
-<span class="sd">    algorithm : {&#39;auto&#39;, &#39;ball_tree&#39;, &#39;kd_tree&#39;, &#39;brute&#39;}, default=``&#39;auto&#39;``</span>
+<span class="sd">    algorithm : {&#39;auto&#39;, &#39;ball_tree&#39;, &#39;kd_tree&#39;, &#39;brute&#39;}, default=``&#39;kd_tree&#39;``</span>
 <span class="sd">        Algorithm used to compute the nearest neighbors as sklearn.</span>
 <span class="sd">        </span>
 <span class="sd">            &#39;ball_tree&#39; will use BallTree</span>
@@ -128,7 +128,7 @@
 <span class="sd">    support_factor : float, default=3</span>
 <span class="sd">        The kernel support factor, even if kernel has infinite support.</span>
 
-<span class="sd">    n_fit_max : int, default=np.inf</span>
+<span class="sd">    n_fit_max : int, default=2*10**4</span>
 <span class="sd">        The maximum number of training samples. A random sampling is done if necessary.</span>
 
 <span class="sd">    n_predict_max : int, default=2*10**4</span>
@@ -408,9 +408,7 @@
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">verbose</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
             <span class="nb">print</span><span class="p">(</span><span class="n">title_heading</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">verbose_heading_level</span><span class="p">)</span><span class="o">+</span><span class="s1">&#39;Boundary bias correction...&#39;</span><span class="p">)</span>
 
-        <span class="k">for</span> <span class="n">bounds_hyperplanes</span> <span class="ow">in</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">_low_bounds_hyperplanes</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_high_bounds_hyperplanes</span><span class="p">]:</span>
-            <span class="k">for</span> <span class="n">hyperplane</span> <span class="ow">in</span> <span class="n">bounds_hyperplanes</span><span class="p">:</span>
-                <span class="n">f</span> <span class="o">/=</span> <span class="mi">1</span> <span class="o">/</span> <span class="mi">2</span> <span class="o">*</span> <span class="p">(</span><span class="mi">1</span> <span class="o">+</span> <span class="n">erf</span><span class="p">(</span><span class="n">hyperplane</span><span class="o">.</span><span class="n">distance</span><span class="p">(</span><span class="n">X</span><span class="p">)</span> <span class="o">/</span> <span class="n">h</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="mi">2</span><span class="p">)))</span>
+        <span class="n">f</span> <span class="o">*=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_boundary_correction</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">h</span><span class="p">)</span>
             
         <span class="c1"># outside bounds : equal to 0</span>
         <span class="n">f</span><span class="p">[</span><span class="n">id_out_of_low_bounds</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
@@ -423,24 +421,45 @@
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">preprocessing</span> <span class="o">!=</span> <span class="s1">&#39;none&#39;</span><span class="p">:</span>
             <span class="n">f</span> <span class="o">/=</span> <span class="n">np</span><span class="o">.</span><span class="n">product</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_preprocessor</span><span class="o">.</span><span class="n">scale_</span><span class="p">)</span>
 
-            <span class="c1"># if null value is forbiden</span>
-            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">forbid_null_value</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">_force_forbid_null_value</span><span class="p">:</span>
-                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">verbose</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
-                    <span class="nb">print</span><span class="p">(</span><span class="n">title_heading</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">verbose_heading_level</span><span class="p">)</span><span class="o">+</span><span class="s1">&#39;Null value correction...&#39;</span><span class="p">)</span>
-                <span class="n">idx</span> <span class="o">=</span> <span class="n">f</span> <span class="o">==</span> <span class="mf">0.0</span>
+        <span class="c1"># if null value is forbiden</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">forbid_null_value</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">_force_forbid_null_value</span><span class="p">:</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">verbose</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="nb">print</span><span class="p">(</span><span class="n">title_heading</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">verbose_heading_level</span><span class="p">)</span><span class="o">+</span><span class="s1">&#39;Null value correction...&#39;</span><span class="p">)</span>
+            <span class="n">idx</span> <span class="o">=</span> <span class="n">f</span> <span class="o">==</span> <span class="mf">0.0</span>
 
-                <span class="n">new_n</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_n</span> <span class="o">+</span> <span class="n">idx</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span>
+            <span class="n">m_0</span> <span class="o">=</span> <span class="n">idx</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span>
 
-                <span class="n">f</span> <span class="o">=</span> <span class="n">f</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">_n</span> <span class="o">/</span> <span class="n">new_n</span>
+            <span class="n">new_n</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_n</span> <span class="o">+</span> <span class="n">m_0</span>
 
-                <span class="n">min_value</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">/</span> <span class="n">new_n</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">_normalization</span> <span class="o">*</span> <span class="n">_gaussian</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
-                <span class="n">f</span><span class="p">[</span><span class="n">f</span> <span class="o">==</span> <span class="mf">0.0</span><span class="p">]</span> <span class="o">=</span> <span class="n">min_value</span>
+            <span class="n">f</span> <span class="o">=</span> <span class="n">f</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">_n</span> <span class="o">/</span> <span class="n">new_n</span>
 
-                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">verbose</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
-                    <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Null value correction done.&#39;</span><span class="p">)</span>
+            <span class="n">min_value</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">/</span> <span class="n">new_n</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">_normalization</span> <span class="o">*</span> <span class="n">_gaussian</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+            <span class="n">f</span><span class="p">[</span><span class="n">f</span> <span class="o">==</span> <span class="mf">0.0</span><span class="p">]</span> <span class="o">=</span> <span class="n">min_value</span>
+
+            <span class="c1"># Warning flag</span>
+            <span class="c1"># check the relative number of corrected probabilities</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">verbose</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;m_0 = &#39;</span><span class="o">+</span><span class="nb">str</span><span class="p">(</span><span class="n">m_0</span><span class="p">)</span><span class="o">+</span><span class="s1">&#39;, m = &#39;</span><span class="o">+</span><span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_n</span><span class="p">)</span><span class="o">+</span><span class="s1">&#39;, m_0 / m = &#39;</span><span class="o">+</span><span class="nb">str</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="n">m_0</span><span class="o">/</span><span class="bp">self</span><span class="o">.</span><span class="n">_n</span><span class="p">,</span><span class="mi">4</span><span class="p">)))</span>
+
+            <span class="c1"># warning flag</span>
+            <span class="k">if</span> <span class="n">m_0</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">_n</span> <span class="o">&gt;</span> <span class="mf">0.01</span><span class="p">:</span>
+                <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;WARNING : m_0/m &gt; 0.01. The parameter `n_fit_max` should be higher.&#39;</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">verbose</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Null value correction done for &#39;</span><span class="o">+</span><span class="nb">str</span><span class="p">(</span><span class="n">m_0</span><span class="p">)</span><span class="o">+</span><span class="s1">&#39; elements.&#39;</span><span class="p">)</span>
 
         <span class="k">return</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
-            
+
+    <span class="k">def</span> <span class="nf">_boundary_correction</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span> <span class="n">h</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        X in the WT space.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">correction</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="n">X</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+        <span class="k">for</span> <span class="n">hyperplane</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_low_bounds_hyperplanes</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">_high_bounds_hyperplanes</span><span class="p">:</span>
+            <span class="n">correction</span> <span class="o">/=</span> <span class="mi">1</span> <span class="o">/</span> <span class="mi">2</span> <span class="o">*</span> <span class="p">(</span><span class="mi">1</span> <span class="o">+</span> <span class="n">erf</span><span class="p">(</span><span class="n">hyperplane</span><span class="o">.</span><span class="n">distance</span><span class="p">(</span><span class="n">X</span><span class="p">)</span> <span class="o">/</span> <span class="n">h</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="mi">2</span><span class="p">)))</span>
+
+        <span class="k">return</span><span class="p">(</span><span class="n">correction</span><span class="p">)</span>
+
 <div class="viewcode-block" id="GKDE.marginal"><a class="viewcode-back" href="../../../generated/clumpy.density_estimation.GKDE.html#clumpy.density_estimation.GKDE.marginal">[docs]</a>    <span class="k">def</span> <span class="nf">marginal</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
                  <span class="n">x</span><span class="p">,</span>
                  <span class="n">k</span><span class="p">):</span>
@@ -605,7 +624,7 @@
         <li class="right" >
           <a href="../../../py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
-        <li class="nav-item nav-item-0"><a href="../../../index.html">clumpy 1.0.0 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="../../../index.html">clumpy 1.0.1 documentation</a> &#187;</li>
           <li class="nav-item nav-item-1"><a href="../../index.html" >Module code</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href="">clumpy.density_estimation._gaussian_kde</a></li> 
       </ul>

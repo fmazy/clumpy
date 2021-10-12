@@ -97,18 +97,21 @@
 </table>
 <table class="docutils align-default">
 <colgroup>
-<col style="width: 58%" />
-<col style="width: 42%" />
+<col style="width: 74%" />
+<col style="width: 26%" />
 </colgroup>
 <tbody>
-<tr class="row-odd"><td><p><strong>set_params</strong></p></td>
+<tr class="row-odd"><td><p><strong>dinamica_determine_ranges</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p><strong>set_params</strong></p></td>
 <td></td>
 </tr>
 </tbody>
 </table>
 <dl class="py method">
 <dt class="sig sig-object py" id="clumpy.Land.allocate">
-<span class="sig-name descname"><span class="pre">allocate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">transition_matrix</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lul</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lul_origin</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mask</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">distances_to_states</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">{}</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">path</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/clumpy/_base/_land.html#Land.allocate"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#clumpy.Land.allocate" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">allocate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">transition_matrix</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lul</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lul_origin</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mask</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">distances_to_states</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">{}</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">path</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">path_prefix_transition_probabilities</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">copy_geo</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/clumpy/_base/_land.html#Land.allocate"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#clumpy.Land.allocate" title="Permalink to this definition">¶</a></dt>
 <dd><p>allocation.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -121,6 +124,7 @@
 <li><p><strong>path</strong> (<em>str</em><em>, </em><em>default=None</em>) – The path to save result as a tif file.
 If None, the allocation is only saved within <cite>lul</cite>, if <cite>lul</cite> is a ndarray.
 Note that if <code class="docutils literal notranslate"><span class="pre">path</span></code> is not <code class="docutils literal notranslate"><span class="pre">None</span></code>, <code class="docutils literal notranslate"><span class="pre">lul</span></code> must be LandUseLayer.</p></li>
+<li><p><strong>path_prefix_transition_probabilities</strong> (<em>str</em><em>, </em><em>default=None</em>) – The path prefix to save transition probabilities.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>
@@ -219,7 +223,7 @@ Usefull to avoid redondant distance computations.</p></li>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="clumpy.Land.transition_probabilities">
-<span class="sig-name descname"><span class="pre">transition_probabilities</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">transition_matrix</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lul</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mask</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">distances_to_states</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">{}</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">path_prefix</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/clumpy/_base/_land.html#Land.transition_probabilities"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#clumpy.Land.transition_probabilities" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">transition_probabilities</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">transition_matrix</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lul</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mask</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">distances_to_states</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">{}</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">path_prefix</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">copy_geo</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">save_P_Y__v</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">save_P_Y</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">return_Y</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/clumpy/_base/_land.html#Land.transition_probabilities"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#clumpy.Land.transition_probabilities" title="Permalink to this definition">¶</a></dt>
 <dd><p>Computes transition probabilities.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -229,16 +233,20 @@ Usefull to avoid redondant distance computations.</p></li>
 <li><p><strong>mask</strong> (<a class="reference internal" href="clumpy.MaskLayer.html#clumpy.MaskLayer" title="clumpy.MaskLayer"><em>MaskLayer</em></a><em>, </em><em>default = None</em>) – The region mask layer. If <code class="docutils literal notranslate"><span class="pre">None</span></code>, the whole area is studied.</p></li>
 <li><p><strong>distances_to_states</strong> (<em>dict</em><em>(</em><em>State:ndarray</em><em>)</em><em>, </em><em>default={}</em>) – The distances matrix to key state. Used to improve performance.</p></li>
 <li><p><strong>path_prefix</strong> (<em>str</em><em>, </em><em>default=None</em>) – The path prefix to save result as <code class="docutils literal notranslate"><span class="pre">path_prefix+'_'+str(state_v.value)+'.tif'.</span>
-<span class="pre">If</span> <span class="pre">None,</span> <span class="pre">the</span> <span class="pre">result</span> <span class="pre">is</span> <span class="pre">returned.</span>
 <span class="pre">Note</span> <span class="pre">that</span> <span class="pre">if</span> <span class="pre">``path_prefix</span> <span class="pre">is</span> <span class="pre">not</span> <span class="pre">None</span></code>, <code class="docutils literal notranslate"><span class="pre">lul</span></code> must be LandUseLayer</p></li>
+<li><p><strong>save_P_Y__v</strong> (<em>bool</em><em>, </em><em>default=False</em>) – Save P_Y__v.</p></li>
+<li><p><strong>save_P_Y</strong> (<em>bool</em><em>, </em><em>default=False</em>) – Save P_Y</p></li>
+<li><p><strong>return_Y</strong> (<em>bool</em><em>, </em><em>default=False</em>) – If <code class="docutils literal notranslate"><span class="pre">True</span></code> and <code class="docutils literal notranslate"><span class="pre">path_prefix</span></code> is <code class="docutils literal notranslate"><span class="pre">None</span></code>, return Y.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>
 <dd class="field-even"><p><ul class="simple">
-<li><p><strong>J_allocation</strong> (<em>ndarray of shape (n_samples,)</em>) – Only returned if <code class="docutils literal notranslate"><span class="pre">path_prefix=False</span></code>. Element indexes in the flattened
+<li><p><strong>J_allocation</strong> (<em>ndarray of shape (n_samples,)</em>) – Element indexes in the flattened
 matrix.</p></li>
 <li><p><strong>P_v__u_Y</strong> (<em>ndarray of shape (n_samples, len(palette_v))</em>) – The transition probabilities of each elements. Columns are
 ordered as <code class="docutils literal notranslate"><span class="pre">palette_v</span></code>.</p></li>
+<li><p><strong>Y</strong> (<em>ndarray of shape (n_samples, n_features)</em>) – Only returned if <code class="docutils literal notranslate"><span class="pre">return_Y=True</span></code>.
+The features values.</p></li>
 </ul>
 </p>
 </dd>

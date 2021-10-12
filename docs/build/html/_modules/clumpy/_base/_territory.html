@@ -5,7 +5,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>clumpy._base._territory &#8212; clumpy 1.0.0 documentation</title>
+    <title>clumpy._base._territory &#8212; clumpy 1.0.1 documentation</title>
     <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css" />
     <link rel="stylesheet" type="text/css" href="../../../_static/nature.css" />
     <script data-url_root="../../../" id="documentation_options" src="../../../_static/documentation_options.js"></script>
@@ -25,7 +25,7 @@
         <li class="right" >
           <a href="../../../py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
-        <li class="nav-item nav-item-0"><a href="../../../index.html">clumpy 1.0.0 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="../../../index.html">clumpy 1.0.1 documentation</a> &#187;</li>
           <li class="nav-item nav-item-1"><a href="../../index.html" accesskey="U">Module code</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href="">clumpy._base._territory</a></li> 
       </ul>
@@ -49,6 +49,7 @@
 <span class="kn">from</span> <span class="nn">..tools._path</span> <span class="kn">import</span> <span class="n">path_split</span>
 <span class="kn">from</span> <span class="nn">..tools._console</span> <span class="kn">import</span> <span class="n">title_heading</span>
 
+
 <div class="viewcode-block" id="Territory"><a class="viewcode-back" href="../../../generated/clumpy.Territory.html#clumpy.Territory">[docs]</a><span class="k">class</span> <span class="nc">Territory</span><span class="p">():</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Territory.</span>
@@ -67,8 +68,8 @@
 
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
                  <span class="n">regions</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-                 <span class="n">verbose</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span>
-                 <span class="n">verbose_heading_level</span> <span class="o">=</span> <span class="mi">1</span><span class="p">):</span>
+                 <span class="n">verbose</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+                 <span class="n">verbose_heading_level</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">regions</span> <span class="o">=</span> <span class="n">regions</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">regions</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
@@ -147,7 +148,7 @@
 <span class="sd">        &quot;&quot;&quot;</span>
 
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">verbose</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
-            <span class="nb">print</span><span class="p">(</span><span class="n">title_heading</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">verbose_heading_level</span><span class="p">)</span><span class="o">+</span><span class="s1">&#39;Territory fitting</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
+            <span class="nb">print</span><span class="p">(</span><span class="n">title_heading</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">verbose_heading_level</span><span class="p">)</span> <span class="o">+</span> <span class="s1">&#39;Territory fitting</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
 
         <span class="k">if</span> <span class="n">masks</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">masks</span> <span class="o">=</span> <span class="p">{</span><span class="n">region</span><span class="p">:</span> <span class="kc">None</span> <span class="k">for</span> <span class="n">region</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">regions</span><span class="p">}</span>
@@ -195,11 +196,10 @@
 
         <span class="k">for</span> <span class="n">region</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">regions</span><span class="p">:</span>
             <span class="n">tms</span><span class="p">[</span><span class="n">region</span><span class="p">]</span> <span class="o">=</span> <span class="n">region</span><span class="o">.</span><span class="n">transition_matrix</span><span class="p">(</span><span class="n">lul_initial</span><span class="o">=</span><span class="n">lul_initial</span><span class="p">,</span>
-                                                                   <span class="n">lul_final</span><span class="o">=</span><span class="n">lul_final</span><span class="p">,</span>
-                                                                   <span class="n">mask</span><span class="o">=</span><span class="n">masks</span><span class="p">[</span><span class="n">region</span><span class="p">])</span>
+                                                   <span class="n">lul_final</span><span class="o">=</span><span class="n">lul_final</span><span class="p">,</span>
+                                                   <span class="n">mask</span><span class="o">=</span><span class="n">masks</span><span class="p">[</span><span class="n">region</span><span class="p">])</span>
 
-        <span class="k">return</span><span class="p">(</span><span class="n">tms</span><span class="p">)</span></div>
-
+        <span class="k">return</span> <span class="p">(</span><span class="n">tms</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="Territory.transition_probabilities"><a class="viewcode-back" href="../../../generated/clumpy.Territory.html#clumpy.Territory.transition_probabilities">[docs]</a>    <span class="k">def</span> <span class="nf">transition_probabilities</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
                                  <span class="n">transition_matrices</span><span class="p">,</span>
@@ -234,7 +234,7 @@
 <span class="sd">        &quot;&quot;&quot;</span>
 
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">verbose</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
-            <span class="nb">print</span><span class="p">(</span><span class="n">title_heading</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">verbose_heading_level</span><span class="p">)</span><span class="o">+</span><span class="s1">&#39;Territory TPE</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
+            <span class="nb">print</span><span class="p">(</span><span class="n">title_heading</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">verbose_heading_level</span><span class="p">)</span> <span class="o">+</span> <span class="s1">&#39;Territory TPE</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
 
         <span class="k">if</span> <span class="n">masks</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">masks</span> <span class="o">=</span> <span class="p">{</span><span class="n">region</span><span class="p">:</span> <span class="kc">None</span> <span class="k">for</span> <span class="n">region</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">regions</span><span class="p">}</span>
@@ -254,7 +254,8 @@
                                                          <span class="n">lul</span><span class="o">=</span><span class="n">lul</span><span class="p">,</span>
                                                          <span class="n">mask</span><span class="o">=</span><span class="n">masks</span><span class="p">[</span><span class="n">region</span><span class="p">],</span>
                                                          <span class="n">distances_to_states</span><span class="o">=</span><span class="n">distances_to_states</span><span class="p">,</span>
-                                                         <span class="n">path_prefix</span><span class="o">=</span><span class="n">region_path_prefix</span><span class="p">)</span>
+                                                         <span class="n">path_prefix</span><span class="o">=</span><span class="n">region_path_prefix</span><span class="p">,</span>
+                                                         <span class="n">copy_geo</span><span class="o">=</span><span class="n">lul</span><span class="p">)</span>
 
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">verbose</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
             <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Territory transition probabilities estimation done.</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
@@ -266,7 +267,8 @@
                  <span class="n">transition_matrices</span><span class="p">,</span>
                  <span class="n">lul</span><span class="p">,</span>
                  <span class="n">masks</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-                 <span class="n">path</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+                 <span class="n">path</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                 <span class="n">path_prefix_transition_probabilities</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Allocate.</span>
 
@@ -275,7 +277,7 @@
 <span class="sd">        transition_matrices : dict(Region:TransitionMatrix)</span>
 <span class="sd">            Dict of transition matrix with the corresponding region as key.</span>
 
-<span class="sd">        lul : LandUseLayer or ndarray</span>
+<span class="sd">        lul : LandUseLayer</span>
 <span class="sd">            The studied land use layer.</span>
 
 <span class="sd">        masks : dict(Region:MaskLayer), default=None</span>
@@ -286,6 +288,9 @@
 <span class="sd">            If None, the allocation is only saved within `lul`, if `lul` is a ndarray.</span>
 <span class="sd">            Note that if ``path`` is not ``None``, ``lul`` must be LandUseLayer.</span>
 
+<span class="sd">        path_prefix_transition_probabilities : str, default=None</span>
+<span class="sd">            The path prefix to save transition probabilities.</span>
+
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
 <span class="sd">        lul_allocated : LandUseLayer</span>
@@ -293,7 +298,7 @@
 <span class="sd">        &quot;&quot;&quot;</span>
 
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">verbose</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
-            <span class="nb">print</span><span class="p">(</span><span class="n">title_heading</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">verbose_heading_level</span><span class="p">)</span><span class="o">+</span><span class="s1">&#39;Territory allocate</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
+            <span class="nb">print</span><span class="p">(</span><span class="n">title_heading</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">verbose_heading_level</span><span class="p">)</span> <span class="o">+</span> <span class="s1">&#39;Territory allocation</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
 
         <span class="k">if</span> <span class="n">masks</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">masks</span> <span class="o">=</span> <span class="p">{</span><span class="n">region</span><span class="p">:</span> <span class="kc">None</span> <span class="k">for</span> <span class="n">region</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">regions</span><span class="p">}</span>
@@ -303,12 +308,21 @@
         <span class="n">lul_data</span> <span class="o">=</span> <span class="n">lul</span><span class="o">.</span><span class="n">get_data</span><span class="p">()</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
 
         <span class="k">for</span> <span class="n">region</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">regions</span><span class="p">:</span>
+
+            <span class="k">if</span> <span class="n">path_prefix_transition_probabilities</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">region_path_prefix_transition_probabilities</span> <span class="o">=</span> <span class="n">path_prefix_transition_probabilities</span> <span class="o">+</span> <span class="s1">&#39;_&#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span>
+                    <span class="n">region</span><span class="o">.</span><span class="n">label</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">region_path_prefix_transition_probabilities</span> <span class="o">=</span> <span class="kc">None</span>
+
             <span class="n">region</span><span class="o">.</span><span class="n">allocate</span><span class="p">(</span><span class="n">transition_matrix</span><span class="o">=</span><span class="n">transition_matrices</span><span class="p">[</span><span class="n">region</span><span class="p">],</span>
                             <span class="n">lul</span><span class="o">=</span><span class="n">lul_data</span><span class="p">,</span>
                             <span class="n">lul_origin</span><span class="o">=</span><span class="n">lul</span><span class="p">,</span>
                             <span class="n">mask</span><span class="o">=</span><span class="n">masks</span><span class="p">[</span><span class="n">region</span><span class="p">],</span>
                             <span class="n">distances_to_states</span><span class="o">=</span><span class="n">distances_to_states</span><span class="p">,</span>
-                            <span class="n">path</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
+                            <span class="n">path</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                            <span class="n">path_prefix_transition_probabilities</span><span class="o">=</span><span class="n">region_path_prefix_transition_probabilities</span><span class="p">,</span>
+                            <span class="n">copy_geo</span><span class="o">=</span><span class="n">lul</span><span class="p">)</span>
             <span class="c1"># Note that the path is set to None above in order to allocate through all regions and save in a second time !</span>
 
         <span class="k">if</span> <span class="n">path</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
@@ -322,19 +336,20 @@
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">verbose</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
             <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Territory allocate done.</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="Territory.multisteps_allocation"><a class="viewcode-back" href="../../../generated/clumpy.Territory.html#clumpy.Territory.multisteps_allocation">[docs]</a>    <span class="k">def</span> <span class="nf">multisteps_allocation</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
-                              <span class="n">n</span><span class="p">,</span>
-                              <span class="n">transition_matrices</span><span class="p">,</span>
-                              <span class="n">lul</span><span class="p">,</span>
-                              <span class="n">masks</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-                              <span class="n">path_prefix</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<div class="viewcode-block" id="Territory.iterative_allocate"><a class="viewcode-back" href="../../../generated/clumpy.Territory.html#clumpy.Territory.iterative_allocate">[docs]</a>    <span class="k">def</span> <span class="nf">iterative_allocate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
+                           <span class="n">n_iter</span><span class="p">,</span>
+                           <span class="n">transition_matrices</span><span class="p">,</span>
+                           <span class="n">lul</span><span class="p">,</span>
+                           <span class="n">masks</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                           <span class="n">path_prefix</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                           <span class="n">path_prefix_transition_probabilities</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Multisteps allocation</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
-<span class="sd">        n : int</span>
-<span class="sd">            Number of steps.</span>
+<span class="sd">        n_iter : int</span>
+<span class="sd">            Number of iterations to allocate.</span>
 
 <span class="sd">        transition_matrices : dict(Region:TransitionMatrix)</span>
 <span class="sd">            Dict of transition matrix with the corresponding region as key.</span>
@@ -345,10 +360,18 @@
 <span class="sd">        masks : dict(Region:MaskLayer), default=None</span>
 <span class="sd">            Dict of masks layer with the corresponding region as key. If None, the whole map is used for each region.</span>
 
-<span class="sd">        path_prefix : str, default=None</span>
-<span class="sd">            The path to save every allocated step map as ``path_prefix+&#39;_&#39;+str(i)+&#39;.tif&#39;``.</span>
+<span class="sd">        path_prefix : str or callable, default=None</span>
+<span class="sd">            The path to save every allocated step map as ``path_prefix+&#39;_iter&#39;+str(i)+&#39;.tif&#39;``.</span>
+<span class="sd">            If callable, it has to be a function with the iteration ``i`` in entry</span>
+<span class="sd">            which returns the tif file path as a string.</span>
 <span class="sd">            If None, the allocation is only saved within `lul`, if `lul` is a ndarray.</span>
 <span class="sd">            Note that if ``path`` is not ``None``, ``lul`` must be LandUseLayer.</span>
+
+<span class="sd">        path_prefix_transition_probabilities : str or callable, default=None</span>
+<span class="sd">            The patch to save every transition probabilities step map</span>
+<span class="sd">            as ``path_prefix_transition_probabilities+&#39;_iter&#39;+str(i)+&#39;_&#39;+region.label+&#39;_&#39;+u+&#39;_&#39;+v+&#39;.tif&#39;.``</span>
+<span class="sd">            If callable, it has to be a function with the iteration ``i`` in entry</span>
+<span class="sd">            which returns the path prefix as a string.</span>
 
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
@@ -356,29 +379,35 @@
 <span class="sd">            The allocated map as a land use layer.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
 
-
-
-        <span class="n">multisteps_transition_matrices</span> <span class="o">=</span> <span class="p">{</span><span class="n">region</span><span class="p">:</span> <span class="n">tm</span><span class="o">.</span><span class="n">multisteps</span><span class="p">(</span><span class="n">n</span><span class="p">)</span> <span class="k">for</span> <span class="n">region</span><span class="p">,</span> <span class="n">tm</span> <span class="ow">in</span> <span class="n">transition_matrices</span><span class="o">.</span><span class="n">items</span><span class="p">()}</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">verbose</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="n">title_heading</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">verbose_heading_level</span><span class="p">)</span> <span class="o">+</span> <span class="s1">&#39;Territory iterative allocation</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
 
         <span class="n">lul_step</span> <span class="o">=</span> <span class="n">lul</span>
 
-        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n</span><span class="p">):</span>
-
-            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">verbose</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
-                <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1"># Territory multisteps allocate &#39;</span><span class="o">+</span><span class="nb">str</span><span class="p">(</span><span class="n">i</span><span class="p">)</span><span class="o">+</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">verbose_heading_level</span> <span class="o">+=</span> <span class="mi">1</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="n">n_iter</span><span class="o">+</span><span class="mi">1</span><span class="p">):</span>
 
             <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">path_prefix</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
-                <span class="n">path_step</span> <span class="o">=</span> <span class="n">path_prefix</span> <span class="o">+</span> <span class="s1">&#39;_&#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">i</span><span class="p">)</span> <span class="o">+</span> <span class="s1">&#39;.tif&#39;</span>
+                <span class="n">iter_path</span> <span class="o">=</span> <span class="n">path_prefix</span> <span class="o">+</span> <span class="s1">&#39;_iter&#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">i</span><span class="p">)</span> <span class="o">+</span> <span class="s1">&#39;.tif&#39;</span>
             <span class="k">elif</span> <span class="n">callable</span><span class="p">(</span><span class="n">path_prefix</span><span class="p">):</span>
-                <span class="n">path_step</span> <span class="o">=</span> <span class="n">path_prefix</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>
+                <span class="n">iter_path</span> <span class="o">=</span> <span class="n">path_prefix</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">iter_path</span> <span class="o">=</span> <span class="kc">None</span>
 
-            <span class="n">lul_step</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">allocation</span><span class="p">(</span><span class="n">transition_matrices</span><span class="o">=</span><span class="n">multisteps_transition_matrices</span><span class="p">,</span>
-                                       <span class="n">lul</span><span class="o">=</span><span class="n">lul_step</span><span class="p">,</span>
-                                       <span class="n">masks</span><span class="o">=</span><span class="n">masks</span><span class="p">,</span>
-                                       <span class="n">path</span><span class="o">=</span><span class="n">path_step</span><span class="p">)</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">path_prefix_transition_probabilities</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+                <span class="n">iter_path_prefix_transition_probabilities</span> <span class="o">=</span> <span class="n">path_prefix_transition_probabilities</span> <span class="o">+</span> <span class="s1">&#39;_iter&#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">i</span><span class="p">)</span> <span class="o">+</span> <span class="s1">&#39;.tif&#39;</span>
+            <span class="k">elif</span> <span class="n">callable</span><span class="p">(</span><span class="n">path_prefix_transition_probabilities</span><span class="p">):</span>
+                <span class="n">iter_path_prefix_transition_probabilities</span> <span class="o">=</span> <span class="n">path_prefix_transition_probabilities</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">iter_path_prefix_transition_probabilities</span> <span class="o">=</span> <span class="kc">None</span>
 
-            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">verbose</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
-                <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Territory multisteps allocate &#39;</span><span class="o">+</span><span class="nb">str</span><span class="p">(</span><span class="n">i</span><span class="p">)</span><span class="o">+</span><span class="s1">&#39; done.</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
+            <span class="n">lul_step</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">allocate</span><span class="p">(</span><span class="n">transition_matrices</span><span class="o">=</span><span class="n">transition_matrices</span><span class="p">,</span>
+                                     <span class="n">lul</span><span class="o">=</span><span class="n">lul_step</span><span class="p">,</span>
+                                     <span class="n">masks</span><span class="o">=</span><span class="n">masks</span><span class="p">,</span>
+                                     <span class="n">path</span><span class="o">=</span><span class="n">iter_path</span><span class="p">,</span>
+                                     <span class="n">path_prefix_transition_probabilities</span><span class="o">=</span><span class="n">iter_path_prefix_transition_probabilities</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">verbose_heading_level</span> <span class="o">-=</span> <span class="mi">1</span>
 
         <span class="k">if</span> <span class="n">path_prefix</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="k">return</span> <span class="n">lul_step</span></div></div>
@@ -416,7 +445,7 @@
         <li class="right" >
           <a href="../../../py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
-        <li class="nav-item nav-item-0"><a href="../../../index.html">clumpy 1.0.0 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="../../../index.html">clumpy 1.0.1 documentation</a> &#187;</li>
           <li class="nav-item nav-item-1"><a href="../../index.html" >Module code</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href="">clumpy._base._territory</a></li> 
       </ul>

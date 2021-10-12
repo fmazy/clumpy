@@ -5,7 +5,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>clumpy._base._transition_matrix &#8212; clumpy 1.0.0 documentation</title>
+    <title>clumpy._base._transition_matrix &#8212; clumpy 1.0.1 documentation</title>
     <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css" />
     <link rel="stylesheet" type="text/css" href="../../../_static/nature.css" />
     <script data-url_root="../../../" id="documentation_options" src="../../../_static/documentation_options.js"></script>
@@ -25,7 +25,7 @@
         <li class="right" >
           <a href="../../../py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
-        <li class="nav-item nav-item-0"><a href="../../../index.html">clumpy 1.0.0 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="../../../index.html">clumpy 1.0.1 documentation</a> &#187;</li>
           <li class="nav-item nav-item-1"><a href="../../index.html" accesskey="U">Module code</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href="">clumpy._base._transition_matrix</a></li> 
       </ul>
@@ -61,7 +61,8 @@
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">M</span><span class="p">,</span> <span class="n">palette_u</span><span class="p">,</span> <span class="n">palette_v</span><span class="p">):</span>
 
         <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">palette_u</span><span class="p">)</span> <span class="o">!=</span> <span class="n">M</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="ow">or</span> <span class="nb">len</span><span class="p">(</span><span class="n">palette_v</span><span class="p">)</span> <span class="o">!=</span> <span class="n">M</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]:</span>
-            <span class="k">raise</span><span class="p">(</span><span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;palette_u and palette_v should describe exactly M.shape !&#39;</span><span class="p">))</span>
+            <span class="k">raise</span> <span class="p">(</span><span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;palette_u (len=&#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">palette_u</span><span class="p">))</span> <span class="o">+</span> <span class="s1">&#39;) and palette_v (len=&#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span>
+                <span class="nb">len</span><span class="p">(</span><span class="n">palette_v</span><span class="p">))</span> <span class="o">+</span> <span class="s1">&#39;) should describe exactly M.shape=&#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">M</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span> <span class="o">+</span> <span class="s1">&#39; !&#39;</span><span class="p">))</span>
 
         <span class="n">M</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">nan_to_num</span><span class="p">(</span><span class="n">M</span><span class="p">)</span>
 
@@ -223,7 +224,7 @@
                 <span class="bp">self</span><span class="o">.</span><span class="n">palette_u</span> <span class="o">=</span> <span class="n">palette_u</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">palette_v</span> <span class="o">=</span> <span class="n">palette_v</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">M</span> <span class="o">=</span> <span class="n">M</span>
-                <span class="k">return</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+                <span class="k">return</span> <span class="p">(</span><span class="bp">self</span><span class="p">)</span>
             <span class="k">else</span><span class="p">:</span>
                 <span class="k">return</span> <span class="p">(</span><span class="n">TransitionMatrix</span><span class="p">(</span><span class="n">M</span><span class="o">=</span><span class="n">M</span><span class="p">,</span>
                                          <span class="n">palette_u</span><span class="o">=</span><span class="n">palette_u</span><span class="p">,</span>
@@ -249,23 +250,21 @@
 
         <span class="c1"># fill diagonal to have sum(axis=1) = 1</span>
         <span class="n">np</span><span class="o">.</span><span class="n">fill_diagonal</span><span class="p">(</span><span class="n">full_M</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
-        <span class="n">np</span><span class="o">.</span><span class="n">fill_diagonal</span><span class="p">(</span><span class="n">full_M</span><span class="p">,</span> <span class="mi">1</span><span class="o">-</span><span class="n">full_M</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">))</span>
+        <span class="n">np</span><span class="o">.</span><span class="n">fill_diagonal</span><span class="p">(</span><span class="n">full_M</span><span class="p">,</span> <span class="mi">1</span> <span class="o">-</span> <span class="n">full_M</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">))</span>
 
         <span class="n">palette_u</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">palette_u</span><span class="o">.</span><span class="n">merge</span><span class="p">(</span><span class="n">tm</span><span class="o">.</span><span class="n">palette_u</span><span class="p">,</span> <span class="n">inplace</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
         <span class="n">palette_v</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">palette_v</span><span class="o">.</span><span class="n">merge</span><span class="p">(</span><span class="n">tm</span><span class="o">.</span><span class="n">palette_v</span><span class="p">,</span> <span class="n">inplace</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
 
-        <span class="n">M</span> <span class="o">=</span> <span class="n">_compact_transition_matrix</span><span class="p">(</span><span class="n">full_M</span><span class="p">,</span> <span class="n">palette_u</span><span class="p">,</span> <span class="n">palette_v</span><span class="p">)</span>
+        <span class="n">merged_tm</span> <span class="o">=</span> <span class="n">_full_M_to_transition_matrix</span><span class="p">(</span><span class="n">full_M</span><span class="p">,</span> <span class="n">palette_u</span><span class="p">,</span> <span class="n">palette_v</span><span class="p">)</span>
 
         <span class="k">if</span> <span class="n">inplace</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">M</span> <span class="o">=</span> <span class="n">M</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">M</span> <span class="o">=</span> <span class="n">merged_tm</span><span class="o">.</span><span class="n">M</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">palette_u</span> <span class="o">=</span> <span class="n">palette_u</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">palette_v</span> <span class="o">=</span> <span class="n">palette_v</span>
 
-            <span class="k">return</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+            <span class="k">return</span> <span class="p">(</span><span class="bp">self</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="k">return</span><span class="p">(</span><span class="n">TransitionMatrix</span><span class="p">(</span><span class="n">M</span><span class="o">=</span><span class="n">M</span><span class="p">,</span>
-                                    <span class="n">palette_u</span><span class="o">=</span><span class="n">palette_u</span><span class="p">,</span>
-                                    <span class="n">palette_v</span><span class="o">=</span><span class="n">palette_v</span><span class="p">))</span></div>
+            <span class="k">return</span> <span class="p">(</span><span class="n">merged_tm</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="TransitionMatrix.get_P_v"><a class="viewcode-back" href="../../../generated/clumpy.TransitionMatrix.html#clumpy.TransitionMatrix.get_P_v">[docs]</a>    <span class="k">def</span> <span class="nf">get_P_v</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">info_u</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
@@ -315,15 +314,15 @@
 
         <span class="n">full_M</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">P</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">diag</span><span class="p">(</span><span class="n">eigen_values</span><span class="p">)),</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">inv</span><span class="p">(</span><span class="n">P</span><span class="p">))</span>
 
-        <span class="n">compact_M</span> <span class="o">=</span> <span class="n">_compact_transition_matrix</span><span class="p">(</span><span class="n">full_M</span><span class="o">=</span><span class="n">full_M</span><span class="p">,</span>
-                                               <span class="n">palette_u</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">palette_u</span><span class="p">,</span>
-                                               <span class="n">palette_v</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">palette_u</span><span class="p">)</span>
+        <span class="n">multisteps_tm</span> <span class="o">=</span> <span class="n">_full_M_to_transition_matrix</span><span class="p">(</span><span class="n">full_M</span><span class="o">=</span><span class="n">full_M</span><span class="p">,</span>
+                                                     <span class="n">palette_u</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">palette_u</span><span class="p">,</span>
+                                                     <span class="n">palette_v</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">palette_v</span><span class="p">)</span>
 
         <span class="k">if</span> <span class="n">inplace</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">M</span> <span class="o">=</span> <span class="n">compact_M</span>
-            <span class="k">return</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">M</span> <span class="o">=</span> <span class="n">multisteps_tm</span><span class="o">.</span><span class="n">M</span>
+            <span class="k">return</span> <span class="p">(</span><span class="bp">self</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="k">return</span> <span class="p">(</span><span class="n">TransitionMatrix</span><span class="p">(</span><span class="n">compact_M</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">palette_u</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">palette_v</span><span class="p">))</span></div>
+            <span class="k">return</span> <span class="p">(</span><span class="n">multisteps_tm</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="TransitionMatrix.patches"><a class="viewcode-back" href="../../../generated/clumpy.TransitionMatrix.html#clumpy.TransitionMatrix.patches">[docs]</a>    <span class="k">def</span> <span class="nf">patches</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">patches</span><span class="p">,</span> <span class="n">inplace</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
@@ -355,20 +354,20 @@
         <span class="n">id_state</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">palette_v</span><span class="o">.</span><span class="n">get_id</span><span class="p">(</span><span class="n">state_u</span><span class="p">)</span>
 
         <span class="n">M_patches</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">M</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
-        <span class="n">M_patches</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="n">id_state</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span>
+        <span class="n">M_patches</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="n">id_state</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span>
         <span class="k">for</span> <span class="n">id_state_v</span><span class="p">,</span> <span class="n">state_v</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">palette_v</span><span class="p">):</span>
             <span class="k">if</span> <span class="n">state_v</span> <span class="o">!=</span> <span class="n">state_u</span><span class="p">:</span>
                 <span class="k">if</span> <span class="n">state_v</span> <span class="ow">in</span> <span class="n">patches</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
-                    <span class="n">M_patches</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="n">id_state_v</span><span class="p">]</span> <span class="o">/=</span> <span class="n">patches</span><span class="p">[</span><span class="n">state_v</span><span class="p">]</span><span class="o">.</span><span class="n">area_mean</span>
-                <span class="n">M_patches</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="n">id_state</span><span class="p">]</span> <span class="o">-=</span> <span class="n">M_patches</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="n">id_state_v</span><span class="p">]</span>
+                    <span class="n">M_patches</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="n">id_state_v</span><span class="p">]</span> <span class="o">/=</span> <span class="n">patches</span><span class="p">[</span><span class="n">state_v</span><span class="p">]</span><span class="o">.</span><span class="n">area_mean</span>
+                <span class="n">M_patches</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="n">id_state</span><span class="p">]</span> <span class="o">-=</span> <span class="n">M_patches</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="n">id_state_v</span><span class="p">]</span>
 
         <span class="k">if</span> <span class="n">inplace</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">M</span> <span class="o">=</span> <span class="n">M_patches</span>
-            <span class="k">return</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+            <span class="k">return</span> <span class="p">(</span><span class="bp">self</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="k">return</span><span class="p">(</span><span class="n">TransitionMatrix</span><span class="p">(</span><span class="n">M</span><span class="o">=</span><span class="n">M_patches</span><span class="p">,</span>
-                                    <span class="n">palette_u</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">palette_u</span><span class="p">,</span>
-                                    <span class="n">palette_v</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">palette_v</span><span class="p">))</span></div>
+            <span class="k">return</span> <span class="p">(</span><span class="n">TransitionMatrix</span><span class="p">(</span><span class="n">M</span><span class="o">=</span><span class="n">M_patches</span><span class="p">,</span>
+                                     <span class="n">palette_u</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">palette_u</span><span class="p">,</span>
+                                     <span class="n">palette_v</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">palette_v</span><span class="p">))</span></div>
 
     <span class="k">def</span> <span class="nf">_full_matrix</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
@@ -404,7 +403,9 @@
 
     <span class="k">def</span> <span class="nf">_check_land_transition_matrix</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">palette_u</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">1</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">M</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">!=</span> <span class="mi">1</span><span class="p">:</span>
-            <span class="k">raise</span><span class="p">(</span><span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Unexpected transition matrix. Expected a land transition matrix with only one initial state.&quot;</span><span class="p">))</span></div>
+            <span class="k">raise</span> <span class="p">(</span><span class="ne">ValueError</span><span class="p">(</span>
+                <span class="s2">&quot;Unexpected transition matrix. Expected a land transition matrix with only one initial state.&quot;</span><span class="p">))</span></div>
+
 
 <div class="viewcode-block" id="load_transition_matrix"><a class="viewcode-back" href="../../../generated/clumpy.load_transition_matrix.html#clumpy.load_transition_matrix">[docs]</a><span class="k">def</span> <span class="nf">load_transition_matrix</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="n">palette</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
@@ -433,10 +434,20 @@
                              <span class="n">palette_v</span><span class="o">=</span><span class="n">palette_v</span><span class="p">))</span></div>
 
 
-<span class="k">def</span> <span class="nf">_compact_transition_matrix</span><span class="p">(</span><span class="n">full_M</span><span class="p">,</span> <span class="n">palette_u</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">palette_v</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="k">def</span> <span class="nf">_full_M_to_transition_matrix</span><span class="p">(</span><span class="n">full_M</span><span class="p">,</span> <span class="n">palette_u</span><span class="p">,</span> <span class="n">palette_v</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Extract compact transition matrix from full_M</span>
 <span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">M</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="nb">len</span><span class="p">(</span><span class="n">palette_u</span><span class="p">),</span> <span class="nb">len</span><span class="p">(</span><span class="n">palette_v</span><span class="p">)))</span>
+
+    <span class="k">for</span> <span class="n">id_u</span><span class="p">,</span> <span class="n">state_u</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">palette_u</span><span class="p">):</span>
+        <span class="n">u</span> <span class="o">=</span> <span class="n">state_u</span><span class="o">.</span><span class="n">value</span>
+        <span class="k">for</span> <span class="n">id_v</span><span class="p">,</span> <span class="n">state_v</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">palette_v</span><span class="p">):</span>
+            <span class="n">v</span> <span class="o">=</span> <span class="n">state_v</span><span class="o">.</span><span class="n">value</span>
+            <span class="n">M</span><span class="p">[</span><span class="n">id_u</span><span class="p">,</span> <span class="n">id_v</span><span class="p">]</span> <span class="o">=</span> <span class="n">full_M</span><span class="p">[</span><span class="n">u</span><span class="p">,</span> <span class="n">v</span><span class="p">]</span>
+
+    <span class="k">return</span> <span class="p">(</span><span class="n">TransitionMatrix</span><span class="p">(</span><span class="n">M</span><span class="o">=</span><span class="n">M</span><span class="p">,</span> <span class="n">palette_u</span><span class="o">=</span><span class="n">palette_u</span><span class="p">,</span> <span class="n">palette_v</span><span class="o">=</span><span class="n">palette_v</span><span class="p">))</span>
+
     <span class="n">list_u</span> <span class="o">=</span> <span class="n">palette_u</span><span class="o">.</span><span class="n">get_list_of_values</span><span class="p">()</span>
     <span class="n">list_v</span> <span class="o">=</span> <span class="n">palette_v</span><span class="o">.</span><span class="n">get_list_of_values</span><span class="p">()</span>
 
@@ -468,7 +479,6 @@
                                            <span class="n">list_v_full_matrix</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">v</span><span class="p">)]</span>
 
     <span class="k">return</span> <span class="p">(</span><span class="n">compact_M</span><span class="p">)</span>
-
 </pre></div>
 
             <div class="clearer"></div>
@@ -503,7 +513,7 @@
         <li class="right" >
           <a href="../../../py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
-        <li class="nav-item nav-item-0"><a href="../../../index.html">clumpy 1.0.0 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="../../../index.html">clumpy 1.0.1 documentation</a> &#187;</li>
           <li class="nav-item nav-item-1"><a href="../../index.html" >Module code</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href="">clumpy._base._transition_matrix</a></li> 
       </ul>

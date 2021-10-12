@@ -5,7 +5,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>clumpy._base._land &#8212; clumpy 1.0.0 documentation</title>
+    <title>clumpy._base._land &#8212; clumpy 1.0.1 documentation</title>
     <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css" />
     <link rel="stylesheet" type="text/css" href="../../../_static/nature.css" />
     <script data-url_root="../../../" id="documentation_options" src="../../../_static/documentation_options.js"></script>
@@ -25,7 +25,7 @@
         <li class="right" >
           <a href="../../../py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
-        <li class="nav-item nav-item-0"><a href="../../../index.html">clumpy 1.0.0 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="../../../index.html">clumpy 1.0.1 documentation</a> &#187;</li>
           <li class="nav-item nav-item-1"><a href="../../index.html" accesskey="U">Module code</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href="">clumpy._base._land</a></li> 
       </ul>
@@ -42,6 +42,7 @@
 
 <span class="kn">from</span> <span class="nn">scipy</span> <span class="kn">import</span> <span class="n">ndimage</span>
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">from</span> <span class="nn">time</span> <span class="kn">import</span> <span class="n">time</span>
 
 <span class="c1"># base import</span>
 <span class="kn">from</span> <span class="nn">._layer</span> <span class="kn">import</span> <span class="n">Layer</span><span class="p">,</span> <span class="n">FeatureLayer</span><span class="p">,</span> <span class="n">LandUseLayer</span>
@@ -315,7 +316,8 @@
 <span class="sd">        -------</span>
 <span class="sd">        self</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-
+        <span class="bp">self</span><span class="o">.</span><span class="n">_time_fit</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="n">st0</span> <span class="o">=</span> <span class="n">time</span><span class="p">()</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">verbose</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
             <span class="nb">print</span><span class="p">(</span><span class="n">title_heading</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">verbose_heading_level</span><span class="p">)</span> <span class="o">+</span> <span class="s1">&#39;Land &#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">state</span><span class="p">)</span> <span class="o">+</span> <span class="s1">&#39; fitting</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
 
@@ -329,15 +331,19 @@
                       <span class="n">distances_to_states</span><span class="o">=</span><span class="n">distances_to_states</span><span class="p">)</span>
 
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">fit_bootstrap_patches</span><span class="p">:</span>
+            <span class="n">st</span> <span class="o">=</span> <span class="n">time</span><span class="p">()</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">compute_bootstrap_patches</span><span class="p">(</span>
                 <span class="n">state</span><span class="o">=</span><span class="n">state</span><span class="p">,</span>
                 <span class="n">palette_v</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">transition_probability_estimator</span><span class="o">.</span><span class="n">_palette_fitted_states</span><span class="p">,</span>
                 <span class="n">lul_initial</span><span class="o">=</span><span class="n">lul_initial</span><span class="p">,</span>
                 <span class="n">lul_final</span><span class="o">=</span><span class="n">lul_final</span><span class="p">,</span>
                 <span class="n">mask</span><span class="o">=</span><span class="n">mask</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_time_fit</span><span class="p">[</span><span class="s1">&#39;compute_bootstrap_patches&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">time</span><span class="p">()</span><span class="o">-</span><span class="n">st</span>
 
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">verbose</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
             <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Land &#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">state</span><span class="p">)</span> <span class="o">+</span> <span class="s1">&#39; fitting done.</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_time_fit</span><span class="p">[</span><span class="s1">&#39;all&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">time</span><span class="p">()</span><span class="o">-</span><span class="n">st0</span>
 
         <span class="k">return</span> <span class="bp">self</span></div>
 
@@ -350,6 +356,8 @@
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Fit the transition probability estimator</span>
 <span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># TIME</span>
+        <span class="n">st</span> <span class="o">=</span> <span class="n">time</span><span class="p">()</span>
         <span class="c1"># GET VALUES</span>
         <span class="n">J_calibration</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span> <span class="n">V</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_values</span><span class="p">(</span><span class="n">state</span><span class="o">=</span><span class="n">state</span><span class="p">,</span>
                                               <span class="n">lul_initial</span><span class="o">=</span><span class="n">lul_initial</span><span class="p">,</span>
@@ -357,6 +365,8 @@
                                               <span class="n">mask</span><span class="o">=</span><span class="n">mask</span><span class="p">,</span>
                                               <span class="n">explanatory_variables</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
                                               <span class="n">distances_to_states</span><span class="o">=</span><span class="n">distances_to_states</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_time_fit</span><span class="p">[</span><span class="s1">&#39;get_values&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">time</span><span class="p">()</span><span class="o">-</span><span class="n">st</span>
+        <span class="n">st</span> <span class="o">=</span> <span class="n">time</span><span class="p">()</span>
 
         <span class="c1"># FEATURE SELECTORS</span>
         <span class="c1"># if only one object, make a list</span>
@@ -389,6 +399,9 @@
 
         <span class="n">features_idx</span> <span class="o">=</span> <span class="n">features_idx</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="p">:]</span>
 
+        <span class="bp">self</span><span class="o">.</span><span class="n">_time_fit</span><span class="p">[</span><span class="s1">&#39;feature_selection&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">time</span><span class="p">()</span><span class="o">-</span><span class="n">st</span>
+        <span class="n">st</span><span class="o">=</span><span class="n">time</span><span class="p">()</span>
+
         <span class="c1"># BOUNDARIES PARAMETERS</span>
         <span class="n">low_bounded_features</span> <span class="o">=</span> <span class="p">[]</span>
         <span class="n">high_bounded_features</span> <span class="o">=</span> <span class="p">[]</span>
@@ -410,14 +423,17 @@
             <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">features</span><span class="p">[</span><span class="n">idx</span><span class="p">],</span> <span class="n">State</span><span class="p">)</span> <span class="ow">or</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">features</span><span class="p">[</span><span class="n">idx</span><span class="p">],</span> <span class="nb">int</span><span class="p">):</span>
                 <span class="n">low_bounded_features</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">id_col</span><span class="p">)</span>
                 <span class="n">low_bounds</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="mf">0.0</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_time_fit</span><span class="p">[</span><span class="s1">&#39;boundaties_parameters_init&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">time</span><span class="p">()</span><span class="o">-</span><span class="n">st</span>
 
         <span class="c1"># TRANSITION PROBABILITY ESTIMATOR</span>
+        <span class="n">st</span> <span class="o">=</span> <span class="n">time</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">transition_probability_estimator</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">X</span><span class="p">,</span>
                                                   <span class="n">V</span><span class="p">,</span>
                                                   <span class="n">low_bounded_features</span><span class="o">=</span><span class="n">low_bounded_features</span><span class="p">,</span>
                                                   <span class="n">high_bounded_features</span><span class="o">=</span><span class="n">high_bounded_features</span><span class="p">,</span>
                                                   <span class="n">low_bounds</span><span class="o">=</span><span class="n">low_bounds</span><span class="p">,</span>
                                                   <span class="n">high_bounds</span><span class="o">=</span><span class="n">high_bounds</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_time_fit</span><span class="p">[</span><span class="s1">&#39;tpe_fit&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">time</span><span class="p">()</span><span class="o">-</span><span class="n">st</span>
 
         <span class="k">return</span> <span class="bp">self</span>
 
@@ -470,7 +486,11 @@
                                  <span class="n">lul</span><span class="p">,</span>
                                  <span class="n">mask</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
                                  <span class="n">distances_to_states</span><span class="o">=</span><span class="p">{},</span>
-                                 <span class="n">path_prefix</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+                                 <span class="n">path_prefix</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                                 <span class="n">copy_geo</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                                 <span class="n">save_P_Y__v</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+                                 <span class="n">save_P_Y</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+                                 <span class="n">return_Y</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Computes transition probabilities.</span>
 
@@ -490,21 +510,34 @@
 
 <span class="sd">        path_prefix : str, default=None</span>
 <span class="sd">            The path prefix to save result as ``path_prefix+&#39;_&#39;+str(state_v.value)+&#39;.tif&#39;.</span>
-<span class="sd">            If None, the result is returned.</span>
 <span class="sd">            Note that if ``path_prefix is not None``, ``lul`` must be LandUseLayer</span>
+
+<span class="sd">        save_P_Y__v : bool, default=False</span>
+<span class="sd">            Save P_Y__v.</span>
+
+<span class="sd">        save_P_Y : bool, default=False</span>
+<span class="sd">            Save P_Y</span>
+
+<span class="sd">        return_Y : bool, default=False</span>
+<span class="sd">            If ``True`` and ``path_prefix`` is ``None``, return Y.</span>
 
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
 <span class="sd">        J_allocation : ndarray of shape (n_samples,)</span>
-<span class="sd">            Only returned if ``path_prefix=False``. Element indexes in the flattened</span>
+<span class="sd">            Element indexes in the flattened</span>
 <span class="sd">            matrix.</span>
 
 <span class="sd">        P_v__u_Y : ndarray of shape (n_samples, len(palette_v))</span>
 <span class="sd">            The transition probabilities of each elements. Columns are</span>
 <span class="sd">            ordered as ``palette_v``.</span>
 
+<span class="sd">        Y : ndarray of shape (n_samples, n_features)</span>
+<span class="sd">            Only returned if ``return_Y=True``.</span>
+<span class="sd">            The features values.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
 
+        <span class="bp">self</span><span class="o">.</span><span class="n">_time_tp</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="n">st</span> <span class="o">=</span> <span class="n">time</span><span class="p">()</span>
         <span class="c1"># check if it is really a land transition matrix</span>
         <span class="n">transition_matrix</span><span class="o">.</span><span class="n">_check_land_transition_matrix</span><span class="p">()</span>
 
@@ -514,32 +547,42 @@
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">verbose</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
             <span class="nb">print</span><span class="p">(</span><span class="n">title_heading</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">verbose_heading_level</span><span class="p">)</span> <span class="o">+</span> <span class="s1">&#39;Land &#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">state</span><span class="p">)</span> <span class="o">+</span> <span class="s1">&#39; TPE</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
 
-        <span class="n">J</span><span class="p">,</span> <span class="n">P_v__u_Y</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_compute_tpe</span><span class="p">(</span><span class="n">transition_matrix</span><span class="o">=</span><span class="n">transition_matrix</span><span class="p">,</span>
-                                        <span class="n">lul</span><span class="o">=</span><span class="n">lul</span><span class="p">,</span>
-                                        <span class="n">mask</span><span class="o">=</span><span class="n">mask</span><span class="p">,</span>
-                                        <span class="n">distances_to_states</span><span class="o">=</span><span class="n">distances_to_states</span><span class="p">)</span>
+        <span class="n">J_P_v__u_Y_Y</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_compute_tpe</span><span class="p">(</span><span class="n">transition_matrix</span><span class="o">=</span><span class="n">transition_matrix</span><span class="p">,</span>
+                                         <span class="n">lul</span><span class="o">=</span><span class="n">lul</span><span class="p">,</span>
+                                         <span class="n">mask</span><span class="o">=</span><span class="n">mask</span><span class="p">,</span>
+                                         <span class="n">distances_to_states</span><span class="o">=</span><span class="n">distances_to_states</span><span class="p">,</span>
+                                         <span class="n">save_P_Y__v</span><span class="o">=</span><span class="n">save_P_Y__v</span><span class="p">,</span>
+                                         <span class="n">save_P_Y</span><span class="o">=</span><span class="n">save_P_Y</span><span class="p">,</span>
+                                         <span class="n">return_Y</span><span class="o">=</span><span class="n">return_Y</span><span class="p">)</span>
 
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">verbose</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
             <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Land &#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">state</span><span class="p">)</span> <span class="o">+</span> <span class="s1">&#39; TPE done.</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
 
-        <span class="k">if</span> <span class="n">path_prefix</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="k">return</span> <span class="n">J</span><span class="p">,</span> <span class="n">P_v__u_Y</span>
+        <span class="k">if</span> <span class="n">path_prefix</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">J</span> <span class="o">=</span> <span class="n">J_P_v__u_Y_Y</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="n">P_v__u_Y</span> <span class="o">=</span> <span class="n">J_P_v__u_Y_Y</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
 
-        <span class="k">else</span><span class="p">:</span>
             <span class="n">folder_path</span><span class="p">,</span> <span class="n">file_prefix</span> <span class="o">=</span> <span class="n">path_split</span><span class="p">(</span><span class="n">path_prefix</span><span class="p">,</span> <span class="n">prefix</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 
             <span class="k">for</span> <span class="n">id_state</span><span class="p">,</span> <span class="n">state_v</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">palette_v</span><span class="p">):</span>
-                <span class="n">M</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">lul</span><span class="o">.</span><span class="n">get_data</span><span class="p">()</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+                <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">lul</span><span class="p">,</span> <span class="n">LandUseLayer</span><span class="p">):</span>
+                    <span class="n">shape</span> <span class="o">=</span> <span class="n">lul</span><span class="o">.</span><span class="n">get_data</span><span class="p">()</span><span class="o">.</span><span class="n">shape</span>
+                    <span class="n">copy_geo</span> <span class="o">=</span> <span class="n">lul</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">shape</span> <span class="o">=</span> <span class="n">lul</span><span class="o">.</span><span class="n">shape</span>
+                <span class="n">M</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">shape</span><span class="p">)</span>
                 <span class="n">M</span><span class="o">.</span><span class="n">flat</span><span class="p">[</span><span class="n">J</span><span class="p">]</span> <span class="o">=</span> <span class="n">P_v__u_Y</span><span class="p">[:,</span> <span class="n">id_state</span><span class="p">]</span>
 
                 <span class="n">file_name</span> <span class="o">=</span> <span class="n">file_prefix</span> <span class="o">+</span> <span class="s1">&#39;_&#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">state_v</span><span class="o">.</span><span class="n">value</span><span class="p">)</span> <span class="o">+</span> <span class="s1">&#39;.tif&#39;</span>
 
                 <span class="n">FeatureLayer</span><span class="p">(</span><span class="n">label</span><span class="o">=</span><span class="n">file_name</span><span class="p">,</span>
                              <span class="n">data</span><span class="o">=</span><span class="n">M</span><span class="p">,</span>
-                             <span class="n">copy_geo</span><span class="o">=</span><span class="n">lul</span><span class="p">,</span>
+                             <span class="n">copy_geo</span><span class="o">=</span><span class="n">copy_geo</span><span class="p">,</span>
                              <span class="n">path</span><span class="o">=</span><span class="n">folder_path</span> <span class="o">+</span> <span class="s1">&#39;/&#39;</span> <span class="o">+</span> <span class="n">file_name</span><span class="p">)</span>
 
-            <span class="k">return</span> <span class="kc">True</span></div>
+        <span class="c1"># even if path prefix is not None, return J, P_v__u_Y, Y</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_time_tp</span><span class="p">[</span><span class="s1">&#39;all&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">time</span><span class="p">()</span><span class="o">-</span><span class="n">st</span>
+        <span class="k">return</span> <span class="n">J_P_v__u_Y_Y</span></div>
 
     <span class="k">def</span> <span class="nf">_compute_tpe</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
                      <span class="n">transition_matrix</span><span class="p">,</span>
@@ -558,11 +601,13 @@
         <span class="n">state</span> <span class="o">=</span> <span class="n">transition_matrix</span><span class="o">.</span><span class="n">palette_u</span><span class="o">.</span><span class="n">states</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
 
         <span class="c1"># GET VALUES</span>
+        <span class="n">st</span> <span class="o">=</span> <span class="n">time</span><span class="p">()</span>
         <span class="n">J_allocation</span><span class="p">,</span> <span class="n">Y</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_values</span><span class="p">(</span><span class="n">state</span><span class="o">=</span><span class="n">state</span><span class="p">,</span>
                                           <span class="n">lul_initial</span><span class="o">=</span><span class="n">lul</span><span class="p">,</span>
                                           <span class="n">mask</span><span class="o">=</span><span class="n">mask</span><span class="p">,</span>
                                           <span class="n">explanatory_variables</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
                                           <span class="n">distances_to_states</span><span class="o">=</span><span class="n">distances_to_states</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_time_tp</span><span class="p">[</span><span class="s1">&#39;get_values&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">time</span><span class="p">()</span> <span class="o">-</span> <span class="n">st</span>
 
         <span class="c1"># FEATURES SELECTOR</span>
         <span class="c1"># if only one object, make a list</span>
@@ -578,6 +623,7 @@
             <span class="n">Y</span> <span class="o">=</span> <span class="n">fs</span><span class="o">.</span><span class="n">transform</span><span class="p">(</span><span class="n">X</span><span class="o">=</span><span class="n">Y</span><span class="p">)</span>
 
         <span class="c1"># TRANSITION PROBABILITY ESTIMATION</span>
+        <span class="n">st</span> <span class="o">=</span> <span class="n">time</span><span class="p">()</span>
         <span class="n">P_v__u_Y</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">transition_probability_estimator</span><span class="o">.</span><span class="n">transition_probability</span><span class="p">(</span>
             <span class="n">transition_matrix</span><span class="o">=</span><span class="n">transition_matrix</span><span class="p">,</span>
             <span class="n">Y</span><span class="o">=</span><span class="n">Y</span><span class="p">,</span>
@@ -585,7 +631,7 @@
             <span class="n">compute_P_Y</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
             <span class="n">save_P_Y__v</span><span class="o">=</span><span class="n">save_P_Y__v</span><span class="p">,</span>
             <span class="n">save_P_Y</span><span class="o">=</span><span class="n">save_P_Y</span><span class="p">)</span>
-
+        <span class="bp">self</span><span class="o">.</span><span class="n">_time_tp</span><span class="p">[</span><span class="s1">&#39;estimation&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">time</span><span class="p">()</span> <span class="o">-</span> <span class="n">st</span>
         <span class="k">if</span> <span class="n">return_Y</span><span class="p">:</span>
             <span class="k">return</span> <span class="n">J_allocation</span><span class="p">,</span> <span class="n">P_v__u_Y</span><span class="p">,</span> <span class="n">Y</span>
         <span class="k">else</span><span class="p">:</span>
@@ -616,7 +662,9 @@
                  <span class="n">lul_origin</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
                  <span class="n">mask</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
                  <span class="n">distances_to_states</span><span class="o">=</span><span class="p">{},</span>
-                 <span class="n">path</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+                 <span class="n">path</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                 <span class="n">path_prefix_transition_probabilities</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                 <span class="n">copy_geo</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        allocation.</span>
 
@@ -642,6 +690,9 @@
 <span class="sd">            If None, the allocation is only saved within `lul`, if `lul` is a ndarray.</span>
 <span class="sd">            Note that if ``path`` is not ``None``, ``lul`` must be LandUseLayer.</span>
 
+<span class="sd">        path_prefix_transition_probabilities : str, default=None</span>
+<span class="sd">            The path prefix to save transition probabilities.</span>
+
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
 <span class="sd">        lul_allocated : LandUseLayer</span>
@@ -665,15 +716,87 @@
                                 <span class="n">lul_origin</span><span class="o">=</span><span class="n">lul_origin</span><span class="p">,</span>
                                 <span class="n">mask</span><span class="o">=</span><span class="n">mask</span><span class="p">,</span>
                                 <span class="n">distances_to_states</span><span class="o">=</span><span class="n">distances_to_states</span><span class="p">,</span>
-                                <span class="n">path</span><span class="o">=</span><span class="n">path</span><span class="p">)</span>
+                                <span class="n">path</span><span class="o">=</span><span class="n">path</span><span class="p">,</span>
+                                <span class="n">path_prefix_transition_probabilities</span><span class="o">=</span><span class="n">path_prefix_transition_probabilities</span><span class="p">,</span>
+                                <span class="n">copy_geo</span><span class="o">=</span><span class="n">copy_geo</span><span class="p">)</span>
 
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">verbose</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
-            <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Land &#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">state</span><span class="p">)</span> <span class="o">+</span> <span class="s1">&#39; allocation done.</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span></div></div>
+            <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Land &#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">state</span><span class="p">)</span> <span class="o">+</span> <span class="s1">&#39; allocation done.</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span></div>
+
+    <span class="k">def</span> <span class="nf">dinamica_determine_ranges</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
+                                  <span class="n">state</span><span class="p">,</span>
+                                  <span class="n">lul_initial</span><span class="p">,</span>
+                                  <span class="n">params</span><span class="p">,</span>
+                                  <span class="n">mask</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="n">J</span><span class="p">,</span> <span class="n">X</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_values</span><span class="p">(</span><span class="n">state</span><span class="o">=</span><span class="n">state</span><span class="p">,</span>
+                               <span class="n">lul_initial</span><span class="o">=</span><span class="n">lul_initial</span><span class="p">,</span>
+                               <span class="n">mask</span><span class="o">=</span><span class="n">mask</span><span class="p">,</span>
+                               <span class="n">explanatory_variables</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+        <span class="n">ranges</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="n">delta</span> <span class="o">=</span> <span class="p">{}</span>
+
+        <span class="k">for</span> <span class="n">id_feature</span><span class="p">,</span> <span class="n">feature</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">features</span><span class="p">):</span>
+            <span class="n">param</span> <span class="o">=</span> <span class="n">params</span><span class="p">[</span><span class="n">feature</span><span class="p">]</span>
+
+            <span class="n">x</span> <span class="o">=</span> <span class="n">X</span><span class="p">[:,</span> <span class="n">id_feature</span><span class="p">]</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+            <span class="n">n_round</span> <span class="o">=</span> <span class="n">_get_n_decimals</span><span class="p">(</span><span class="n">param</span><span class="p">[</span><span class="s1">&#39;increment&#39;</span><span class="p">])</span>
+            <span class="n">x</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sort</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+            <span class="n">x</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">n_round</span><span class="p">)</span>
+
+            <span class="n">ranges</span><span class="p">[</span><span class="n">feature</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">n_round</span><span class="p">)]</span>
+            <span class="n">delta</span><span class="p">[</span><span class="n">feature</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span>
+
+            <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">xi</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
+                <span class="k">if</span> <span class="n">delta</span><span class="p">[</span><span class="n">feature</span><span class="p">][</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">&gt;=</span> <span class="n">param</span><span class="p">[</span><span class="s1">&#39;maximum_delta&#39;</span><span class="p">]:</span>
+                    <span class="n">ranges</span><span class="p">[</span><span class="n">feature</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">xi</span><span class="p">)</span>
+                    <span class="n">delta</span><span class="p">[</span><span class="n">feature</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+                <span class="k">elif</span> <span class="n">xi</span> <span class="o">-</span> <span class="n">ranges</span><span class="p">[</span><span class="n">feature</span><span class="p">][</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">&gt;</span> <span class="n">param</span><span class="p">[</span><span class="s1">&#39;increment&#39;</span><span class="p">]</span> <span class="ow">and</span> <span class="n">delta</span><span class="p">[</span><span class="n">feature</span><span class="p">][</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">&gt;=</span> <span class="n">param</span><span class="p">[</span><span class="s1">&#39;minimum_delta&#39;</span><span class="p">]:</span>
+                    <span class="n">ranges</span><span class="p">[</span><span class="n">feature</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">ranges</span><span class="p">[</span><span class="n">feature</span><span class="p">][</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span class="n">param</span><span class="p">[</span><span class="s1">&#39;increment&#39;</span><span class="p">])</span>
+                    <span class="n">delta</span><span class="p">[</span><span class="n">feature</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+
+                <span class="k">elif</span> <span class="nb">len</span><span class="p">(</span><span class="n">ranges</span><span class="p">[</span><span class="n">feature</span><span class="p">])</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+                    <span class="n">v1</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">ranges</span><span class="p">[</span><span class="n">feature</span><span class="p">][</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="n">ranges</span><span class="p">[</span><span class="n">feature</span><span class="p">][</span><span class="o">-</span><span class="mi">2</span><span class="p">],</span>
+                                   <span class="p">(</span><span class="n">delta</span><span class="p">[</span><span class="n">feature</span><span class="p">][</span><span class="o">-</span><span class="mi">2</span><span class="p">]</span> <span class="o">-</span> <span class="n">delta</span><span class="p">[</span><span class="n">feature</span><span class="p">][</span><span class="o">-</span><span class="mi">3</span><span class="p">])])</span>
+                    <span class="n">v2</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">xi</span> <span class="o">-</span> <span class="n">ranges</span><span class="p">[</span><span class="n">feature</span><span class="p">][</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span>
+                                   <span class="p">(</span><span class="n">delta</span><span class="p">[</span><span class="n">feature</span><span class="p">][</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span class="mi">1</span> <span class="o">-</span> <span class="n">delta</span><span class="p">[</span><span class="n">feature</span><span class="p">][</span><span class="o">-</span><span class="mi">2</span><span class="p">])])</span>
+
+                    <span class="n">norm_v1</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">v1</span><span class="p">)</span>
+                    <span class="n">norm_v2</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">v2</span><span class="p">)</span>
+                    <span class="k">if</span> <span class="n">norm_v1</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="ow">and</span> <span class="n">norm_v2</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+                        <span class="n">v1</span> <span class="o">/=</span> <span class="n">norm_v1</span>
+                        <span class="n">v2</span> <span class="o">/=</span> <span class="n">norm_v2</span>
+
+                        <span class="n">dot</span> <span class="o">=</span> <span class="n">v1</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">*</span> <span class="n">v2</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span class="n">v1</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">*</span> <span class="n">v2</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+                        <span class="k">if</span> <span class="n">dot</span> <span class="o">&gt;=</span> <span class="mi">0</span> <span class="ow">and</span> <span class="n">dot</span> <span class="o">&lt;=</span> <span class="mi">1</span><span class="p">:</span>
+                            <span class="n">angle</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arccos</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">v1</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">*</span> <span class="n">v2</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span class="n">v1</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">*</span> <span class="n">v2</span><span class="p">[</span><span class="mi">1</span><span class="p">]))</span> <span class="o">*</span> <span class="mi">180</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span>
+                        <span class="k">else</span><span class="p">:</span>
+                            <span class="n">angle</span> <span class="o">=</span> <span class="mi">0</span>
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="n">angle</span> <span class="o">=</span> <span class="mi">0</span>
+
+                    <span class="k">if</span> <span class="n">angle</span> <span class="o">&gt;</span> <span class="n">param</span><span class="p">[</span><span class="s1">&#39;tolerance_angle&#39;</span><span class="p">]</span> <span class="ow">and</span> <span class="n">delta</span><span class="p">[</span><span class="n">feature</span><span class="p">][</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">&gt;=</span> <span class="n">param</span><span class="p">[</span><span class="s1">&#39;minimum_delta&#39;</span><span class="p">]:</span>
+                        <span class="n">ranges</span><span class="p">[</span><span class="n">feature</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">xi</span><span class="p">)</span>
+                        <span class="n">delta</span><span class="p">[</span><span class="n">feature</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="n">delta</span><span class="p">[</span><span class="n">feature</span><span class="p">][</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">+=</span> <span class="mi">1</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">delta</span><span class="p">[</span><span class="n">feature</span><span class="p">][</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">+=</span> <span class="mi">1</span>
+
+        <span class="k">return</span> <span class="p">(</span><span class="n">ranges</span><span class="p">,</span> <span class="n">delta</span><span class="p">)</span></div>
 
 
 <span class="k">def</span> <span class="nf">_compute_distance</span><span class="p">(</span><span class="n">state</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="n">distances_to_states</span><span class="p">):</span>
     <span class="n">v_matrix</span> <span class="o">=</span> <span class="p">(</span><span class="n">data</span> <span class="o">==</span> <span class="n">state</span><span class="o">.</span><span class="n">value</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">int</span><span class="p">)</span>
     <span class="n">distances_to_states</span><span class="p">[</span><span class="n">state</span><span class="p">]</span> <span class="o">=</span> <span class="n">ndimage</span><span class="o">.</span><span class="n">distance_transform_edt</span><span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">v_matrix</span><span class="p">)</span>
+
+
+<span class="k">def</span> <span class="nf">_get_n_decimals</span><span class="p">(</span><span class="n">s</span><span class="p">):</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="nb">int</span><span class="p">(</span><span class="n">s</span><span class="o">.</span><span class="n">rstrip</span><span class="p">(</span><span class="s1">&#39;0&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">rstrip</span><span class="p">(</span><span class="s1">&#39;.&#39;</span><span class="p">))</span>
+        <span class="k">return</span> <span class="mi">0</span>
+    <span class="k">except</span><span class="p">:</span>
+        <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">s</span><span class="p">))</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;.&#39;</span><span class="p">)[</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>
 </pre></div>
 
             <div class="clearer"></div>
@@ -708,7 +831,7 @@
         <li class="right" >
           <a href="../../../py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
-        <li class="nav-item nav-item-0"><a href="../../../index.html">clumpy 1.0.0 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="../../../index.html">clumpy 1.0.1 documentation</a> &#187;</li>
           <li class="nav-item nav-item-1"><a href="../../index.html" >Module code</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href="">clumpy._base._land</a></li> 
       </ul>
