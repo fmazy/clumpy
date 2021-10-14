@@ -218,8 +218,10 @@ class GKDE(DensityEstimator):
         self._low_bounds_hyperplanes = []
         for id_k, k in enumerate(self.low_bounded_features):
             A = np.diag(np.ones(self._d))
-            A[:,id_k] = self.low_bounds[id_k]
-            
+            A[:,k] = self.low_bounds[id_k]
+
+            print(A)
+
             A_wt = self._preprocessor.transform(A)
             
             self._low_bounds_hyperplanes.append(Hyperplane().set_by_points(A_wt))
@@ -231,7 +233,7 @@ class GKDE(DensityEstimator):
         self._high_bounds_hyperplanes = []
         for id_k, k in enumerate(self.high_bounded_features):
             A = np.diag(np.ones(self._d))
-            A[:,id_k] = self.high_bounds[id_k]
+            A[:,k] = self.high_bounds[id_k]
             
             A_wt = self._preprocessor.transform(A)
             
@@ -315,12 +317,14 @@ class GKDE(DensityEstimator):
         """
         # get indices outside bounds
         # it will be use to cut off the result later
-        id_out_of_low_bounds = np.any(X[:, self.low_bounded_features] < self.low_bounds)
-        id_out_of_high_bounds = np.any(X[:, self.high_bounded_features] > self.high_bounds)
+        id_out_of_low_bounds = np.any(X[:, self.low_bounded_features] < self.low_bounds, axis=1)
+        id_out_of_high_bounds = np.any(X[:, self.high_bounded_features] > self.high_bounds, axis=1)
         
         if self.preprocessing != 'none':
+            print('preprocessor !')
+            print(X.mean())
             X = self._preprocessor.transform(X)
-        
+            print(X.mean())
 
         # STEPS INITIALIZATION
         # requested elements are not estimated alltogether in order to
@@ -369,8 +373,8 @@ class GKDE(DensityEstimator):
         if self.verbose > 0:
             print(title_heading(self.verbose_heading_level)+'Boundary bias correction...')
 
-        f *= self._boundary_correction(X, h)
-            
+        f /= self._boundary_correction(X, h)
+
         # outside bounds : equal to 0
         f[id_out_of_low_bounds] = 0
         f[id_out_of_high_bounds] = 0
@@ -415,10 +419,17 @@ class GKDE(DensityEstimator):
         """
         X in the WT space.
         """
+        h = h
+
         correction = np.ones(X.shape[0])
         for hyperplane in self._low_bounds_hyperplanes + self._high_bounds_hyperplanes:
-            correction /= 1 / 2 * (1 + erf(hyperplane.distance(X) / h / np.sqrt(2)))
+            correction *= 1 / 2 * (1 + erf(hyperplane.distance(X) / h / np.sqrt(2)))
 
+        X_inv = self._preprocessor.inverse_transform(X)
+        X_inv = np.round(X_inv, 5)
+        plt.scatter(X_inv[:, 0], X_inv[:, 1], c=correction, s=2)
+        plt.colorbar()
+        print(correction.min(), correction.max())
         return(correction)
 
     def marginal(self,
