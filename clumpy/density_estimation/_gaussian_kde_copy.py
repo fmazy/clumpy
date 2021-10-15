@@ -29,19 +29,15 @@ def restart_line():
 def _gaussian(x):
     return(np.sum(np.exp(-0.5 * x**2)))
 
-def _gaussian_coef(x, coef):
-    return (np.sum(np.exp(-0.5 * x ** 2) * coef))
-
-def _compute_gaussian_kde(nn, X, h, support_factor, bc_coef, i=None, n_steps=None, verbose=0):
+def _compute_gaussian_kde(nn, X, h, support_factor, i=None, n_steps=None, verbose=0):
     distances, neighbors_id = nn.radius_neighbors(X, radius=h * support_factor, return_distance=True)
     
     if i is not None and n_steps is not None and verbose>0:
         restart_line()
         sys.stdout.write(str(i)+'/'+str(n_steps))
         sys.stdout.flush()
-
-    return (np.array([_gaussian_coef(dist / h, bc_coef[neighbors_id[idx]]) for idx, dist in enumerate(distances)]))
-    # return(np.array([_gaussian(dist/h) for idx, dist in enumerate(distances)]))
+                
+    return(np.array([_gaussian(dist/h) for dist in distances]))
 
 class GKDE(DensityEstimator):
     """
@@ -271,13 +267,6 @@ class GKDE(DensityEstimator):
                                    n_jobs = self.n_jobs_neighbors)
         self._nn.fit(self._data)
 
-        # BOUNDARY BIAS COEF
-        self._bc_coef = np.ones(self._n)
-        for hyperplan in self._low_bounds_hyperplanes + self._high_bounds_hyperplanes:
-            dist = hyperplan.distance(self._data)
-            idx_close = dist <= self._h * self.support_factor
-            self._bc_coef[idx_close] *= 1 / (1/2 * (1 + erf(dist[idx_close] / self._h / np.sqrt(2))))
-
         if self.verbose > 0:
             print('sklearn.neighbors.NearestNeighbors fitting done.')
             print('GKDE fitting done.')
@@ -355,8 +344,7 @@ class GKDE(DensityEstimator):
                 f[i:i+self.n_predict_max] = _compute_gaussian_kde(self._nn,
                                                                   X[i:i+self.n_predict_max],
                                                                   h,
-                                                                  self.support_factor,
-                                                                  bc_coef=self._bc_coef)
+                                                                  self.support_factor)
                     
         else:
             pool = Pool(self.n_jobs_predict)
@@ -364,7 +352,6 @@ class GKDE(DensityEstimator):
                                                       X[i:i+self.n_predict_max],
                                                       h,
                                                       self.support_factor,
-                                                      self._bc_coef,
                                                       id_i,
                                                       steps.size,
                                                       self.verbose) for id_i, i in enumerate(steps)])
@@ -384,7 +371,7 @@ class GKDE(DensityEstimator):
         if self.verbose > 0:
             print(title_heading(self.verbose_heading_level)+'Boundary bias correction...')
 
-        # f /= self._boundary_correction(X, h)
+        f /= self._boundary_correction(X, h)
 
         # outside bounds : equal to 0
         f[id_out_of_low_bounds] = 0
