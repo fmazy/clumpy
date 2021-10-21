@@ -426,6 +426,68 @@ class GKDE(DensityEstimator):
     def marginal(self,
                  x,
                  k):
+        X = np.random.random((x.size, self._d))
+        X[:, k] = x
+
+        if self.preprocessing != 'none':
+            X = self._preprocessor.transform(X)
+        x = X[:, k]
+
+        return(x)
+
+    def extract_marginal(self, k):
+        # make list if necessary
+        if not isinstance(k, list):
+            k = [k]
+
+        # if preprocessing, get original data
+        if self.preprocessing != 'none':
+            data = self._preprocessor.inverse_transform(self._data)
+
+        # get only requested columns
+        data = data[:,k]
+
+        # create new marginal GKDE
+        low_bounded_features = []
+        high_bounded_features = []
+        low_bounds = []
+        high_bounds = []
+
+        for id_marg, ki in enumerate(k):
+            if ki in self.low_bounded_features:
+                id_self = self.low_bounded_features.index(ki)
+                low_bounded_features.append(id_marg)
+                low_bounds.append(self.low_bounds[id_self])
+
+            if ki in self.high_bounded_features:
+                id_self = self.high_bounded_features.index(ki)
+                high_bounded_features.append(id_marg)
+                high_bounds.append(self.high_bounds[id_self])
+
+        marg_gkde = GKDE(h=self._h,
+                         low_bounded_features=low_bounded_features,
+                         high_bounded_features=high_bounded_features,
+                         low_bounds = low_bounds,
+                         high_bounds = high_bounds,
+                         preprocessing=self.preprocessing,
+                         algorithm=self.algorithm,
+                         leaf_size=self.leaf_size,
+                         support_factor=self.support_factor,
+                         n_fit_max = self.n_fit_max,
+                         n_predict_max = self.n_predict_max,
+                         forbid_null_value = self.forbid_null_value,
+                         n_jobs_predict=self.n_jobs_predict,
+                         n_jobs_neighbors=self.n_jobs_neighbors,
+                         verbose=self.verbose,
+                         verbose_heading_level=self.verbose_heading_level)
+
+        marg_gkde.fit(data)
+
+        return(marg_gkde)
+
+    def marginal2(self,
+                 x,
+                 k):
         """
         Estimate the marginal probability.
 
@@ -452,7 +514,7 @@ class GKDE(DensityEstimator):
         nn = NearestNeighbors(radius=self._h * self.support_factor,
                               algorithm = self.algorithm,
                               leaf_size=self.leaf_size,
-                              n_jobs = self.n_jobs)
+                              n_jobs = self.n_jobs_neighbors)
         nn.fit(self._data[:,[k]])
         
         distances, _ = nn.radius_neighbors(x[:,None],
@@ -472,9 +534,9 @@ class GKDE(DensityEstimator):
             f /= 1 / 2 * (1 + erf((self._high_bounds[id_k] - x) / self._h / np.sqrt(2)))
             
             f[x > self._high_bounds[id_k]] = 0
-        
+
         if self.preprocessing != 'none':
-            f /= np.product(self._preprocessor.scale_[k])
+            f /= np.product(self._preprocessor.scale_)
         
         return(f)
     

@@ -51,7 +51,7 @@ class NullEstimator(DensityEstimator):
     def __init__(self):
         super().__init__()
 
-    def fit(self, X, y):
+    def fit(self, X, y=None):
         return (self)
 
     def predict(self, X):

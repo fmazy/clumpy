@@ -26,7 +26,12 @@ class Layer:
         self.time = time
         self.path = path
         self.copy_geo = copy_geo
-                
+
+        folder_path, file_name, file_ext = path_split(path)
+
+        if self.label is None:
+            self.label = file_name
+
         # if path and data -> file creation
         if path is not None and data is not None:
             
@@ -54,9 +59,8 @@ class Layer:
                 transform = self.copy_geo.raster_.transform
             
             # create parent directories if necessary
-            folder_path, file_name, file_ext = path_split(path)
             create_directories(folder_path)
-            
+
             # create file
             with rasterio.open(
                 self.path,

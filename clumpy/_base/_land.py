@@ -40,7 +40,7 @@ class Land():
     feature_selection : FeatureSelection or list(FeatureSelection)
         List of features selection methods.
 
-    fit_bootstrap_patches : bool, default=True
+    fit_bootstrap_patches : bool, default=False
         If ``True``, make bootstrap patches when fitting.
 
     allocator : Allocator, default=None
@@ -389,8 +389,8 @@ class Land():
 
         # TRANSITION PROBABILITY ESTIMATOR
         st = time()
-        self.transition_probability_estimator.fit(X,
-                                                  V,
+        self.transition_probability_estimator.fit(X=X,
+                                                  V=V,
                                                   low_bounded_features=low_bounded_features,
                                                   high_bounded_features=high_bounded_features,
                                                   low_bounds=low_bounds,
