@@ -60,7 +60,7 @@ class Bayes(TransitionProbabilityEstimator):
 
     def add_conditional_density_estimator(self,
                                           state,
-                                          de='gkde',
+                                          density_estimation='gkde',
                                           P_v_min=5 * 10 ** (-5),
                                           n_samples_min=500):
         """
@@ -71,7 +71,7 @@ class Bayes(TransitionProbabilityEstimator):
         state : State
             The final state.
 
-        de : {'gkde'} or DensityEstimator, default='gkde'
+        density_estimation : {'gkde'} or DensityEstimator, default='gkde'
             Density estimation for :math:`P(x|u,v)`.
                 gkde : Gaussian Kernel Density Estimation method
 
@@ -87,10 +87,10 @@ class Bayes(TransitionProbabilityEstimator):
             The self object.
         """
 
-        if isinstance(de, DensityEstimator):
-            self.conditional_density_estimators[state] = de
-        elif de in _methods:
-            self.conditional_density_estimators[state] = _methods[de](verbose=self.verbose - 1,
+        if isinstance(density_estimation, DensityEstimator):
+            self.conditional_density_estimators[state] = density_estimation
+        elif density_estimation in _methods:
+            self.conditional_density_estimators[state] = _methods[density_estimation](verbose=self.verbose - 1,
                                                                       verbose_heading_level=self.verbose_heading_level + 1)
         else:
             raise (ValueError('Unexpected de value.'))

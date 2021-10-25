@@ -414,3 +414,7 @@ class FeatureLayer(Layer):
 
 def convert_raster_file(path_in, path_out):
     os.system('rio convert '+path_in+' '+path_out+' --overwrite')
+
+layers = {'land_use' : LandUseLayer,
+          'feature' : FeatureLayer,
+          'mask' : MaskLayer}

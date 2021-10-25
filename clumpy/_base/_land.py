@@ -15,6 +15,7 @@ from ..transition_probability_estimation._tpe import TransitionProbabilityEstima
 
 # Features selection
 from ..feature_selection._feature_selector import FeatureSelector
+from ..feature_selection import feature_selectors as dict_feature_selectors
 
 # Tools
 from ..tools._path import path_split
@@ -23,7 +24,6 @@ from ..tools._console import title_heading
 # Allocation
 from ..allocation._allocator import Allocator
 from ..allocation._compute_patches import compute_bootstrap_patches
-
 
 class Land():
     """
@@ -37,7 +37,7 @@ class Land():
     transition_probability_estimator : TransitionProbabilityEstimator, default=None
         Transition probability estimator. If ``None``, fit, transition_probabilities and allocate are not available.
 
-    feature_selection : FeatureSelection or list(FeatureSelection)
+    feature_selector : FeatureSelection or list(FeatureSelection)
         List of features selection methods.
 
     fit_bootstrap_patches : bool, default=False
@@ -56,7 +56,7 @@ class Land():
     def __init__(self,
                  features=[],
                  transition_probability_estimator=None,
-                 feature_selection=None,
+                 feature_selector=None,
                  fit_bootstrap_patches=False,
                  allocator=None,
                  verbose=0,
@@ -75,7 +75,17 @@ class Land():
         self.features = features
 
         # Features selection
-        self.feature_selection = feature_selection
+        self.feature_selector = []
+        if isinstance(feature_selector, list):
+            for info in feature_selector:
+                if isinstance(info, dict):
+                    dict_fs = info.copy()
+                    del dict_fs['type']
+                    fs = dict_feature_selectors[info['type']](**dict_fs)
+                    self.feature_selector.append(fs)
+
+                if isinstance(info, FeatureSelector):
+                    self.feature_selector.append(info)
 
         # fit bootstrap patches
         self.fit_bootstrap_patches = fit_bootstrap_patches
@@ -116,12 +126,12 @@ class Land():
         check the feature selectors uniqueness.
         """
 
-        if isinstance(self.feature_selection, list):
-            feature_selection = self.feature_selection
+        if isinstance(self.feature_selector, list):
+            feature_selector = self.feature_selector
         else:
-            feature_selection = [self.feature_selection]
+            feature_selector = [self.feature_selector]
 
-        for fs in feature_selection:
+        for fs in feature_selector:
             if fs in feature_selectors and fs is not None:
                 raise (ValueError('The feature selection is already used. A new FeatureSelector must be invoked.'))
             feature_selectors.append(fs)
@@ -331,25 +341,25 @@ class Land():
 
         # FEATURE SELECTORS
         # if only one object, make a list
-        if isinstance(self.feature_selection, list):
-            feature_selection = self.feature_selection
-        elif self.feature_selection is None:
-            feature_selection = []
+        if isinstance(self.feature_selector, list):
+            feature_selector = self.feature_selector
+        elif self.feature_selector is None:
+            feature_selector = []
         else:
-            feature_selection = [self.feature_selection]
+            feature_selector = [self.feature_selector]
 
         # features_idx is used for boundaries parameters
         # it will be transformed as a X data
         # to get selected columns after all selectors.
         features_idx = np.arange(len(self.features))[None, :]
 
-        for fs in feature_selection:
+        for fs in feature_selector:
             if self.verbose > 0:
                 print('Feature selecting : ' + str(fs) + '...')
             # check the type
             if not isinstance(fs, FeatureSelector):
                 raise (TypeError(
-                    "Unexpected 'feature_selection' type. Should be 'FeatureSelector' or 'list(FeatureSelector)'"))
+                    "Unexpected 'feature_selector' type. Should be 'FeatureSelector' or 'list(FeatureSelector)'"))
             # fit and transform X
             X = fs.fit_transform(X=X)
 
@@ -360,7 +370,7 @@ class Land():
 
         features_idx = features_idx[0, :]
 
-        self._time_fit['feature_selection'] = time()-st
+        self._time_fit['feature_selector'] = time()-st
         st=time()
 
         # BOUNDARIES PARAMETERS
@@ -573,14 +583,14 @@ class Land():
 
         # FEATURES SELECTOR
         # if only one object, make a list
-        if isinstance(self.feature_selection, list):
-            feature_selection = self.feature_selection
-        elif self.feature_selection is None:
-            feature_selection = []
+        if isinstance(self.feature_selector, list):
+            feature_selector = self.feature_selector
+        elif self.feature_selector is None:
+            feature_selector = []
         else:
-            feature_selection = [self.feature_selection]
+            feature_selector = [self.feature_selector]
 
-        for fs in feature_selection:
+        for fs in feature_selector:
             # transform Y according to the fitting.
             Y = fs.transform(X=Y)
 

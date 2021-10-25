@@ -85,6 +85,11 @@ class Territory():
             density_estimators = region._check_density_estimators(density_estimators=density_estimators)
             feature_selectors = region._check_feature_selectors(feature_selectors=feature_selectors)
 
+    def get_region(self, label):
+        for region in self.regions:
+            if region.label == label:
+                return(region)
+
     def fit(self,
             lul_initial,
             lul_final,
@@ -113,6 +118,15 @@ class Territory():
 
         if masks is None:
             masks = {region: None for region in self.regions}
+
+        # convert keys if label strings
+        masks_region_keys = masks.copy()
+        for key, mask in masks.items():
+            if isinstance(key, str):
+                del masks_region_keys[key]
+                masks_region_keys[self.get_region(key)] = mask
+
+        masks = masks_region_keys
 
         distances_to_states = {}
 
@@ -200,7 +214,26 @@ class Territory():
         if masks is None:
             masks = {region: None for region in self.regions}
 
+        # convert keys if label strings
+        masks_region_keys = masks.copy()
+        for key, mask in masks.items():
+            if isinstance(key, str):
+                del masks_region_keys[key]
+                masks_region_keys[self.get_region(key)] = mask
+
+        masks = masks_region_keys
+
+        # same for transition_matrices
+        tms_copy = transition_matrices.copy()
+        for key, tm in transition_matrices.items():
+            if isinstance(key, str):
+                del tms_copy[key]
+                tms_copy[self.get_region(key)] = tm
+
+        transition_matrices = tms_copy
+
         distances_to_states = {}
+
 
         tp = {}
 
@@ -263,6 +296,24 @@ class Territory():
 
         if masks is None:
             masks = {region: None for region in self.regions}
+
+        # convert keys if label strings
+        masks_region_keys = masks.copy()
+        for key, mask in masks.items():
+            if isinstance(key, str):
+                del masks_region_keys[key]
+                masks_region_keys[self.get_region(key)] = mask
+
+        masks = masks_region_keys
+
+        # same for transition_matrices
+        tms_copy = transition_matrices.copy()
+        for key, tm in transition_matrices.items():
+            if isinstance(key, str):
+                del tms_copy[key]
+                tms_copy[self.get_region(key)] = tm
+
+        transition_matrices = tms_copy
 
         distances_to_states = {}
 
