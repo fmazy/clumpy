@@ -44,7 +44,7 @@ def make_default_territory(transition_matrices,
                 # if the transition is expected
                 if tm.get(state_u, state_v) > 0.0:
                     tpe.add_conditional_density_estimator(state=state_v,
-                                                          density_estimation=GKDE(n_jobs_predict=n_jobs_predict,
+                                                          density_estimator=GKDE(n_jobs_predict=n_jobs_predict,
                                                                                   n_predict_max=n_predict_max,
                                                                                   n_fit_max=n_fit_max,
                                                                                   verbose=verbose,
