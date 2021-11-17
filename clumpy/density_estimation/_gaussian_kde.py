@@ -423,17 +423,17 @@ class GKDE(DensityEstimator):
 
         return(correction)
 
-    def marginal(self,
-                 x,
-                 k):
-        X = np.random.random((x.size, self._d))
-        X[:, k] = x
-
-        if self.preprocessing != 'none':
-            X = self._preprocessor.transform(X)
-        x = X[:, k]
-
-        return(x)
+    # def marginal(self,
+    #              x,
+    #              k):
+    #     X = np.random.random((x.size, self._d))
+    #     X[:, k] = x
+    #
+    #     if self.preprocessing != 'none':
+    #         X = self._preprocessor.transform(X)
+    #     x = X[:, k]
+    #
+    #     return(x)
 
     def extract_marginal(self, k):
         # make list if necessary
@@ -485,8 +485,8 @@ class GKDE(DensityEstimator):
 
         return(marg_gkde)
 
-    def marginal2(self,
-                 x,
+    def marginal(self,
+                 n,
                  k):
         """
         Estimate the marginal probability.
@@ -503,9 +503,11 @@ class GKDE(DensityEstimator):
         f : ndarray of shape (n_samples,)
             The estimated marginal probabilities.
         """
-        
-        X = np.zeros((x.size, self._d))
-        X[:,k] = x
+
+        x_max = self._data[:,[k]].max() + self._h * self.support_factor
+        x_min = self._data[:, [k]].min() - self._h * self.support_factor
+
+        x = np.linspace(x_min, x_max, n)
         
         if self.preprocessing != 'none':
             X = self._preprocessor.transform(X)

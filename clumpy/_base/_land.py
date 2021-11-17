@@ -446,6 +446,8 @@ class Land():
         P_v = n_counts / n_counts.sum()
         P_v = P_v[None, :]
 
+        v_unique = v_unique.astype(int)
+
         palette_u = lul_initial.palette.extract(infos=[state])
         palette_v = lul_final.palette.extract(infos=v_unique)
 

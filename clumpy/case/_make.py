@@ -3,7 +3,7 @@ from .. import Region
 from .. import Land
 from ..transition_probability_estimation import Bayes
 from ..density_estimation import GKDE
-from ..allocation import Unbiased
+from ..allocation import Unbiased, UnbiasedMonoPixel
 from .. import feature_selection
 
 
@@ -17,6 +17,7 @@ def make_default_territory(transition_matrices,
                            P_v_min=0.0,
                            n_samples_min=1,
                            update_P_Y=False,
+                           allocation_method = 'unbiased',
                            n_allocation_try=10 ** 3,
                            fit_bootstrap_patches=True,
                            verbose=0):
@@ -52,9 +53,14 @@ def make_default_territory(transition_matrices,
                                                           P_v_min=P_v_min,
                                                           n_samples_min=n_samples_min)
 
-                allocator = Unbiased(update_P_Y=update_P_Y,
-                                     n_allocation_try=n_allocation_try,
-                                     verbose=verbose)
+                if allocation_method == 'unbiased':
+                    allocator = Unbiased(update_P_Y=update_P_Y,
+                                         n_allocation_try=n_allocation_try,
+                                         verbose=verbose,
+                                         verbose_heading_level=3)
+                elif allocation_method == 'unbiased_mono_pixel':
+                    allocator = UnbiasedMonoPixel(verbose=verbose,
+                                                  verbose_heading_level=3)
 
                 # features
                 # distance to the studied state_u are removed

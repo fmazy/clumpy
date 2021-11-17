@@ -254,8 +254,7 @@ class Territory():
         if self.verbose > 0:
             print('Territory transition probabilities estimation done.\n')
 
-        if path_prefix is None:
-            return (tp)
+        return (tp)
 
     def allocate(self,
                  transition_matrices,
