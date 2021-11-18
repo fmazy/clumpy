@@ -31,6 +31,11 @@ def _gaussian(x):
 
 def _compute_gaussian_kde(nn, X, h, support_factor, i=None, n_steps=None, verbose=0):
     distances, neighbors_id = nn.radius_neighbors(X, radius=h * support_factor, return_distance=True)
+
+    # ici on pourrait mettre de quoi vérifier si il y a assez de voisins
+    # pour faire l'estimation.
+    # avec un parametre n_min_neighbors
+    #
     
     if i is not None and n_steps is not None and verbose>0:
         restart_line()
