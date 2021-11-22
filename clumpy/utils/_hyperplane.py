@@ -38,7 +38,7 @@ class Hyperplane():
         
         return(self)
     
-    def distance(self, X):
+    def distance(self, X, p=2):
         """
         Computes the distance to the hyperplane according to the formula :
         
@@ -57,6 +57,6 @@ class Hyperplane():
         
 
         """
-        dist = np.abs(np.dot(X, self.w) + self.b) / np.linalg.norm(self.w)
+        dist = np.abs(np.dot(X, self.w) + self.b) / np.linalg.norm(self.w, ord=p)
         
         return(dist)

@@ -11,12 +11,12 @@ from sklearn.neighbors import NearestNeighbors
 from scipy.special import erf
 from multiprocessing import Pool
 from matplotlib import pyplot as plt
-from sklearn.preprocessing import StandardScaler
+
 from tqdm import tqdm
 
 from . import bandwidth_selection
 from ._density_estimator import DensityEstimator
-from ._whitening_transformer import _WhiteningTransformer
+
 from ..utils._hyperplane import Hyperplane
 from ..tools._console import title_heading
 
@@ -197,50 +197,13 @@ class GKDE(DensityEstimator):
                 print('n_fit_max overshoot. Random sampling done.')
 
         # preprocessing
-        if self.preprocessing == 'standard':
-            self._preprocessor = StandardScaler()
-            self._data = self._preprocessor.fit_transform(X)
-        
-        elif self.preprocessing == 'whitening':
-            self._preprocessor = _WhiteningTransformer()
-            self._data = self._preprocessor.fit_transform(X)
-        
-        else:
-            self._data = X
+        self._set_data(X)
 
         if self.verbose > 0:
             print('Preprocessing done.')
-        
-        # get data dimensions
-        self._n = self._data.shape[0]
-        self._d = self._data.shape[1]
-        
+
         # BOUNDARIES INFORMATIONS
-        # low bounds
-        if self.low_bounds is None or len(self.low_bounds) != len(self.low_bounded_features):
-            raise(ValueError("unexpected low bounds value"))
-        
-        self._low_bounds_hyperplanes = []
-        for id_k, k in enumerate(self.low_bounded_features):
-            A = np.diag(np.ones(self._d))
-            A[:,k] = self.low_bounds[id_k]
-
-            A_wt = self._preprocessor.transform(A)
-            
-            self._low_bounds_hyperplanes.append(Hyperplane().set_by_points(A_wt))
-
-        # high bounds
-        if self.high_bounds is None or len(self.high_bounds) != len(self.high_bounded_features):
-            raise(ValueError("unexpected low bounds value"))
-        
-        self._high_bounds_hyperplanes = []
-        for id_k, k in enumerate(self.high_bounded_features):
-            A = np.diag(np.ones(self._d))
-            A[:,k] = self.high_bounds[id_k]
-            
-            A_wt = self._preprocessor.transform(A)
-            
-            self._high_bounds_hyperplanes.append(Hyperplane().set_by_points(A_wt))
+        self._set_boundaries()
             
         if self.verbose > 0:
             print('Boundaries initialization done.')
@@ -324,10 +287,7 @@ class GKDE(DensityEstimator):
         id_out_of_high_bounds = np.any(X[:, self.high_bounded_features] > self.high_bounds, axis=1)
         
         if self.preprocessing != 'none':
-            print('preprocessor !')
-            print(X.mean())
             X = self._preprocessor.transform(X)
-            print(X.mean())
 
         # STEPS INITIALIZATION
         # requested elements are not estimated alltogether in order to
@@ -401,7 +361,7 @@ class GKDE(DensityEstimator):
 
             f = f * self._n / new_n
 
-            min_value = 1 / new_n / self._normalization * _gaussian(0)
+            min_value = 1 / new_n * self._normalization * _gaussian(0)
             f[f == 0.0] = min_value
 
             # Warning flag

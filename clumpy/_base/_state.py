@@ -63,6 +63,10 @@ class Palette():
     def __len__(self):
         return (len(self.states))
 
+    def copy(self):
+        palette = Palette(states = [state for state in self.states])
+        return(palette)
+
     def add(self, state):
         """
         Append a state to the palette's states.
