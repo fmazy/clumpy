@@ -95,7 +95,6 @@ class ASHBayes(TransitionProbabilityEstimator):
 
         # create a digitization for each shift
         self._digitizers = []
-        # self._histograms = []
 
         self._histograms_v = []
 
@@ -111,48 +110,18 @@ class ASHBayes(TransitionProbabilityEstimator):
             else:
                 id_transited = np.ones(V.size).astype(bool)
 
-            # uniques_u, inverse_u, counts_u = np.unique(X_digitized,
-            #                                      axis=0,
-            #                                      return_counts=True,
-            #                                      return_inverse=True)
             df = pd.DataFrame(X_digitized[id_transited])
-            # df['V'] = V[id_transited]
-            # df_uniques = df.groupby(by=df.columns.to_list()).size().reset_index(name='P_X__v')
-
-            # df = df.merge(df_uniques, how='left')
-
-            # sparse_shape = [bins.size + 1 for bins in self._digitizers[i_shift]._bins]
-
-            # on ne calibre pas encore Y !
-            # ici on ne s'intéresse qu'aux X_v
-            # self._histograms.append(sparse.COO(coords=uniques_u.T,
-            #                                    data=counts_u / self._n,
-            #                                    shape=sparse_shape))
 
             df_histograms = pd.DataFrame(columns=[k for k in range(self._d)])
 
             for state_v in self.palette_v:
-                # J_v = V == state_v.value
-                # inverse_u_v = inverse_u[J_v]
-                # uniques_inverse_u_v, counts_uniques_inverse_u_v = np.unique(inverse_u_v, return_counts=True)
-                #
-                # coords = uniques_u[uniques_inverse_u_v]
-                # data = counts_uniques_inverse_u_v / counts_uniques_inverse_u_v.sum()
-
-                # df_uniques__v = df_uniques.loc[df_uniques.V == state_v.value]
-                # coords = df_uniques__v[[k for k in range(self._d)]].values
-                # data = df_uniques__v.counts.values / df_uniques__v.counts.sum()
-
-                # self._histograms_v[state_v].append(sparse.COO(coords = coords.T,
-                #                                               data = data,
-                #                                               shape = sparse_shape))
                 if state_v.value != state.value:
                     id_v = V[id_transited]==state_v.value
                     df_uniques_v = df.loc[id_v].groupby(by=df.columns.to_list()).size().reset_index(name='P_X__v'+str(state_v.value))
                     df_uniques_v['P_X__v'+str(state_v.value)] /= df_uniques_v['P_X__v'+str(state_v.value)].sum()
 
                     df_histograms = df_histograms.merge(df_uniques_v, how='outer')
-                # df_uniques.loc[df_uniques__v_loc, 'P_X__v'] /= df_uniques.loc[df_uniques__v_loc].P_X__v.sum()
+
             df_histograms.fillna(value=0.0, inplace=True)
             self._histograms_v.append(df_histograms)
 
@@ -171,11 +140,6 @@ class ASHBayes(TransitionProbabilityEstimator):
         for i_shift in tqdm(range(self.q)):
             Y_digitized = self._digitizers[i_shift].transform(Y)
 
-            # uniques, inverse_indices, counts = np.unique(Y_digitized,
-            #                                              axis=0,
-            #                                              return_inverse=True,
-            #                                              return_counts=True)
-
             df = pd.DataFrame(Y_digitized)
             df_uniques = df.groupby(by=df.columns.to_list()).size().reset_index(name='P_Y')
             df_uniques['P_Y'] /= m
@@ -184,39 +148,20 @@ class ASHBayes(TransitionProbabilityEstimator):
             df = df.merge(self._histograms_v[i_shift], how='left')
             df.fillna(value=0.0, inplace=True)
 
-            if i_shift == 0:
-                print(df)
-
             P_Y += df.P_Y.values
             for id_v, state_v in enumerate(transition_matrix.palette_v):
                 if state_v in self.palette_v and state_v.value != state_u.value:
-                    P_Y__v[:, id_v] = df['P_X__v'+str(state_v.value)].values
-
-            # df['i'] = df.index.values
-            # df_v = df.merge(self._histograms_v[i_shift], how='right')
-
-            # for id_v, state_v in enumerate(transition_matrix.palette_v):
-            #     if state_v in self.palette_v and state_v.value != state_u.value:
-            #         df_v = df.merge(self._histograms_v[i_shift].loc[self._histograms_v[i_shift].V == state_v.value],
-            #                         how='left')
-            #         df_v.fillna(value=0.0, inplace=True)
-            #         P_Y__v[:,id_v] += df_v.P_X__v.values
-
-            # uniques = tuple(U for U in uniques.T)
-            #
-            # P_Y += counts[inverse_indices] / m
-            #
-            # for id_v, state_v in enumerate(transition_matrix.palette_v):
-            #     if state_v in self.palette_v and state_v.value != state_u.value:
-            #         P_Y__v[:,id_v] += self._histograms_v[state_v][i_shift][uniques].todense()[inverse_indices]
+                    P_Y__v[:, id_v] += df['P_X__v'+str(state_v.value)].values
 
         # Normalization
         P_Y *= self._normalization / self.q
+        # P_Y /= np.product(self._wt.scale_)
         P_Y = P_Y[:,None]
 
         print('#null values ', np.sum(P_Y==0))
 
         P_Y__v *= self._normalization / self.q
+        # P_Y__v /= np.product(self._wt.scale_)
 
         return(P_Y, P_Y__v)
 
