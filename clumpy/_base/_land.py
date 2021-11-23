@@ -401,6 +401,7 @@ class Land():
         st = time()
         self.transition_probability_estimator.fit(X=X,
                                                   V=V,
+                                                  state = state,
                                                   low_bounded_features=low_bounded_features,
                                                   high_bounded_features=high_bounded_features,
                                                   low_bounds=low_bounds,

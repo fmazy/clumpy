@@ -125,6 +125,7 @@ class Bayes(TransitionProbabilityEstimator):
     def fit(self,
             X,
             V,
+            state=None,
             low_bounded_features=[],
             high_bounded_features=[],
             low_bounds=[],
