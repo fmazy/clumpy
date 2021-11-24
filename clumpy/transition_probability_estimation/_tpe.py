@@ -45,6 +45,7 @@ class TransitionProbabilityEstimator():
     def transition_probability(self,
                                transition_matrix,
                                Y,
+                               J=None,
                                id_J=None,
                                compute_P_Y__v=True,
                                compute_P_Y = True,
@@ -77,21 +78,24 @@ class TransitionProbabilityEstimator():
         if self.verbose > 0:
             print(title_heading(self.verbose_heading_level) + 'TPE computing')
 
-        if '_compute_all' not in dir(self):
+        if '_compute_all' in dir(self) and compute_P_Y and compute_P_Y__v:
+            P_Y, P_Y__v = self._compute_all(Y=Y[id_J],
+                                            transition_matrix=transition_matrix)
+        else:
             # P(Y) estimation
             if compute_P_Y:
-                P_Y = self._compute_P_Y(Y=Y[id_J])
+                P_Y = self._compute_P_Y(Y=Y[id_J],
+                                        J=J[id_J])
             else:
                 P_Y = self.P_Y[id_J]
 
             # P(Y|v) estimation
             if compute_P_Y__v:
-                P_Y__v = self._compute_P_Y__v(Y=Y[id_J], transition_matrix=transition_matrix)
+                P_Y__v = self._compute_P_Y__v(Y=Y[id_J],
+                                              transition_matrix=transition_matrix,
+                                              J=J[id_J])
             else:
                 P_Y__v = self.P_Y__v[id_J]
-        else:
-            P_Y, P_Y__v = self._compute_all(Y=Y[id_J],
-                                            transition_matrix=transition_matrix)
 
         # BAYES ADJUSTMENT PROCESS
         P_v__Y = self._bayes_adjustment(P_Y__v=P_Y__v,

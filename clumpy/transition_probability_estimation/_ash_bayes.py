@@ -4,7 +4,7 @@ from ..density_estimation import ASH
 from ..density_estimation import bandwidth_selection
 from ..density_estimation._whitening_transformer import _WhiteningTransformer
 from tqdm import tqdm
-import sparse
+# import sparse
 import numpy as np
 
 import pandas as pd
@@ -156,15 +156,75 @@ class ASHBayes(TransitionProbabilityEstimator):
         # Normalization
         P_Y *= self._normalization / self.q
         # P_Y /= np.product(self._wt.scale_)
+        # WT scale and boundaries corrections are unnecessary
+        # because in fine, P_Y__v is divided by P_Y and they share the same
+        # bandwidth h.
         P_Y = P_Y[:,None]
-
-        print('#null values ', np.sum(P_Y==0))
 
         P_Y__v *= self._normalization / self.q
         # P_Y__v /= np.product(self._wt.scale_)
 
         return(P_Y, P_Y__v)
 
+    def _compute_P_Y(self, Y, J=None):
+
+        Y = self._wt.transform(Y)
+
+        m = Y.shape[0]
+
+        P_Y = np.zeros(Y.shape[0])
+
+        for i_shift in tqdm(range(self.q)):
+            Y_digitized = self._digitizers[i_shift].transform(Y)
+
+            df = pd.DataFrame(Y_digitized)
+            df_uniques = df.groupby(by=df.columns.to_list()).size().reset_index(name='P_Y')
+            df_uniques['P_Y'] /= m
+
+            df = df.merge(df_uniques, how='left')
+            df = df.merge(self._histograms_v[i_shift], how='left')
+            df.fillna(value=0.0, inplace=True)
+
+            P_Y += df.P_Y.values
+
+        # Normalization
+        P_Y *= self._normalization / self.q
+        # P_Y /= np.product(self._wt.scale_)
+        # WT scale and boundaries corrections are unnecessary
+        # because in fine, P_Y__v is divided by P_Y and they share the same
+        # bandwidth h.
+        P_Y = P_Y[:,None]
+
+        return(P_Y)
+
+    def _compute_P_Y__v(self, Y, transition_matrix, J=None):
+        state_u = transition_matrix.palette_u.states[0]
+
+        Y = self._wt.transform(Y)
+
+        P_Y__v = np.zeros((Y.shape[0], len(transition_matrix.palette_v)))
+
+        for i_shift in tqdm(range(self.q)):
+            Y_digitized = self._digitizers[i_shift].transform(Y)
+
+            df = pd.DataFrame(Y_digitized)
+
+            df = df.merge(self._histograms_v[i_shift], how='left')
+            df.fillna(value=0.0, inplace=True)
+
+            for id_v, state_v in enumerate(transition_matrix.palette_v):
+                if state_v in self.palette_v and state_v.value != state_u.value:
+                    P_Y__v[:, id_v] += df['P_X__v' + str(state_v.value)].values
+
+        # Normalization
+        # WT scale and boundaries corrections are unnecessary
+        # because in fine, P_Y__v is divided by P_Y and they share the same
+        # bandwidth h.
+
+        P_Y__v *= self._normalization / self.q
+        # P_Y__v /= np.product(self._wt.scale_)
+
+        return (P_Y__v)
 
     def _check(self, density_estimators=[]):
         return (density_estimators)

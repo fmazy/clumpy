@@ -5,5 +5,5 @@ tqdm
 scikit-learn
 tifffile
 imbalanced-learn
-rasterio
+rasterio==1.1.8
 ghalton

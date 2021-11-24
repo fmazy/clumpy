@@ -602,6 +602,7 @@ class Land():
         P_v__u_Y = self.transition_probability_estimator.transition_probability(
             transition_matrix=transition_matrix,
             Y=Y,
+            J=J_allocation,
             compute_P_Y__v=True,
             compute_P_Y=True,
             save_P_Y__v=save_P_Y__v,

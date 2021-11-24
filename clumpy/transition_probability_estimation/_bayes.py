@@ -190,7 +190,7 @@ class Bayes(TransitionProbabilityEstimator):
 
         return (self)
 
-    def _compute_P_Y(self, Y):
+    def _compute_P_Y(self, Y, J=None):
         # forbid_null_value is forced to True by default for this density estimator
         self.density_estimator.set_params(forbid_null_value=True)
 
@@ -209,7 +209,7 @@ class Bayes(TransitionProbabilityEstimator):
 
         return (P_Y)
 
-    def _compute_P_Y__v(self, Y, transition_matrix):
+    def _compute_P_Y__v(self, Y, transition_matrix, J=None):
         state_u = transition_matrix.palette_u.states[0]
 
         # first, create a list of estimators according to palette_v order

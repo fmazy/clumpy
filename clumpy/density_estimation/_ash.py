@@ -1,6 +1,7 @@
 import numpy as np
 from tqdm import tqdm
-import sparse
+# import sparse
+import pandas as pd
 
 from ._density_estimator import DensityEstimator
 from . import bandwidth_selection
@@ -94,15 +95,13 @@ class ASH(DensityEstimator):
         for i_shift in tqdm(range(self.q)):
             self._digitizers.append(Digitize(dx=self._h,
                                              shift=self._h / self.q * i_shift))
-            self._digitizers[i_shift].fit(self._data)
+            X_digitized = self._digitizers[i_shift].fit_transform(self._data)
 
-            uniques, nb = np.unique(self._digitizers[i_shift].transform(self._data),
-                                    axis=0,
-                                    return_counts=True)
+            df = pd.DataFrame(X_digitized)
+            df_uniques = df.groupby(by=df.columns.to_list()).size().reset_index(name='P')
+            df_uniques['P'] /= self._n
 
-            self._histograms.append(sparse.COO(coords=uniques.T,
-                                               data = nb / self._n,
-                                               shape=[bins.size + 1 for bins in self._digitizers[i_shift]._bins]))
+            self._histograms.append(df_uniques)
 
         return(self)
 
@@ -120,10 +119,11 @@ class ASH(DensityEstimator):
         for i_shift in tqdm(range(self.q)):
             X_digitized = self._digitizers[i_shift].transform(X)
 
-            uniques, inverse_indices = np.unique(X_digitized, axis=0, return_inverse=True)
-            uniques = tuple(U for U in uniques.T)
+            df = pd.DataFrame(X_digitized)
+            df = df.merge(self._histograms[i_shift], how='left')
+            df.fillna(value=0.0, inplace=True)
 
-            f += self._histograms[i_shift][uniques].todense()[inverse_indices]
+            f += df.P.values
 
         # Normalization
         f *= self._normalization / self.q
