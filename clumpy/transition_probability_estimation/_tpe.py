@@ -72,6 +72,10 @@ class TransitionProbabilityEstimator():
         if id_J is None:
             id_J = np.ones(Y.shape[0]).astype(bool)
 
+        J_id_J = None
+        if J is not None:
+            J_id_J = J[id_J]
+
         # check if it is really a land transition matrix
         transition_matrix._check_land_transition_matrix()
 
@@ -85,7 +89,7 @@ class TransitionProbabilityEstimator():
             # P(Y) estimation
             if compute_P_Y:
                 P_Y = self._compute_P_Y(Y=Y[id_J],
-                                        J=J[id_J])
+                                        J=J_id_J)
             else:
                 P_Y = self.P_Y[id_J]
 
@@ -93,7 +97,7 @@ class TransitionProbabilityEstimator():
             if compute_P_Y__v:
                 P_Y__v = self._compute_P_Y__v(Y=Y[id_J],
                                               transition_matrix=transition_matrix,
-                                              J=J[id_J])
+                                              J=J_id_J)
             else:
                 P_Y__v = self.P_Y__v[id_J]
 
