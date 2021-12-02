@@ -31,11 +31,24 @@ class Digitize():
 
         return (self.transform(X))
 
+    def inverse_transform(self, X_digitized):
+        X = np.zeros(X_digitized.shape)
+        for k in range(self._d):
+            X[:,k] = self._bins[k][0] + (X_digitized[:,k] - 0.5) * self.dx
+        return(X)
+
+def box(X, h):
+    dist = np.linalg.norm(X, axis=1, ord=np.inf)
+    s = np.zeros(X.shape[0])
+    s[dist <= h] = 1
+    s *= 1 / 2 ** X.shape[1]
+    return(s)
 
 class ASH(DensityEstimator):
     def __init__(self,
                  h='scott',
                  q=10,
+                 n_mc = 10000,
                  low_bounded_features=[],
                  high_bounded_features=[],
                  low_bounds=[],
@@ -57,6 +70,7 @@ class ASH(DensityEstimator):
         self.h = h
         self._h = None
         self.q = q
+        self.n_mc = n_mc
 
     def __repr__(self):
         if self._h is None:
@@ -78,6 +92,7 @@ class ASH(DensityEstimator):
         elif type(self.h) is str:
             if self.h == 'scott' or self.h == 'silverman':
                 self._h = 2.576 * bandwidth_selection.scotts_rule(X)
+                # self._h = bandwidth_selection.scotts_rule(X)
             else:
                 raise (ValueError("Unexpected bandwidth selection method."))
         else:
@@ -92,6 +107,13 @@ class ASH(DensityEstimator):
         # create a digitization for each shift
         self._digitizers = []
         self._histograms = []
+        # self._correction = []
+        # self._uniques_inverse = []
+        np.random.seed(42)
+        X_mc = np.random.random((self.n_mc, self._d)) * self._h - self._h / 2
+
+        V_all = self._h ** self._d
+
         for i_shift in tqdm(range(self.q)):
             self._digitizers.append(Digitize(dx=self._h,
                                              shift=self._h / self.q * i_shift))
@@ -100,6 +122,38 @@ class ASH(DensityEstimator):
             df = pd.DataFrame(X_digitized)
             df_uniques = df.groupby(by=df.columns.to_list()).size().reset_index(name='P')
             df_uniques['P'] /= self._n
+
+            # BOUNDARIES CORRECTION
+
+
+            # which cells are concerned ?
+            # only close enough to the hyperplanes cells
+            # are kept
+            # first get cells centers
+            centers = self._digitizers[i_shift].inverse_transform(df_uniques[df.columns.to_list()].values)
+
+            # then get all close enough centers
+            centers_to_keep = np.zeros(centers.shape[0]).astype(bool)
+            for hyp in self._low_bounds_hyperplanes:
+                dist = hyp.distance(centers,p=np.inf)
+                centers_to_keep = np.bitwise_or(centers_to_keep, dist<=self._h)
+
+            # for each center C
+            I = np.ones(centers_to_keep.sum())
+            for id_C, C in enumerate(centers[centers_to_keep]):
+                # montecarlo around the center C
+                X_mc_kept = C + X_mc.copy()
+                # only elements inside the studied space are kept
+                for hyp in self._low_bounds_hyperplanes:
+                    X_mc_kept = X_mc_kept[hyp.side(X_mc_kept, self._data[0])]
+                # the correction is equal to the ratio of kept elements
+                I[id_C] = X_mc_kept.shape[0] / self.n_mc
+
+            # security no division by 0
+            I[I == 0] = 1 / self.n_mc
+
+            # edit the histogram with the correction
+            df_uniques.loc[centers_to_keep, 'P'] /= I
 
             self._histograms.append(df_uniques)
 
@@ -127,12 +181,6 @@ class ASH(DensityEstimator):
 
         # Normalization
         f *= self._normalization / self.q
-
-        # boundary bias correction
-        if self.verbose > 0:
-            print(title_heading(self.verbose_heading_level) + 'Boundary bias correction...')
-
-        f /= self._boundary_correction(X, self._h)
 
         # outside bounds : equal to 0
         f[id_out_of_low_bounds] = 0

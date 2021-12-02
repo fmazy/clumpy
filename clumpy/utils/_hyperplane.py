@@ -60,3 +60,16 @@ class Hyperplane():
         dist = np.abs(np.dot(X, self.w) + self.b) / np.linalg.norm(self.w, ord=p)
         
         return(dist)
+
+    def side(self, X, P):
+        norm_P = np.dot(P[None,:], self.w) + self.b
+
+        if norm_P == 0:
+            raise(ValueError("P should not belongs to the hyperplane."))
+
+        norm_vec = np.dot(X, self.w) + self.b
+
+        if norm_P < 0:
+            norm_vec = - norm_vec
+
+        return(norm_vec>0)
