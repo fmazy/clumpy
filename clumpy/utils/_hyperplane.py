@@ -12,6 +12,13 @@ class Hyperplane():
     """
     Hyperplane object. Used for boundary bias correction within the GKDE method.
     """
+    def __init__(self,
+                 w=None,
+                 b=None,
+                 positive_side_scalar=1):
+        self.w = w
+        self.b = b
+        self.positive_side_scalar = positive_side_scalar
     
     def set_by_points(self, A):
         """
@@ -61,15 +68,19 @@ class Hyperplane():
         
         return(dist)
 
-    def side(self, X, P):
-        norm_P = np.dot(P[None,:], self.w) + self.b
+    def set_positive_side(self, P):
+        norm_P = np.dot(P[None, :], self.w) + self.b
 
         if norm_P == 0:
             raise(ValueError("P should not belongs to the hyperplane."))
 
-        norm_vec = np.dot(X, self.w) + self.b
+        if norm_P > 0:
+            self.positive_side_scalar = 1
+        else:
+            self.positive_side_scalar = -1
 
-        if norm_P < 0:
-            norm_vec = - norm_vec
+    def side(self, X):
+        norm_vec = np.dot(X, self.w) + self.b
+        norm_vec *= self.positive_side_scalar
 
         return(norm_vec>0)

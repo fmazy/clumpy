@@ -137,7 +137,8 @@ class GKDE(DensityEstimator):
                  verbose=0,
                  verbose_heading_level=1):
         
-        super().__init__(low_bounded_features=low_bounded_features,
+        super().__init__(bounds=[],
+                         low_bounded_features=low_bounded_features,
                          high_bounded_features=high_bounded_features,
                          low_bounds = low_bounds,
                          high_bounds = high_bounds,

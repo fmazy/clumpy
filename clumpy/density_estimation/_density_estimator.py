@@ -12,9 +12,11 @@ from sklearn.base import BaseEstimator
 
 from ._whitening_transformer import _WhiteningTransformer
 from ..utils._hyperplane import Hyperplane
+from ..tools._console import title_heading
 
 class DensityEstimator(BaseEstimator):
     def __init__(self,
+                 bounds = [],
                  low_bounded_features=[],
                  high_bounded_features=[],
                  low_bounds=[],
@@ -22,10 +24,12 @@ class DensityEstimator(BaseEstimator):
                  forbid_null_value=False,
                  verbose=0,
                  verbose_heading_level=1):
-        self.low_bounded_features = low_bounded_features
-        self.high_bounded_features = high_bounded_features
-        self.low_bounds = low_bounds
-        self.high_bounds = high_bounds
+
+        self.bounds = bounds
+        if len(self.bounds) == 0:
+            self.bounds = [(low_bounded_features[i], low_bounds[i]) for i in range(len(low_bounded_features))]
+            self.bounds += [(high_bounded_features[i], high_bounds[i]) for i in range(len(high_bounded_features))]
+
         self.forbid_null_value = forbid_null_value
         self.verbose = verbose
         self.verbose_heading_level = verbose_heading_level
@@ -50,31 +54,54 @@ class DensityEstimator(BaseEstimator):
         self._d = self._data.shape[1]
 
     def _set_boundaries(self):
-        # low bounds
-        if self.low_bounds is None or len(self.low_bounds) != len(self.low_bounded_features):
-            raise (ValueError("unexpected low bounds value"))
+        self._bounds_hyperplanes = []
+        self._low_bound_trigger = []
+        P_wt = self._data[0]
+        P = self._preprocessor.inverse_transform(P_wt[None,:])[0]
 
-        self._low_bounds_hyperplanes = []
-        for id_k, k in enumerate(self.low_bounded_features):
+        for k, value in self.bounds:
             A = np.diag(np.ones(self._d))
-            A[:, k] = self.low_bounds[id_k]
+            A[:, k] = value
 
             A_wt = self._preprocessor.transform(A)
 
-            self._low_bounds_hyperplanes.append(Hyperplane().set_by_points(A_wt))
+            hyp = Hyperplane().set_by_points(A_wt)
+            hyp.set_positive_side(P_wt)
+            self._bounds_hyperplanes.append(hyp)
 
-        # high bounds
-        if self.high_bounds is None or len(self.high_bounds) != len(self.high_bounded_features):
-            raise (ValueError("unexpected low bounds value"))
+            if P[k] >= value:
+                self._low_bound_trigger.append(True)
+            else:
+                self._low_bound_trigger.append(False)
 
-        self._high_bounds_hyperplanes = []
-        for id_k, k in enumerate(self.high_bounded_features):
-            A = np.diag(np.ones(self._d))
-            A[:, k] = self.high_bounds[id_k]
+    def _forbid_null_values_process(self, f):
+        if self.verbose > 0:
+            print(title_heading(self.verbose_heading_level) + 'Null value correction...')
+        idx = f == 0.0
 
-            A_wt = self._preprocessor.transform(A)
+        m_0 = idx.sum()
 
-            self._high_bounds_hyperplanes.append(Hyperplane().set_by_points(A_wt))
+        new_n = self._n + m_0
+
+        f = f * self._n / new_n
+
+        min_value = 1 / new_n * self._normalization * 1
+        f[f == 0.0] = min_value
+
+        # Warning flag
+        # check the relative number of corrected probabilities
+        if self.verbose > 0:
+            print('m_0 = ' + str(m_0) + ', m = ' + str(self._n) + ', m_0 / m = ' + str(
+                np.round(m_0 / self._n, 4)))
+
+        # warning flag
+        if m_0 / self._n > 0.01:
+            print('WARNING : m_0/m > 0.01. The parameter `n_fit_max` should be higher.')
+
+        if self.verbose > 0:
+            print('Null value correction done for ' + str(m_0) + ' elements.')
+
+        return(f)
 
     def set_params(self, **params):
         """

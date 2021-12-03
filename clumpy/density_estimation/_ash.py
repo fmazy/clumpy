@@ -1,13 +1,18 @@
 import numpy as np
 from tqdm import tqdm
 # import sparse
+# from ghalton import Halton
+# import sobol
 import pandas as pd
+from multiprocessing import Pool
 
 from ._density_estimator import DensityEstimator
 from . import bandwidth_selection
-from ..tools._console import title_heading
 
-class Digitize():
+from ..utils._hyperplane import Hyperplane
+
+
+class Digitizer():
     def __init__(self, dx, shift=0):
         self.dx = dx
         self.shift = shift
@@ -49,19 +54,15 @@ class ASH(DensityEstimator):
                  h='scott',
                  q=10,
                  n_mc = 10000,
-                 low_bounded_features=[],
-                 high_bounded_features=[],
-                 low_bounds=[],
-                 high_bounds=[],
+                 mc_seed = None,
+                 bounds = [],
                  preprocessing='whitening',
                  forbid_null_value=False,
+                 n_jobs = 1,
                  verbose=0,
                  verbose_heading_level=1):
 
-        super().__init__(low_bounded_features=low_bounded_features,
-                         high_bounded_features=high_bounded_features,
-                         low_bounds=low_bounds,
-                         high_bounds=high_bounds,
+        super().__init__(bounds = bounds,
                          forbid_null_value=forbid_null_value,
                          verbose=verbose,
                          verbose_heading_level=verbose_heading_level)
@@ -71,6 +72,8 @@ class ASH(DensityEstimator):
         self._h = None
         self.q = q
         self.n_mc = n_mc
+        self.mc_seed = mc_seed
+        self.n_jobs = n_jobs
 
     def __repr__(self):
         if self._h is None:
@@ -91,6 +94,9 @@ class ASH(DensityEstimator):
 
         elif type(self.h) is str:
             if self.h == 'scott' or self.h == 'silverman':
+                # the scott rule is based on gaussian kernel
+                # the support of the gaussian kernel to have 99%
+                # of the density is 2.576
                 self._h = 2.576 * bandwidth_selection.scotts_rule(X)
                 # self._h = bandwidth_selection.scotts_rule(X)
             else:
@@ -107,63 +113,68 @@ class ASH(DensityEstimator):
         # create a digitization for each shift
         self._digitizers = []
         self._histograms = []
-        # self._correction = []
-        # self._uniques_inverse = []
-        np.random.seed(42)
-        X_mc = np.random.random((self.n_mc, self._d)) * self._h - self._h / 2
 
-        V_all = self._h ** self._d
+        # Random Monte Carlo
+        if len(self.bounds) > 0:
+            np.random.seed(self.mc_seed)
+            X_mc = np.random.random((self.n_mc, self._d)) * self._h - self._h / 2
+            np.random.seed(None)
 
-        for i_shift in tqdm(range(self.q)):
-            self._digitizers.append(Digitize(dx=self._h,
-                                             shift=self._h / self.q * i_shift))
-            X_digitized = self._digitizers[i_shift].fit_transform(self._data)
+        # pfiou, tenter de paralléliser est un échec.
+        # peut etre que la fonction est trop grosse.
+        # peut etre que Pandas est incompatible
+        # peut etre ne paraléliser uniquement que le calcul de la correction de bords...
+        # en tout cas il faudrait revenir à un code plus propre !
 
-            df = pd.DataFrame(X_digitized)
-            df_uniques = df.groupby(by=df.columns.to_list()).size().reset_index(name='P')
-            df_uniques['P'] /= self._n
-
-            # BOUNDARIES CORRECTION
+        pool = Pool(self.n_jobs)
 
 
-            # which cells are concerned ?
-            # only close enough to the hyperplanes cells
-            # are kept
-            # first get cells centers
-            centers = self._digitizers[i_shift].inverse_transform(df_uniques[df.columns.to_list()].values)
 
-            # then get all close enough centers
-            centers_to_keep = np.zeros(centers.shape[0]).astype(bool)
-            for hyp in self._low_bounds_hyperplanes:
-                dist = hyp.distance(centers,p=np.inf)
-                centers_to_keep = np.bitwise_or(centers_to_keep, dist<=self._h)
 
-            # for each center C
-            I = np.ones(centers_to_keep.sum())
-            for id_C, C in enumerate(centers[centers_to_keep]):
-                # montecarlo around the center C
-                X_mc_kept = C + X_mc.copy()
-                # only elements inside the studied space are kept
-                for hyp in self._low_bounds_hyperplanes:
-                    X_mc_kept = X_mc_kept[hyp.side(X_mc_kept, self._data[0])]
-                # the correction is equal to the ratio of kept elements
-                I[id_C] = X_mc_kept.shape[0] / self.n_mc
+        bounds_hyperplanes_params = [(hyp.w, hyp.b, hyp.positive_side_scalar) for hyp in self._bounds_hyperplanes]
 
-            # security no division by 0
-            I[I == 0] = 1 / self.n_mc
+        # self._histograms = pool.starmap_async(_fit_histogram, [(self._data,
+        #                                                   self._n,
+        #                                                   self._h,
+        #                                                   self.q,
+        #                                                   i_shift,
+        #                                                   X_mc,
+        #                                                   bounds_hyperplanes_params) for i_shift in range(self.q)]).get()
 
-            # edit the histogram with the correction
-            df_uniques.loc[centers_to_keep, 'P'] /= I
+        args_iter = [(self._data,
+                      self._n,
+                      self._h,
+                      self.q,
+                      i_shift,
+                      X_mc,
+                      bounds_hyperplanes_params) for i_shift in range(self.q)]
 
-            self._histograms.append(df_uniques)
+        self._histograms = pool.map_async(
+                                            _fit_histogram,
+                                            iterable=args_iter,
+                                            chunksize=self.n_jobs
+                                        ).get()
+
+        # self._histograms = [
+        #     _fit_histogram(self._data, self._n, self._h, self.q, i_shift, X_mc, bounds_hyperplanes_params) for i_shift in
+        #     range(self.q)]
 
         return(self)
+
 
     def predict(self, X):
         # get indices outside bounds
         # it will be use to cut off the result later
-        id_out_of_low_bounds = np.any(X[:, self.low_bounded_features] < self.low_bounds, axis=1)
-        id_out_of_high_bounds = np.any(X[:, self.high_bounded_features] > self.high_bounds, axis=1)
+        bounds_array = np.array(self.bounds)
+        low_bound_trigger = np.array(self._low_bound_trigger)
+        low_bounded_features = [int(k) for k, v  in bounds_array[low_bound_trigger]]
+        low_bounds = [v for k, v in bounds_array[low_bound_trigger]]
+
+        high_bounded_features = [int(k) for k, v in bounds_array[~low_bound_trigger]]
+        high_bounds = [v for k, v in bounds_array[~low_bound_trigger]]
+
+        id_out_of_low_bounds = np.any(X[:, low_bounded_features] < low_bounds, axis=1)
+        id_out_of_high_bounds = np.any(X[:, high_bounded_features] > high_bounds, axis=1)
 
         if self.preprocessing != 'none':
             X = self._preprocessor.transform(X)
@@ -171,7 +182,7 @@ class ASH(DensityEstimator):
         f = np.zeros(X.shape[0])
 
         for i_shift in tqdm(range(self.q)):
-            X_digitized = self._digitizers[i_shift].transform(X)
+            X_digitized = self._histograms[i_shift].digitizer.transform(X)
 
             df = pd.DataFrame(X_digitized)
             df = df.merge(self._histograms[i_shift], how='left')
@@ -192,41 +203,70 @@ class ASH(DensityEstimator):
 
         # if null value is forbiden
         if self.forbid_null_value or self._force_forbid_null_value:
-            if self.verbose > 0:
-                print(title_heading(self.verbose_heading_level) + 'Null value correction...')
-            idx = f == 0.0
-
-            m_0 = idx.sum()
-
-            new_n = self._n + m_0
-
-            f = f * self._n / new_n
-
-            min_value = 1 / new_n * self._normalization * 1
-            f[f == 0.0] = min_value
-
-            # Warning flag
-            # check the relative number of corrected probabilities
-            if self.verbose > 0:
-                print('m_0 = ' + str(m_0) + ', m = ' + str(self._n) + ', m_0 / m = ' + str(
-                    np.round(m_0 / self._n, 4)))
-
-            # warning flag
-            if m_0 / self._n > 0.01:
-                print('WARNING : m_0/m > 0.01. The parameter `n_fit_max` should be higher.')
-
-            if self.verbose > 0:
-                print('Null value correction done for ' + str(m_0) + ' elements.')
+            f = self._forbid_null_values_process(f)
 
         return (f)
 
-    def _boundary_correction(self, X, h):
-        """
-        X in the WT space.
-        """
-        correction = np.ones(X.shape[0])
-        for hyperplane in self._low_bounds_hyperplanes + self._high_bounds_hyperplanes:
-            dist = hyperplane.distance(X, p=np.inf)
-            correction *= 1 - np.maximum(0, dist + h) * ( 1 - dist / h) / 2
+def _fit_histogram(args):
+    X, n, h, q, i_shift, X_mc, bounds_hyperplanes_params = args
 
-        return(correction)
+    digitizer = Digitizer(dx=h,
+                         shift=h / q * i_shift)
+    X_digitized = digitizer.fit_transform(X)
+
+    df = pd.DataFrame(X_digitized)
+    histogram = df.groupby(by=df.columns.to_list()).size().reset_index(name='P')
+    histogram['P'] /= n
+
+    # bounds_hyperplanes = [Hyperplane(w=bhp[0],
+    #                                 b=bhp[1],
+    #                                 positive_side_scalar=bhp[2]) for bhp in bounds_hyperplanes_params]
+
+    # BOUNDARIES CORRECTION
+    if len(bounds_hyperplanes_params) > 0:
+        # which cells are concerned ?
+        # only close enough to the hyperplanes cells
+        # are kept
+        # first get cells centers
+        centers = digitizer.inverse_transform(histogram[df.columns.to_list()].values)
+
+        # then get all close enough centers
+        centers_to_keep = np.zeros(centers.shape[0]).astype(bool)
+        for bhp in bounds_hyperplanes_params:
+            # dist = hyp.distance(centers, p=np.inf)
+            dist = _distance_hyperplane(centers, w=bhp[0], b=bhp[1], p=np.inf)
+            centers_to_keep = np.bitwise_or(centers_to_keep, dist <= h)
+
+        I = np.array([_cell_correction(C, X_mc, bounds_hyperplanes_params) for C in centers[centers_to_keep]])
+
+        # security no division by 0
+        I[I == 0] = 1 / X_mc.shape[0]
+
+        # edit the histogram with the correction
+        histogram.loc[centers_to_keep, 'P'] /= I
+
+    histogram.digitizer = digitizer
+    histogram.i_shift = i_shift
+
+    return(histogram)
+
+def _distance_hyperplane(X, w, b, p):
+    dist = np.abs(np.dot(X, w) + b) / np.linalg.norm(w, ord=p)
+
+    return (dist)
+
+def _side_hyperplane(X, w, b, positive_side_scalar):
+    norm_vec = np.dot(X, w) + b
+    norm_vec *= positive_side_scalar
+
+    return(norm_vec>0)
+
+def _cell_correction(C, X_mc, bounds_hyperplanes_params):
+    n_mc = X_mc.shape[0]
+    # montecarlo around the center C
+    X_mc = C + X_mc
+    # only elements inside the studied space are kept
+    for bhp in bounds_hyperplanes_params:
+        X_mc = X_mc[_side_hyperplane(X_mc, bhp[0], bhp[1], bhp[2])]
+    # the correction is equal to the ratio of kept elements
+    return(X_mc.shape[0] / n_mc)
