@@ -44,16 +44,11 @@ class Bayes(TransitionProbabilityEstimator):
                          log_computations=False,
                          verbose=verbose,
                          verbose_heading_level=verbose_heading_level)
-
-        print(_methods)
-
-        if isinstance(density_estimator, DensityEstimator):
-            self.density_estimator = density_estimator
-        elif density_estimator in _methods:
-            self.density_estimator = _methods[density_estimator](verbose=self.verbose - 1,
-                                                                 verbose_heading_level=self.verbose_heading_level + 1)
+        
+        if density_estimator in _methods:
+            self.density_estimator = _methods[density_estimator](verbose=self.verbose - 1)
         else:
-            raise (ValueError('Unexpected density_estimator value.'))
+            self.density_estimator = density_estimator
 
         self.conditional_density_estimators = {}
 
@@ -90,14 +85,12 @@ class Bayes(TransitionProbabilityEstimator):
         self : Land
             The self object.
         """
-
-        if isinstance(density_estimator, DensityEstimator):
-            self.conditional_density_estimators[state] = density_estimator
-        elif density_estimator in _methods:
-            self.conditional_density_estimators[state] = _methods[density_estimator](verbose=self.verbose - 1,
-                                                                                     verbose_heading_level=self.verbose_heading_level + 1)
+        
+        if density_estimator in _methods:
+            self.conditional_density_estimators[state] = _methods[density_estimator](verbose=self.verbose - 1)
         else:
-            raise (ValueError('Unexpected de value.'))
+            self.conditional_density_estimators[state] = density_estimator
+        
 
         self.P_v_min[state] = P_v_min
         self.n_samples_min[state] = n_samples_min

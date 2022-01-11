@@ -1,11 +1,4 @@
 import setuptools
-from distutils.core import Extension, setup
-from Cython.Build import cythonize
-
-# define an extension that will be cythonized and compiled
-setup(
-      ext_modules=cythonize("clumpy/metrics/_mcdf.pyx")
-)
 
 with open("README.md", "r") as fh:
     long_description = fh.read()
@@ -26,4 +19,13 @@ setuptools.setup(
         "Operating System :: OS Independent",
     ],
     python_requires='>=3.6',
+    install_requires=[
+            'numpy>=1.19.2',
+            'fastash>=0.1.5',
+            'matplotlib',
+            'scipy',
+            'tqdm',
+            'scikit-learn',
+            'rasterio',
+        ],
 )

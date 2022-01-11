@@ -2,7 +2,6 @@ from .. import Territory
 from .. import Region
 from .. import Land
 from ..transition_probability_estimation import Bayes
-from ..density_estimation import GKDE
 from ..density_estimation import _methods as _density_estimation_methods
 from ..allocation import Unbiased, UnbiasedMonoPixel
 from ..allocation import _methods as _allocation_methods
@@ -26,7 +25,7 @@ def extract_parameters(func, kwargs):
 def make_default_territory(transition_matrices,
                            features=[],
                            feature_selector=None,
-                           density_estimation_method='gkde',
+                           density_estimation_method='bkde',
                            allocation_method='unbiased',
                            verbose=0,
                            **kwargs):
@@ -63,7 +62,7 @@ def make_default_territory(transition_matrices,
                     tpe.add_conditional_density_estimator(
                         state=state_v,
                         density_estimator=cde_class(verbose=verbose,
-                                                    verbose_heading_level=5,
+                                                    # verbose_heading_level=5,
                                                     **cde_parameters),
                         **add_cde_parameters)
 

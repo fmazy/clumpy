@@ -113,7 +113,9 @@ class ASHBayes(TransitionProbabilityEstimator):
             df = pd.DataFrame(X_digitized[id_transited])
 
             df_histograms = pd.DataFrame(columns=[k for k in range(self._d)])
-
+            
+            # print(df.max(axis=0))
+            
             for state_v in self.palette_v:
                 if state_v.value != state.value:
                     id_v = V[id_transited]==state_v.value

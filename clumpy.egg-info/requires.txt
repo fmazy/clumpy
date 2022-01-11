@@ -1,0 +1,7 @@
+numpy>=1.19.2
+fastash>=0.1.5
+matplotlib
+scipy
+tqdm
+scikit-learn
+rasterio
