@@ -1,11 +1,35 @@
 """Density Estimation Methods"""
 
+import numpy as np
 
-from ._gaussian_kde import GKDE
-# from ._ash import ASH
-from fastash import BKDE
-# from ._uniform_kde import UKDE
-# from ._fft_kde import FFTKDE
+from ekde import KDE
 
-_methods = {'gkde':GKDE,
-            'bkde':BKDE}
+_methods = {'kde':KDE,}
+
+class NullEstimator():
+    def __init__(self):
+        super().__init__()
+
+    def fit(self, X, y=None):
+        return (self)
+
+    def predict(self, X):
+        return (np.zeros(X.shape[0]))
+    
+    def set_params(self, **params):
+        """
+        Set parameters.
+
+        Parameters
+        ----------
+        **params : kwargs
+            Parameters et values to set.
+
+        Returns
+        -------
+        self : DensityEstimator
+            The self object.
+
+        """
+        for param, value in params.items():
+            setattr(self, param, value)

@@ -6,26 +6,12 @@ from ..density_estimation import _methods as _density_estimation_methods
 from ..allocation import Unbiased, UnbiasedMonoPixel
 from ..allocation import _methods as _allocation_methods
 from .. import feature_selection
-
-import inspect
-
-
-def extract_parameters(func, kwargs):
-    sig = inspect.signature(func)
-    parameters = {}
-    func_parameters = list(sig.parameters.keys())
-
-    for key, value in kwargs.items():
-        if key in func_parameters:
-            parameters[key] = value
-
-    return (parameters)
-
+from ..tools._funcs import extract_parameters
 
 def make_default_territory(transition_matrices,
                            features=[],
                            feature_selector=None,
-                           density_estimation_method='bkde',
+                           density_estimation_method='kde',
                            allocation_method='unbiased',
                            verbose=0,
                            **kwargs):
@@ -39,10 +25,6 @@ def make_default_territory(transition_matrices,
 
         # for each transitions
         for state_u in tm.palette_u:
-
-            # if density_estimation_method == 'gkde'
-            # density_estimator =
-
             de_class = _density_estimation_methods[density_estimation_method]
             de_parameters = extract_parameters(de_class, kwargs)
 

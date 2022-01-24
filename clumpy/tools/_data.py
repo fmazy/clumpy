@@ -122,4 +122,9 @@ def smooth(x, window_len=3, window='hanning'):
     else:
         return y[int(window_len/2):-int(window_len/2)]
 
-
+def generate_grid(*kwargs):
+    xx = np.meshgrid(*kwargs)
+    
+    xx = np.vstack([xi.flat for xi in xx]).T
+    
+    return(xx)

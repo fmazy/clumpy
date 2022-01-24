@@ -199,9 +199,9 @@ class Layer:
 
         """
         
-        if type(center) is int:
+        if type(center) is int or type(center) == np.int64:
             center = np.unravel_index(center, self.get_data().shape)
-        
+            print('c', center)
         data = self.get_data()
         
         if type(window) == int:
@@ -432,8 +432,7 @@ class FeatureLayer(Layer):
                  time=0,
                  path=None,
                  data=None,
-                 low_bound = None,
-                 high_bound = None,
+                 bounded = None,
                  copy_geo=None):
         
         super().__init__(label=label,
@@ -442,8 +441,7 @@ class FeatureLayer(Layer):
                          data=data,
                          copy_geo=copy_geo)
         
-        self.low_bound = low_bound
-        self.high_bound = high_bound
+        self.bounded = bounded
 
 def convert_raster_file(path_in, path_out):
     os.system('rio convert '+path_in+' '+path_out+' --overwrite')

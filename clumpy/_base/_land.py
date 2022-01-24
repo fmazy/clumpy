@@ -56,6 +56,7 @@ class Land():
     def __init__(self,
                  features=[],
                  transition_probability_estimator=None,
+                 set_features_bounds=True,
                  feature_selector=None,
                  fit_bootstrap_patches=False,
                  allocator=None,
@@ -86,7 +87,9 @@ class Land():
 
                 if isinstance(info, FeatureSelector):
                     self.feature_selector.append(info)
-
+        
+        self.set_features_bounds = set_features_bounds
+        
         # fit bootstrap patches
         self.fit_bootstrap_patches = fit_bootstrap_patches
 
@@ -374,38 +377,29 @@ class Land():
         st=time()
 
         # BOUNDARIES PARAMETERS
-        low_bounded_features = []
-        high_bounded_features = []
-        low_bounds = []
-        high_bounds = []
-        for id_col, idx in enumerate(features_idx):
-            if isinstance(self.features[idx], FeatureLayer):
-                if self.features[idx].low_bound is not None:
-                    # low_bounded_features takes as parameter the column id of
-                    # bounded features AFTER feature selection !
-                    # So, the right col index is id_col.
-                    # idx is used to get the corresponding feature layer.
-                    low_bounded_features.append(id_col)
-                    low_bounds.append(self.features[idx].low_bound)
-
-                if self.features[idx].high_bound is not None:
-                    high_bounded_features.append(id_col)
-                    high_bounds.append(self.features[idx].high_bound)
-            # if it is a state distance, add a low bound set to 0.0
-            if isinstance(self.features[idx], State) or isinstance(self.features[idx], int):
-                low_bounded_features.append(id_col)
-                low_bounds.append(0.0)
-        self._time_fit['boundaties_parameters_init'] = time()-st
+        bounds = []
+        if self.set_features_bounds:
+            for id_col, idx in enumerate(features_idx):
+                if isinstance(self.features[idx], FeatureLayer):
+                    if self.features[idx].bounded is not None:
+                        # low_bounded_features takes as parameter the column id of
+                        # bounded features AFTER feature selection !
+                        # So, the right col index is id_col.
+                        # idx is used to get the corresponding feature layer.
+                        bounds.append((id_col, self.features[idx].bounded))
+                        
+                # if it is a state distance, add a low bound set to 0.0
+                if isinstance(self.features[idx], State) or isinstance(self.features[idx], int):
+                    bounds.append((id_col, 'left'))
+                
+        self._time_fit['boundaries_parameters_init'] = time()-st
 
         # TRANSITION PROBABILITY ESTIMATOR
         st = time()
         self.transition_probability_estimator.fit(X=X,
                                                   V=V,
                                                   state = state,
-                                                  low_bounded_features=low_bounded_features,
-                                                  high_bounded_features=high_bounded_features,
-                                                  low_bounds=low_bounds,
-                                                  high_bounds=high_bounds)
+                                                  bounds = bounds)
         self._time_fit['tpe_fit'] = time()-st
 
         return self

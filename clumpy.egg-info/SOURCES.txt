@@ -41,6 +41,7 @@ clumpy/metrics/_rec.py
 clumpy/tools/__init__.py
 clumpy/tools/_console.py
 clumpy/tools/_data.py
+clumpy/tools/_funcs.py
 clumpy/tools/_path.py
 clumpy/tools/_save.py
 clumpy/transition_probability_estimation/__init__.py
