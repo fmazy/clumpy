@@ -84,7 +84,7 @@ class Layer:
     def __repr__(self):
         return(self.label)
 
-    def export(self, path):
+    def export(self, path, plane=False, rdc_only=False):
         """Export the layer according to the file extension. See GDAL for available extenstions.
         For floating rst, the data should be np.float32.
         Parameters
@@ -95,36 +95,66 @@ class Layer:
         # create folder if not exists
         folder_path, file_name, file_ext = path_split(path)
         create_directories(folder_path)
-
-        os.system('rio convert '+self.path+' '+path+' --overwrite')
+        
+        if not rdc_only:
+            os.system('rio convert '+self.path+' '+path+' --overwrite')
 
         if file_ext == 'rst':
-            rdc_file = "file format: Idrisi Raster A.1\n"
-            rdc_file += "file title: \n"
-            rdc_file += "data type: byte\n"
-            rdc_file += "file type: binary\n"
-            rdc_file += "columns: "+str(self.get_data().shape[1])+"\n"
-            rdc_file += "rows: "+str(self.get_data().shape[0])+"\n"
-            rdc_file += "ref.system: spc83la3\n"
-            rdc_file += "ref.units: m\n"
-            rdc_file += "unit dist.: 1\n"
-            rdc_file += "min.X: "+str(self.raster_.transform[2])+"\n"
-            rdc_file += "max.X: "+str(self.raster_.transform[2] + self.raster_.transform[0] * self.get_data().shape[1])+"\n"
-            rdc_file += "min.Y: "+str(self.raster_.transform[5] + self.raster_.transform[4] * self.get_data().shape[0])+"\n"
-            rdc_file += "max.Y: "+str(self.raster_.transform[5])+"\n"
-            rdc_file += "pos'n error : unspecified\n"
-            rdc_file += "resolution: "+str(np.abs(self.raster_.transform[0]))+"\n"
-            rdc_file += "min.value: "+str(self.get_data().min())+"\n"
-            rdc_file += "max.value: "+str(self.get_data().max())+"\n"
-            rdc_file += "display min: "+str(self.get_data().min())+"\n"
-            rdc_file += "display max: "+str(self.get_data().max())+"\n"
-            rdc_file += "value units: unspecified\n"
-            rdc_file += "value error: unspecified\n"
-            rdc_file += "flag value: none\n"
-            rdc_file += "flag def 'n  : none\n"
-            rdc_file += "legend cats: 0\n"
-            rdc_file += "lineage: \n"
-            rdc_file += "comment:\n"
+            if not plane:
+                rdc_file  = "file format : Idrisi Raster A.1\n"
+                rdc_file += "file title  : \n"
+                rdc_file += "data type   : byte\n"
+                rdc_file += "file type   : binary\n"
+                rdc_file += "columns     : "+str(self.get_data().shape[1])+"\n"
+                rdc_file += "rows        : "+str(self.get_data().shape[0])+"\n"
+                rdc_file += "ref.system  : spc83la3\n"
+                rdc_file += "ref.units   : m\n"
+                rdc_file += "unit dist.  : 1\n"
+                rdc_file += "min.X       : "+str(self.raster_.transform[2])+"\n"
+                rdc_file += "max.X       : "+str(self.raster_.transform[2] + self.raster_.transform[0] * self.get_data().shape[1])+"\n"
+                rdc_file += "min.Y       : "+str(self.raster_.transform[5] + self.raster_.transform[4] * self.get_data().shape[0])+"\n"
+                rdc_file += "max.Y       : "+str(self.raster_.transform[5])+"\n"
+                rdc_file += "pos'n error : unspecified\n"
+                rdc_file += "resolution  : "+str(np.abs(self.raster_.transform[0]))+"\n"
+                rdc_file += "min.value   : "+str(self.get_data().min())+"\n"
+                rdc_file += "max.value   : "+str(self.get_data().max())+"\n"
+                rdc_file += "display min : "+str(self.get_data().min())+"\n"
+                rdc_file += "display max : "+str(self.get_data().max())+"\n"
+                rdc_file += "value units : unspecified\n"
+                rdc_file += "value error : unspecified\n"
+                rdc_file += "flag value  : none\n"
+                rdc_file += "flag def 'n : none\n"
+                rdc_file += "legend cats : 0\n"
+                rdc_file += "lineage     : \n"
+                rdc_file += "comment     :\n"
+            
+            else:
+                rdc_file  = "file format : Idrisi Raster A.1\n"
+                rdc_file += "file title  : \n"
+                rdc_file += "data type   : byte\n"
+                rdc_file += "file type   : binary\n"
+                rdc_file += "columns     : "+str(self.get_data().shape[1])+"\n"
+                rdc_file += "rows        : "+str(self.get_data().shape[0])+"\n"
+                rdc_file += "ref.system  : plane\n"
+                rdc_file += "ref.units   : m\n"
+                rdc_file += "unit dist.  : 1.0\n"
+                rdc_file += "min.X       : 0.0\n"
+                rdc_file += "max.X       : "+str(self.get_data().shape[1])+"\n"
+                rdc_file += "min.Y       : 0.0\n"
+                rdc_file += "max.Y       : "+str(self.get_data().shape[0])+"\n"
+                rdc_file += "pos'n error : unknown\n"
+                rdc_file += "resolution  : 1.0\n"
+                rdc_file += "min.value   : "+str(self.get_data().min())+"\n"
+                rdc_file += "max.value   : "+str(self.get_data().max())+"\n"
+                rdc_file += "display min : "+str(self.get_data().min())+"\n"
+                rdc_file += "display max : "+str(self.get_data().max())+"\n"
+                rdc_file += "value units : unspecified\n"
+                rdc_file += "value error : unspecified\n"
+                rdc_file += "flag value  : none\n"
+                rdc_file += "flag def 'n : none\n"
+                rdc_file += "legend cats : 0\n"
+                rdc_file += "lineage     : \n"
+                rdc_file += "comment     :\n"
 
             f = open(folder_path+'/'+file_name+'.rdc', "w")
 
