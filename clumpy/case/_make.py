@@ -8,7 +8,7 @@ from ..allocation import _methods as _allocation_methods
 from .. import feature_selection
 from ..tools._funcs import extract_parameters
 
-def make_default_territory(transition_matrices,
+def make_default_territory(transition_matrices={},
                            features=[],
                            feature_selector=None,
                            density_estimation_method='kde',

@@ -3,7 +3,7 @@ from .. import start_log
 from .. import load_palette
 from .. import load_transition_matrix
 from ._make import make_default_territory
-
+from ..tools._funcs import extract_parameters
 
 import json
 
@@ -14,38 +14,39 @@ def load(path):
 
     # returns JSON object as
     # a dictionary
-    json_case = json.load(f)
+    params = json.load(f)
 
     # Closing file
     f.close()
-
+    
+    
     # data folder path
     # =================
-    if 'data_folder_path' in json_case.keys():
-        data_folder_path = json_case['data_folder_path']
+    if 'data_folder_path' in params.keys():
+        data_folder_path = params['data_folder_path']
     else:
         data_folder_path = ''
 
     # log file
     # =========
-    if 'log_file' in json_case.keys():
-        start_log(data_folder_path + json_case['log_file'])
+    if 'log_file' in params.keys():
+        start_log(data_folder_path + params['log_file'])
 
     # verbose
     # ========
-    if 'verbose' in json_case.keys():
-        verbose = json_case['verbose']
+    if 'verbose' in params.keys():
+        verbose = params['verbose']
 
     # palette
     # ========
-    if "palette" in json_case.keys():
-        palette = load_palette(data_folder_path + json_case['palette'])
+    if "palette" in params.keys():
+        palette = load_palette(data_folder_path + params['palette'])
 
     # load layers
     # ============
     layers = {}
-    if "layers" in json_case.keys():
-        for label, infos in json_case['layers'].items():
+    if "layers" in params.keys():
+        for label, infos in params['layers'].items():
 
             layers_params = infos.copy()
             del layers_params['type']
@@ -61,53 +62,33 @@ def load(path):
     # Transition matrices
     # ====================
     transition_matrices = {}
-    if "transition_matrices" in json_case.keys():
-        for label, path in json_case['transition_matrices'].items():
+    if "transition_matrices" in params.keys():
+        for label, path in params['transition_matrices'].items():
             transition_matrices[label] = load_transition_matrix(path=data_folder_path + path,
                                                                 palette=palette)
-
+    
+    params['transition_matrices'] = transition_matrices
+    
     # Features
     #=========
     features = []
-    if 'features' in json_case.keys():
-        for info in json_case['features']:
+    if 'features' in params.keys():
+        for info in params['features']:
             if isinstance(info, str):
                 features.append(layers[info])
 
             if isinstance(info, int):
                 features.append(palette.get(info))
+                
+        params['features'] = features
 
     # Feature Selectors
     #==================
-    if 'feature_selector' in json_case.keys():
-        feature_selector = json_case['feature_selector']
-    else:
-        feature_selector = []
-
+    
+        
     # Territory
     # ==========
-    make_parameters = {'n_jobs_predict':1,
-                       'n_jobs_neighbors':1,
-                       'n_fit_max':2*10**4,
-                       'n_predict_max':2*10**4,
-                       'density_estimation_method':'kde',
-                       'q':51,
-                       'kernel':'box',
-                       'P_v_min':0.0,
-                       'n_samples_min':1,
-                       'update_P_Y':False,
-                       'n_allocation_try':1000,
-                       'fit_bootstrap_patches':True}
-
-    for key, default in make_parameters.items():
-        if key in json_case.keys():
-            make_parameters[key] = json_case[key]
-    
-    print(make_parameters)
-    territory = make_default_territory(transition_matrices=transition_matrices,
-                                       features = features,
-                                       feature_selector = feature_selector,
-                                       **make_parameters)
+    territory = make_default_territory(**params)
 
     territory.check()
 

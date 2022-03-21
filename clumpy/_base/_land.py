@@ -381,8 +381,8 @@ class Land():
         if self.set_features_bounds:
             for id_col, idx in enumerate(features_idx):
                 if isinstance(self.features[idx], FeatureLayer):
-                    if self.features[idx].bounded is not None:
-                        # low_bounded_features takes as parameter the column id of
+                    if self.features[idx].bounded in ['left', 'right', 'both']:
+                        # one takes as parameter the column id of
                         # bounded features AFTER feature selection !
                         # So, the right col index is id_col.
                         # idx is used to get the corresponding feature layer.
