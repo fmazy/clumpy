@@ -441,11 +441,8 @@ class FeatureLayer(Layer):
     data : :class:`numpy.ndarray`, defaul=None
         The data to write. If ``None``, no writing is made.
     
-    low_bound : None or float, default=None
-        If float, a low bound is set. Used in density estimation methods as GKDE.
-    
-    high_bound : None or float, default=None
-        If float, a high bound is set. Used in density estimation methods as GKDE.
+    bounded : {'none', 'left', 'right', 'both'}, default:'none'
+        Boundary trigger.
     
     copy_geo : :class:`LandUseLayer`, default=None
         The layer from whose geo metadata are copied.
@@ -462,7 +459,7 @@ class FeatureLayer(Layer):
                  time=0,
                  path=None,
                  data=None,
-                 bounded = None,
+                 bounded = 'none',
                  copy_geo=None):
         
         super().__init__(label=label,

@@ -4,7 +4,7 @@ save_data_on_exit = True
 save_history = True
 save_non_project_files = False
 project_type = empty-project-type
-recent_files = ['../clumpy-cases/calibration_paper_6/generate_case_d_n.py', '../clumpy-cases/calibration_paper_6/estimation_d_n_mlp.py', '../clumpy-cases/calibration_paper_6/comparison_d_n.py', 'clumpy/_base/_layer.py']
+recent_files = ['../clumpy-cases/calibration_paper_6/generate_case_d_n.py', '../clumpy-cases/calibration_paper_6/estimation_d_n_mlp.py', '../clumpy-cases/calibration_paper_6/comparison_d_n.py', 'clumpy/_base/_layer.py', '../clumpy-cases/calibration_paper_6/generate_case_d.py']
 
 [main]
 version = 0.2.0

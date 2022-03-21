@@ -90,6 +90,9 @@ def load(path):
                        'n_jobs_neighbors':1,
                        'n_fit_max':2*10**4,
                        'n_predict_max':2*10**4,
+                       'density_estimation_method':'kde',
+                       'q':51,
+                       'kernel':'box',
                        'P_v_min':0.0,
                        'n_samples_min':1,
                        'update_P_Y':False,
@@ -99,7 +102,8 @@ def load(path):
     for key, default in make_parameters.items():
         if key in json_case.keys():
             make_parameters[key] = json_case[key]
-
+    
+    print(make_parameters)
     territory = make_default_territory(transition_matrices=transition_matrices,
                                        features = features,
                                        feature_selector = feature_selector,
