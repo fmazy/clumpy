@@ -38,7 +38,8 @@ class Bayes(TransitionProbabilityEstimator):
                  n_corrections_max=1000,
                  log_computations=False,
                  verbose=0,
-                 verbose_heading_level=1):
+                 verbose_heading_level=1,
+                 **kwargs):
 
         super().__init__(n_corrections_max=1000,
                          log_computations=False,

@@ -9,8 +9,7 @@ from .. import feature_selection
 from ..tools._funcs import extract_parameters
 
 def make_default_territory(transition_matrices={},
-                           features=[],
-                           feature_selector=None,
+                           regions_features={},
                            density_estimation_method='kde',
                            allocation_method='unbiased',
                            verbose=0,
@@ -57,14 +56,13 @@ def make_default_territory(transition_matrices={},
 
                 # features
                 # distance to the studied state_u are removed
-                features_u = features.copy()
+                features_u = regions_features[region_label].copy()
                 if state_u in features_u:
                     features_u.remove(state_u)
 
                 land_parameters = extract_parameters(Land, kwargs)
 
                 land = Land(features=features_u,
-                            feature_selector=feature_selector,
                             transition_probability_estimator=tpe,
                             allocator=allocator,
                             verbose=verbose,

@@ -1,7 +1,5 @@
 # -*- coding: utf-8 -*-
 
-
-
 import numpy as np
 import os
 from matplotlib import pyplot as plt
@@ -76,7 +74,10 @@ class Layer:
                     dst.write(data)
         
         # read file
+        # try:
         self.raster_ = rasterio.open(self.path)
+        # except:
+            # log.error("open file error")
 
     def get_data(self, band=1):
         return(self.raster_.read(band))

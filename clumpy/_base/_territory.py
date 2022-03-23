@@ -177,7 +177,7 @@ class Territory():
         return (tms)
 
     def transition_probabilities(self,
-                                 transition_matrices,
+                                 regions_transition_matrices,
                                  lul,
                                  masks=None,
                                  path_prefix=None):
@@ -186,7 +186,7 @@ class Territory():
 
         Parameters
         ----------
-        transition_matrices : dict(Region:TransitionMatrix)
+        regions_transition_matrices : dict(Region:TransitionMatrix)
             Dict of transition matrix with the corresponding region as key.
 
         lul : LandUseLayer
@@ -224,13 +224,13 @@ class Territory():
         masks = masks_region_keys
 
         # same for transition_matrices
-        tms_copy = transition_matrices.copy()
-        for key, tm in transition_matrices.items():
+        tms_copy = regions_transition_matrices.copy()
+        for key, tm in regions_transition_matrices.items():
             if isinstance(key, str):
                 del tms_copy[key]
                 tms_copy[self.get_region(key)] = tm
 
-        transition_matrices = tms_copy
+        regions_transition_matrices = tms_copy
 
         distances_to_states = {}
 
@@ -244,12 +244,13 @@ class Territory():
             else:
                 region_path_prefix = None
 
-            tp[region] = region.transition_probabilities(transition_matrix=transition_matrices[region],
-                                                         lul=lul,
-                                                         mask=masks[region],
-                                                         distances_to_states=distances_to_states,
-                                                         path_prefix=region_path_prefix,
-                                                         copy_geo=lul)
+            tp[region] = \
+                region.transition_probabilities(transition_matrix=regions_transition_matrices[region],
+                                                lul=lul,
+                                                mask=masks[region],
+                                                distances_to_states=distances_to_states,
+                                                path_prefix=region_path_prefix,
+                                                copy_geo=lul)
 
         if self.verbose > 0:
             print('Territory transition probabilities estimation done.\n')
@@ -257,7 +258,7 @@ class Territory():
         return (tp)
 
     def allocate(self,
-                 transition_matrices,
+                 regions_transition_matrices,
                  lul,
                  masks=None,
                  path=None,
@@ -267,7 +268,7 @@ class Territory():
 
         Parameters
         ----------
-        transition_matrices : dict(Region:TransitionMatrix)
+        regions_transition_matrices : dict(Region:TransitionMatrix)
             Dict of transition matrix with the corresponding region as key.
 
         lul : LandUseLayer
@@ -306,13 +307,13 @@ class Territory():
         masks = masks_region_keys
 
         # same for transition_matrices
-        tms_copy = transition_matrices.copy()
-        for key, tm in transition_matrices.items():
+        tms_copy = regions_transition_matrices.copy()
+        for key, tm in regions_transition_matrices.items():
             if isinstance(key, str):
                 del tms_copy[key]
                 tms_copy[self.get_region(key)] = tm
 
-        transition_matrices = tms_copy
+        regions_transition_matrices = tms_copy
 
         distances_to_states = {}
 
@@ -326,7 +327,7 @@ class Territory():
             else:
                 region_path_prefix_transition_probabilities = None
 
-            region.allocate(transition_matrix=transition_matrices[region],
+            region.allocate(transition_matrix=regions_transition_matrices[region],
                             lul=lul_data,
                             lul_origin=lul,
                             mask=masks[region],

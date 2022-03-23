@@ -22,6 +22,10 @@ clumpy/allocation/_patch.py
 clumpy/allocation/_patcher.py
 clumpy/allocation/_unbiased.py
 clumpy/allocation/_unbiased_mono_pixel.py
+clumpy/case/__init__.py
+clumpy/case/_case.py
+clumpy/case/_load.py
+clumpy/case/_make.py
 clumpy/density_estimation/__init__.py
 clumpy/density_estimation/_ash.py
 clumpy/density_estimation/_density_estimator.py

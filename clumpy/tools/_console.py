@@ -1,5 +1,7 @@
 import sys
 
+from ._path import path_split, create_directories
+
 def title_heading(n):
     if n > 0:
         return('\n'+''.join(['#' for i in range(n)])+' ')
@@ -31,6 +33,10 @@ def start_log(path):
     path : str
         Log file path.
     """
+    
+    folder_path, file_name, file_ext = path_split(path)
+    create_directories(folder_path)
+    
     sys.stdout = Transcript(path)
 
 def stop_log():

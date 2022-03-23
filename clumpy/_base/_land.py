@@ -675,7 +675,7 @@ class Land():
 
         print(type(self.allocator))
         if not isinstance(self.allocator, Allocator):
-            raise (ValueError("Unexpected 'allocator'. A clumpy.allocation.Allocator object is expected."))
+            raise (ValueError("Unexpected 'allocator'. A clumpy.allocation.Allocator object is expected ; got instead "+str(type(self.allocator))))
 
         if self.verbose > 0:
             print(title_heading(self.verbose_heading_level) + 'Land ' + str(state) + ' allocation\n')
