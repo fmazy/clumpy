@@ -57,8 +57,7 @@ def compute_bootstrap_patches(state,
 
     u = state.value
 
-    J, V = land.get_values(state=state,
-                           lul_initial=lul_initial,
+    J, V = land.get_values(lul_initial=lul_initial,
                            lul_final=lul_final,
                            mask=mask,
                            explanatory_variables=False)

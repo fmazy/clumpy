@@ -8,6 +8,10 @@ State blabla.
 from xml.dom import minidom
 import numpy as np
 
+import logging
+logger = logging.getLogger('clumpy')
+
+from ..tools._console import stop_log
 
 class State():
     """
@@ -25,7 +29,9 @@ class State():
 
     def __init__(self, label, value, color):
         if value < 0:
-            raise (ValueError('Unexpected state value. It must be positive !'))
+            logger.error('Unexpected state value. It must be positive !')
+            stop_log()
+            raise
 
         self.label = label
         self.value = value
@@ -83,7 +89,9 @@ class Palette():
 
         """
         if state.value in self.get_list_of_values():
-            raise (ValueError('Unexpected state : its value is already set'))
+            logger.error('Unexpected state : its value is already set')
+            stop_log()
+            raise 
 
         self.states.append(state)
 
@@ -134,7 +142,9 @@ class Palette():
         elif isinstance(info, State):
             return (info)
         else:
-            raise (TypeError("Unexpected info type. Should be int or str or State"))
+            logger.error("Unexpected info type. Should be int or str or State")
+            stop_log()
+            raise 
 
     def extract(self, infos):
         """
@@ -187,8 +197,13 @@ class Palette():
             The requested state.
         """
         values = [state.value for state in self.states]
-
-        return (self.states[values.index(value)])
+        
+        try:
+            return (self.states[values.index(value)])
+        except:
+            logger.error(str(value) +" is not in the palette. Occured in '_base/_state.py, Palette._get_by_value()'.")
+            stop_log()
+            raise
 
     def _get_id_by_value(self, value):
         """
@@ -371,12 +386,16 @@ def _check_states(states):
     Check if they are duplicates in states (object and state values).
     """
     if len(set(states)) != len(states):
-        raise (ValueError('Duplicate states found !'))
+        logger.error('Duplicate states found !')
+        stop_log()
+        raise
 
     values = []
     for state in states:
         if state.value in values:
-            raise (ValueError('Duplicate states values found !'))
+            stop_log()
+            logger.error('Duplicate states values found !')
+            raise
         values.append(state.value)
 
 

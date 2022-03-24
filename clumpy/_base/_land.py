@@ -8,10 +8,12 @@ from time import time
 # base import
 from ._layer import Layer, FeatureLayer, LandUseLayer
 from ._state import State
-from ._transition_matrix import TransitionMatrix
+from ._transition_matrix import TransitionMatrix, load_transition_matrix
 
 # Transition Probability Estimator
+from ..density_estimation import _methods as _density_estimation_methods
 from ..transition_probability_estimation._tpe import TransitionProbabilityEstimator
+from ..transition_probability_estimation import Bayes
 
 # Features selection
 from ..feature_selection._feature_selector import FeatureSelector
@@ -20,10 +22,15 @@ from ..feature_selection import feature_selectors as dict_feature_selectors
 # Tools
 from ..tools._path import path_split
 from ..tools._console import title_heading
+from ..tools._funcs import extract_parameters
 
 # Allocation
 from ..allocation._allocator import Allocator
 from ..allocation._compute_patches import compute_bootstrap_patches
+from ..allocation import _methods as _allocation_methods
+
+import logging
+logger = logging.getLogger('clumpy')
 
 class Land():
     """
@@ -54,11 +61,12 @@ class Land():
     """
 
     def __init__(self,
+                 state,
                  features=[],
                  transition_probability_estimator=None,
                  set_features_bounds=True,
                  feature_selector=None,
-                 fit_bootstrap_patches=False,
+                 fit_bootstrap_patches=True,
                  allocator=None,
                  verbose=0,
                  verbose_heading_level=1):
@@ -95,6 +103,9 @@ class Land():
 
         # allocator
         self.allocator = allocator
+        
+        # state
+        self.state = state
 
         self.verbose = verbose
         self.verbose_heading_level = verbose_heading_level
@@ -106,6 +117,96 @@ class Land():
                    **params):
         for key, param in params.items():
             setattr(self, key, param)
+    
+    def make(self, palette, **params):
+        
+        # features
+        features = []
+        if 'features' in params.keys():
+            for feature_params in params['features']:
+                if feature_params['type'] == 'layer':
+                    fp = extract_parameters(FeatureLayer, feature_params)
+                    features.append(FeatureLayer(**fp))
+                elif feature_params['type'] == 'distance':
+                    if feature_params['state'] != self.state.value:
+                        features.append(palette._get_by_value(feature_params['state']))
+        
+        # transition matrix
+        if 'transition_matrix' in params.keys():
+            transition_matrix = load_transition_matrix(path=params['transition_matrix'],
+                                                       palette=palette)
+        
+        # calibration
+        try:
+            calibration_method = params['calibration_method']
+        except:
+            calibration_method = 'bayes'
+        
+        try:
+            calibration_params = params['calibration_params']
+        except:
+            calibration_params = {}
+        
+        if calibration_method == 'bayes':
+            try:
+                density_estimation_method = calibration_params['density_estimation_method']
+            except:
+                density_estimation_method = 'kde'
+                
+            de_class = _density_estimation_methods[density_estimation_method]
+            de_parameters = extract_parameters(de_class, calibration_params)
+
+            tpe = Bayes(density_estimator=de_class(verbose=self.verbose,
+                                                   **de_parameters),
+                        verbose=self.verbose,
+                        verbose_heading_level=4)
+
+            for state_v in transition_matrix.palette_v:
+                # if the transition is expected
+                if transition_matrix.get(self.state, state_v) > 0.0:
+                    add_cde_parameters = extract_parameters(tpe.add_conditional_density_estimator, calibration_params)
+
+                    cde_class = _density_estimation_methods[density_estimation_method]
+                    cde_parameters = extract_parameters(cde_class, calibration_params)
+
+                    tpe.add_conditional_density_estimator(
+                        state=state_v,
+                        density_estimator=cde_class(verbose=self.verbose,
+                                                    # verbose_heading_level=5,
+                                                    **cde_parameters),
+                        **add_cde_parameters)
+        
+        # allocation
+        try:
+            allocation_method = params['allocation_method']
+        except:
+            allocation_method = 'unbiased'
+            
+        try:
+            allocation_params = params['allocation_params']
+        except:
+            allocation_params = {}
+        
+        for state_v in transition_matrix.palette_v:
+            alloc_class = _allocation_methods[allocation_method]
+            alloc_parameters = extract_parameters(alloc_class, params)
+
+            allocator = alloc_class(verbose=self.verbose,
+                                    verbose_heading_level=3,
+                                    **alloc_parameters)
+                
+        try:
+            land_params = params['land_params']
+        except:
+            land_params = {}
+                            
+        self.__init__(state=self.state,
+                      features=features,
+                      transition_probability_estimator=tpe,
+                      allocator=allocator,
+                      verbose=self.verbose,
+                      verbose_heading_level=self.verbose_heading_level,
+                      **land_params)
 
     def check(self):
         """
@@ -142,7 +243,6 @@ class Land():
         return feature_selectors
 
     def get_values(self,
-                   state,
                    lul_initial,
                    lul_final=None,
                    mask=None,
@@ -199,7 +299,7 @@ class Land():
 
         # get pixels indexes whose initial states are u
         # J = ndarray_suitable_integer_type(np.where(initial_lul_layer.raster_.read(1).flat==u)[0])
-        J = np.where(data_lul_initial.flat == state.value)[0]
+        J = np.where(data_lul_initial.flat == self.state.value)[0]
 
         X = None
         if explanatory_variables:
@@ -219,14 +319,15 @@ class Land():
 
                 elif isinstance(info, int):
                     # get the corresponding state
-                    state = lul_initial.palette.get(info)
+                    ev_state = lul_initial.palette.get(info)
                     # get distance data
                     # in this case, feature is a State object !
-                    if state not in distances_to_states.keys():
-                        _compute_distance(state, data_lul_initial, distances_to_states)
-                    x = distances_to_states[state].flat[J]
+                    if ev_state not in distances_to_states.keys():
+                        _compute_distance(ev_state, data_lul_initial, distances_to_states)
+                    x = distances_to_states[ev_state].flat[J]
                 else:
-                    raise (TypeError('Unexpected feature info : ' + str(info) + '.'))
+                    logger.error('Unexpected feature info : ' + type(info) + '. Occured in \'_base/_land.py, Land.get_values()\'.')
+                    raise (TypeError('Unexpected feature info : ' + type(info) + '.'))
 
                 # if X is not yet defined
                 if X is None:
@@ -261,7 +362,6 @@ class Land():
         return elements_to_return
 
     def fit(self,
-            state,
             lul_initial,
             lul_final,
             mask=None,
@@ -293,13 +393,12 @@ class Land():
         self._time_fit = {}
         st0 = time()
         if self.verbose > 0:
-            print(title_heading(self.verbose_heading_level) + 'Land ' + str(state) + ' fitting\n')
+            print(title_heading(self.verbose_heading_level) + 'Land ' + str(self.state) + ' fitting\n')
 
         if self.transition_probability_estimator is None:
             raise (ValueError('Transition probability estimator is expected for fitting.'))
 
-        self._fit_tpe(state=state,
-                      lul_initial=lul_initial,
+        self._fit_tpe(lul_initial=lul_initial,
                       lul_final=lul_final,
                       mask=mask,
                       distances_to_states=distances_to_states)
@@ -307,7 +406,6 @@ class Land():
         if self.fit_bootstrap_patches:
             st = time()
             self.compute_bootstrap_patches(
-                state=state,
                 palette_v=self.transition_probability_estimator._palette_fitted_states,
                 lul_initial=lul_initial,
                 lul_final=lul_final,
@@ -315,14 +413,13 @@ class Land():
             self._time_fit['compute_bootstrap_patches'] = time()-st
 
         if self.verbose > 0:
-            print('Land ' + str(state) + ' fitting done.\n')
+            print('Land ' + str(self.state) + ' fitting done.\n')
 
         self._time_fit['all'] = time()-st0
 
         return self
 
     def _fit_tpe(self,
-                 state,
                  lul_initial,
                  lul_final,
                  mask=None,
@@ -333,8 +430,7 @@ class Land():
         # TIME
         st = time()
         # GET VALUES
-        J_calibration, X, V = self.get_values(state=state,
-                                              lul_initial=lul_initial,
+        J_calibration, X, V = self.get_values(lul_initial=lul_initial,
                                               lul_final=lul_final,
                                               mask=mask,
                                               explanatory_variables=True,
@@ -398,14 +494,13 @@ class Land():
         st = time()
         self.transition_probability_estimator.fit(X=X,
                                                   V=V,
-                                                  state = state,
+                                                  state = self.state,
                                                   bounds = bounds)
         self._time_fit['tpe_fit'] = time()-st
 
         return self
 
     def transition_matrix(self,
-                          state,
                           lul_initial,
                           lul_final,
                           mask=None):
@@ -431,8 +526,7 @@ class Land():
         tm : TransitionMatrix
             The computed transition matrix.
         """
-        J, V = self.get_values(state=state,
-                               lul_initial=lul_initial,
+        J, V = self.get_values(lul_initial=lul_initial,
                                lul_final=lul_final,
                                mask=mask,
                                explanatory_variables=False)
@@ -443,7 +537,7 @@ class Land():
 
         v_unique = v_unique.astype(int)
 
-        palette_u = lul_initial.palette.extract(infos=[state])
+        palette_u = lul_initial.palette.extract(infos=[self.state])
         palette_v = lul_final.palette.extract(infos=v_unique)
 
         return (TransitionMatrix(M=P_v,
@@ -511,6 +605,12 @@ class Land():
         transition_matrix._check_land_transition_matrix()
 
         state = transition_matrix.palette_u.states[0]
+        
+        if state.value != self.state.value:
+            logger.error("Transition_matrix initial state does not correspond to the Land state.")
+            stop_log()
+            raise
+        
         P_v, palette_v = transition_matrix.get_P_v(state)
 
         if self.verbose > 0:
@@ -571,8 +671,7 @@ class Land():
 
         # GET VALUES
         st = time()
-        J_allocation, Y = self.get_values(state=state,
-                                          lul_initial=lul,
+        J_allocation, Y = self.get_values(lul_initial=lul,
                                           mask=mask,
                                           explanatory_variables=True,
                                           distances_to_states=distances_to_states)
@@ -608,7 +707,6 @@ class Land():
             return J_allocation, P_v__u_Y
 
     def compute_bootstrap_patches(self,
-                                  state,
                                   palette_v,
                                   lul_initial,
                                   lul_final,
@@ -617,7 +715,7 @@ class Land():
         Compute Bootstrap patches
 
         """
-        patches = compute_bootstrap_patches(state=state,
+        patches = compute_bootstrap_patches(state=self.state,
                                             palette_v=palette_v,
                                             land=self,
                                             lul_initial=lul_initial,
@@ -672,8 +770,7 @@ class Land():
         transition_matrix._check_land_transition_matrix()
 
         state = transition_matrix.palette_u.states[0]
-
-        print(type(self.allocator))
+        
         if not isinstance(self.allocator, Allocator):
             raise (ValueError("Unexpected 'allocator'. A clumpy.allocation.Allocator object is expected ; got instead "+str(type(self.allocator))))
 
@@ -694,12 +791,10 @@ class Land():
             print('Land ' + str(state) + ' allocation done.\n')
 
     def dinamica_determine_ranges(self,
-                                  state,
                                   lul_initial,
                                   params,
                                   mask=None):
-        J, X = self.get_values(state=state,
-                               lul_initial=lul_initial,
+        J, X = self.get_values(lul_initial=lul_initial,
                                mask=mask,
                                explanatory_variables=True)
 

@@ -7,9 +7,12 @@ Created on Fri Sep 17 15:40:56 2021
 """
 
 from ._layer import LandUseLayer
+from . import Region
 from ..tools._path import path_split
 from ..tools._console import title_heading
 
+import logging
+logger = logging.getLogger('clumpy')
 
 class Territory():
     """
@@ -34,7 +37,7 @@ class Territory():
 
         self.regions = regions
         if self.regions is None:
-            self.regions = []
+            self.regions = {}
 
         self.verbose = verbose
         self.verbose_heading_level = verbose_heading_level
@@ -52,8 +55,8 @@ class Territory():
         -------
         self
         """
-        if region not in self.regions:
-            self.regions.append(region)
+        if region not in self.regions.values():
+            self.regions[region.label] = region
 
         return (self)
 
@@ -70,7 +73,10 @@ class Territory():
         -------
         self
         """
-        self.regions.remove(region)
+        try:
+            del self.regions[region.label]
+        except:
+            pass
 
         return (self)
 
@@ -81,14 +87,30 @@ class Territory():
         """
         density_estimators = []
         feature_selectors = []
-        for region in self.regions:
+        for region in self.regions.values():
             density_estimators = region._check_density_estimators(density_estimators=density_estimators)
             feature_selectors = region._check_feature_selectors(feature_selectors=feature_selectors)
 
     def get_region(self, label):
-        for region in self.regions:
-            if region.label == label:
-                return(region)
+        try:
+            return(self.regions[label])
+        except:
+            logger.error('The given label region does not exist : '+str(label))
+            raise
+
+    def make(self, case):
+        self.regions = {}
+        
+        for region_label, region_params in case.params['regions'].items():
+            region = Region(label=region_label,
+                            verbose=case.get_verbose(),
+                            verbose_heading_level=2)
+            
+            region.make(palette=case.palette, 
+                        **region_params)
+            
+            
+            self.add_region(region)
 
     def fit(self,
             lul_initial,
@@ -117,7 +139,7 @@ class Territory():
             print(title_heading(self.verbose_heading_level) + 'Territory fitting\n')
 
         if masks is None:
-            masks = {region: None for region in self.regions}
+            masks = {region: None for region in self.regions.values()}
 
         # convert keys if label strings
         masks_region_keys = masks.copy()
@@ -130,7 +152,7 @@ class Territory():
 
         distances_to_states = {}
 
-        for id_region, region in enumerate(self.regions):
+        for region in self.regions.values():
             region.fit(lul_initial=lul_initial,
                        lul_final=lul_final,
                        mask=masks[region],
@@ -165,11 +187,11 @@ class Territory():
             A dict of transition matrices with regions as keys.
         """
         if masks is None:
-            masks = {region: None for region in self.regions}
+            masks = {region: None for region in self.regions.values()}
 
         tms = {}
 
-        for region in self.regions:
+        for region in self.regions.values():
             tms[region] = region.transition_matrix(lul_initial=lul_initial,
                                                    lul_final=lul_final,
                                                    mask=masks[region])
@@ -212,7 +234,7 @@ class Territory():
             print(title_heading(self.verbose_heading_level) + 'Territory TPE\n')
 
         if masks is None:
-            masks = {region: None for region in self.regions}
+            masks = {region: None for region in self.regions.values()}
 
         # convert keys if label strings
         masks_region_keys = masks.copy()
@@ -237,7 +259,7 @@ class Territory():
 
         tp = {}
 
-        for region in self.regions:
+        for region in self.regions.values():
 
             if path_prefix is not None:
                 region_path_prefix = path_prefix + '_' + str(region.label)
@@ -295,7 +317,7 @@ class Territory():
             print(title_heading(self.verbose_heading_level) + 'Territory allocation\n')
 
         if masks is None:
-            masks = {region: None for region in self.regions}
+            masks = {region: None for region in self.regions.values()}
 
         # convert keys if label strings
         masks_region_keys = masks.copy()
@@ -319,7 +341,7 @@ class Territory():
 
         lul_data = lul.get_data().copy()
 
-        for region in self.regions:
+        for region in self.regions.values():
 
             if path_prefix_transition_probabilities is not None:
                 region_path_prefix_transition_probabilities = path_prefix_transition_probabilities + '_' + str(

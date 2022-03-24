@@ -20,7 +20,6 @@ def make_default_territory(transition_matrices={},
         region = Region(label=region_label,
                         verbose=verbose,
                         verbose_heading_level=2)
-        territory.add_region(region)
 
         # for each transitions
         for state_u in tm.palette_u:
@@ -46,7 +45,7 @@ def make_default_territory(transition_matrices={},
                                                     # verbose_heading_level=5,
                                                     **cde_parameters),
                         **add_cde_parameters)
-
+                    
                 alloc_class = _allocation_methods[allocation_method]
                 alloc_parameters = extract_parameters(alloc_class, kwargs)
 
@@ -71,5 +70,7 @@ def make_default_territory(transition_matrices={},
 
                 region.add_land(state=state_u,
                                 land=land)
+        
+        territory.add_region(region)
 
     return territory

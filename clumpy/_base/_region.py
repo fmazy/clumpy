@@ -3,12 +3,15 @@
 
 import numpy as np
 
-from ._layer import LandUseLayer
+from ._layer import LandUseLayer, FeatureLayer
 from ._state import Palette
-from ._transition_matrix import TransitionMatrix
+from ._transition_matrix import TransitionMatrix, load_transition_matrix
 from ..tools._path import path_split
 from ..tools._console import title_heading
-
+from ..tools._funcs import extract_parameters
+from ..allocation import _methods as _allocation_methods
+from ..transition_probability_estimation import Bayes
+from . import Land
 
 class Region():
     """
@@ -39,7 +42,7 @@ class Region():
     def __repr__(self):
         return (self.label)
 
-    def add_land(self, state, land):
+    def add_land(self, land):
         """
         Add a land for a given state.
 
@@ -55,9 +58,31 @@ class Region():
         -------
         self
         """
-        self.lands[state] = land
+        self.lands[land.state] = land
 
         return (self)
+    
+    def make(self, palette, **params):
+        
+        density_estimation_method = 'kde'
+        allocation_method = 'unbiased'
+        
+        self.lands = {}
+        
+        
+        if 'transition_matrix' in params.keys():
+            transition_matrix = load_transition_matrix(path=params['transition_matrix'],
+                                                       palette=palette)
+                
+        for state_u in transition_matrix.palette_u:
+            land = Land(state=state_u,
+                        verbose=self.verbose,
+                        verbose_heading_level=4)
+            
+            land.make(palette, **params)
+            
+            self.add_land(land=land)
+        
 
     def _check_density_estimators(self, density_estimators=[]):
         """
@@ -84,6 +109,9 @@ class Region():
         """
         self._check_density_estimators()
         self._check_feature_selectors()
+        
+        for state, land in self.lands.items():
+            land.state = state
 
     def fit(self,
             lul_initial,
@@ -115,8 +143,7 @@ class Region():
             print(title_heading(self.verbose_heading_level) + 'Region ' + self.label + ' fitting\n')
 
         for state, land in self.lands.items():
-            land.fit(state=state,
-                     lul_initial=lul_initial,
+            land.fit(lul_initial=lul_initial,
                      lul_final=lul_final,
                      mask=mask,
                      distances_to_states=distances_to_states)
@@ -151,8 +178,7 @@ class Region():
         """
         tm = None
         for state, land in self.lands.items():
-            tm_to_merge = land.transition_matrix(state=state,
-                                                 lul_initial=lul_initial,
+            tm_to_merge = land.transition_matrix(lul_initial=lul_initial,
                                                  lul_final=lul_final,
                                                  mask=mask)
             if tm is None:

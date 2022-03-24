@@ -61,8 +61,8 @@ class Bayes(TransitionProbabilityEstimator):
     def add_conditional_density_estimator(self,
                                           state,
                                           density_estimator='kde',
-                                          P_v_min=5 * 10 ** (-5),
-                                          n_samples_min=500):
+                                          P_v_min=0.0,
+                                          n_samples_min=1):
         """
         Add conditional density for a given final state.
 

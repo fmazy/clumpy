@@ -1,13 +1,10 @@
 from ._tpe import TransitionProbabilityEstimator
 from .._base import FeatureLayer
-from ..density_estimation._whitening_transformer import _WhiteningTransformer
 from tqdm import tqdm
-from ..density_estimation import bandwidth_selection
 from .._base import Palette
 import numpy as np
 import pandas as pd
 
-from ..density_estimation._density_estimator import DensityEstimator, NullEstimator
 from ..density_estimation import _methods
 
 class Digitize():

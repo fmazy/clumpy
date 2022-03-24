@@ -9,6 +9,11 @@ import rasterio
 from ..tools._data import ndarray_suitable_integer_type
 from ..tools._path import path_split, create_directories
 
+import logging
+logger = logging.getLogger('clumpy')
+
+from ..tools._console import stop_log
+
 class Layer:
     """Layer base element
     """
@@ -44,7 +49,9 @@ class Layer:
                 data = data[None, :, :]
             
             elif len(data.shape) > 3:
-                raise(ValueError("len(data.shape) is expected to be lower or equal to 3."))
+                logger.error("len(data.shape) is expected to be lower or equal to 3.")
+                stop_log()
+                raise(ValueError())
 
             driver = None
             crs = None
@@ -74,10 +81,12 @@ class Layer:
                     dst.write(data)
         
         # read file
-        # try:
-        self.raster_ = rasterio.open(self.path)
-        # except:
-            # log.error("open file error")
+        try:
+            self.raster_ = rasterio.open(self.path)
+        except:
+            logger.error("Failed to open '"+str(self.path)+"'. A tif file is expected. Occured in '_base/_layer.tif, Layer.__init_()'.")
+            stop_log()
+            raise
 
     def get_data(self, band=1):
         return(self.raster_.read(band))
