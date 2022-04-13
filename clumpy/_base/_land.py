@@ -16,8 +16,7 @@ from ..transition_probability_estimation._tpe import TransitionProbabilityEstima
 from ..transition_probability_estimation import Bayes
 
 # Features selection
-from ..feature_selection._feature_selector import FeatureSelector
-from ..feature_selection import feature_selectors as dict_feature_selectors
+from ..feature_selection import MRMR
 
 # Tools
 from ..tools._path import path_split
@@ -65,7 +64,7 @@ class Land():
                  features=[],
                  transition_probability_estimator=None,
                  set_features_bounds=True,
-                 feature_selector=None,
+                 feature_selection=-1,
                  fit_bootstrap_patches=True,
                  allocator=None,
                  verbose=0,
@@ -84,18 +83,9 @@ class Land():
         self.features = features
 
         # Features selection
-        self.feature_selector = []
-        if isinstance(feature_selector, list):
-            for info in feature_selector:
-                if isinstance(info, dict):
-                    dict_fs = info.copy()
-                    del dict_fs['type']
-                    fs = dict_feature_selectors[info['type']](**dict_fs)
-                    self.feature_selector.append(fs)
-
-                if isinstance(info, FeatureSelector):
-                    self.feature_selector.append(info)
+        self.feature_selection = feature_selection
         
+        # set features bounds 
         self.set_features_bounds = set_features_bounds
         
         # fit bootstrap patches
@@ -106,7 +96,7 @@ class Land():
         
         # state
         self.state = state
-
+        
         self.verbose = verbose
         self.verbose_heading_level = verbose_heading_level
 
@@ -131,10 +121,19 @@ class Land():
                     if feature_params['state'] != self.state.value:
                         features.append(palette._get_by_value(feature_params['state']))
         
+        # feature selection
+        if 'feature_selection' in params.keys():
+            if isinstance(params['feature_selection'], int):
+                self.feature_selection = params['feature_selection']
+            else:
+                self.feature_selection = -1
+                
+        
         # transition matrix
-        if 'transition_matrix' in params.keys():
-            transition_matrix = load_transition_matrix(path=params['transition_matrix'],
-                                                       palette=palette)
+        transition_matrix = load_transition_matrix(path=params['transition_matrix'],
+                                                   palette=palette)
+        # select expected final states
+        self._final_palette = transition_matrix.get_final_palette(info_u=self.state)
         
         # calibration
         try:
@@ -161,20 +160,18 @@ class Land():
                         verbose=self.verbose,
                         verbose_heading_level=4)
 
-            for state_v in transition_matrix.palette_v:
-                # if the transition is expected
-                if transition_matrix.get(self.state, state_v) > 0.0:
-                    add_cde_parameters = extract_parameters(tpe.add_conditional_density_estimator, calibration_params)
+            for state_v in self._final_palette:
+                add_cde_parameters = extract_parameters(tpe.add_conditional_density_estimator, calibration_params)
 
-                    cde_class = _density_estimation_methods[density_estimation_method]
-                    cde_parameters = extract_parameters(cde_class, calibration_params)
+                cde_class = _density_estimation_methods[density_estimation_method]
+                cde_parameters = extract_parameters(cde_class, calibration_params)
 
-                    tpe.add_conditional_density_estimator(
-                        state=state_v,
-                        density_estimator=cde_class(verbose=self.verbose,
-                                                    # verbose_heading_level=5,
-                                                    **cde_parameters),
-                        **add_cde_parameters)
+                tpe.add_conditional_density_estimator(
+                    state=state_v,
+                    density_estimator=cde_class(verbose=self.verbose,
+                                                # verbose_heading_level=5,
+                                                **cde_parameters),
+                    **add_cde_parameters)
         
         # allocation
         try:
@@ -247,7 +244,8 @@ class Land():
                    lul_final=None,
                    mask=None,
                    explanatory_variables=True,
-                   distances_to_states={}):
+                   distances_to_states={},
+                   restrict_to_final_palette=True):
         """
         Get values.
 
@@ -350,6 +348,9 @@ class Land():
 
             # just get data inside the region (because J is already inside)
             V = data_lul_final.flat[J]
+            
+            if restrict_to_final_palette:
+                V[~np.isin(V, self._final_palette.get_list_of_values())] = self.state.value
 
         elements_to_return = [J]
 
@@ -440,34 +441,17 @@ class Land():
 
         # FEATURE SELECTORS
         # if only one object, make a list
-        if isinstance(self.feature_selector, list):
-            feature_selector = self.feature_selector
-        elif self.feature_selector is None:
-            feature_selector = []
-        else:
-            feature_selector = [self.feature_selector]
+        self._feature_selector = MRMR(e=self.feature_selection)
+        
+        if self.verbose > 0:
+            print('Feature selecting...')
+        
+        # fit and transform X
+        X = self._feature_selector.fit_transform(X=X, V=V)
 
-        # features_idx is used for boundaries parameters
-        # it will be transformed as a X data
-        # to get selected columns after all selectors.
-        features_idx = np.arange(len(self.features))[None, :]
 
-        for fs in feature_selector:
-            if self.verbose > 0:
-                print('Feature selecting : ' + str(fs) + '...')
-            # check the type
-            if not isinstance(fs, FeatureSelector):
-                raise (TypeError(
-                    "Unexpected 'feature_selector' type. Should be 'FeatureSelector' or 'list(FeatureSelector)'"))
-            # fit and transform X
-            X = fs.fit_transform(X=X)
-
-            features_idx = fs.transform(features_idx)
-
-            if self.verbose > 0:
-                print('Feature selecting : ' + str(fs) + ' done.')
-
-        features_idx = features_idx[0, :]
+        if self.verbose > 0:
+            print('Feature selecting done.')
 
         self._time_fit['feature_selector'] = time()-st
         st=time()
@@ -475,7 +459,7 @@ class Land():
         # BOUNDARIES PARAMETERS
         bounds = []
         if self.set_features_bounds:
-            for id_col, idx in enumerate(features_idx):
+            for id_col, idx in enumerate(self._feature_selector._cols_support):
                 if isinstance(self.features[idx], FeatureLayer):
                     if self.features[idx].bounded in ['left', 'right', 'both']:
                         # one takes as parameter the column id of
@@ -678,17 +662,7 @@ class Land():
         self._time_tp['get_values'] = time() - st
 
         # FEATURES SELECTOR
-        # if only one object, make a list
-        if isinstance(self.feature_selector, list):
-            feature_selector = self.feature_selector
-        elif self.feature_selector is None:
-            feature_selector = []
-        else:
-            feature_selector = [self.feature_selector]
-
-        for fs in feature_selector:
-            # transform Y according to the fitting.
-            Y = fs.transform(X=Y)
+        Y = self._feature_selector.transform(X=Y)
 
         # TRANSITION PROBABILITY ESTIMATION
         st = time()

@@ -249,6 +249,13 @@ class TransitionMatrix():
         p = self.M[id_u, :].copy()
 
         return (p, self.palette_v)
+    
+    def get_final_palette(self, info_u):
+        p = self.get_P_v(info_u)[0]
+        id_possible_v = np.arange(p.size)[p > 0]
+        final_palette = Palette(states=[self.palette_v.states[id_v] for id_v in id_possible_v])
+        
+        return(final_palette)
 
     def multisteps(self, n, inplace=False):
         """

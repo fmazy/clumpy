@@ -2,41 +2,31 @@
 
 import numpy as np
 from ._feature_selector import FeatureSelector
+from sklearn.feature_selection import f_classif
 
 class MRMR(FeatureSelector):
-    def __init__(self, s):
-        self.s = s
+    def __init__(self, e):
+        self.e = e
     
-    def fit(self, X, y):
+    def fit(self, X, V):
         
-        F = []
-        for j in range(X.shape[1]):
-            F.append(np.abs(np.corrcoef(np.vstack((X[:,j], y)))[0,1]))
-        F = np.abs(F)
+        n, d = X.shape
         
-        print(F)
         
-        corr_X = np.abs(np.corrcoef(X))
+        F = f_classif(X, V)[0]
         
-        T_bar = np.arange(X.shape[1])
+        R = np.abs(np.corrcoef(X.T))
         
-        id_max = np.argmax(F)
+        T = [np.argmax(F)]
+        T_bar = np.delete(np.arange(d), T[0])
         
-        T_bar = np.delete(T_bar, id_max)
-        T = np.array([id_max])
-        
-        print(T)
-        
-        for j in range(self.s - 1):
+        for j in range(self.e - 1):
+            alpha = F[T_bar] / R[T, :][:, T_bar].sum(axis=0)
             
-            alpha = F[T_bar] / np.sum(corr_X[T_bar, :][:, T], axis=1)
-            
-            b = np.argmax(alpha)
-            T_bar = np.delete(T_bar, b)
-            T = np.append(T, b)
-            
-            print(T)
-            
-        self._cols_support = list(T)
+            id_k_star = np.argmax(alpha)
+            T = np.append(T, T_bar[id_k_star])
+            T_bar = np.delete(T_bar, id_k_star)
+        
+        self._cols_support = T
         
         return(self)

@@ -32,7 +32,7 @@ class FeatureSelector():
         """
         return(X[:, self._cols_support])
 
-    def fit_transform(self, X, y=None):
+    def fit_transform(self, X, V):
         """
         Fit to data, then transform it.
 
@@ -47,7 +47,7 @@ class FeatureSelector():
         X_r : array-like of shape (n_samples, n_features)
             The input samples with only the selected features.
         """
-        self.fit(X)
+        self.fit(X, V)
         return(self.transform(X))
     
     

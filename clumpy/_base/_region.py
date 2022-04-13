@@ -63,10 +63,7 @@ class Region():
         return (self)
     
     def make(self, palette, **params):
-        
-        density_estimation_method = 'kde'
-        allocation_method = 'unbiased'
-        
+                
         self.lands = {}
         
         
@@ -79,7 +76,14 @@ class Region():
                         verbose=self.verbose,
                         verbose_heading_level=4)
             
-            land.make(palette, **params)
+            state_params = params.copy()
+            # state_params is appended with specific parameters of the land
+            if 'states' in state_params.keys():
+                if str(state_u.value) in state_params['states'].keys():
+                    for key in state_params['states'][str(state_u.value)]:
+                        state_params[key] = state_params['states'][str(state_u.value)][key]
+                                
+            land.make(palette, **state_params)
             
             self.add_land(land=land)
         
