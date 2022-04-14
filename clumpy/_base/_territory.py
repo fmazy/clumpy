@@ -10,6 +10,7 @@ from ._layer import LandUseLayer
 from . import Region
 from ..tools._path import path_split
 from ..tools._console import title_heading
+from ._feature import Features
 
 import logging
 logger = logging.getLogger('clumpy')
@@ -41,7 +42,7 @@ class Territory():
 
         self.verbose = verbose
         self.verbose_heading_level = verbose_heading_level
-
+    
     def add_region(self, region):
         """
         Add a region. If ``region`` is already in the list, nothing happened.
@@ -55,9 +56,10 @@ class Territory():
         -------
         self
         """
+        region.territory = self
         if region not in self.regions.values():
             self.regions[region.label] = region
-
+        
         return (self)
 
     def remove_region(self, region):
@@ -79,6 +81,12 @@ class Territory():
             pass
 
         return (self)
+    
+    def set_features(self, features):
+        self.features = features
+    
+    def get_features(self):
+        return(self.features)
 
     def check(self):
         """

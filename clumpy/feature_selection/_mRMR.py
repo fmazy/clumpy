@@ -8,6 +8,9 @@ class MRMR(FeatureSelector):
     def __init__(self, e=-1):
         self.e = e
     
+    def __repr__(self):
+        return 'mRMR(e='+str(self.e)+')'
+    
     def fit(self, X, V):
         n, d = X.shape
         

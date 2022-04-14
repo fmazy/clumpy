@@ -20,7 +20,7 @@ class Case():
         self.territory = None
         self.params = None
     
-    def load(self, info):
+    def open(self, info):
         """
         Loading function 
 
@@ -41,13 +41,13 @@ class Case():
 
         """
         if isinstance(info, dict):
-            self._load_dict(info)
+            self._open_dict(info)
         elif isinstance(info, str):
-            self._load_json(info)
+            self._open_json(info)
         else:
             self.logger.error('Case/_case.py - Case.load() : Unexpected load info parameter.')
     
-    def _load_json(self, path):
+    def _open_json(self, path):
         """
         load a json file
         """
@@ -62,11 +62,11 @@ class Case():
         # Closing file
         f.close()
         
-        self._load_dict(params)
+        self._open_dict(params)
         
         return(self)
     
-    def _load_dict(self, params):
+    def _open_dict(self, params):
         """
         load a dict object
         """
@@ -185,7 +185,7 @@ class Case():
         Get the palette set in the parameters.
         """
         try:
-            palette = load_palette(self.params['palette'])
+            palette = load_palette(self.params.params['palette'])
             return(palette)
         except:
             self.logger.warning("Failed to open palette")
@@ -197,7 +197,7 @@ class Case():
         Get the transition probabilities only trigger parameter.
         """
         try:
-            transition_probabilities_only = self.params['transition_probabilities_only']
+            transition_probabilities_only = self.params.params['transition_probabilities_only']
             return(transition_probabilities_only)
         except:
             self.logger.warning("Failed to get transition_probability_only trigger. set True as default.")
@@ -208,7 +208,7 @@ class Case():
         Get the verbose parameter.
         """
         try:
-            return(self.params['verbose'])
+            return(self.params.params['verbose'])
         except:
             self.logger.warning("Failed to get verbose trigger. set True as default.")
             return(True)
@@ -218,7 +218,7 @@ class Case():
         Get the output folder parameter.
         """
         try:
-            return(self.params['output_folder'])
+            return(self.params.params['output_folder'])
         except:
             self.logger.warning("Failed to get output_folder string. set '' as default.")
             return('')
@@ -229,7 +229,7 @@ class Case():
         """
         try:
             palette = self.palette
-            return(LandUseLayer(path = self.params['lul_'+str(kind)],
+            return(LandUseLayer(path = self.params.params['lul_'+str(kind)],
                                 palette=self.palette))
         except:
             self.logger.error("Failed to open land use layer at "+str(self.params['lul_'+str(kind)])+".")
@@ -270,3 +270,15 @@ class Case():
             self.logger.error("Failed to open '"+str(region_params['transition_matrix'])+"'")
             raise
     
+    def new_region(self, label):
+        if not isinstance(label, str):
+            self.logger.error("The region label must be a string.")
+            raise
+        
+        if label in self.params['regions'].keys():
+            self.logger.error("The region label "+str(label)+" does already exist.")
+            raise
+        else:
+            self.params['regions'][label] = {'transition_matrix':None,
+                                             'calibration_mask':None,
+                                             'allocation_mask':None}

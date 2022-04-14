@@ -4,6 +4,8 @@
 import numpy as np
 from time import time
 
+from scipy import ndimage
+
 # base import
 from ._layer import Layer, FeatureLayer, LandUseLayer
 from ._state import State
@@ -14,8 +16,9 @@ from ..density_estimation import _methods as _density_estimation_methods
 from ..transition_probability_estimation._tpe import TransitionProbabilityEstimator
 from ..transition_probability_estimation import Bayes
 
-# features selection
+# features
 from ..feature_selection import MRMR
+from ._feature import Features
 
 # Tools
 from ..tools._path import path_split
@@ -34,7 +37,6 @@ DEFAULT_calibration_method = 'bayes'
 DEFAULT_calibration_params_density_estimation_method = 'kde'
 DEFAULT_allocation_method = 'unbiased'
 DEFAULT_set_features_bounds = True
-DEFAULT_feature_selection = -1
 DEFAULT_fit_bootstrap_patches = True
 
 class Land():
@@ -67,10 +69,10 @@ class Land():
 
     def __init__(self,
                  state,
-                 features=[],
+                 final_palette=None,
+                 features=None,
                  transition_probability_estimator=None,
                  set_features_bounds=DEFAULT_set_features_bounds,
-                 feature_selection=DEFAULT_feature_selection,
                  fit_bootstrap_patches=DEFAULT_fit_bootstrap_patches,
                  allocator=None,
                  verbose=0,
@@ -84,12 +86,7 @@ class Land():
         self.transition_probability_estimator = transition_probability_estimator
 
         # features as a list
-        if not isinstance(features, list):
-            raise (TypeError("Unexpected 'features'. A list is expected."))
         self.features = features
-
-        # features selection
-        self.feature_selection = feature_selection
         
         # set features bounds 
         self.set_features_bounds = set_features_bounds
@@ -105,6 +102,9 @@ class Land():
         
         self.verbose = verbose
         self.verbose_heading_level = verbose_heading_level
+        
+        self.region = None
+        self.final_palette = final_palette
 
     def __repr__(self):
         return 'land'
@@ -139,7 +139,7 @@ class Land():
         transition_matrix = load_transition_matrix(path=params['transition_matrix'],
                                                    palette=palette)
         # select expected final states
-        self._final_palette = transition_matrix.get_final_palette(info_u=self.state)
+        self.final_palette = transition_matrix.getfinal_palette(info_u=self.state)
         
         # calibration
         try:
@@ -166,7 +166,7 @@ class Land():
                         verbose=self.verbose,
                         verbose_heading_level=4)
 
-            for state_v in self._final_palette:
+            for state_v in self.final_palette:
                 add_cde_parameters = extract_parameters(tpe.add_conditional_density_estimator, calibration_params)
 
                 cde_class = _density_estimation_methods[density_estimation_method]
@@ -247,14 +247,23 @@ class Land():
             feature_selectors.append(fs)
 
         return feature_selectors
-
+    
+    def set_features(self, features):
+        self.features = features
+    
+    def get_features(self):
+        if self.features is None:
+            return(self.region.get_features())
+        else:
+            return(self.features)
+    
     def get_values(self,
                    lul_initial,
                    lul_final=None,
                    mask=None,
                    explanatory_variables=True,
                    distances_to_states={},
-                   restrict_to_final_palette=True):
+                   restrict_tofinal_palette=True):
         """
         Get values.
 
@@ -311,7 +320,7 @@ class Land():
         X = None
         if explanatory_variables:
             # create feature labels
-            for info in self.features:
+            for info in self.get_features():
                 # switch according z_type
                 if isinstance(info, Layer):
                     # just get data
@@ -345,7 +354,7 @@ class Land():
                     X = np.column_stack((X, x))
 
             # if only one feature, reshape X as a column
-            if len(self.features) == 1:
+            if len(X.shape) == 1:
                 X = X[:, None]
 
         # if final lul layer
@@ -358,8 +367,8 @@ class Land():
             # just get data inside the region (because J is already inside)
             V = data_lul_final.flat[J]
             
-            if restrict_to_final_palette:
-                V[~np.isin(V, self._final_palette.get_list_of_values())] = self.state.value
+            if restrict_tofinal_palette and self.final_palette is not None:
+                V[~np.isin(V, self.final_palette.get_list_of_values())] = self.state.value
 
         elements_to_return = [J]
 
@@ -447,7 +456,9 @@ class Land():
                                               distances_to_states=distances_to_states)
         self._time_fit['get_values'] = time()-st
         st = time()
-
+        
+        return(self)
+        
         # feature SELECTORS
         # if only one object, make a list
         self._feature_selector = MRMR(e=self.feature_selection)

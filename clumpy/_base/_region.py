@@ -8,6 +8,7 @@ from ._transition_matrix import TransitionMatrix, load_transition_matrix
 from ..tools._path import path_split
 from ..tools._console import title_heading
 from . import Land
+from ._feature import Features
 
 class Region():
     """
@@ -34,6 +35,9 @@ class Region():
         self.verbose_heading_level = verbose_heading_level
 
         self.lands = {}
+        
+        self.territory = None
+        self.features = None
 
     def __repr__(self):
         return (self.label)
@@ -54,7 +58,10 @@ class Region():
         -------
         self
         """
+        land.region = self
+        
         self.lands[land.state] = land
+        
 
         return (self)
     
@@ -72,14 +79,14 @@ class Region():
                         verbose=self.verbose,
                         verbose_heading_level=4)
             
-            state_params = params.copy()
-            # state_params is appended with specific parameters of the land
-            if 'states' in state_params.keys():
-                if str(state_u.value) in state_params['states'].keys():
-                    for key in state_params['states'][str(state_u.value)]:
-                        state_params[key] = state_params['states'][str(state_u.value)][key]
+            land_params = params.copy()
+            # land_params is appended with specific parameters of the land
+            if 'lands' in land_params.keys():
+                if str(state_u.value) in land_params['states'].keys():
+                    for key in land_params['states'][str(state_u.value)]:
+                        land_params[key] = land_params['states'][str(state_u.value)][key]
                                 
-            land.make(palette, **state_params)
+            land.make(palette, **land_params)
             
             self.add_land(land=land)
         
@@ -101,7 +108,16 @@ class Region():
             feature_selectors = land._check_feature_selectors(feature_selectors=feature_selectors)
 
         return (feature_selectors)
-
+    
+    def set_features(self, features):
+        self.features = features
+    
+    def get_features(self):
+        if self.features is None:
+            return(self.territory.get_features())
+        else:
+            return(self.features)
+    
     def check(self):
         """
         Check the Region object through lands checks.
