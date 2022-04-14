@@ -42,6 +42,10 @@ class Territory():
 
         self.verbose = verbose
         self.verbose_heading_level = verbose_heading_level
+        
+        self.lul = {}
+        self.mask = {}
+        self.transition_matrix = None
     
     def add_region(self, region):
         """
@@ -87,6 +91,30 @@ class Territory():
     
     def get_features(self):
         return(self.features)
+    
+    def set_calibrator(self, calibrator):
+        self.calibrator = calibrator
+    
+    def get_calibrator(self):
+        return(self.calibrator)
+    
+    def set_lul(self, lul, kind):
+        self.lul[kind] = lul
+    
+    def get_lul(self, kind):
+        return(self.lul[kind])
+    
+    def set_mask(self, mask, kind):
+        return(self.mask[kind])
+    
+    def get_mask(self, kind):
+        return(self.mask[kind])
+    
+    def set_transition_matrix(self, tm):
+        self.transition_matrix = tm
+    
+    def get_transition_matrix(self):
+        return(self.transition_matrix)
 
     def check(self):
         """

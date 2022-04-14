@@ -9,6 +9,7 @@ from ..tools._console import title_heading
 
 from .._base import Palette
 
+from copy import deepcopy
 
 class Bayes(TransitionProbabilityEstimator):
     """
@@ -34,7 +35,7 @@ class Bayes(TransitionProbabilityEstimator):
     """
 
     def __init__(self,
-                 density_estimator='kde',
+                 density_estimator=None,
                  n_corrections_max=1000,
                  log_computations=False,
                  verbose=0,
@@ -46,80 +47,12 @@ class Bayes(TransitionProbabilityEstimator):
                          verbose=verbose,
                          verbose_heading_level=verbose_heading_level)
         
-        if density_estimator in _methods:
-            self.density_estimator = _methods[density_estimator](verbose=self.verbose - 1)
-        else:
-            self.density_estimator = density_estimator
-
-        self.conditional_density_estimators = {}
-
-        self.P_v_min = {}
-        self.n_samples_min = {}
-
-
-
-    def add_conditional_density_estimator(self,
-                                          state,
-                                          density_estimator='kde',
-                                          P_v_min=0.0,
-                                          n_samples_min=1):
-        """
-        Add conditional density for a given final state.
-
-        Parameters
-        ----------
-        state : State
-            The final state.
-
-        density_estimator : {'gkde'} or DensityEstimator, default='gkde'
-            Density estimation for :math:`P(x|u,v)`.
-                gkde : Gaussian Kernel Density Estimation method
-
-        P_v_min : float, default=5*10**(-5)
-        Minimum global probability to learn.
-
-        n_samples_min : int, default=500
-            Minimum number of samples to learn.
-
-        Returns
-        -------
-        self : Land
-            The self object.
-        """
-        
-        if density_estimator in _methods:
-            self.conditional_density_estimators[state] = _methods[density_estimator](verbose=self.verbose - 1)
-        else:
-            self.conditional_density_estimators[state] = density_estimator
-        
-
-        self.P_v_min[state] = P_v_min
-        self.n_samples_min[state] = n_samples_min
-
-        return (self)
-
-    def _check(self, density_estimators=[]):
-        """
-        Check the density estimators uniqueness.
-        """
-        # density estimator check.
-        if self.density_estimator in density_estimators:
-            raise (ValueError('The density estimator is already used. A new DensityEstimator must be invoked.'))
-        density_estimators.append(self.density_estimator)
-
-        # conditional density estimator check.
-        for state, cde in self.conditional_density_estimators.items():
-            if cde in density_estimators:
-                raise (ValueError('The conditional density estimator for the state ' + str(
-                    state) + ' is already used. A new DensityEstimator must be invoked.'))
-            density_estimators.append(cde)
-
-        return (density_estimators)
-
+        self.density_estimator = density_estimator
+    
     def fit(self,
             X,
             V,
-            state=None,
+            v_initial=None,
             bounds=None):
         """
         Fit the transition probability estimators. Only :math:`P(Y|u,v)` is
@@ -145,76 +78,67 @@ class Bayes(TransitionProbabilityEstimator):
             print('Conditional density estimators fitting :')
 
         self._palette_fitted_states = Palette()
-
+        
         # set de params
-        self.density_estimator.set_params(bounds = bounds)
-
-        for state_v, cde in self.conditional_density_estimators.items():
-            if self.verbose > 0:
-                print('state_v : ' + str(state_v))
-
-            # set cde params
-            cde.set_params(bounds = bounds)
-
-            # select X_v
-            idx_v = V == state_v.value
-
-            # check fitting conditions
-            if np.mean(idx_v) > self.P_v_min[state_v] and np.sum(idx_v) > self.n_samples_min[state_v] and state_v != state:
-                # Density estimation fit
-                cde.fit(X[idx_v])
-
-                self._palette_fitted_states.add(state_v)
+        self._de = deepcopy(self.density_estimator)
+        self._de.set_params(bounds = bounds)
+        
+        self._cde = {}
+        
+        list_v = np.unique(V)
+        for v in list_v:
+            if v != v_initial:
+                self._cde[v] = deepcopy(self._de)
+                self._cde[v].set_params(bounds = bounds)
+                
+                idx_v = V == v
+                self._cde[v].fit(X=X[idx_v])
+                
             else:
-                # fitting conditions are not satisfying
-                # change the density estimator to the null estimator.
-                if self.verbose > 0:
-                    print('This transition is not studied.')
-                self.conditional_density_estimators[state_v] = NullEstimator()
-
+                self._cde[v] = NullEstimator()
+        
         if self.verbose > 0:
             print('TPE fitting done.')
 
         return (self)
 
-    def _compute_P_Y(self, Y, J=None):
+    def _compute_P_Y(self, Y):
         # forbid_null_value is forced to True by default for this density estimator
-        self.density_estimator.set_params(forbid_null_value=True)
+        # self._de.set_params(forbid_null_value=True)
 
         if self.verbose > 0:
             print('Density estimator fitting...')
-        self.density_estimator.fit(Y)
+        self._de.fit(Y)
         if self.verbose > 0:
             print('Density estimator fitting done.')
 
         # P(Y) estimation
         if self.verbose > 0:
             print('Density estimator predict...')
-        P_Y = self.density_estimator.predict(Y)[:, None]
+        P_Y = self._de.predict(Y)[:, None]
         if self.verbose > 0:
             print('Density estimator predict done.')
 
         return (P_Y)
 
-    def _compute_P_Y__v(self, Y, transition_matrix, J=None):
-        state_u = transition_matrix.palette_u.states[0]
+    def _compute_P_Y__v(self, Y, list_v):
 
         # first, create a list of estimators according to palette_v order
         # if no estimator is informed, the NullEstimator is invoked.
         if self.verbose > 0:
             print('Conditionnal density estimators predict...')
             print('are concerned :')
-        conditional_density_estimators = []
-        for state_v in transition_matrix.palette_v:
-            if state_v != state_u and state_v in self.conditional_density_estimators.keys():
+        cde = []
+        for v in list_v:
+            if v in self._cde.keys():
                 if self.verbose > 0:
-                    print('state_v ' + str(state_v))
-                conditional_density_estimators.append(self.conditional_density_estimators[state_v])
+                    print('v ' + str(v))
+                cde.append(self._cde[v])
             else:
-                conditional_density_estimators.append(NullEstimator())
+                cde.append(NullEstimator())
 
         # estimate P(Y|u,v). Columns with no estimators are null columns.
-        P_Y__v = np.vstack([cde.predict(Y) for cde in conditional_density_estimators]).T
+        P_Y__v = np.vstack([cde.predict(Y) for cde in cde]).T
 
         if self.verbose > 0:
             print('Conditional density estimators predict done.')

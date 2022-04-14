@@ -68,6 +68,9 @@ class Palette():
 
     def __len__(self):
         return (len(self.states))
+    
+    def __getitem__(self, info):
+         return self.get(info)
 
     def copy(self):
         palette = Palette(states = [state for state in self.states])

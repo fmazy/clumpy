@@ -38,6 +38,10 @@ class Region():
         
         self.territory = None
         self.features = None
+        self.calibrator = None
+        self.lul = {}
+        self.mask = {}
+        self.transition_matrix = None
 
     def __repr__(self):
         return (self.label)
@@ -117,6 +121,42 @@ class Region():
             return(self.territory.get_features())
         else:
             return(self.features)
+    
+    def set_calibrator(self, calibrator):
+        self.calibrator = calibrator
+    
+    def get_calibrator(self):
+        if self.calibrator is None:
+            return(self.territory.get_calibrator())
+        else:
+            return(self.calibrator)
+    
+    def set_lul(self, lul, kind):
+        self.lul[kind] = lul
+    
+    def get_lul(self, kind):
+        if kind not in self.lul.keys():
+            return(self.territory.get_lul(kind))
+        else:
+            return(self.lul[kind])
+    
+    def set_mask(self, mask, kind):
+        self.mask[kind] = mask
+    
+    def get_mask(self, kind):
+        if kind not in self.mask.keys():
+            return(self.territory.get_mask(kind))
+        else:
+            return(self.mask[kind])
+    
+    def set_transition_matrix(self, tm):
+        self.transition_matrix = tm
+    
+    def get_transition_matrix(self):
+        if self.transition_matrix is None:
+            return(self.territory.get_transition_matrix())
+        else:
+            return(self.transition_matrix)
     
     def check(self):
         """

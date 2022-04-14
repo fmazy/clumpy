@@ -15,7 +15,7 @@ class MRMR(FeatureSelector):
         n, d = X.shape
         
         nb_ev = self.e
-        if nb_ev == -1:
+        if nb_ev == -1 or nb_ev > d:
             nb_ev = d
         
         F = f_classif(X, V)[0]
@@ -25,11 +25,8 @@ class MRMR(FeatureSelector):
         T = [np.argmax(F)]
         T_bar = np.delete(np.arange(d), T[0])
         
-        
-        
         for j in range(nb_ev - 1):
             alpha = F[T_bar] / R[T, :][:, T_bar].sum(axis=0)
-            
             id_k_star = np.argmax(alpha)
             T = np.append(T, T_bar[id_k_star])
             T_bar = np.delete(T_bar, id_k_star)
@@ -37,3 +34,6 @@ class MRMR(FeatureSelector):
         self._cols_support = T
         
         return(self)
+    
+    def copy(self):
+        return(MRMR(e=self.e))

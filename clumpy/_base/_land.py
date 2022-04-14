@@ -70,7 +70,6 @@ class Land():
     def __init__(self,
                  state,
                  final_palette=None,
-                 features=None,
                  transition_probability_estimator=None,
                  set_features_bounds=DEFAULT_set_features_bounds,
                  fit_bootstrap_patches=DEFAULT_fit_bootstrap_patches,
@@ -85,8 +84,10 @@ class Land():
                 "Unexpected 'transition_probability_estimator. A 'TransitionProbabilityEstimator' object is expected."))
         self.transition_probability_estimator = transition_probability_estimator
 
-        # features as a list
-        self.features = features
+        self.features = None
+        self.calibrator = None
+        self.lul = {}
+        self.mask = {}
         
         # set features bounds 
         self.set_features_bounds = set_features_bounds
@@ -256,14 +257,39 @@ class Land():
             return(self.region.get_features())
         else:
             return(self.features)
+        
+    def set_calibrator(self, calibrator):
+        self.calibrator = calibrator
     
+    def get_calibrator(self):
+        if self.calibrator is None:
+            return(self.region.get_calibrator())
+        else:
+            return(self.calibrator)
+    
+    def set_lul(self, lul, kind):
+        self.lul[kind] = lul
+    
+    def get_lul(self, kind):
+        if kind not in self.lul.keys():
+            return(self.region.get_lul(kind))
+        else:
+            return(self.lul[kind])
+        
+    def set_mask(self, mask, kind):
+        self.mask[kind] = mask
+    
+    def get_mask(self, kind):
+        if kind not in self.mask.keys():
+            return(self.region.get_mask(kind))
+        else:
+            return(self.mask[kind])
+        
     def get_values(self,
-                   lul_initial,
-                   lul_final=None,
-                   mask=None,
+                   kind,
                    explanatory_variables=True,
                    distances_to_states={},
-                   restrict_tofinal_palette=True):
+                   restrict_to_final_palette=True):
         """
         Get values.
 
@@ -300,6 +326,10 @@ class Land():
             Returned if ``lul_final`` is not ``None``. The final state values.
 
         """
+        lul_initial = self.get_lul('initial')
+        lul_final = self.get_lul('final')
+        mask = self.get_mask(kind)
+        
         # initial data
         # the region is selected after the distance computation
         if isinstance(lul_initial, LandUseLayer):
@@ -320,7 +350,16 @@ class Land():
         X = None
         if explanatory_variables:
             # create feature labels
-            for info in self.get_features():
+            features = self.get_features().copy()
+            
+            # remove features distance to the land state
+            # (equal to 0.0 everywhere)
+            if self.state in features:
+                features.list.remove(self.state)
+            if self.state.value in features:
+                features.list.remove(self.state.value)
+            
+            for info in features:
                 # switch according z_type
                 if isinstance(info, Layer):
                     # just get data
@@ -358,7 +397,7 @@ class Land():
                 X = X[:, None]
 
         # if final lul layer
-        if lul_final is not None:
+        if kind == 'calibration':
             if isinstance(lul_final, LandUseLayer):
                 data_lul_final = lul_final.get_data()
             else:
@@ -367,23 +406,22 @@ class Land():
             # just get data inside the region (because J is already inside)
             V = data_lul_final.flat[J]
             
-            if restrict_tofinal_palette and self.final_palette is not None:
-                V[~np.isin(V, self.final_palette.get_list_of_values())] = self.state.value
+            if restrict_to_final_palette:
+                tm = self.region.get_transition_matrix()
+                final_palette = tm.get_final_palette(self.state)
+                V[~np.isin(V, final_palette.get_list_of_values())] = self.state.value
 
         elements_to_return = [J]
 
         if explanatory_variables:
             elements_to_return.append(X)
 
-        if lul_final is not None:
+        if kind == 'calibration':
             elements_to_return.append(V)
 
         return elements_to_return
 
     def fit(self,
-            lul_initial,
-            lul_final,
-            mask=None,
             distances_to_states={}):
         """
         Fit the land. Required for any further process.
@@ -413,23 +451,28 @@ class Land():
         st0 = time()
         if self.verbose > 0:
             print(title_heading(self.verbose_heading_level) + 'Land ' + str(self.state) + ' fitting\n')
+        
+        self._calibrator = self.get_calibrator().copy()
+        
+        self._calibrator.fit(land=self,
+                             distances_to_states=distances_to_states)
+        
+        # if self.transition_probability_estimator is None:
+        #     raise (ValueError('Transition probability estimator is expected for fitting.'))
 
-        if self.transition_probability_estimator is None:
-            raise (ValueError('Transition probability estimator is expected for fitting.'))
+        # self._fit_tpe(lul_initial=lul_initial,
+        #               lul_final=lul_final,
+        #               mask=mask,
+        #               distances_to_states=distances_to_states)
 
-        self._fit_tpe(lul_initial=lul_initial,
-                      lul_final=lul_final,
-                      mask=mask,
-                      distances_to_states=distances_to_states)
-
-        if self.fit_bootstrap_patches:
-            st = time()
-            self.compute_bootstrap_patches(
-                palette_v=self.transition_probability_estimator._palette_fitted_states,
-                lul_initial=lul_initial,
-                lul_final=lul_final,
-                mask=mask)
-            self._time_fit['compute_bootstrap_patches'] = time()-st
+        # if self.fit_bootstrap_patches:
+        #     st = time()
+        #     self.compute_bootstrap_patches(
+        #         palette_v=self.transition_probability_estimator._palette_fitted_states,
+        #         lul_initial=lul_initial,
+        #         lul_final=lul_final,
+        #         mask=mask)
+        #     self._time_fit['compute_bootstrap_patches'] = time()-st
 
         if self.verbose > 0:
             print('Land ' + str(self.state) + ' fitting done.\n')
@@ -438,76 +481,70 @@ class Land():
 
         return self
 
-    def _fit_tpe(self,
-                 lul_initial,
-                 lul_final,
-                 mask=None,
-                 distances_to_states={}):
-        """
-        Fit the transition probability estimator
-        """
-        # TIME
-        st = time()
-        # GET VALUES
-        J_calibration, X, V = self.get_values(lul_initial=lul_initial,
-                                              lul_final=lul_final,
-                                              mask=mask,
-                                              explanatory_variables=True,
-                                              distances_to_states=distances_to_states)
-        self._time_fit['get_values'] = time()-st
-        st = time()
-        
-        return(self)
-        
-        # feature SELECTORS
-        # if only one object, make a list
-        self._feature_selector = MRMR(e=self.feature_selection)
-        
-        if self.verbose > 0:
-            print('feature selecting...')
-        
-        # fit and transform X
-        X = self._feature_selector.fit_transform(X=X, V=V)
-
-
-        if self.verbose > 0:
-            print('feature selecting done.')
-
-        self._time_fit['feature_selector'] = time()-st
-        st=time()
-
-        # BOUNDARIES PARAMETERS
-        bounds = []
-        if self.set_features_bounds:
-            for id_col, idx in enumerate(self._feature_selector._cols_support):
-                if isinstance(self.features[idx], FeatureLayer):
-                    if self.features[idx].bounded in ['left', 'right', 'both']:
-                        # one takes as parameter the column id of
-                        # bounded features AFTER feature selection !
-                        # So, the right col index is id_col.
-                        # idx is used to get the corresponding feature layer.
-                        bounds.append((id_col, self.features[idx].bounded))
-                        
-                # if it is a state distance, add a low bound set to 0.0
-                if isinstance(self.features[idx], State) or isinstance(self.features[idx], int):
-                    bounds.append((id_col, 'left'))
+    # def _fit_tpe(self,
+    #              lul_initial,
+    #              lul_final,
+    #              mask=None,
+    #              distances_to_states={}):
+    #     """
+    #     Fit the transition probability estimator
+    #     """
+    #     # TIME
+    #     st = time()
+    #     # GET VALUES
+    #     J_calibration, X, V = self.get_values(lul_initial=lul_initial,
+    #                                           lul_final=lul_final,
+    #                                           mask=mask,
+    #                                           explanatory_variables=True,
+    #                                           distances_to_states=distances_to_states)
+    #     self._time_fit['get_values'] = time()-st
+    #     st = time()
                 
-        self._time_fit['boundaries_parameters_init'] = time()-st
+    #     # get a copy of features
+    #     # copy is necessary for the selector object
+    #     self._features = self.get_features().copy()
+        
+    #     if self.verbose > 0:
+    #         print('feature selecting...')
+        
+    #     # fit and transform X
+    #     X = self._features.selector.fit_transform(X=X, V=V)
 
-        # TRANSITION PROBABILITY ESTIMATOR
-        st = time()
-        self.transition_probability_estimator.fit(X=X,
-                                                  V=V,
-                                                  state = self.state,
-                                                  bounds = bounds)
-        self._time_fit['tpe_fit'] = time()-st
+    #     if self.verbose > 0:
+    #         print('feature selecting done.')
 
-        return self
+    #     self._time_fit['feature_selector'] = time()-st
+    #     st=time()
+                
+    #     # BOUNDARIES PARAMETERS
+    #     bounds = []
+    #     if self.set_features_bounds:
+    #         for id_col, idx in enumerate(self._features.selector._cols_support):
+    #             if isinstance(self._features[idx], FeatureLayer):
+    #                 if self._features[idx].bounded in ['left', 'right', 'both']:
+    #                     # one takes as parameter the column id of
+    #                     # bounded features AFTER feature selection !
+    #                     # So, the right col index is id_col.
+    #                     # idx is used to get the corresponding feature layer.
+    #                     bounds.append((id_col, self._features[idx].bounded))
+                        
+    #             # if it is a state distance, add a low bound set to 0.0
+    #             if isinstance(self._features[idx], State) or isinstance(self._features[idx], int):
+    #                 bounds.append((id_col, 'left'))
+                
+    #     self._time_fit['boundaries_parameters_init'] = time()-st
 
-    def transition_matrix(self,
-                          lul_initial,
-                          lul_final,
-                          mask=None):
+    #     # TRANSITION PROBABILITY ESTIMATOR
+    #     st = time()
+    #     self.transition_probability_estimator.fit(X=X,
+    #                                               V=V,
+    #                                               state = self.state,
+    #                                               bounds = bounds)
+    #     self._time_fit['tpe_fit'] = time()-st
+
+    #     return self
+
+    def transition_matrix(self):
         """
         Compute the transition matrix.
 
@@ -530,9 +567,12 @@ class Land():
         tm : TransitionMatrix
             The computed transition matrix.
         """
-        J, V = self.get_values(lul_initial=lul_initial,
-                               lul_final=lul_final,
-                               mask=mask,
+        
+        lul_initial = self.get_lul('initial')
+        lul_final = self.get_lul('final')
+        mask = self.get_mask('calibration')
+        
+        J, V = self.get_values(kind='calibration',
                                explanatory_variables=False)
 
         v_unique, n_counts = np.unique(V, return_counts=True)
@@ -547,158 +587,6 @@ class Land():
         return (TransitionMatrix(M=P_v,
                                  palette_u=palette_u,
                                  palette_v=palette_v))
-
-    def transition_probabilities(self,
-                                 transition_matrix,
-                                 lul,
-                                 mask=None,
-                                 distances_to_states={},
-                                 path_prefix=None,
-                                 copy_geo=None,
-                                 save_P_Y__v=False,
-                                 save_P_Y=False,
-                                 return_Y=False):
-        """
-        Computes transition probabilities.
-
-        Parameters
-        ----------
-        transition_matrix : TransitionMatrix
-            Land transition matrix with only one state in ``tm.palette_u``.
-
-        lul : LandUseLayer
-            The studied land use layer.
-
-        mask : MaskLayer, default = None
-            The region mask layer. If ``None``, the whole area is studied.
-
-        distances_to_states : dict(State:ndarray), default={}
-            The distances matrix to key state. Used to improve performance.
-
-        path_prefix : str, default=None
-            The path prefix to save result as ``path_prefix+'_'+str(state_v.value)+'.tif'.
-            Note that if ``path_prefix is not None``, ``lul`` must be LandUseLayer
-
-        save_P_Y__v : bool, default=False
-            Save P_Y__v.
-
-        save_P_Y : bool, default=False
-            Save P_Y
-
-        return_Y : bool, default=False
-            If ``True`` and ``path_prefix`` is ``None``, return Y.
-
-        Returns
-        -------
-        J_allocation : ndarray of shape (n_samples,)
-            Element indexes in the flattened
-            matrix.
-
-        P_v__u_Y : ndarray of shape (n_samples, len(palette_v))
-            The transition probabilities of each elements. Columns are
-            ordered as ``palette_v``.
-
-        Y : ndarray of shape (n_samples, n_features)
-            Only returned if ``return_Y=True``.
-            The features values.
-        """
-
-        self._time_tp = {}
-        st = time()
-        # check if it is really a land transition matrix
-        transition_matrix._check_land_transition_matrix()
-
-        state = transition_matrix.palette_u.states[0]
-        
-        if state.value != self.state.value:
-            logger.error("Transition_matrix initial state does not correspond to the Land state.")
-            stop_log()
-            raise
-        
-        P_v, palette_v = transition_matrix.get_P_v(state)
-
-        if self.verbose > 0:
-            print(title_heading(self.verbose_heading_level) + 'Land ' + str(state) + ' TPE\n')
-
-        J_P_v__u_Y_Y = self._compute_tpe(transition_matrix=transition_matrix,
-                                         lul=lul,
-                                         mask=mask,
-                                         distances_to_states=distances_to_states,
-                                         save_P_Y__v=save_P_Y__v,
-                                         save_P_Y=save_P_Y,
-                                         return_Y=return_Y)
-
-        if self.verbose > 0:
-            print('Land ' + str(state) + ' TPE done.\n')
-
-        if path_prefix is not None:
-            J = J_P_v__u_Y_Y[0]
-            P_v__u_Y = J_P_v__u_Y_Y[1]
-
-            folder_path, file_prefix = path_split(path_prefix, prefix=True)
-
-            for id_state, state_v in enumerate(palette_v):
-                if isinstance(lul, LandUseLayer):
-                    shape = lul.get_data().shape
-                    copy_geo = lul
-                else:
-                    shape = lul.shape
-                M = np.zeros(shape)
-                M.flat[J] = P_v__u_Y[:, id_state]
-
-                file_name = file_prefix + '_' + str(state_v.value) + '.tif'
-
-                FeatureLayer(label=file_name,
-                             data=M,
-                             copy_geo=copy_geo,
-                             path=folder_path + '/' + file_name)
-
-        # featureen if path prefix is not None, return J, P_v__u_Y, Y
-        self._time_tp['all'] = time()-st
-        return J_P_v__u_Y_Y
-
-    def _compute_tpe(self,
-                     transition_matrix,
-                     lul,
-                     mask=None,
-                     distances_to_states={},
-                     save_P_Y__v=False,
-                     save_P_Y=False,
-                     return_Y=False):
-        """
-        Compute the transition probability estimation according to the given P_v
-        """
-        # check if it is really a land transition matrix
-        transition_matrix._check_land_transition_matrix()
-
-        state = transition_matrix.palette_u.states[0]
-
-        # GET VALUES
-        st = time()
-        J_allocation, Y = self.get_values(lul_initial=lul,
-                                          mask=mask,
-                                          explanatory_variables=True,
-                                          distances_to_states=distances_to_states)
-        self._time_tp['get_values'] = time() - st
-
-        # featureS SELECTOR
-        Y = self._feature_selector.transform(X=Y)
-        
-        # TRANSITION PROBABILITY ESTIMATION
-        st = time()
-        P_v__u_Y = self.transition_probability_estimator.transition_probability(
-            transition_matrix=transition_matrix,
-            Y=Y,
-            J=J_allocation,
-            compute_P_Y__v=True,
-            compute_P_Y=True,
-            save_P_Y__v=save_P_Y__v,
-            save_P_Y=save_P_Y)
-        self._time_tp['estimation'] = time() - st
-        if return_Y:
-            return J_allocation, P_v__u_Y, Y
-        else:
-            return J_allocation, P_v__u_Y
 
     def compute_bootstrap_patches(self,
                                   palette_v,

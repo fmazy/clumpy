@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+from copy import deepcopy
 
 class Features():
     def __init__(self, 
@@ -16,3 +17,10 @@ class Features():
 
     def __len__(self):
         return (len(self.list))
+    
+    def __getitem__(self, i):
+         return self.list[i]
+    
+    def copy(self):
+        return(Features(list = [f for f in self.list],
+                        selector = deepcopy(self.selector)))
