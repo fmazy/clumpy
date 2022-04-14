@@ -1,39 +1,77 @@
 # -*- coding: utf-8 -*-
 
-from .. import FeatureLayer, LandUseLayer, MaskLayer
+from .. import LandUseLayer, MaskLayer
 from .. import start_log, stop_log
 from .. import Palette, load_palette
 from .. import load_transition_matrix
-from ._make import make_default_territory
-from ..tools._funcs import extract_parameters
 
-from .. import Territory, Region
+from .. import Territory
 
 from datetime import datetime
 import json
-import rasterio
 import logging
 
 
 class Case():
+    """
+    Case object. It is the base object for configuring and running a LULC change modeling case with CLUMPY. It can also be used to set a simple case which can then be complexified through the API. No parameters are required for initializing the object. See 'load' function.
+    """
     def __init__(self):
         self.territory = None
         self.params = None
     
-    def load(self, path):
+    def load(self, info):
+        """
+        Loading function 
+
+        Parameters
+        ----------
+        info : str or dict
+            The load parameters. It can be a path (as a string) which points 
+            to a json file, or a dict object directly.
+
+        Returns
+        -------
+        self
+        
+        Attributes
+        ----------
+        params : dict
+            The dict object containing all parameters.
+
+        """
+        if isinstance(info, dict):
+            self._load_dict(info)
+        elif isinstance(info, str):
+            self._load_json(info)
+        else:
+            self.logger.error('Case/_case.py - Case.load() : Unexpected load info parameter.')
+    
+    def _load_json(self, path):
+        """
+        load a json file
+        """
         self.path = path
         # Opening JSON file
         f = open(path)
     
         # returns JSON object as
         # a dictionary
-        self.params = json.load(f)
+        params = json.load(f)
     
         # Closing file
         f.close()
+        
+        self._load_dict(params)
+        
+        return(self)
     
-        # OUTPUT
-        # ======
+    def _load_dict(self, params):
+        """
+        load a dict object
+        """
+        
+        self.params = params
         
         output_folder = self.get_output_folder()
             
@@ -50,8 +88,18 @@ class Case():
         self.logger.info('Start Clumpy Case')
         
         return(self)
+        
     
     def save(self, path=None):
+        """
+        Save the parameters as a json file.
+
+        Parameters
+        ----------
+        path : str, default=None
+            The path to save the json file. If None, the current file is 
+            overwritten !
+        """
         if path is None:
             path = self.path
             
@@ -60,14 +108,29 @@ class Case():
         f.close()
     
     def save_as(self, path):
+        """
+        Save as a new json file.
+
+        Parameters
+        ----------
+        path : str
+             The path to save the json file.
+        """
         self.save(path=path)
             
     def fit(self):
+        """
+        Fit the case.
+        """
         self.territory.fit(lul_initial = self.get_lul('initial'),
                            lul_final = self.get_lul('final'),
                            masks = self.get_regions_masks('calibration'))
         
     def transition_probabilities(self):
+        """
+        Compute the transition probabilities of the case.
+        """
+        
         self.territory.transition_probabilities(\
                 regions_transition_matrices = self.get_regions_transition_matrices(),
                 lul = self.get_lul('start'),
@@ -75,6 +138,10 @@ class Case():
                 path_prefix = self.get_output_folder() + "proba")
         
     def allocate(self):
+        """
+        Allocate the case.
+        """
+        
         self.territory.allocate(\
                 regions_transition_matrices = self.get_regions_transition_matrices(),
                 lul = self.get_lul('start'),
@@ -83,6 +150,9 @@ class Case():
                 path_prefix_transition_probabilities = self.get_output_folder() + "proba")
     
     def run(self):
+        """
+        Run the case according to the parameters.
+        """
         self.logger.info('Start run function.')
         now = datetime.now()
         start_log(self.get_output_folder() + now.strftime("console_%Y_%m_%d_%H_%M_%S.md"))
@@ -101,6 +171,9 @@ class Case():
         stop_log()
     
     def make(self):
+        """
+        Make the case. This function must be called before any other operational function.
+        """
         # the palette must be unchanged during all the process !
         self.palette = self.get_palette()
         
@@ -108,6 +181,9 @@ class Case():
         self.territory.make(self)
     
     def get_palette(self):
+        """
+        Get the palette set in the parameters.
+        """
         try:
             palette = load_palette(self.params['palette'])
             return(palette)
@@ -117,6 +193,9 @@ class Case():
             raise
     
     def get_transition_probabilities_only(self):
+        """
+        Get the transition probabilities only trigger parameter.
+        """
         try:
             transition_probabilities_only = self.params['transition_probabilities_only']
             return(transition_probabilities_only)
@@ -125,6 +204,9 @@ class Case():
             return(True)
     
     def get_verbose(self):
+        """
+        Get the verbose parameter.
+        """
         try:
             return(self.params['verbose'])
         except:
@@ -132,6 +214,9 @@ class Case():
             return(True)
     
     def get_output_folder(self):
+        """
+        Get the output folder parameter.
+        """
         try:
             return(self.params['output_folder'])
         except:
@@ -139,6 +224,9 @@ class Case():
             return('')
     
     def get_lul(self, kind):
+        """
+        Get the land use layers parameter.
+        """
         try:
             palette = self.palette
             return(LandUseLayer(path = self.params['lul_'+str(kind)],
@@ -148,6 +236,15 @@ class Case():
             raise
     
     def get_regions_masks(self, kind):
+        """
+        Get the masks parameters according to regions and the purpose 
+        (calibration or allocation).
+        
+        Parameters
+        ----------
+        kind : {'calibration', 'allocation'}
+            The purpose of the requested mask.
+        """
         try:
             regions_masks = {}
             for region_label, region_params in self.params['regions'].items():
@@ -159,6 +256,9 @@ class Case():
             return(None)
     
     def get_regions_transition_matrices(self):
+        """
+        Get the transition matrices parameters according to regions
+        """
         try:
             regions_transition_matrices = {}
             for region_name, region_params in self.params['regions'].items():

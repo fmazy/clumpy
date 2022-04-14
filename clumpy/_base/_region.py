@@ -3,14 +3,10 @@
 
 import numpy as np
 
-from ._layer import LandUseLayer, FeatureLayer
-from ._state import Palette
+from ._layer import LandUseLayer
 from ._transition_matrix import TransitionMatrix, load_transition_matrix
 from ..tools._path import path_split
 from ..tools._console import title_heading
-from ..tools._funcs import extract_parameters
-from ..allocation import _methods as _allocation_methods
-from ..transition_probability_estimation import Bayes
 from . import Land
 
 class Region():

@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-from scipy import ndimage
 import numpy as np
 from time import time
 
@@ -15,7 +14,7 @@ from ..density_estimation import _methods as _density_estimation_methods
 from ..transition_probability_estimation._tpe import TransitionProbabilityEstimator
 from ..transition_probability_estimation import Bayes
 
-# Features selection
+# features selection
 from ..feature_selection import MRMR
 
 # Tools
@@ -31,19 +30,26 @@ from ..allocation import _methods as _allocation_methods
 import logging
 logger = logging.getLogger('clumpy')
 
+DEFAULT_calibration_method = 'bayes'
+DEFAULT_calibration_params_density_estimation_method = 'kde'
+DEFAULT_allocation_method = 'unbiased'
+DEFAULT_set_features_bounds = True
+DEFAULT_feature_selection = -1
+DEFAULT_fit_bootstrap_patches = True
+
 class Land():
     """
     Land object which refers to a given initial state.
 
     Parameters
     ----------
-    features : list(FeaturesLayer or State), default=[]
+    features : list(featuresLayer or State), default=[]
         List of features where a State means a distance layer to the corresponding state.
 
     transition_probability_estimator : TransitionProbabilityEstimator, default=None
         Transition probability estimator. If ``None``, fit, transition_probabilities and allocate are not available.
 
-    feature_selector : FeatureSelection or list(FeatureSelection)
+    feature_selector : featureSelection or list(featureSelection)
         List of features selection methods.
 
     fit_bootstrap_patches : bool, default=False
@@ -53,19 +59,19 @@ class Land():
         Allocator. If `None`, the allocation is not available.
     
     verbose : int, default=0
-        Verbosity level.
+        Verbosity lfeatureel.
 
     verbose_heading_level : int, default=1
-        Verbose heading level for markdown titles. If ``0``, no markdown title are printed.
+        Verbose heading lfeatureel for markdown titles. If ``0``, no markdown title are printed.
     """
 
     def __init__(self,
                  state,
                  features=[],
                  transition_probability_estimator=None,
-                 set_features_bounds=True,
-                 feature_selection=-1,
-                 fit_bootstrap_patches=True,
+                 set_features_bounds=DEFAULT_set_features_bounds,
+                 feature_selection=DEFAULT_feature_selection,
+                 fit_bootstrap_patches=DEFAULT_fit_bootstrap_patches,
                  allocator=None,
                  verbose=0,
                  verbose_heading_level=1):
@@ -82,7 +88,7 @@ class Land():
             raise (TypeError("Unexpected 'features'. A list is expected."))
         self.features = features
 
-        # Features selection
+        # features selection
         self.feature_selection = feature_selection
         
         # set features bounds 
@@ -109,7 +115,6 @@ class Land():
             setattr(self, key, param)
     
     def make(self, palette, **params):
-        
         # features
         features = []
         if 'features' in params.keys():
@@ -121,13 +126,14 @@ class Land():
                     if feature_params['state'] != self.state.value:
                         features.append(palette._get_by_value(feature_params['state']))
         
+        self.features = features
+        
         # feature selection
         if 'feature_selection' in params.keys():
             if isinstance(params['feature_selection'], int):
                 self.feature_selection = params['feature_selection']
             else:
                 self.feature_selection = -1
-                
         
         # transition matrix
         transition_matrix = load_transition_matrix(path=params['transition_matrix'],
@@ -139,7 +145,7 @@ class Land():
         try:
             calibration_method = params['calibration_method']
         except:
-            calibration_method = 'bayes'
+            calibration_method = DEFAULT_calibration_method
         
         try:
             calibration_params = params['calibration_params']
@@ -150,7 +156,7 @@ class Land():
             try:
                 density_estimation_method = calibration_params['density_estimation_method']
             except:
-                density_estimation_method = 'kde'
+                density_estimation_method = DEFAULT_calibration_params_density_estimation_method
                 
             de_class = _density_estimation_methods[density_estimation_method]
             de_parameters = extract_parameters(de_class, calibration_params)
@@ -172,38 +178,41 @@ class Land():
                                                 # verbose_heading_level=5,
                                                 **cde_parameters),
                     **add_cde_parameters)
+            
+            self.transition_probability_estimator = tpe
         
         # allocation
         try:
             allocation_method = params['allocation_method']
         except:
-            allocation_method = 'unbiased'
+            allocation_method = DEFAULT_allocation_method
             
         try:
             allocation_params = params['allocation_params']
         except:
             allocation_params = {}
         
-        for state_v in transition_matrix.palette_v:
-            alloc_class = _allocation_methods[allocation_method]
-            alloc_parameters = extract_parameters(alloc_class, params)
+        alloc_class = _allocation_methods[allocation_method]
+        alloc_parameters = extract_parameters(alloc_class, params)
 
-            allocator = alloc_class(verbose=self.verbose,
-                                    verbose_heading_level=3,
-                                    **alloc_parameters)
-                
+        self.allocator = alloc_class(verbose=self.verbose,
+                                verbose_heading_level=3,
+                                **alloc_parameters)
+        
         try:
-            land_params = params['land_params']
+            self.set_features_bounds = params['set_features_bounds']
         except:
-            land_params = {}
-                            
-        self.__init__(state=self.state,
-                      features=features,
-                      transition_probability_estimator=tpe,
-                      allocator=allocator,
-                      verbose=self.verbose,
-                      verbose_heading_level=self.verbose_heading_level,
-                      **land_params)
+            self.set_features_bounds = DEFAULT_set_features_bounds
+        
+        try:
+            self.feature_selection = params['feature_selection']
+        except:
+            self.feature_selection = DEFAULT_feature_selection
+        
+        try:
+            self.fit_bootstrap_patches = params['fit_bootstrap_patches']
+        except:
+            self.fit_bootstrap_patches = DEFAULT_fit_bootstrap_patches
 
     def check(self):
         """
@@ -234,7 +243,7 @@ class Land():
 
         for fs in feature_selector:
             if fs in feature_selectors and fs is not None:
-                raise (ValueError('The feature selection is already used. A new FeatureSelector must be invoked.'))
+                raise (ValueError('The feature selection is already used. A new featureSelector must be invoked.'))
             feature_selectors.append(fs)
 
         return feature_selectors
@@ -317,12 +326,12 @@ class Land():
 
                 elif isinstance(info, int):
                     # get the corresponding state
-                    ev_state = lul_initial.palette.get(info)
+                    feature_state = lul_initial.palette.get(info)
                     # get distance data
                     # in this case, feature is a State object !
-                    if ev_state not in distances_to_states.keys():
-                        _compute_distance(ev_state, data_lul_initial, distances_to_states)
-                    x = distances_to_states[ev_state].flat[J]
+                    if feature_state not in distances_to_states.keys():
+                        _compute_distance(feature_state, data_lul_initial, distances_to_states)
+                    x = distances_to_states[feature_state].flat[J]
                 else:
                     logger.error('Unexpected feature info : ' + type(info) + '. Occured in \'_base/_land.py, Land.get_values()\'.')
                     raise (TypeError('Unexpected feature info : ' + type(info) + '.'))
@@ -439,19 +448,19 @@ class Land():
         self._time_fit['get_values'] = time()-st
         st = time()
 
-        # FEATURE SELECTORS
+        # feature SELECTORS
         # if only one object, make a list
         self._feature_selector = MRMR(e=self.feature_selection)
         
         if self.verbose > 0:
-            print('Feature selecting...')
+            print('feature selecting...')
         
         # fit and transform X
         X = self._feature_selector.fit_transform(X=X, V=V)
 
 
         if self.verbose > 0:
-            print('Feature selecting done.')
+            print('feature selecting done.')
 
         self._time_fit['feature_selector'] = time()-st
         st=time()
@@ -633,7 +642,7 @@ class Land():
                              copy_geo=copy_geo,
                              path=folder_path + '/' + file_name)
 
-        # even if path prefix is not None, return J, P_v__u_Y, Y
+        # featureen if path prefix is not None, return J, P_v__u_Y, Y
         self._time_tp['all'] = time()-st
         return J_P_v__u_Y_Y
 
@@ -661,9 +670,9 @@ class Land():
                                           distances_to_states=distances_to_states)
         self._time_tp['get_values'] = time() - st
 
-        # FEATURES SELECTOR
+        # featureS SELECTOR
         Y = self._feature_selector.transform(X=Y)
-
+        
         # TRANSITION PROBABILITY ESTIMATION
         st = time()
         P_v__u_Y = self.transition_probability_estimator.transition_probability(

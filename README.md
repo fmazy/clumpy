@@ -34,3 +34,8 @@ https://packaging.python.org/tutorials/packaging-projects/
 
 install package locally
 python setup.py install
+
+## JSON help
+
+### available parameters
+
