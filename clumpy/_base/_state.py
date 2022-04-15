@@ -39,6 +39,9 @@ class State():
 
     def __repr__(self):
         return (self.label)
+    
+    def __int__(self):
+        return(self.value)
 
 
 class Palette():

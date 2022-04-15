@@ -9,6 +9,16 @@ import numpy as np
 import pandas as pd
 
 class FeatureSelector():
+    def __init__(self):
+        self._fitted = False
+    
+    def fit(self, X, y=None):
+        self._fit(X, y)
+        
+        self._fitted = True
+        
+        return(self)
+    
     def get_support(self):
         """
         Get the columns indexes that are kept for the transformation.
@@ -30,9 +40,11 @@ class FeatureSelector():
         X_r : array-like of shape (n_samples, n_features)
             The input samples with only the selected features.
         """
+        if not self._fitted:
+            raise(TypeError("The FeatureSelector object has to be fitted before calling transform()."))
         return(X[:, self._cols_support])
 
-    def fit_transform(self, X, V):
+    def fit_transform(self, X, y):
         """
         Fit to data, then transform it.
 
@@ -47,7 +59,7 @@ class FeatureSelector():
         X_r : array-like of shape (n_samples, n_features)
             The input samples with only the selected features.
         """
-        self.fit(X, V)
+        self.fit(X, y)
         return(self.transform(X))
     
     

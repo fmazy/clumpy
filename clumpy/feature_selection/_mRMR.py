@@ -7,18 +7,21 @@ from sklearn.feature_selection import f_classif
 class MRMR(FeatureSelector):
     def __init__(self, e=-1):
         self.e = e
+        
+        super().__init__()
+        
     
     def __repr__(self):
         return 'mRMR(e='+str(self.e)+')'
     
-    def fit(self, X, V):
+    def _fit(self, X, y):
         n, d = X.shape
         
         nb_ev = self.e
         if nb_ev == -1 or nb_ev > d:
             nb_ev = d
         
-        F = f_classif(X, V)[0]
+        F = f_classif(X, y)[0]
         
         R = np.abs(np.corrcoef(X.T))
         
@@ -32,7 +35,7 @@ class MRMR(FeatureSelector):
             T_bar = np.delete(T_bar, id_k_star)
         
         self._cols_support = T
-        
+                
         return(self)
     
     def copy(self):

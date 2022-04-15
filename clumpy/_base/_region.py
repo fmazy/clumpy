@@ -37,7 +37,7 @@ class Region():
         self.lands = {}
         
         self.territory = None
-        self.features = None
+        # self.features = None
         self.calibrator = None
         self.lul = {}
         self.mask = {}
@@ -113,14 +113,14 @@ class Region():
 
         return (feature_selectors)
     
-    def set_features(self, features):
-        self.features = features
+    # def set_features(self, features):
+    #     self.features = features
     
-    def get_features(self):
-        if self.features is None:
-            return(self.territory.get_features())
-        else:
-            return(self.features)
+    # def get_features(self):
+    #     if self.features is None:
+    #         return(self.territory.get_features())
+    #     else:
+    #         return(self.features)
     
     def set_calibrator(self, calibrator):
         self.calibrator = calibrator

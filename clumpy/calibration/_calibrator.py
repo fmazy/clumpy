@@ -8,42 +8,50 @@ from .._base import State
 class Calibrator():
     def __init__(self, 
                  tpe,
-                 set_features_bounds=True,
+                 features,
                  verbose = 0):
         self.tpe = tpe
-        self.set_features_bounds = True
+        self.features = features
         self.verbose = verbose
         
     def __repr__(self):
         return ('Calibrator(tpe='+str(self.tpe)+')')
     
     def copy(self):
-        return(deepcopy(self))
+        return(Calibrator(tpe=deepcopy(self.tpe),
+                          features=self.features.copy(),
+                          verbose=self.verbose))
     
     def fit(self,
-            land,
+            J,
+            V,
+            state,
+            lul,
             distances_to_states={}):
-        
+        """
+        lul est utilisé pour le calcul des distances dans features.get()
+        """
         self._time_fit = {}
         
         # TIME
+        # st = time()
+        # # GET VALUES
+        # J_calibration, X, V = land.get_values(kind='calibration',
+        #                                       explanatory_variables=True,
+        #                                       distances_to_states=distances_to_states)
+        # self._time_fit['get_values'] = time()-st
         st = time()
-        # GET VALUES
-        J_calibration, X, V = land.get_values(kind='calibration',
-                                              explanatory_variables=True,
-                                              distances_to_states=distances_to_states)
-        self._time_fit['get_values'] = time()-st
-        st = time()
-                
-        # get a copy of features
-        # copy is necessary for the selector object
-        self._features = land.get_features().copy()
-        
+                        
         if self.verbose > 0:
             print('feature selecting...')
         
-        # fit and transform X
-        X = self._features.selector.fit_transform(X=X, V=V)
+        # get X
+        X = self.features.fit(J=J, 
+                              V=V,
+                              state=state,
+                              lul=lul, 
+                              distances_to_states=distances_to_states,
+                              return_X=True)
 
         if self.verbose > 0:
             print('feature selecting done.')
@@ -52,30 +60,19 @@ class Calibrator():
         st=time()
         
         # BOUNDARIES PARAMETERS
-        bounds = []
-        if self.set_features_bounds:
-            for id_col, idx in enumerate(self._features.selector._cols_support):
-                if isinstance(self._features[idx], FeatureLayer):
-                    if self._features[idx].bounded in ['left', 'right', 'both']:
-                        # one takes as parameter the column id of
-                        # bounded features AFTER feature selection !
-                        # So, the right col index is id_col.
-                        # idx is used to get the corresponding feature layer.
-                        bounds.append((id_col, self._features[idx].bounded))
-                        
-                # if it is a state distance, add a low bound set to 0.0
-                if isinstance(self._features[idx], State) or isinstance(self._features[idx], int):
-                    bounds.append((id_col, 'left'))
-                
+        bounds = self.features.get_bounds()
+        
         self._time_fit['boundaries_parameters_init'] = time()-st
-
+        
         # TRANSITION PROBABILITY ESTIMATOR
         st = time()
         self.tpe.fit(X=X,
                      V=V,
-                     v_initial = land.state.value,
+                     v_initial = int(state),
                      bounds = bounds)
         self._time_fit['tpe_fit'] = time()-st
+        
+        return(self)
     
     def transition_probabilities(self,
                                  land,

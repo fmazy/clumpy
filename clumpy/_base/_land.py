@@ -7,7 +7,7 @@ from time import time
 from scipy import ndimage
 
 # base import
-from ._layer import Layer, FeatureLayer, LandUseLayer
+from ._layer import Layer, FeatureLayer, LandUseLayer, MaskLayer
 from ._state import State
 from ._transition_matrix import TransitionMatrix, load_transition_matrix
 
@@ -84,7 +84,7 @@ class Land():
                 "Unexpected 'transition_probability_estimator. A 'TransitionProbabilityEstimator' object is expected."))
         self.transition_probability_estimator = transition_probability_estimator
 
-        self.features = None
+        # self.features = None
         self.calibrator = None
         self.lul = {}
         self.mask = {}
@@ -249,14 +249,14 @@ class Land():
 
         return feature_selectors
     
-    def set_features(self, features):
-        self.features = features
+    # def set_features(self, features):
+    #     self.features = features
     
-    def get_features(self):
-        if self.features is None:
-            return(self.region.get_features())
-        else:
-            return(self.features)
+    # def get_features(self):
+    #     if self.features is None:
+    #         return(self.region.get_features())
+    #     else:
+    #         return(self.features)
         
     def set_calibrator(self, calibrator):
         self.calibrator = calibrator
@@ -284,142 +284,220 @@ class Land():
             return(self.region.get_mask(kind))
         else:
             return(self.mask[kind])
-        
-    def get_values(self,
-                   kind,
-                   explanatory_variables=True,
-                   distances_to_states={},
-                   restrict_to_final_palette=True):
+    
+    def get_J(self, 
+              lul,
+              mask=None):
         """
-        Get values.
+        Get J indices.
 
         Parameters
         ----------
-        state : State
-            The studied initial state.
-            
-        lul_initial : LandUseLayer or ndarray
-            The initial land use layer.
-            
-        lul_final : LandUseLayer or ndarray, default=None
-            The final land use layer. Ignored if ``None``.
-            
-        mask : MaskLayer, default=None
-            The region mask layer. If ``None``, the whole area is studied.
-            
-        explanatory_variables : bool, default=True
-            If ``True``, features values are returned.
-            
-        distances_to_states : dict(ndarray)
-            A dict of ndarray distances_to_states to the State used as key.
-            Usefull to avoid redondant distance computations.
+        lul : {'initial', 'final', 'start'} or LandUseLayer or np.array
+            The land use map.
+        mask : {'calibration', 'allocation'} or MaskLayer or np.array
+            The mask.
 
         Returns
         -------
-        J : ndarray of shape (n_samples,)
-            The samples flat indexes.
-        
-        X : ndarray of shape (n_samples, n_features)
-            Returned if ``explanatory_variables`` is ``True``. The features values.
-        
-        V : ndarray of shape (n_samples, n_features)
-            Returned if ``lul_final`` is not ``None``. The final state values.
+        None.
 
         """
-        lul_initial = self.get_lul('initial')
-        lul_final = self.get_lul('final')
-        mask = self.get_mask(kind)
         
+        if isinstance(lul, str):
+            lul = self.get_lul(lul)
+        
+        if isinstance(mask, str):
+            mask = self.get_mask(mask)
+                
         # initial data
         # the region is selected after the distance computation
-        if isinstance(lul_initial, LandUseLayer):
-            data_lul_initial = lul_initial.get_data().copy()
+        if isinstance(lul, LandUseLayer):
+            data_lul = lul.get_data().copy()
         else:
-            data_lul_initial = lul_initial.copy()
+            data_lul = lul.copy()
 
         # selection according to the region.
         # one set -1 to non studied data
         # -1 is a forbiden state value.
         if mask is not None:
-            data_lul_initial[mask.get_data() != 1] = -1
+            if isinstance(mask, MaskLayer):
+                data_lul[mask.get_data() != 1] = -1
+            else:
+                data_lul[mask != 1] = -1
 
         # get pixels indexes whose initial states are u
-        # J = ndarray_suitable_integer_type(np.where(initial_lul_layer.raster_.read(1).flat==u)[0])
-        J = np.where(data_lul_initial.flat == self.state.value)[0]
-
-        X = None
-        if explanatory_variables:
-            # create feature labels
-            features = self.get_features().copy()
+        return(np.where(data_lul.flat == int(self.state))[0])
+    
+    def get_V(self, 
+              lul,
+              J,
+              restrict_to_final_palette=True):
+        
+        if isinstance(lul, str):
+            lul = self.get_lul(lul)
+        
+        if isinstance(lul, LandUseLayer):
+            data_lul = lul.get_data().copy()
+        else:
+            data_lul = lul.copy()
+        
+        V = data_lul.flat[J]
             
-            # remove features distance to the land state
-            # (equal to 0.0 everywhere)
-            if self.state in features:
-                features.list.remove(self.state)
-            if self.state.value in features:
-                features.list.remove(self.state.value)
+        if restrict_to_final_palette:
+            tm = self.region.get_transition_matrix()
+            final_palette = tm.get_final_palette(self.state)
+            V[~np.isin(V, final_palette.get_list_of_values())] = int(self.state)
+        
+        return(V)
+    
+    def get_J_V(self,
+                lul_initial,
+                lul_final,
+                mask=None,
+                restrict_to_final_palette=True):
+        J = self.get_J(lul=lul_initial,
+                       mask=mask)
+        V = self.get_V(lul=lul_final,
+                       J=J,
+                       restrict_to_final_palette=restrict_to_final_palette)
+        return(J, V)
+        
+    # def get_values(self,
+    #                kind,
+    #                explanatory_variables=True,
+    #                distances_to_states={},
+    #                restrict_to_final_palette=True):
+    #     """
+    #     Get values.
+
+    #     Parameters
+    #     ----------
+    #     state : State
+    #         The studied initial state.
             
-            for info in features:
-                # switch according z_type
-                if isinstance(info, Layer):
-                    # just get data
-                    x = info.get_data().flat[J]
-
-                elif isinstance(info, State):
-                    # get distance data
-                    # in this case, feature is a State object !
-                    if info not in distances_to_states.keys():
-                        _compute_distance(info, data_lul_initial, distances_to_states)
-                    x = distances_to_states[info].flat[J]
-
-                elif isinstance(info, int):
-                    # get the corresponding state
-                    feature_state = lul_initial.palette.get(info)
-                    # get distance data
-                    # in this case, feature is a State object !
-                    if feature_state not in distances_to_states.keys():
-                        _compute_distance(feature_state, data_lul_initial, distances_to_states)
-                    x = distances_to_states[feature_state].flat[J]
-                else:
-                    logger.error('Unexpected feature info : ' + type(info) + '. Occured in \'_base/_land.py, Land.get_values()\'.')
-                    raise (TypeError('Unexpected feature info : ' + type(info) + '.'))
-
-                # if X is not yet defined
-                if X is None:
-                    X = x
-
-                # else column stack
-                else:
-                    X = np.column_stack((X, x))
-
-            # if only one feature, reshape X as a column
-            if len(X.shape) == 1:
-                X = X[:, None]
-
-        # if final lul layer
-        if kind == 'calibration':
-            if isinstance(lul_final, LandUseLayer):
-                data_lul_final = lul_final.get_data()
-            else:
-                data_lul_final = lul_final
-
-            # just get data inside the region (because J is already inside)
-            V = data_lul_final.flat[J]
+    #     lul_initial : LandUseLayer or ndarray
+    #         The initial land use layer.
             
-            if restrict_to_final_palette:
-                tm = self.region.get_transition_matrix()
-                final_palette = tm.get_final_palette(self.state)
-                V[~np.isin(V, final_palette.get_list_of_values())] = self.state.value
+    #     lul_final : LandUseLayer or ndarray, default=None
+    #         The final land use layer. Ignored if ``None``.
+            
+    #     mask : MaskLayer, default=None
+    #         The region mask layer. If ``None``, the whole area is studied.
+            
+    #     explanatory_variables : bool, default=True
+    #         If ``True``, features values are returned.
+            
+    #     distances_to_states : dict(ndarray)
+    #         A dict of ndarray distances_to_states to the State used as key.
+    #         Usefull to avoid redondant distance computations.
 
-        elements_to_return = [J]
+    #     Returns
+    #     -------
+    #     J : ndarray of shape (n_samples,)
+    #         The samples flat indexes.
+        
+    #     X : ndarray of shape (n_samples, n_features)
+    #         Returned if ``explanatory_variables`` is ``True``. The features values.
+        
+    #     V : ndarray of shape (n_samples, n_features)
+    #         Returned if ``lul_final`` is not ``None``. The final state values.
 
-        if explanatory_variables:
-            elements_to_return.append(X)
+    #     """
+    #     lul_initial = self.get_lul('initial')
+    #     lul_final = self.get_lul('final')
+    #     mask = self.get_mask(kind)
+        
+    #     # initial data
+    #     # the region is selected after the distance computation
+    #     if isinstance(lul_initial, LandUseLayer):
+    #         data_lul_initial = lul_initial.get_data().copy()
+    #     else:
+    #         data_lul_initial = lul_initial.copy()
 
-        if kind == 'calibration':
-            elements_to_return.append(V)
+    #     # selection according to the region.
+    #     # one set -1 to non studied data
+    #     # -1 is a forbiden state value.
+    #     if mask is not None:
+    #         data_lul_initial[mask.get_data() != 1] = -1
 
-        return elements_to_return
+    #     # get pixels indexes whose initial states are u
+    #     # J = ndarray_suitable_integer_type(np.where(initial_lul_layer.raster_.read(1).flat==u)[0])
+    #     J = np.where(data_lul_initial.flat == self.state.value)[0]
+
+    #     X = None
+    #     if explanatory_variables:
+    #         # create feature labels
+    #         features = self.get_features().copy()
+            
+    #         # remove features distance to the land state
+    #         # (equal to 0.0 everywhere)
+    #         if self.state in features:
+    #             features.list.remove(self.state)
+    #         if self.state.value in features:
+    #             features.list.remove(self.state.value)
+            
+    #         for info in features:
+    #             # switch according z_type
+    #             if isinstance(info, Layer):
+    #                 # just get data
+    #                 x = info.get_data().flat[J]
+
+    #             elif isinstance(info, State):
+    #                 # get distance data
+    #                 # in this case, feature is a State object !
+    #                 if info not in distances_to_states.keys():
+    #                     _compute_distance(info, data_lul_initial, distances_to_states)
+    #                 x = distances_to_states[info].flat[J]
+
+    #             elif isinstance(info, int):
+    #                 # get the corresponding state
+    #                 feature_state = lul_initial.palette.get(info)
+    #                 # get distance data
+    #                 # in this case, feature is a State object !
+    #                 if feature_state not in distances_to_states.keys():
+    #                     _compute_distance(feature_state, data_lul_initial, distances_to_states)
+    #                 x = distances_to_states[feature_state].flat[J]
+    #             else:
+    #                 logger.error('Unexpected feature info : ' + type(info) + '. Occured in \'_base/_land.py, Land.get_values()\'.')
+    #                 raise (TypeError('Unexpected feature info : ' + type(info) + '.'))
+
+    #             # if X is not yet defined
+    #             if X is None:
+    #                 X = x
+
+    #             # else column stack
+    #             else:
+    #                 X = np.column_stack((X, x))
+
+    #         # if only one feature, reshape X as a column
+    #         if len(X.shape) == 1:
+    #             X = X[:, None]
+
+    #     # if final lul layer
+    #     if kind == 'calibration':
+    #         if isinstance(lul_final, LandUseLayer):
+    #             data_lul_final = lul_final.get_data()
+    #         else:
+    #             data_lul_final = lul_final
+
+    #         # just get data inside the region (because J is already inside)
+    #         V = data_lul_final.flat[J]
+            
+    #         if restrict_to_final_palette:
+    #             tm = self.region.get_transition_matrix()
+    #             final_palette = tm.get_final_palette(self.state)
+    #             V[~np.isin(V, final_palette.get_list_of_values())] = self.state.value
+
+    #     elements_to_return = [J]
+
+    #     if explanatory_variables:
+    #         elements_to_return.append(X)
+
+    #     if kind == 'calibration':
+    #         elements_to_return.append(V)
+
+    #     return elements_to_return
 
     def fit(self,
             distances_to_states={}):
@@ -452,9 +530,18 @@ class Land():
         if self.verbose > 0:
             print(title_heading(self.verbose_heading_level) + 'Land ' + str(self.state) + ' fitting\n')
         
+        J, V = self.get_J_V(lul_initial='initial',
+                            lul_final='final',
+                            mask='calibration',
+                            restrict_to_final_palette=True)
+        
+        # get a copy !
         self._calibrator = self.get_calibrator().copy()
         
-        self._calibrator.fit(land=self,
+        self._calibrator.fit(J=J,
+                             V=V,
+                             state=self.state,
+                             lul=self.get_lul('initial'),
                              distances_to_states=distances_to_states)
         
         # if self.transition_probability_estimator is None:

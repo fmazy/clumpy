@@ -86,11 +86,11 @@ class Territory():
 
         return (self)
     
-    def set_features(self, features):
-        self.features = features
+    # def set_features(self, features):
+    #     self.features = features
     
-    def get_features(self):
-        return(self.features)
+    # def get_features(self):
+    #     return(self.features)
     
     def set_calibrator(self, calibrator):
         self.calibrator = calibrator
