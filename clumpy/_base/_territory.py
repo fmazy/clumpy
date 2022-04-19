@@ -10,7 +10,6 @@ from ._layer import LandUseLayer, ProbaLayer
 from . import Region
 from ..tools._path import path_split
 from ..tools._console import title_heading
-from ._feature import Features
 
 import numpy as np
 
@@ -41,7 +40,9 @@ class Territory():
         self.regions = regions
         if self.regions is None:
             self.regions = {}
-
+        
+        self.features = None
+        
         self.verbose = verbose
         self.verbose_heading_level = verbose_heading_level
         
@@ -92,6 +93,13 @@ class Territory():
     
     def get_lul(self, kind):
         return(self.lul[kind])
+    
+    def set_features(self, features):
+        self.features = features
+        return(self)
+    
+    def get_features(self):
+        return(self.features)
 
     def check(self, objects=[]):
         """

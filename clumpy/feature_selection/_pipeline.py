@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 import numpy as np
+from copy import deepcopy
 
 from ._feature_selector import FeatureSelector
 
@@ -23,6 +24,9 @@ class Pipeline(FeatureSelector):
         self._cols_support = self._cols_support[0]
         
         return(self)
+    
+    def copy(self):
+        return(deepcopy(self))
 
     def check(self, objects=[]):
         for selector in self.list:

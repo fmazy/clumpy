@@ -8,7 +8,6 @@ from ._transition_matrix import TransitionMatrix, load_transition_matrix
 from ..tools._path import path_split
 from ..tools._console import title_heading
 from . import Land
-from ._feature import Features
 
 class Region():
     """
@@ -37,7 +36,7 @@ class Region():
         self.lands = {}
         
         self.territory = None
-        # self.features = None
+        self.features = None
         self.calibrator = None
         self.lul = {}
         self.mask = {}
@@ -142,6 +141,16 @@ class Region():
             return(self.territory.get_transition_matrix())
         else:
             return(self.transition_matrix)
+        
+    def set_features(self, features):
+        self.features = features
+        return(self)
+    
+    def get_features(self):
+        if self.features is None:
+            return(self.territory.get_features())
+        else:
+            return(self.features)
     
     def check(self, objects=[]):
         """

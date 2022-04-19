@@ -16,6 +16,7 @@ class FeatureSelector():
         self._fit(X, y)
         
         self._fitted = True
+        self._n_cols = X.shape[1]
         
         return(self)
     
@@ -42,6 +43,10 @@ class FeatureSelector():
         """
         if not self._fitted:
             raise(TypeError("The FeatureSelector object has to be fitted before calling transform()."))
+        
+        if X.shape[1] != self._n_cols:
+            raise(ValueError("X's number of columns is incorrect. Expected "+str(self._n_cols)+", got "+str(X.shape[1])))
+        
         return(X[:, self._cols_support])
 
     def fit_transform(self, X, y):

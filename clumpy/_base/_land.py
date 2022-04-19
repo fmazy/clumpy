@@ -18,7 +18,6 @@ from ..transition_probability_estimation import Bayes
 
 # features
 from ..feature_selection import MRMR
-from ._feature import Features
 
 # Tools
 from ..tools._path import path_split
@@ -69,7 +68,6 @@ class Land():
 
     def __init__(self,
                  state,
-                 final_palette=None,
                  transition_probability_estimator=None,
                  set_features_bounds=DEFAULT_set_features_bounds,
                  fit_bootstrap_patches=DEFAULT_fit_bootstrap_patches,
@@ -90,6 +88,7 @@ class Land():
         self.mask = {}
         
         # set features bounds 
+        self.features = None
         self.set_features_bounds = set_features_bounds
         
         # fit bootstrap patches
@@ -105,7 +104,6 @@ class Land():
         self.verbose_heading_level = verbose_heading_level
         
         self.region = None
-        self.final_palette = final_palette
 
     def __repr__(self):
         return 'land'
@@ -286,83 +284,15 @@ class Land():
         else:
             return(self.transition_matrix)
     
-    def get_J(self, 
-              lul,
-              mask=None):
-        """
-        Get J indices.
-
-        Parameters
-        ----------
-        lul : {'initial', 'final', 'start'} or LandUseLayer or np.array
-            The land use map.
-        mask : {'calibration', 'allocation'} or MaskLayer or np.array
-            The mask.
-
-        Returns
-        -------
-        None.
-
-        """
-        
-        if isinstance(lul, str):
-            lul = self.get_lul(lul)
-        
-        if isinstance(mask, str):
-            mask = self.get_mask(mask)
-                
-        # initial data
-        # the region is selected after the distance computation
-        if isinstance(lul, LandUseLayer):
-            data_lul = lul.get_data().copy()
-        else:
-            data_lul = lul.copy()
-
-        # selection according to the region.
-        # one set -1 to non studied data
-        # -1 is a forbiden state value.
-        if mask is not None:
-            if isinstance(mask, MaskLayer):
-                data_lul[mask.get_data() != 1] = -1
-            else:
-                data_lul[mask != 1] = -1
-
-        # get pixels indexes whose initial states are u
-        return(np.where(data_lul.flat == int(self.state))[0])
+    def set_features(self, features):
+        self.features = features
+        return(self)
     
-    def get_V(self, 
-              lul,
-              J,
-              restrict_to_final_palette=True):
-        
-        if isinstance(lul, str):
-            lul = self.get_lul(lul)
-        
-        if isinstance(lul, LandUseLayer):
-            data_lul = lul.get_data().copy()
+    def get_features(self):
+        if self.features is None:
+            return(self.region.get_features())
         else:
-            data_lul = lul.copy()
-        
-        V = data_lul.flat[J]
-            
-        if restrict_to_final_palette:
-            tm = self.region.get_transition_matrix()
-            final_palette = tm.get_final_palette(self.state)
-            V[~np.isin(V, final_palette.get_list_of_values())] = int(self.state)
-        
-        return(V)
-    
-    def get_J_V(self,
-                lul_initial,
-                lul_final,
-                mask=None,
-                restrict_to_final_palette=True):
-        J = self.get_J(lul=lul_initial,
-                       mask=mask)
-        V = self.get_V(lul=lul_final,
-                       J=J,
-                       restrict_to_final_palette=restrict_to_final_palette)
-        return(J, V)
+            return(self.features)
 
     def fit(self,
             distances_to_states={}):
@@ -390,21 +320,16 @@ class Land():
         -------
         self
         """
-        self._time_fit = {}
-        st0 = time()
+        
         if self.verbose > 0:
             print(title_heading(self.verbose_heading_level) + 'Land ' + str(self.state) + ' fitting\n')
         
-        J, V = self.get_J_V(lul_initial='initial',
-                            lul_final='final',
-                            mask='calibration',
-                            restrict_to_final_palette=True)
-                
-        self.calibrator.fit(J=J,
-                            V=V,
-                            state=self.state,
-                            lul=self.get_lul('initial'),
-                            distances_to_states=distances_to_states)
+        self.calibrator.fit(lul_initial=self.get_lul('initial'),
+               lul_final=self.get_lul('final'),
+               features=self.get_features(),
+               mask=self.get_mask('calibration'),
+               distances_to_states=distances_to_states)
+                        
         
         # if self.transition_probability_estimator is None:
         #     raise (ValueError('Transition probability estimator is expected for fitting.'))
@@ -426,8 +351,6 @@ class Land():
         if self.verbose > 0:
             print('Land ' + str(self.state) + ' fitting done.\n')
 
-        self._time_fit['all'] = time()-st0
-
         return self
     
     def transition_probabilities(self, 
@@ -435,24 +358,16 @@ class Land():
                                  effective_transitions_only=True):
         if isinstance(lul, str):
             lul = self.get_lul(lul)
-            
-        J = self.get_J(lul=lul,
-                       mask='allocation')
         
         tm = self.get_transition_matrix().extract(self.state)
     
-        P_v__u_Y = self.calibrator.transition_probabilities(J=J,
-                                                            tm=tm,
-                                                            lul=lul,
-                                                            distances_to_states={})
-        
-        final_states = tm.palette_v.get_list_of_values()
-        
-        if effective_transitions_only:
-            bands_to_keep = np.array(final_states) != int(self.state)
-            final_states = list(np.array(final_states)[bands_to_keep])
-            P_v__u_Y = P_v__u_Y[:, bands_to_keep]
-        
+        J, P_v__u_Y, final_states = self.calibrator.transition_probabilities(
+            lul=lul,
+            tm=tm,
+            features=self.get_features(),
+            distances_to_states={},
+            effective_transitions_only=effective_transitions_only)
+                
         return(J, P_v__u_Y, final_states)
     
     def transition_probabilities_layer(self, 

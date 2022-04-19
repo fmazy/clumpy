@@ -9,7 +9,10 @@ _methods = {'kde':KDE,}
 class NullEstimator():
     def __init__(self):
         super().__init__()
-
+        
+    def __repr__(self):
+        return("NullEstimator()")
+    
     def fit(self, X, y=None):
         return (self)
 
