@@ -111,28 +111,11 @@ class Region():
         for state, land in self.lands.items():
             feature_selectors = land._check_feature_selectors(feature_selectors=feature_selectors)
 
-        return (feature_selectors)
-    
-    # def set_features(self, features):
-    #     self.features = features
-    
-    # def get_features(self):
-    #     if self.features is None:
-    #         return(self.territory.get_features())
-    #     else:
-    #         return(self.features)
-    
-    def set_calibrator(self, calibrator):
-        self.calibrator = calibrator
-    
-    def get_calibrator(self):
-        if self.calibrator is None:
-            return(self.territory.get_calibrator())
-        else:
-            return(self.calibrator)
+        return (feature_selectors)    
     
     def set_lul(self, lul, kind):
         self.lul[kind] = lul
+        return(self)
     
     def get_lul(self, kind):
         if kind not in self.lul.keys():
@@ -142,6 +125,7 @@ class Region():
     
     def set_mask(self, mask, kind):
         self.mask[kind] = mask
+        return(self)
     
     def get_mask(self, kind):
         if kind not in self.mask.keys():
@@ -151,6 +135,7 @@ class Region():
     
     def set_transition_matrix(self, tm):
         self.transition_matrix = tm
+        return(self)
     
     def get_transition_matrix(self):
         if self.transition_matrix is None:
@@ -170,9 +155,6 @@ class Region():
             land.state = state
 
     def fit(self,
-            lul_initial,
-            lul_final,
-            mask=None,
             distances_to_states={}):
         """
         Fit the region.
@@ -199,10 +181,7 @@ class Region():
             print(title_heading(self.verbose_heading_level) + 'Region ' + self.label + ' fitting\n')
 
         for state, land in self.lands.items():
-            land.fit(lul_initial=lul_initial,
-                     lul_final=lul_final,
-                     mask=mask,
-                     distances_to_states=distances_to_states)
+            land.fit(distances_to_states=distances_to_states)
 
         if self.verbose > 0:
             print('Region ' + self.label + ' fitting done.\n')
@@ -245,12 +224,7 @@ class Region():
         return (tm)
 
     def transition_probabilities(self,
-                                 transition_matrix,
-                                 lul,
-                                 mask=None,
-                                 distances_to_states={},
-                                 path_prefix=None,
-                                 copy_geo=None):
+                                 lul):
         """
         Compute transition probabilities.
 
@@ -283,40 +257,27 @@ class Region():
             ordered as ``palette_v``.
         """
 
-        J = {}
-        P_v__u_Y = {}
-
-        if self.verbose > 0:
-            print(title_heading(self.verbose_heading_level) + 'Region ' + str(self.label) + ' TPE\n')
-
-        if isinstance(lul, LandUseLayer):
-            copy_geo = lul
-
+        if isinstance(lul, str):
+            lul = self.get_lul(lul)
+        
+        r = {}
+        
         for state, land in self.lands.items():
+            r[state] = land.transition_probabilities(lul=lul)
 
-            if self.verbose > 0:
-                print('state ' + str(state))
-
-            if path_prefix is not None:
-                land_path_prefix = path_prefix + '_' + str(state.value)
-            else:
-                land_path_prefix = None
-
-            ltp = land.transition_probabilities(transition_matrix=transition_matrix.extract(infos=[state]),
-                                                lul=lul,
-                                                mask=mask,
-                                                distances_to_states=distances_to_states,
-                                                path_prefix=land_path_prefix,
-                                                copy_geo=copy_geo)
-
-            if path_prefix is None:
-                J[state] = ltp[0]
-                P_v__u_Y[state] = ltp[1]
-
-        if self.verbose > 0:
-            print('Region ' + str(self.label) + ' TPE done.\n')
-
-        return (J, P_v__u_Y)
+        return r
+    
+    # def _get_transition_probabilities_layer_data(self,
+    #                                              J_P_final_states,
+    #                                              shape):
+    #     n_bands = P_v__u_Y.shape[1]
+    #     M = np.zeros((n_bands,) + shape)
+        
+    #     for i_band in range(P_v__u_Y.shape[1]):
+    #         M[i_band].flat[J] = P_v__u_Y[:, i_band]
+        
+    #     return(M)
+        
 
     def allocate(self,
                  transition_matrix,

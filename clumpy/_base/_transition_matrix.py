@@ -373,6 +373,7 @@ class TransitionMatrix():
         if len(self.palette_u) != 1 or self.M.shape[0] != 1:
             raise (ValueError(
                 "Unexpected transition matrix. Expected a land transition matrix with only one initial state."))
+        return(True)
 
 
 def load_transition_matrix(path, palette):

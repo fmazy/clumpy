@@ -75,10 +75,10 @@ class Calibrator():
         return(self)
     
     def transition_probabilities(self,
-                                 land,
+                                 J,
+                                 tm,
+                                 lul,
                                  distances_to_states={},
-                                 path_prefix=None,
-                                 copy_geo=None,
                                  save_P_Y__v=False,
                                  save_P_Y=False,
                                  return_Y=False):
@@ -126,27 +126,22 @@ class Calibrator():
             Only returned if ``return_Y=True``.
             The features values.
         """
-
+        
+        tm._check_land_transition_matrix()
+        
         self._time_tp = {}
         st = time()
-        
-        state = land.state
-        tm = land.region.get_transition_matrix().extract(state.value)
-        
+                
         if self.verbose > 0:
             print(title_heading(self.verbose_heading_level) + 'Land ' + str(state) + ' TPE\n')
 
         # GET VALUES
-        st = time()
-        J, Y = land.get_values(kind='allocation',
-                               explanatory_variables=True,
-                               distances_to_states=distances_to_states)
+        Y = self.features.get(J=J,
+                              lul=lul,
+                              distances_to_states=distances_to_states)
         
-        # features SELECTOR
-        Y = self._features.selector.transform(X=Y)
-
         # TRANSITION PROBABILITY ESTIMATION
-        P_v__u_Y = self.tpe.transition_probability(
+        P_v__u_Y = self.tpe.transition_probabilities(
             transition_matrix=tm,
             Y=Y,
             compute_P_Y__v=True,
@@ -157,27 +152,34 @@ class Calibrator():
         if self.verbose > 0:
             print('Land ' + str(state) + ' TPE done.\n')
 
-        if path_prefix is not None:
+        # if path_prefix is not None:
 
-            folder_path, file_prefix = path_split(path_prefix, prefix=True)
+        #     folder_path, file_prefix = path_split(path_prefix, prefix=True)
+            
+        #     if isinstance(lul, LandUseLayer):
+        #             shape = lul.get_data().shape
+        #             copy_geo = lul
+        #         else:
+        #             shape = lul.shape
+        #             copy_geo = None
+                
+        #     n_bands = len(tm.palette_v)
+        #     M = np.zeros((n_bands,) + shape)
+            
+        #     initial_states = []
+        #     final_states = []
+            
+        #     for id_state, state_v in enumerate(tm.palette_v):
+        #         M[.flat[J] = P_v__u_Y[:, id_state]
 
-            for id_state, state_v in enumerate(tm.palette_v):
-                if isinstance(lul, LandUseLayer):
-                    shape = lul.get_data().shape
-                    copy_geo = lul
-                else:
-                    shape = lul.shape
-                M = np.zeros(shape)
-                M.flat[J] = P_v__u_Y[:, id_state]
+        #         file_name = file_prefix + '_' + str(state_v.value) + '.tif'
 
-                file_name = file_prefix + '_' + str(state_v.value) + '.tif'
-
-                FeatureLayer(label=file_name,
-                             data=M,
-                             copy_geo=copy_geo,
-                             path=folder_path + '/' + file_name)
+        #         FeatureLayer(label=file_name,
+        #                      data=M,
+        #                      copy_geo=copy_geo,
+        #                      path=folder_path + '/' + file_name)
 
         if return_Y:
-            return J, P_v__u_Y, Y
+            return P_v__u_Y, Y
         else:
-            return J, P_v__u_Y
+            return P_v__u_Y

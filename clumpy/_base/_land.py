@@ -7,7 +7,7 @@ from time import time
 from scipy import ndimage
 
 # base import
-from ._layer import Layer, FeatureLayer, LandUseLayer, MaskLayer
+from ._layer import Layer, FeatureLayer, LandUseLayer, MaskLayer, ProbaLayer
 from ._state import State
 from ._transition_matrix import TransitionMatrix, load_transition_matrix
 
@@ -84,8 +84,8 @@ class Land():
                 "Unexpected 'transition_probability_estimator. A 'TransitionProbabilityEstimator' object is expected."))
         self.transition_probability_estimator = transition_probability_estimator
 
-        # self.features = None
         self.calibrator = None
+        self.transition_matrix = None
         self.lul = {}
         self.mask = {}
         
@@ -248,27 +248,14 @@ class Land():
             feature_selectors.append(fs)
 
         return feature_selectors
-    
-    # def set_features(self, features):
-    #     self.features = features
-    
-    # def get_features(self):
-    #     if self.features is None:
-    #         return(self.region.get_features())
-    #     else:
-    #         return(self.features)
         
     def set_calibrator(self, calibrator):
         self.calibrator = calibrator
-    
-    def get_calibrator(self):
-        if self.calibrator is None:
-            return(self.region.get_calibrator())
-        else:
-            return(self.calibrator)
-    
+        return(self)
+       
     def set_lul(self, lul, kind):
         self.lul[kind] = lul
+        return(self)
     
     def get_lul(self, kind):
         if kind not in self.lul.keys():
@@ -278,12 +265,23 @@ class Land():
         
     def set_mask(self, mask, kind):
         self.mask[kind] = mask
+        return(self)
     
     def get_mask(self, kind):
         if kind not in self.mask.keys():
             return(self.region.get_mask(kind))
         else:
             return(self.mask[kind])
+    
+    def set_transition_matrix(self, tm):
+        self.transition_matrix = tm
+        return(self)
+    
+    def get_transition_matrix(self):
+        if self.transition_matrix is None:
+            return(self.region.get_transition_matrix())
+        else:
+            return(self.transition_matrix)
     
     def get_J(self, 
               lul,
@@ -534,15 +532,12 @@ class Land():
                             lul_final='final',
                             mask='calibration',
                             restrict_to_final_palette=True)
-        
-        # get a copy !
-        self._calibrator = self.get_calibrator().copy()
-        
-        self._calibrator.fit(J=J,
-                             V=V,
-                             state=self.state,
-                             lul=self.get_lul('initial'),
-                             distances_to_states=distances_to_states)
+                
+        self.calibrator.fit(J=J,
+                            V=V,
+                            state=self.state,
+                            lul=self.get_lul('initial'),
+                            distances_to_states=distances_to_states)
         
         # if self.transition_probability_estimator is None:
         #     raise (ValueError('Transition probability estimator is expected for fitting.'))
@@ -567,6 +562,67 @@ class Land():
         self._time_fit['all'] = time()-st0
 
         return self
+    
+    def transition_probabilities(self, 
+                                 lul):
+        if isinstance(lul, str):
+            lul = self.get_lul(lul)
+            
+        J = self.get_J(lul=lul,
+                       mask='allocation')
+        
+        tm = self.get_transition_matrix().extract(self.state)
+    
+        P_v__u_Y = self.calibrator.transition_probabilities(J=J,
+                                                            tm=tm,
+                                                            lul=lul,
+                                                            distances_to_states={})
+        
+        final_states = tm.palette_v.get_list_of_values()
+        return(J, P_v__u_Y, final_states)
+    
+    def transition_probabilities_layer(self, 
+                                       lul, 
+                                       path,
+                                       effective_transitions_only=True):
+        
+        if isinstance(lul, str):
+            lul = self.get_lul(lul)
+        
+        J, P_v__u_Y, final_states = self.transition_probabilities(lul=lul)
+        
+        M = self._get_transition_probabilities_layer_data(J=J,
+                                                          P_v__u_Y=P_v__u_Y,
+                                                          shape=lul.get_data().shape)
+        
+        if effective_transitions_only:
+            bands_to_keep = np.array(final_states) != int(self.state)
+            M = M[bands_to_keep]
+            final_states = list(np.array(final_states)[bands_to_keep])
+        
+        initial_states = [int(self.state) for i in range(len(final_states))]
+        
+        probalayer = ProbaLayer(path=path,
+                                data=M,
+                                initial_states = initial_states,
+                                final_states = final_states,
+                                copy_geo=lul)
+        
+        return(probalayer)
+        
+        
+    def _get_transition_probabilities_layer_data(self, 
+                                                 J, 
+                                                 P_v__u_Y,
+                                                 shape):
+        
+        n_bands = P_v__u_Y.shape[1]
+        M = np.zeros((n_bands,) + shape)
+        
+        for i_band in range(P_v__u_Y.shape[1]):
+            M[i_band].flat[J] = P_v__u_Y[:, i_band]
+        
+        return(M)
 
     # def _fit_tpe(self,
     #              lul_initial,

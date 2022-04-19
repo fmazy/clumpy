@@ -44,8 +44,6 @@ class Territory():
         self.verbose_heading_level = verbose_heading_level
         
         self.lul = {}
-        self.mask = {}
-        self.transition_matrix = None
     
     def add_region(self, region):
         """
@@ -84,37 +82,14 @@ class Territory():
         except:
             pass
 
-        return (self)
-    
-    # def set_features(self, features):
-    #     self.features = features
-    
-    # def get_features(self):
-    #     return(self.features)
-    
-    def set_calibrator(self, calibrator):
-        self.calibrator = calibrator
-    
-    def get_calibrator(self):
-        return(self.calibrator)
+        return (self)    
     
     def set_lul(self, lul, kind):
         self.lul[kind] = lul
+        return(self)
     
     def get_lul(self, kind):
         return(self.lul[kind])
-    
-    def set_mask(self, mask, kind):
-        return(self.mask[kind])
-    
-    def get_mask(self, kind):
-        return(self.mask[kind])
-    
-    def set_transition_matrix(self, tm):
-        self.transition_matrix = tm
-    
-    def get_transition_matrix(self):
-        return(self.transition_matrix)
 
     def check(self):
         """
@@ -148,10 +123,7 @@ class Territory():
             
             self.add_region(region)
 
-    def fit(self,
-            lul_initial,
-            lul_final,
-            masks=None):
+    def fit(self):
         """
         Fit the territory.
 
@@ -174,30 +146,16 @@ class Territory():
         if self.verbose > 0:
             print(title_heading(self.verbose_heading_level) + 'Territory fitting\n')
 
-        if masks is None:
-            masks = {region: None for region in self.regions.values()}
-
         # convert keys if label strings
-        masks_region_keys = masks.copy()
-        for key, mask in masks.items():
-            if isinstance(key, str):
-                del masks_region_keys[key]
-                masks_region_keys[self.get_region(key)] = mask
-
-        masks = masks_region_keys
-
         distances_to_states = {}
 
         for region in self.regions.values():
-            region.fit(lul_initial=lul_initial,
-                       lul_final=lul_final,
-                       mask=masks[region],
-                       distances_to_states=distances_to_states)
+            region.fit(distances_to_states=distances_to_states)
 
         if self.verbose > 0:
             print('Territory fitting done.\n')
 
-        return (self)
+        return self
 
     def transition_matrices(self,
                             lul_initial,

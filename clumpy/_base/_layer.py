@@ -23,6 +23,7 @@ class Layer:
                  time=0,
                  path=None,
                  data=None,
+                 band_tags=None,
                  copy_geo=None):
         
         self.label = label
@@ -48,7 +49,7 @@ class Layer:
             elif len(data.shape) == 2:
                 data = data[None, :, :]
             
-            elif len(data.shape) > 3:
+            elif len(data.shape) > 4:
                 logger.error("len(data.shape) is expected to be lower or equal to 3.")
                 stop_log()
                 raise(ValueError())
@@ -79,6 +80,10 @@ class Layer:
                 transform=transform
                 ) as dst:
                     dst.write(data)
+                    
+                    if band_tags is not None:
+                        for band_i, tags in enumerate(band_tags):
+                            dst.update_tags(band_i+1, **tags)
         
         # read file
         try:
@@ -90,6 +95,9 @@ class Layer:
 
     def get_data(self, band=1):
         return(self.raster_.read(band))
+    
+    def get_n_bands(self):
+        return(self.raster_.read().shape[0])
 
     def __repr__(self):
         return(self.label)
@@ -479,6 +487,44 @@ class FeatureLayer(Layer):
                          copy_geo=copy_geo)
         
         self.bounded = bounded
+
+class ProbaLayer(Layer):
+    def __init__(self,
+                 label=None,
+                 time=0,
+                 path=None,
+                 data=None,
+                 initial_states = None,
+                 final_states = None,
+                 copy_geo=None):
+        
+        band_tags = None
+        
+        if initial_states is not None and final_states is not None:
+            band_tags = [{'initial_state' : initial_states[i],
+                          'final_state' : final_states[i]} for i in range(len(initial_states))]
+        
+        super().__init__(label=label,
+                         time=time,
+                         path=path,
+                         data=data,
+                         band_tags=band_tags,
+                         copy_geo=copy_geo)
+    
+    def get_proba(self, 
+                  u, 
+                  v):
+        n_bands = self.get_n_bands()
+        
+        for i_band in range(1, n_bands+1):
+            if int(self.raster_.tags(i_band)['initial_state']) == int(u) and\
+            int(self.raster_.tags(i_band)['final_state']) == int(v):
+                return(self.get_data(i_band))
+        
+        return(None)
+            
+        
+
 
 def convert_raster_file(path_in, path_out):
     os.system('rio convert '+path_in+' '+path_out+' --overwrite')

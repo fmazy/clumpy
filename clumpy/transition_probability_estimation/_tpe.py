@@ -42,14 +42,14 @@ class TransitionProbabilityEstimator():
         """
         self._check()
 
-    def transition_probability(self,
-                               transition_matrix,
-                               Y,
-                               id_J=None,
-                               compute_P_Y__v=True,
-                               compute_P_Y = True,
-                               save_P_Y__v=False,
-                               save_P_Y=False):
+    def transition_probabilities(self,
+                                 transition_matrix,
+                                 Y,
+                                 id_J=None,
+                                 compute_P_Y__v=True,
+                                 compute_P_Y = True,
+                                 save_P_Y__v=False,
+                                 save_P_Y=False):
         """
         Estimates transition probability. Non estimated final states transition probabilities are filled to the null value.
 
