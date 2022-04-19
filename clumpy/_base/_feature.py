@@ -5,6 +5,7 @@ import numpy as np
 
 from ._layer import Layer, FeatureLayer
 from ._state import State
+from ..feature_selection import Pipeline
 
 class Features():
     def __init__(self, 
@@ -36,6 +37,15 @@ class Features():
     def copy(self):
         return(Features(f_list = [f for f in self.list],
                         selector = deepcopy(self.selector)))
+    
+    def check(self, objects=[]):
+        if self.selector in objects:
+            raise(ValueError("Selector objects must be different."))
+        else:
+            objects.append(self.selector)
+        
+        if isinstance(self.selector, Pipeline):
+            self.selector.check(objects=objects)
     
     def get_all(self, 
                 J,

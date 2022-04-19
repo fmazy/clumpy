@@ -3,7 +3,7 @@ from ._tpe import TransitionProbabilityEstimator
 # from ..density_estimation import GKDE
 
 import numpy as np
-# from ..density_estimation._density_estimator import DensityEstimator, NullEstimator
+# from ..density_estimation.density_estimatornsity_estimator import DensityEstimator, NullEstimator
 from ..density_estimation import _methods, NullEstimator
 from ..tools._console import title_heading
 
@@ -47,7 +47,25 @@ class Bayes(TransitionProbabilityEstimator):
                          verbose=verbose,
                          verbose_heading_level=verbose_heading_level)
         
-        self.density_estimator = density_estimator
+        self.de = density_estimator
+    
+    def __repr__(self):
+        return ('Bayes')
+    
+    def check(self, objects=[]):
+        """
+        Check the density estimators uniqueness.
+        """
+        if self.de in objects:
+            raise(ValueError("DensityEstimator objects must be different."))
+        else:
+            objects.append(self.de)
+        
+        for cde in self.cde.values():
+            if cde in objects:
+                raise(ValueError("DensityEstimator objects must be different."))
+            else:
+                objects.append(cde)
     
     def fit(self,
             X,
@@ -80,22 +98,21 @@ class Bayes(TransitionProbabilityEstimator):
         self._palette_fitted_states = Palette()
         
         # set de params
-        self._de = deepcopy(self.density_estimator)
-        self._de.set_params(bounds = bounds)
+        self.de.set_params(bounds = bounds)
         
-        self._cde = {}
+        self.cde = {}
         
         list_v = np.unique(V)
         for v in list_v:
             if v != v_initial:
-                self._cde[v] = deepcopy(self._de)
-                self._cde[v].set_params(bounds = bounds)
+                self.cde[v] = deepcopy(self.de)
+                self.cde[v].set_params(bounds = bounds)
                 
                 idx_v = V == v
-                self._cde[v].fit(X=X[idx_v])
+                self.cde[v].fit(X=X[idx_v])
                 
             else:
-                self._cde[v] = NullEstimator()
+                self.cde[v] = NullEstimator()
         
         if self.verbose > 0:
             print('TPE fitting done.')
@@ -104,18 +121,18 @@ class Bayes(TransitionProbabilityEstimator):
 
     def _compute_P_Y(self, Y):
         # forbid_null_value is forced to True by default for this density estimator
-        # self._de.set_params(forbid_null_value=True)
+        # self.de.set_params(forbid_null_value=True)
 
         if self.verbose > 0:
             print('Density estimator fitting...')
-        self._de.fit(Y)
+        self.de.fit(Y)
         if self.verbose > 0:
             print('Density estimator fitting done.')
 
         # P(Y) estimation
         if self.verbose > 0:
             print('Density estimator predict...')
-        P_Y = self._de.predict(Y)[:, None]
+        P_Y = self.de.predict(Y)[:, None]
         if self.verbose > 0:
             print('Density estimator predict done.')
 
@@ -130,10 +147,10 @@ class Bayes(TransitionProbabilityEstimator):
             print('are concerned :')
         cde = []
         for v in list_v:
-            if v in self._cde.keys():
+            if v in self.cde.keys():
                 if self.verbose > 0:
                     print('v ' + str(v))
-                cde.append(self._cde[v])
+                cde.append(self.cde[v])
             else:
                 cde.append(NullEstimator())
 

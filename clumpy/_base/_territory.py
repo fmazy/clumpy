@@ -6,11 +6,13 @@ Created on Fri Sep 17 15:40:56 2021
 @author: frem
 """
 
-from ._layer import LandUseLayer
+from ._layer import LandUseLayer, ProbaLayer
 from . import Region
 from ..tools._path import path_split
 from ..tools._console import title_heading
 from ._feature import Features
+
+import numpy as np
 
 import logging
 logger = logging.getLogger('clumpy')
@@ -91,16 +93,19 @@ class Territory():
     def get_lul(self, kind):
         return(self.lul[kind])
 
-    def check(self):
+    def check(self, objects=[]):
         """
         Check the Region object through regions checks.
         Notably, estimators uniqueness are checked to avoid malfunctioning during transition probabilities estimation.
         """
-        density_estimators = []
-        feature_selectors = []
         for region in self.regions.values():
-            density_estimators = region._check_density_estimators(density_estimators=density_estimators)
-            feature_selectors = region._check_feature_selectors(feature_selectors=feature_selectors)
+            
+            if region in objects:
+                raise(ValueError("Region objects must be different."))
+            else:
+                objects.append(region)
+            
+            region.check(objects=objects)
 
     def get_region(self, label):
         try:
@@ -193,28 +198,16 @@ class Territory():
         return (tms)
 
     def transition_probabilities(self,
-                                 regions_transition_matrices,
                                  lul,
-                                 masks=None,
-                                 path_prefix=None):
+                                 effective_transitions_only=True):
         """
         Compute transition probabilities.
 
         Parameters
         ----------
-        regions_transition_matrices : dict(Region:TransitionMatrix)
-            Dict of transition matrix with the corresponding region as key.
 
         lul : LandUseLayer
             The studied land use layer.
-
-        masks : dict(Region:MaskLayer), default=None
-            Dict of masks layer with the corresponding region as key. If None, the whole map is used for each region.
-
-        path_prefix : str, default=None
-            The path prefix to save result as ``path_prefix+'_'+region.label+'_'+ str(state_u.value)+'_'+str(state_v.value)+'.tif'.
-            If None, the result is returned.
-            Note that if ``path_prefix is not None``, ``lul`` must be LandUseLayer
 
         Returns
         -------
@@ -223,55 +216,69 @@ class Territory():
             which is the element indices in the flattened map and ``P_v__u_Y``, the transition probabilities whose columns correspond
             to transition matrix argument : ``palette_v``.
         """
+        if isinstance(lul, str):
+            lul = self.get_lul(lul)
+        
+        r = {}
+        
+        for region_label, region in self.regions.items():
+            r[region_label] = region.transition_probabilities(
+                lul=lul,
+                effective_transitions_only=effective_transitions_only)
 
-        if self.verbose > 0:
-            print(title_heading(self.verbose_heading_level) + 'Territory TPE\n')
+        return r
 
-        if masks is None:
-            masks = {region: None for region in self.regions.values()}
-
-        # convert keys if label strings
-        masks_region_keys = masks.copy()
-        for key, mask in masks.items():
-            if isinstance(key, str):
-                del masks_region_keys[key]
-                masks_region_keys[self.get_region(key)] = mask
-
-        masks = masks_region_keys
-
-        # same for transition_matrices
-        tms_copy = regions_transition_matrices.copy()
-        for key, tm in regions_transition_matrices.items():
-            if isinstance(key, str):
-                del tms_copy[key]
-                tms_copy[self.get_region(key)] = tm
-
-        regions_transition_matrices = tms_copy
-
-        distances_to_states = {}
-
-
-        tp = {}
-
-        for region in self.regions.values():
-
-            if path_prefix is not None:
-                region_path_prefix = path_prefix + '_' + str(region.label)
-            else:
-                region_path_prefix = None
-
-            tp[region] = \
-                region.transition_probabilities(transition_matrix=regions_transition_matrices[region],
-                                                lul=lul,
-                                                mask=masks[region],
-                                                distances_to_states=distances_to_states,
-                                                path_prefix=region_path_prefix,
-                                                copy_geo=lul)
-
-        if self.verbose > 0:
-            print('Territory transition probabilities estimation done.\n')
-
-        return (tp)
+    def transition_probabilities_layer(self,
+                                       lul,
+                                       path,
+                                       effective_transitions_only=True):
+        
+        if isinstance(lul, str):
+            lul = self.get_lul(lul)
+            
+        M, initial_states, final_states = self._get_transition_probabilities_layer_data(
+            lul=lul,
+            effective_transitions_only=effective_transitions_only)
+        
+        probalayer = ProbaLayer(path=path,
+                                data=M,
+                                initial_states = initial_states,
+                                final_states = final_states,
+                                copy_geo=lul)    
+        
+        return(probalayer)
+        
+    def _get_transition_probabilities_layer_data(self, 
+                                                 lul='start',
+                                                 effective_transitions_only=True):
+        if isinstance(lul, str):
+            lul = self.get_lul(lul)
+        
+        M = np.zeros((0,) + lul.get_data().shape)
+        initial_final = []
+        
+        for region_label, region in self.regions.items():
+            M__region, initial_states__region, final_states__region = region._get_transition_probabilities_layer_data(
+                lul=lul,
+                effective_transitions_only=effective_transitions_only)
+            
+            for i in range(len(initial_states__region)):
+                initial_final__i = (initial_states__region[i],
+                                    final_states__region[i])
+                if initial_final__i in initial_final:
+                    i_band = initial_final.index(initial_final__i)
+                    M[i_band] += M__region[i]
+                else:
+                    M = np.concatenate((M, M__region[[i]]))
+                    initial_final.append(initial_final__i)
+        
+        initial_states = [initial for initial, final in initial_final]
+        final_states = [final for initial, final in initial_final]
+        
+        return(M, initial_states, final_states)
+            
+            
+        
 
     def allocate(self,
                  regions_transition_matrices,

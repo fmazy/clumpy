@@ -22,6 +22,21 @@ class Calibrator():
                           features=self.features.copy(),
                           verbose=self.verbose))
     
+    def check(self, objects=[]):
+        if self.features in objects:
+            raise(ValueError("Features objects must be different."))
+        else:
+            objects.append(self.features)
+            
+        self.features.check(objects=objects)
+        
+        if self.tpe in objects:
+            raise(ValueError("TPE objects must be different."))
+        else:
+            objects.append(self.tpe)
+            
+        self.tpe.check(objects=objects)
+    
     def fit(self,
             J,
             V,

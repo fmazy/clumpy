@@ -8,7 +8,7 @@ class Pipeline(FeatureSelector):
         self.list = fs_list
         
         super().__init__()
-    
+        
     def __repr__(self):
         return("Pipeline"+str(self.list))
     
@@ -23,3 +23,11 @@ class Pipeline(FeatureSelector):
         self._cols_support = self._cols_support[0]
         
         return(self)
+
+    def check(self, objects=[]):
+        for selector in self.list:
+            if selector in objects:
+                raise(ValueError("Selector objects must be different."))
+            else:
+                objects.append(selector)
+            

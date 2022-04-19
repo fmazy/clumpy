@@ -3,7 +3,7 @@
 
 import numpy as np
 
-from ._layer import LandUseLayer
+from ._layer import LandUseLayer, ProbaLayer
 from ._transition_matrix import TransitionMatrix, load_transition_matrix
 from ..tools._path import path_split
 from ..tools._console import title_heading
@@ -143,16 +143,21 @@ class Region():
         else:
             return(self.transition_matrix)
     
-    def check(self):
+    def check(self, objects=[]):
         """
         Check the Region object through lands checks.
         Notably, estimators uniqueness are checked to avoid malfunctioning during transition probabilities estimation.
         """
-        self._check_density_estimators()
-        self._check_feature_selectors()
         
-        for state, land in self.lands.items():
-            land.state = state
+        
+        for land in self.lands.values():
+            if land in objects:
+                raise(ValueError("Land objects must be different."))
+            else:
+                objects.append(land)
+                
+            land.check(objects=objects)
+        
 
     def fit(self,
             distances_to_states={}):
@@ -224,7 +229,8 @@ class Region():
         return (tm)
 
     def transition_probabilities(self,
-                                 lul):
+                                 lul='start',
+                                 effective_transitions_only=True):
         """
         Compute transition probabilities.
 
@@ -263,20 +269,54 @@ class Region():
         r = {}
         
         for state, land in self.lands.items():
-            r[state] = land.transition_probabilities(lul=lul)
+            r[state] = land.transition_probabilities(
+                lul=lul,
+                effective_transitions_only=effective_transitions_only)
 
         return r
     
-    # def _get_transition_probabilities_layer_data(self,
-    #                                              J_P_final_states,
-    #                                              shape):
-    #     n_bands = P_v__u_Y.shape[1]
-    #     M = np.zeros((n_bands,) + shape)
+    def transition_probabilities_layer(self, 
+                                       path,
+                                       lul='start', 
+                                       effective_transitions_only=True):
         
-    #     for i_band in range(P_v__u_Y.shape[1]):
-    #         M[i_band].flat[J] = P_v__u_Y[:, i_band]
+        if isinstance(lul, str):
+            lul = self.get_lul(lul)
         
-    #     return(M)
+        M, initial_states, final_states = self._get_transition_probabilities_layer_data(
+            lul=lul,
+            effective_transitions_only=effective_transitions_only)
+        
+        probalayer = ProbaLayer(path=path,
+                                data=M,
+                                initial_states = initial_states,
+                                final_states = final_states,
+                                copy_geo=lul)    
+        
+        return(probalayer)
+    
+    def _get_transition_probabilities_layer_data(self, 
+                                                 lul='start',
+                                                 effective_transitions_only=True):
+        if isinstance(lul, str):
+            lul = self.get_lul(lul)
+        
+        initial_states = []
+        final_states = []
+        
+        M = np.array([]).reshape((0,) + lul.get_data().shape)
+        
+        for state, land in self.lands.items():
+            M__land, initial_states__land, final_states__land = land._get_transition_probabilities_layer_data(
+                lul,
+                effective_transitions_only=effective_transitions_only)
+            
+            final_states += final_states__land
+            initial_states += initial_states__land
+            
+            M = np.concatenate((M, M__land))
+            
+        return(M, initial_states, final_states)
         
 
     def allocate(self,

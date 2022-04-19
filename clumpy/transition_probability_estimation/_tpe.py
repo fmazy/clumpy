@@ -36,11 +36,7 @@ class TransitionProbabilityEstimator():
         self._palette_fitted_states = Palette()
 
 
-    def check(self):
-        """
-        Check the density estimators uniqueness.
-        """
-        self._check()
+    
 
     def transition_probabilities(self,
                                  transition_matrix,
