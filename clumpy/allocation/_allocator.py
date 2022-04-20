@@ -2,9 +2,10 @@
 Allocators blabla.
 """
 
-from .._base import LandUseLayer, State
+from .._base import State
+from ..layer import LandUseLayer
 from ..tools._path import path_split
-
+from copy import deepcopy
 
 class Allocator():
     """
@@ -31,15 +32,8 @@ class Allocator():
             setattr(self, key, param)
 
     def allocate(self,
-                 calibrator,
-                 tm,
-                 lul,
-                 lul_origin=None,
-                 mask=None,
-                 distances_to_states={},
-                 path=None,
-                 path_transition_probabilities=None,
-                 copy_geo=None):
+                 lul, 
+                 p):
         """
         Allocate
 
@@ -68,7 +62,7 @@ class Allocator():
             If None, the allocation is only saved within `lul`, if `lul` is a ndarray.
             Note that if ``path`` is not ``None``, ``lul`` must be LandUseLayer.
 
-        path_prefix_transition_probabilities : str, default=None
+        path_transition_probabilities : str, default=None
             The path prefix to save transition probabilities
 
         Returns
@@ -76,40 +70,37 @@ class Allocator():
         lul_allocated : LandUseLayer
             Only returned if ``path`` is not ``None``. The allocated map as a land use layer.
         """
+        # if lul_origin is None:
+        #     lul_origin = lul
 
-        # check if it is really a land transition matrix
-        tm._check_land_tm()
-
-        if lul_origin is None:
-            lul_origin = lul
-
-        if isinstance(lul_origin, LandUseLayer):
-            lul_origin_data = lul_origin.get_data()
-            copy_geo = lul_origin
-        else:
-            lul_origin_data = lul_origin
+        # if isinstance(lul_origin, LandUseLayer):
+        #     lul_origin_data = lul_origin.get_data()
+        #     copy_geo = lul_origin
+        # else:
+        #     lul_origin_data = lul_origin
 
         if isinstance(lul, LandUseLayer):
             lul_data = lul.get_data().copy()
         else:
             lul_data = lul
-
-        self._allocate(tm=tm,
-                       land=land,
-                       lul_data=lul_data,
-                       lul_origin_data=lul_origin_data,
-                       mask=mask,
-                       distances_to_states=distances_to_states,
-                       path_prefix_transition_probabilities=path_prefix_transition_probabilities,
-                       copy_geo=copy_geo)
-
-        if path is not None:
-            folder_path, file_name, file_ext = path_split(path)
-            return (LandUseLayer(label='file_name',
-                                 data=lul_data,
-                                 copy_geo=lul_origin,
-                                 path=path,
-                                 palette=lul_origin.palette))
+        
+        self._allocate(lul_data=lul_data,
+                       p=p)
+        
+        return(lul_data)
+    
+    def allocate_layer(self,
+                       lul,
+                       p,
+                       path):
+        lul_data = self.allocate(lul=lul, 
+                                 p=p)
+        
+        land_use_layer = LandUseLayer(path=path,
+                                      data=lul_data,
+                                      copy_geo=lul,
+                                      palette=lul.palette)
+        return(land_use_layer)
 
 def _update_P_v__Y_u(P_v__u_Y, tm, inplace=True):
     if not inplace:

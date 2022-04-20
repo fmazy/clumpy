@@ -1,6 +1,6 @@
 import numpy as np
 
-from .._base._tm import TransitionMatrix
+from .._base._transition_matrix import TransitionMatrix
 
 from ._allocator import Allocator, _update_P_v__Y_u
 from ._gart import generalized_allocation_rejection_test

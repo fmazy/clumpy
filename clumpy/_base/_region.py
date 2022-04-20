@@ -3,7 +3,7 @@
 
 import numpy as np
 
-from ._layer import LandUseLayer, ProbaLayer
+from ..layer import LandUseLayer, ProbaLayer, create_proba_layer
 from ._transition_matrix import TransitionMatrix, load_transition_matrix
 from ..tools._path import path_split
 from ..tools._console import title_heading
@@ -174,7 +174,8 @@ class Region(dict):
 
     def transition_probabilities(self,
                                  lul='start',
-                                 effective_transitions_only=True):
+                                 effective_transitions_only=True,
+                                 territory_format=False):
         """
         Compute transition probabilities.
 
@@ -210,14 +211,17 @@ class Region(dict):
         if isinstance(lul, str):
             lul = self.get_lul(lul)
         
-        r = {}
+        p = {}
         
         for state, land in self.items():
-            r[state] = land.transition_probabilities(
+            p[int(state)] = land.transition_probabilities(
                 lul=lul,
                 effective_transitions_only=effective_transitions_only)
-
-        return r
+        
+        if not territory_format:
+            return(p)
+        else:
+            return({self.label : p})
     
     def transition_probabilities_layer(self, 
                                        path,
@@ -227,40 +231,16 @@ class Region(dict):
         if isinstance(lul, str):
             lul = self.get_lul(lul)
         
-        M, initial_states, final_states = self._get_transition_probabilities_layer_data(
+        p = self.transition_probabilities(
             lul=lul,
-            effective_transitions_only=effective_transitions_only)
+            effective_transitions_only=effective_transitions_only,
+            territory_format=True)
         
-        probalayer = ProbaLayer(path=path,
-                                data=M,
-                                initial_states = initial_states,
-                                final_states = final_states,
-                                copy_geo=lul)    
+        proba_layer = create_proba_layer(path=path,
+                                         lul=lul,
+                                         p=p)
         
-        return(probalayer)
-    
-    def _get_transition_probabilities_layer_data(self, 
-                                                 lul='start',
-                                                 effective_transitions_only=True):
-        if isinstance(lul, str):
-            lul = self.get_lul(lul)
-        
-        initial_states = []
-        final_states = []
-        
-        M = np.array([]).reshape((0,) + lul.get_data().shape)
-        
-        for state, land in self.items():
-            M__land, initial_states__land, final_states__land = land._get_transition_probabilities_layer_data(
-                lul,
-                effective_transitions_only=effective_transitions_only)
-            
-            final_states += final_states__land
-            initial_states += initial_states__land
-            
-            M = np.concatenate((M, M__land))
-            
-        return(M, initial_states, final_states)
+        return(proba_layer)
         
 
     def allocate(self,

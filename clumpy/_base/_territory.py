@@ -6,7 +6,7 @@ Created on Fri Sep 17 15:40:56 2021
 @author: frem
 """
 
-from ._layer import LandUseLayer, ProbaLayer
+from ..layer import LandUseLayer, ProbaLayer, create_proba_layer
 from . import Region
 from ..tools._path import path_split
 from ..tools._console import title_heading
@@ -185,7 +185,7 @@ class Territory(dict):
             r[region_label] = region.transition_probabilities(
                 lul=lul,
                 effective_transitions_only=effective_transitions_only)
-
+        
         return r
 
     def transition_probabilities_layer(self,
@@ -195,51 +195,17 @@ class Territory(dict):
         
         if isinstance(lul, str):
             lul = self.get_lul(lul)
-            
-        M, initial_states, final_states = self._get_transition_probabilities_layer_data(
+        
+        p = self.transition_probabilities(
             lul=lul,
             effective_transitions_only=effective_transitions_only)
         
-        probalayer = ProbaLayer(path=path,
-                                data=M,
-                                initial_states = initial_states,
-                                final_states = final_states,
-                                copy_geo=lul)    
+        proba_layer = create_proba_layer(path=path,
+                                         lul=lul,
+                                         p=p)
         
-        return(probalayer)
-        
-    def _get_transition_probabilities_layer_data(self, 
-                                                 lul='start',
-                                                 effective_transitions_only=True):
-        if isinstance(lul, str):
-            lul = self.get_lul(lul)
-        
-        M = np.zeros((0,) + lul.get_data().shape)
-        initial_final = []
-        
-        for region_label, region in self.items():
-            M__region, initial_states__region, final_states__region = region._get_transition_probabilities_layer_data(
-                lul=lul,
-                effective_transitions_only=effective_transitions_only)
+        return(proba_layer)
             
-            for i in range(len(initial_states__region)):
-                initial_final__i = (initial_states__region[i],
-                                    final_states__region[i])
-                if initial_final__i in initial_final:
-                    i_band = initial_final.index(initial_final__i)
-                    M[i_band] += M__region[i]
-                else:
-                    M = np.concatenate((M, M__region[[i]]))
-                    initial_final.append(initial_final__i)
-        
-        initial_states = [initial for initial, final in initial_final]
-        final_states = [final for initial, final in initial_final]
-        
-        return(M, initial_states, final_states)
-            
-            
-        
-
     def allocate(self,
                  regions_transition_matrices,
                  lul,

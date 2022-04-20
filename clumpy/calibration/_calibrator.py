@@ -4,8 +4,7 @@ from copy import deepcopy
 import numpy as np
 from scipy import ndimage
 
-from .._base import FeatureLayer, LandUseLayer, MaskLayer
-from .._base._layer import Layer
+from ..layer import Layer, FeatureLayer, LandUseLayer, MaskLayer
 from .._base import State
 from ..feature_selection import Pipeline
 from ..patch import Patcher, Patchers
@@ -211,6 +210,8 @@ class Calibrator():
             save_P_Y__v=save_P_Y__v,
             save_P_Y=save_P_Y)
         
+        final_states = deepcopy(self.final_states)
+        
         if effective_transitions_only:
             bands_to_keep = np.array(self.final_states) != int(self.state)
             final_states = list(np.array(self.final_states)[bands_to_keep])
@@ -371,7 +372,8 @@ class Calibrator():
                                             J=J,
                                             V=V,
                                             shape=shape,
-                                            mask=mask)
+                                            mask=mask)       
+        
 
 def _compute_distance(state_value, data, distances_to_states):
     v_matrix = (data == state_value).astype(int)

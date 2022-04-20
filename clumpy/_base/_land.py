@@ -7,7 +7,7 @@ from time import time
 from scipy import ndimage
 
 # base import
-from ._layer import Layer, FeatureLayer, LandUseLayer, MaskLayer, ProbaLayer
+from ..layer import Layer, FeatureLayer, LandUseLayer, MaskLayer, ProbaLayer, create_proba_layer
 from ._state import State
 from ._transition_matrix import TransitionMatrix, load_transition_matrix
 
@@ -194,21 +194,33 @@ class Land():
         return self
     
     def transition_probabilities(self, 
-                                 lul='start',
-                                 effective_transitions_only=True):
+                                 lul=None,
+                                 mask=None,
+                                 effective_transitions_only=True,
+                                 territory_format=False):
+        if lul is None:
+            lul = 'start'
+        
         if isinstance(lul, str):
             lul = self.get_lul(lul)
         
+        if mask is None:
+            mask = self.get_mask('allocation')
+        
         tm = self.get_transition_matrix().extract(self.state)
     
-        J, P_v__u_Y, final_states = self.calibrator.transition_probabilities(
+        p = self.calibrator.transition_probabilities(
             lul=lul,
             tm=tm,
             features=self.get_features(),
+            mask = mask,
             distances_to_states={},
             effective_transitions_only=effective_transitions_only)
-                
-        return(J, P_v__u_Y, final_states)
+        
+        if not territory_format:
+            return(p)
+        else:
+            return({self.region.label : {int(self.state) : p}})
     
     def transition_probabilities_layer(self, 
                                        path,
@@ -218,42 +230,17 @@ class Land():
         if isinstance(lul, str):
             lul = self.get_lul(lul)
         
-        M, initial_states, final_states = self._get_transition_probabilities_layer_data(
+        p = self.transition_probabilities(
             lul=lul,
-            effective_transitions_only=effective_transitions_only)
-                
-        probalayer = ProbaLayer(path=path,
-                                data=M,
-                                initial_states = initial_states,
-                                final_states = final_states,
-                                copy_geo=lul)
+            effective_transitions_only=effective_transitions_only,
+            territory_format=True)
         
-        return(probalayer)
+        proba_layer = create_proba_layer(path=path,
+                                         lul=lul,
+                                         p=p)
+        
+        return(proba_layer)
             
-    def _get_transition_probabilities_layer_data(self, 
-                                                 lul='start',
-                                                 effective_transitions_only=True):
-        
-        if isinstance(lul, str):
-            lul = self.get_lul(lul)
-        
-        shape = lul.get_data().shape
-        
-        J, P_v__u_Y, final_states = self.transition_probabilities(
-            lul=lul,
-            effective_transitions_only=effective_transitions_only)
-                
-        n_bands = len(final_states)
-        M = np.zeros((n_bands,) + shape)
-        
-        for i_band in range(n_bands):
-            M[i_band].flat[J] = P_v__u_Y[:, i_band]
-        
-        initial_states = [int(self.state) for i in range(len(final_states))]
-        
-        return(M, initial_states, final_states)
-
-
     def transition_matrix(self):
         """
         Compute the transition matrix.

@@ -3,6 +3,7 @@ intro Reference
 """
 
 from ._base import *
+from .layer import *
 from . import transition_probability_estimation
 from . import density_estimation
 from . import feature_selection
@@ -11,4 +12,5 @@ from . import metrics
 from . import tools
 from .case._case import Case
 from . import calibration
+from . import allocation
 from . import patch
