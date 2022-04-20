@@ -28,7 +28,14 @@ class Pipeline(FeatureSelector):
     def copy(self):
         return(deepcopy(self))
 
-    def check(self, objects=[]):
+    def check(self, objects=None):
+        """
+        Check the unicity of objects.
+        Notably, estimators uniqueness are checked to avoid malfunctioning during transition probabilities estimation.
+        """
+        if objects is None:
+            objects = []
+            
         for selector in self.list:
             if selector in objects:
                 raise(ValueError("Selector objects must be different."))

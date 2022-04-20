@@ -1,6 +1,6 @@
 import numpy as np
 
-from .._base._transition_matrix import TransitionMatrix
+from .._base._tm import TransitionMatrix
 
 from ._allocator import Allocator, _update_P_v__Y_u
 from ._gart import generalized_allocation_rejection_test
@@ -40,7 +40,7 @@ class Unbiased(Allocator):
                          verbose_heading_level=verbose_heading_level)
 
     def _allocate(self,
-                  transition_matrix,
+                  tm,
                   land,
                   lul_data,
                   lul_origin_data,
@@ -53,14 +53,14 @@ class Unbiased(Allocator):
         """
 
         # check if it is really a land transition matrix
-        transition_matrix._check_land_transition_matrix()
+        tm._check_land_tm()
 
         # make a copy
         # the transition matrix will be edited after
-        transition_matrix = transition_matrix.copy()
+        tm = tm.copy()
 
-        state = transition_matrix.palette_u.states[0]
-        palette_v = transition_matrix.palette_v
+        state = tm.palette_u.states[0]
+        palette_v = tm.palette_v
 
         # ghost initialization
         palette_v_without_u = palette_v.remove(state)
@@ -76,17 +76,17 @@ class Unbiased(Allocator):
 
         if self.verbose > 0:
             print('Allocation start...')
-            print('P_v : ' + str(transition_matrix.M[0]))
+            print('P_v : ' + str(tm.M[0]))
             print('update_P_Y : ' + str(self.update_P_Y) + '\n')
 
         n_try = 0
         while np.sum(list(n_ghost.values())) > 0 and n_try < self.n_allocation_try:
             n_try += 1
 
-            # transition_matrix is divided by patch area mean
+            # tm is divided by patch area mean
             # The new one is then largely smaller.
-            # one keep transition_matrix to update it after the allocation try.
-            transition_matrix_patches = transition_matrix.patches(patches=self.patches,
+            # one keep tm to update it after the allocation try.
+            tm_patches = tm.patches(patches=self.patches,
                                                                   inplace=False)
 
             # if P_v__u_Y has to be updated
@@ -94,7 +94,7 @@ class Unbiased(Allocator):
             # compute P(v|u,Y)
             if n_try == 1:
                 J, P_v__u_Y, Y = land.transition_probabilities(
-                    transition_matrix=transition_matrix_patches,
+                    tm=tm_patches,
                     lul=lul_data,
                     mask=mask,
                     distances_to_states=distances_to_states,
@@ -109,7 +109,7 @@ class Unbiased(Allocator):
 
             else:
                 P_v__u_Y = land.transition_probability_estimator.transition_probability(
-                    transition_matrix=transition_matrix_patches,
+                    tm=tm_patches,
                     Y=Y,
                     id_J=idx_J_unused,
                     compute_P_Y__v=False,
@@ -117,7 +117,7 @@ class Unbiased(Allocator):
                     save_P_Y__v=False,
                     save_P_Y=False)
 
-            expected_allocated = {state_v: n_idx_J_unused * transition_matrix.M[0, id_state_v] for id_state_v, state_v
+            expected_allocated = {state_v: n_idx_J_unused * tm.M[0, id_state_v] for id_state_v, state_v
                                   in
                                   enumerate(palette_v)}
 
@@ -146,7 +146,7 @@ class Unbiased(Allocator):
                 break
 
             # update the transition matrix
-            _reduce_transition_matrix(transition_matrix,
+            _reduce_tm(tm,
                                       expected_allocated,
                                       n_allocated,
                                       n_idx_J_unused)
@@ -251,20 +251,20 @@ class Unbiased(Allocator):
         return (J_used, n_allocated, n_ghost)
 
 
-def _reduce_transition_matrix(transition_matrix,
+def _reduce_tm(tm,
                               expected_allocated,
                               n_allocated,
                               n_idx_J_unused):
-    state = transition_matrix.palette_u.states[0]
-    palette_v = transition_matrix.palette_v
+    state = tm.palette_u.states[0]
+    palette_v = tm.palette_v
     # get the id of the initial state
     id_state = palette_v.get_id(state)
 
-    transition_matrix.M[0, id_state] = 1
+    tm.M[0, id_state] = 1
     for id_state_v, state_v in enumerate(palette_v):
         if state_v != state:
             expected_allocated[state_v] -= n_allocated[state_v]
             if expected_allocated[state_v] < 0:
                 expected_allocated[state_v] = 0
-            transition_matrix.M[0, id_state_v] = expected_allocated[state_v] / n_idx_J_unused
-            transition_matrix.M[0, id_state] -= transition_matrix.M[0, id_state_v]
+            tm.M[0, id_state_v] = expected_allocated[state_v] / n_idx_J_unused
+            tm.M[0, id_state] -= tm.M[0, id_state_v]

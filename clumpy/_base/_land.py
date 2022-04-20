@@ -26,17 +26,10 @@ from ..tools._funcs import extract_parameters
 
 # Allocation
 from ..allocation._allocator import Allocator
-from ..allocation._compute_patches import compute_bootstrap_patches
 from ..allocation import _methods as _allocation_methods
 
 import logging
 logger = logging.getLogger('clumpy')
-
-DEFAULT_calibration_method = 'bayes'
-DEFAULT_calibration_params_density_estimation_method = 'kde'
-DEFAULT_allocation_method = 'unbiased'
-DEFAULT_set_features_bounds = True
-DEFAULT_fit_bootstrap_patches = True
 
 class Land():
     """
@@ -68,191 +61,56 @@ class Land():
 
     def __init__(self,
                  state,
-                 transition_probability_estimator=None,
-                 set_features_bounds=DEFAULT_set_features_bounds,
-                 fit_bootstrap_patches=DEFAULT_fit_bootstrap_patches,
+                 calibrator=None,
                  allocator=None,
                  verbose=0,
                  verbose_heading_level=1):
-
-        # Transition probability estimator
-        if transition_probability_estimator is not None and isinstance(transition_probability_estimator,
-                                                                       TransitionProbabilityEstimator) == False:
-            raise (TypeError(
-                "Unexpected 'transition_probability_estimator. A 'TransitionProbabilityEstimator' object is expected."))
-        self.transition_probability_estimator = transition_probability_estimator
-
-        self.calibrator = None
-        self.transition_matrix = None
-        self.lul = {}
-        self.mask = {}
-        
-        # set features bounds 
-        self.features = None
-        self.set_features_bounds = set_features_bounds
-        
-        # fit bootstrap patches
-        self.fit_bootstrap_patches = fit_bootstrap_patches
-
-        # allocator
-        self.allocator = allocator
         
         # state
         self.state = state
+        
+        self.calibrator = calibrator
+        self.allocator = allocator
         
         self.verbose = verbose
         self.verbose_heading_level = verbose_heading_level
         
         self.region = None
+        self.features = None
+        self.transition_matrix = None
+        self.lul = {}
+        self.mask = {}
 
     def __repr__(self):
-        return 'land'
+        return 'Land()'
 
     def set_params(self,
                    **params):
         for key, param in params.items():
             setattr(self, key, param)
-    
-    def make(self, palette, **params):
-        # features
-        features = []
-        if 'features' in params.keys():
-            for feature_params in params['features']:
-                if feature_params['type'] == 'layer':
-                    fp = extract_parameters(FeatureLayer, feature_params)
-                    features.append(FeatureLayer(**fp))
-                elif feature_params['type'] == 'distance':
-                    if feature_params['state'] != self.state.value:
-                        features.append(palette._get_by_value(feature_params['state']))
-        
-        self.features = features
-        
-        # feature selection
-        if 'feature_selection' in params.keys():
-            if isinstance(params['feature_selection'], int):
-                self.feature_selection = params['feature_selection']
-            else:
-                self.feature_selection = -1
-        
-        # transition matrix
-        transition_matrix = load_transition_matrix(path=params['transition_matrix'],
-                                                   palette=palette)
-        # select expected final states
-        self.final_palette = transition_matrix.getfinal_palette(info_u=self.state)
-        
-        # calibration
-        try:
-            calibration_method = params['calibration_method']
-        except:
-            calibration_method = DEFAULT_calibration_method
-        
-        try:
-            calibration_params = params['calibration_params']
-        except:
-            calibration_params = {}
-        
-        if calibration_method == 'bayes':
-            try:
-                density_estimation_method = calibration_params['density_estimation_method']
-            except:
-                density_estimation_method = DEFAULT_calibration_params_density_estimation_method
-                
-            de_class = _density_estimation_methods[density_estimation_method]
-            de_parameters = extract_parameters(de_class, calibration_params)
 
-            tpe = Bayes(density_estimator=de_class(verbose=self.verbose,
-                                                   **de_parameters),
-                        verbose=self.verbose,
-                        verbose_heading_level=4)
-
-            for state_v in self.final_palette:
-                add_cde_parameters = extract_parameters(tpe.add_conditional_density_estimator, calibration_params)
-
-                cde_class = _density_estimation_methods[density_estimation_method]
-                cde_parameters = extract_parameters(cde_class, calibration_params)
-
-                tpe.add_conditional_density_estimator(
-                    state=state_v,
-                    density_estimator=cde_class(verbose=self.verbose,
-                                                # verbose_heading_level=5,
-                                                **cde_parameters),
-                    **add_cde_parameters)
-            
-            self.transition_probability_estimator = tpe
-        
-        # allocation
-        try:
-            allocation_method = params['allocation_method']
-        except:
-            allocation_method = DEFAULT_allocation_method
-            
-        try:
-            allocation_params = params['allocation_params']
-        except:
-            allocation_params = {}
-        
-        alloc_class = _allocation_methods[allocation_method]
-        alloc_parameters = extract_parameters(alloc_class, params)
-
-        self.allocator = alloc_class(verbose=self.verbose,
-                                verbose_heading_level=3,
-                                **alloc_parameters)
-        
-        try:
-            self.set_features_bounds = params['set_features_bounds']
-        except:
-            self.set_features_bounds = DEFAULT_set_features_bounds
-        
-        try:
-            self.feature_selection = params['feature_selection']
-        except:
-            self.feature_selection = DEFAULT_feature_selection
-        
-        try:
-            self.fit_bootstrap_patches = params['fit_bootstrap_patches']
-        except:
-            self.fit_bootstrap_patches = DEFAULT_fit_bootstrap_patches
-
-    def check(self, objects=[]):
+    def check(self, objects=None):
         """
-        Check the Land object.
+        Check the unicity of objects.
         Notably, estimators uniqueness are checked to avoid malfunctioning during transition probabilities estimation.
         """
+        if objects is None:
+            objects = []
+            
         if self.calibrator in objects:
             raise(ValueError("Calibrator objects must be different."))
         else:
             objects.append(self.calibrator)
         
         self.calibrator.check(objects=objects)
-
-    def _check_density_estimators(self, density_estimators=[]):
-        """
-        Check the density estimators uniqueness.
-        """
-        density_estimators = self.transition_probability_estimator._check(density_estimators=density_estimators)
-
-        return (density_estimators)
-
-    def _check_feature_selectors(self, feature_selectors=[]):
-        """
-        check the feature selectors uniqueness.
-        """
-
-        if isinstance(self.feature_selector, list):
-            feature_selector = self.feature_selector
-        else:
-            feature_selector = [self.feature_selector]
-
-        for fs in feature_selector:
-            if fs in feature_selectors and fs is not None:
-                raise (ValueError('The feature selection is already used. A new featureSelector must be invoked.'))
-            feature_selectors.append(fs)
-
-        return feature_selectors
         
     def set_calibrator(self, calibrator):
         self.calibrator = calibrator
         return(self)
+    
+    def set_allocator(self, allocator):
+        self.allocator = allocator
+        return(self)    
        
     def set_lul(self, lul, kind):
         self.lul[kind] = lul
@@ -330,24 +188,6 @@ class Land():
                mask=self.get_mask('calibration'),
                distances_to_states=distances_to_states)
                         
-        
-        # if self.transition_probability_estimator is None:
-        #     raise (ValueError('Transition probability estimator is expected for fitting.'))
-
-        # self._fit_tpe(lul_initial=lul_initial,
-        #               lul_final=lul_final,
-        #               mask=mask,
-        #               distances_to_states=distances_to_states)
-
-        # if self.fit_bootstrap_patches:
-        #     st = time()
-        #     self.compute_bootstrap_patches(
-        #         palette_v=self.transition_probability_estimator._palette_fitted_states,
-        #         lul_initial=lul_initial,
-        #         lul_final=lul_final,
-        #         mask=mask)
-        #     self._time_fit['compute_bootstrap_patches'] = time()-st
-
         if self.verbose > 0:
             print('Land ' + str(self.state) + ' fitting done.\n')
 
@@ -458,23 +298,7 @@ class Land():
                                  palette_u=palette_u,
                                  palette_v=palette_v))
 
-    def compute_bootstrap_patches(self,
-                                  palette_v,
-                                  lul_initial,
-                                  lul_final,
-                                  mask):
-        """
-        Compute Bootstrap patches
-
-        """
-        patches = compute_bootstrap_patches(state=self.state,
-                                            palette_v=palette_v,
-                                            land=self,
-                                            lul_initial=lul_initial,
-                                            lul_final=lul_final,
-                                            mask=mask)
-
-        self.allocator.set_params(patches=patches)
+    
 
     def allocate(self,
                  transition_matrix,
@@ -601,12 +425,106 @@ class Land():
                     delta[feature][-1] += 1
 
         return (ranges, delta)
+    
+# def make(self, palette, **params):
+    #     # features
+    #     features = []
+    #     if 'features' in params.keys():
+    #         for feature_params in params['features']:
+    #             if feature_params['type'] == 'layer':
+    #                 fp = extract_parameters(FeatureLayer, feature_params)
+    #                 features.append(FeatureLayer(**fp))
+    #             elif feature_params['type'] == 'distance':
+    #                 if feature_params['state'] != self.state.value:
+    #                     features.append(palette._get_by_value(feature_params['state']))
+        
+    #     self.features = features
+        
+    #     # feature selection
+    #     if 'feature_selection' in params.keys():
+    #         if isinstance(params['feature_selection'], int):
+    #             self.feature_selection = params['feature_selection']
+    #         else:
+    #             self.feature_selection = -1
+        
+    #     # transition matrix
+    #     transition_matrix = load_transition_matrix(path=params['transition_matrix'],
+    #                                                palette=palette)
+    #     # select expected final states
+    #     self.final_palette = transition_matrix.getfinal_palette(info_u=self.state)
+        
+    #     # calibration
+    #     try:
+    #         calibration_method = params['calibration_method']
+    #     except:
+    #         calibration_method = DEFAULT_calibration_method
+        
+    #     try:
+    #         calibration_params = params['calibration_params']
+    #     except:
+    #         calibration_params = {}
+        
+    #     if calibration_method == 'bayes':
+    #         try:
+    #             density_estimation_method = calibration_params['density_estimation_method']
+    #         except:
+    #             density_estimation_method = DEFAULT_calibration_params_density_estimation_method
+                
+    #         de_class = _density_estimation_methods[density_estimation_method]
+    #         de_parameters = extract_parameters(de_class, calibration_params)
 
+    #         tpe = Bayes(density_estimator=de_class(verbose=self.verbose,
+    #                                                **de_parameters),
+    #                     verbose=self.verbose,
+    #                     verbose_heading_level=4)
 
-def _compute_distance(state, data, distances_to_states):
-    v_matrix = (data == state.value).astype(int)
-    distances_to_states[state] = ndimage.distance_transform_edt(1 - v_matrix)
+    #         for state_v in self.final_palette:
+    #             add_cde_parameters = extract_parameters(tpe.add_conditional_density_estimator, calibration_params)
 
+    #             cde_class = _density_estimation_methods[density_estimation_method]
+    #             cde_parameters = extract_parameters(cde_class, calibration_params)
+
+    #             tpe.add_conditional_density_estimator(
+    #                 state=state_v,
+    #                 density_estimator=cde_class(verbose=self.verbose,
+    #                                             # verbose_heading_level=5,
+    #                                             **cde_parameters),
+    #                 **add_cde_parameters)
+            
+    #         self.transition_probability_estimator = tpe
+        
+        # # allocation
+        # try:
+        #     allocation_method = params['allocation_method']
+        # except:
+        #     allocation_method = DEFAULT_allocation_method
+            
+        # try:
+        #     allocation_params = params['allocation_params']
+        # except:
+        #     allocation_params = {}
+        
+        # alloc_class = _allocation_methods[allocation_method]
+        # alloc_parameters = extract_parameters(alloc_class, params)
+
+        # self.allocator = alloc_class(verbose=self.verbose,
+        #                         verbose_heading_level=3,
+        #                         **alloc_parameters)
+        
+        # try:
+        #     self.set_features_bounds = params['set_features_bounds']
+        # except:
+        #     self.set_features_bounds = DEFAULT_set_features_bounds
+        
+        # try:
+        #     self.feature_selection = params['feature_selection']
+        # except:
+        #     self.feature_selection = DEFAULT_feature_selection
+        
+        # try:
+        #     self.fit_bootstrap_patches = params['fit_bootstrap_patches']
+        # except:
+        #     self.fit_bootstrap_patches = DEFAULT_fit_bootstrap_patches
 
 def _get_n_decimals(s):
     try:

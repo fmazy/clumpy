@@ -52,10 +52,14 @@ class Bayes(TransitionProbabilityEstimator):
     def __repr__(self):
         return ('Bayes')
     
-    def check(self, objects=[]):
+    def check(self, objects=None):
         """
-        Check the density estimators uniqueness.
+        Check the unicity of objects.
+        Notably, estimators uniqueness are checked to avoid malfunctioning during transition probabilities estimation.
         """
+        if objects is None:
+            objects = []
+            
         if self.de in objects:
             raise(ValueError("DensityEstimator objects must be different."))
         else:

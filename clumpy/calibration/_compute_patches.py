@@ -6,7 +6,7 @@ from ..tools._data import np_drop_duplicates_from_column
 from ._patch import BootstrapPatch
 
 def compute_bootstrap_patches(state,
-                              palette_v,
+                              final_states,
                               land,
                               lul_initial,
                               lul_final,
@@ -19,8 +19,8 @@ def compute_bootstrap_patches(state,
     state : State
         The initial state of this land.
 
-    palette_v : Palette
-        The final palette.
+    final_states : [State]
+        The final states list.
 
     land : Land
         The studied land object.
@@ -62,7 +62,7 @@ def compute_bootstrap_patches(state,
                            mask=mask,
                            explanatory_variables=False)
 
-    for state_v in palette_v:
+    for state_v in final_states:
         if state_v != state:
             # print(str(u) + ' -> ' + str(v))
             M = np.zeros(M_shape)

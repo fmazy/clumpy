@@ -8,6 +8,7 @@ from .._base import FeatureLayer, LandUseLayer, MaskLayer
 from .._base._layer import Layer
 from .._base import State
 from ..feature_selection import Pipeline
+from ..patch import Patcher, Patchers
 
 class Calibrator():
     def __init__(self,
@@ -15,6 +16,7 @@ class Calibrator():
                  final_states,
                  tpe,
                  feature_selector=None,
+                 patchers=None,
                  verbose = 0):
         self.state = state
         self.final_states = final_states
@@ -27,6 +29,15 @@ class Calibrator():
         
         self._fitted = False
         
+        
+        if isinstance(patchers, Patcher):
+            self.patchers = Patchers()
+            for v in final_states:
+                if int(v) != int(self.state):
+                    self.patchers[v] = patchers.copy()
+        else:
+            self.patchers = patchers
+        
         self.verbose = verbose
         
     def __repr__(self):
@@ -38,20 +49,36 @@ class Calibrator():
                           feature_selector=self.feature_selector.copy(),
                           verbose=self.verbose))
     
-    def check(self, objects=[]):
+    def check(self, objects=None):
+        """
+        Check the unicity of objects.
+        Notably, estimators uniqueness are checked to avoid malfunctioning during transition probabilities estimation.
+        """
+        if objects is None:
+            objects = []
+            
         if self.feature_selector in objects:
             raise(ValueError("Features objects must be different."))
         else:
             objects.append(self.feature_selector)
-            
-        self.feature_selector.check(objects=objects)
+        
+        if isinstance(self.feature_selector, Pipeline):
+            self.feature_selector.check(objects=objects)
         
         if self.tpe in objects:
             raise(ValueError("TPE objects must be different."))
         else:
             objects.append(self.tpe)
-            
+        
         self.tpe.check(objects=objects)
+        
+        if self.patchers is not None and self.patchers in objects:
+            raise(ValueError("Patchers objects must be different."))
+        else:
+            objects.append(self.patchers)
+        
+        self.patchers.check(objects=objects)
+        
     
     def fit(self,
             lul_initial,
@@ -93,6 +120,11 @@ class Calibrator():
                       bounds = bounds)
         
         self._fitted = True
+        
+        if self.patchers is not None:
+            self.patchers.fit(J=J,
+                              V=V,
+                              shape=lul_initial.get_data().shape)
         
         return(self)
     
@@ -320,6 +352,26 @@ class Calibrator():
                 bounds.append((id_col, 'left'))
         
         return(bounds)
+    
+    def compute_bootstrap_patches(self,
+                                  lul_initial,
+                                  lul_final,
+                                  mask=None):
+        """
+        Compute Bootstrap patches
+
+        """
+        J, V = self.get_J_V(lul_initial = lul_initial,
+                            lul_final = lul_final,
+                            mask=mask,
+                            final_states_only=False)
+        
+        self.patches = compute_bootstrap_patches(state=self.state,
+                                            final_states=self.final_states,
+                                            J=J,
+                                            V=V,
+                                            shape=shape,
+                                            mask=mask)
 
 def _compute_distance(state_value, data, distances_to_states):
     v_matrix = (data == state_value).astype(int)

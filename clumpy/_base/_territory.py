@@ -16,7 +16,7 @@ import numpy as np
 import logging
 logger = logging.getLogger('clumpy')
 
-class Territory():
+class Territory(dict):
     """
     Territory.
 
@@ -33,14 +33,9 @@ class Territory():
     """
 
     def __init__(self,
-                 regions=None,
                  verbose=0,
                  verbose_heading_level=1):
-
-        self.regions = regions
-        if self.regions is None:
-            self.regions = {}
-        
+                
         self.features = None
         
         self.verbose = verbose
@@ -48,44 +43,11 @@ class Territory():
         
         self.lul = {}
     
-    def add_region(self, region):
-        """
-        Add a region. If ``region`` is already in the list, nothing happened.
-
-        Parameters
-        ----------
-        region : Region
-            The region to append.
-
-        Returns
-        -------
-        self
-        """
+    def add_region(self,
+                   region):
+        self[region.label] = region
         region.territory = self
-        if region not in self.regions.values():
-            self.regions[region.label] = region
-        
-        return (self)
-
-    def remove_region(self, region):
-        """
-        Remove a region.
-
-        Parameters
-        ----------
-        region : Region
-            The region to remove
-
-        Returns
-        -------
-        self
-        """
-        try:
-            del self.regions[region.label]
-        except:
-            pass
-
-        return (self)    
+        return(self)
     
     def set_lul(self, lul, kind):
         self.lul[kind] = lul
@@ -101,40 +63,30 @@ class Territory():
     def get_features(self):
         return(self.features)
 
-    def check(self, objects=[]):
+    def check(self, objects=None):
         """
-        Check the Region object through regions checks.
+        Check the unicity of objects.
         Notably, estimators uniqueness are checked to avoid malfunctioning during transition probabilities estimation.
         """
-        for region in self.regions.values():
-            
+        if objects is None:
+            objects = []
+        
+        for region in self.values():
             if region in objects:
                 raise(ValueError("Region objects must be different."))
             else:
                 objects.append(region)
             
             region.check(objects=objects)
-
-    def get_region(self, label):
-        try:
-            return(self.regions[label])
-        except:
-            logger.error('The given label region does not exist : '+str(label))
-            raise
-
-    def make(self, case):
-        self.regions = {}
         
-        for region_label, region_params in case.params['regions'].items():
-            region = Region(label=region_label,
-                            verbose=case.get_verbose(),
-                            verbose_heading_level=2)
-            
-            region.make(palette=case.palette, 
-                        **region_params)
-            
-            
-            self.add_region(region)
+        # return(objects)
+
+    # def get_region(self, label):
+    #     try:
+    #         return(self[label])
+    #     except:
+    #         logger.error('The given label region does not exist : '+str(label))
+    #         raise
 
     def fit(self):
         """
@@ -162,7 +114,7 @@ class Territory():
         # convert keys if label strings
         distances_to_states = {}
 
-        for region in self.regions.values():
+        for region in self.values():
             region.fit(distances_to_states=distances_to_states)
 
         if self.verbose > 0:
@@ -194,11 +146,11 @@ class Territory():
             A dict of transition matrices with regions as keys.
         """
         if masks is None:
-            masks = {region: None for region in self.regions.values()}
+            masks = {region: None for region in self.values()}
 
         tms = {}
 
-        for region in self.regions.values():
+        for region in self.values():
             tms[region] = region.transition_matrix(lul_initial=lul_initial,
                                                    lul_final=lul_final,
                                                    mask=masks[region])
@@ -229,7 +181,7 @@ class Territory():
         
         r = {}
         
-        for region_label, region in self.regions.items():
+        for region_label, region in self.items():
             r[region_label] = region.transition_probabilities(
                 lul=lul,
                 effective_transitions_only=effective_transitions_only)
@@ -265,7 +217,7 @@ class Territory():
         M = np.zeros((0,) + lul.get_data().shape)
         initial_final = []
         
-        for region_label, region in self.regions.items():
+        for region_label, region in self.items():
             M__region, initial_states__region, final_states__region = region._get_transition_probabilities_layer_data(
                 lul=lul,
                 effective_transitions_only=effective_transitions_only)
@@ -326,7 +278,7 @@ class Territory():
             print(title_heading(self.verbose_heading_level) + 'Territory allocation\n')
 
         if masks is None:
-            masks = {region: None for region in self.regions.values()}
+            masks = {region: None for region in self.values()}
 
         # convert keys if label strings
         masks_region_keys = masks.copy()
@@ -350,7 +302,7 @@ class Territory():
 
         lul_data = lul.get_data().copy()
 
-        for region in self.regions.values():
+        for region in self.values():
 
             if path_prefix_transition_probabilities is not None:
                 region_path_prefix_transition_probabilities = path_prefix_transition_probabilities + '_' + str(
@@ -454,3 +406,17 @@ class Territory():
 
         if path_prefix is not None:
             return lul_step
+        
+    # def make(self, case):
+    #     self = {}
+        
+    #     for region_label, region_params in case.params['regions'].items():
+    #         region = Region(label=region_label,
+    #                         verbose=case.get_verbose(),
+    #                         verbose_heading_level=2)
+            
+    #         region.make(palette=case.palette, 
+    #                     **region_params)
+            
+            
+    #         self.add_region(region)

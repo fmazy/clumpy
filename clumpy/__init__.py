@@ -11,3 +11,4 @@ from . import metrics
 from . import tools
 from .case._case import Case
 from . import calibration
+from . import patch

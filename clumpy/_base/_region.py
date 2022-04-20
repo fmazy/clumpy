@@ -9,7 +9,7 @@ from ..tools._path import path_split
 from ..tools._console import title_heading
 from . import Land
 
-class Region():
+class Region(dict):
     """
     Define a region.
 
@@ -32,8 +32,6 @@ class Region():
         self.label = label
         self.verbose = verbose
         self.verbose_heading_level = verbose_heading_level
-
-        self.lands = {}
         
         self.territory = None
         self.features = None
@@ -41,76 +39,11 @@ class Region():
         self.lul = {}
         self.mask = {}
         self.transition_matrix = None
-
-    def __repr__(self):
-        return (self.label)
-
+        
     def add_land(self, land):
-        """
-        Add a land for a given state.
-
-        Parameters
-        ----------
-        state : State
-            The initial state.
-        
-        land : Land
-            The Land object.
-
-        Returns
-        -------
-        self
-        """
+        self[land.state] = land
         land.region = self
-        
-        self.lands[land.state] = land
-        
-
-        return (self)
-    
-    def make(self, palette, **params):
-                
-        self.lands = {}
-        
-        
-        if 'transition_matrix' in params.keys():
-            transition_matrix = load_transition_matrix(path=params['transition_matrix'],
-                                                       palette=palette)
-                
-        for state_u in transition_matrix.palette_u:
-            land = Land(state=state_u,
-                        verbose=self.verbose,
-                        verbose_heading_level=4)
-            
-            land_params = params.copy()
-            # land_params is appended with specific parameters of the land
-            if 'lands' in land_params.keys():
-                if str(state_u.value) in land_params['states'].keys():
-                    for key in land_params['states'][str(state_u.value)]:
-                        land_params[key] = land_params['states'][str(state_u.value)][key]
-                                
-            land.make(palette, **land_params)
-            
-            self.add_land(land=land)
-        
-
-    def _check_density_estimators(self, density_estimators=[]):
-        """
-        Check the density estimators uniqueness.
-        """
-        for state, land in self.lands.items():
-            density_estimators = land._check_density_estimators(density_estimators=density_estimators)
-
-        return (density_estimators)
-
-    def _check_feature_selectors(self, feature_selectors=[]):
-        """
-        check the feature selectors uniqueness.
-        """
-        for state, land in self.lands.items():
-            feature_selectors = land._check_feature_selectors(feature_selectors=feature_selectors)
-
-        return (feature_selectors)    
+        return(self)
     
     def set_lul(self, lul, kind):
         self.lul[kind] = lul
@@ -152,14 +85,16 @@ class Region():
         else:
             return(self.features)
     
-    def check(self, objects=[]):
+    def check(self, objects=None):
         """
-        Check the Region object through lands checks.
+        Check the unicity of objects.
         Notably, estimators uniqueness are checked to avoid malfunctioning during transition probabilities estimation.
         """
+        if objects is None:
+            objects = []
         
         
-        for land in self.lands.values():
+        for land in self.values():
             if land in objects:
                 raise(ValueError("Land objects must be different."))
             else:
@@ -194,7 +129,7 @@ class Region():
         if self.verbose > 0:
             print(title_heading(self.verbose_heading_level) + 'Region ' + self.label + ' fitting\n')
 
-        for state, land in self.lands.items():
+        for state, land in self.items():
             land.fit(distances_to_states=distances_to_states)
 
         if self.verbose > 0:
@@ -226,7 +161,7 @@ class Region():
             The computed transition matrix.
         """
         tm = None
-        for state, land in self.lands.items():
+        for state, land in self.items():
             tm_to_merge = land.transition_matrix(lul_initial=lul_initial,
                                                  lul_final=lul_final,
                                                  mask=mask)
@@ -277,7 +212,7 @@ class Region():
         
         r = {}
         
-        for state, land in self.lands.items():
+        for state, land in self.items():
             r[state] = land.transition_probabilities(
                 lul=lul,
                 effective_transitions_only=effective_transitions_only)
@@ -315,7 +250,7 @@ class Region():
         
         M = np.array([]).reshape((0,) + lul.get_data().shape)
         
-        for state, land in self.lands.items():
+        for state, land in self.items():
             M__land, initial_states__land, final_states__land = land._get_transition_probabilities_layer_data(
                 lul,
                 effective_transitions_only=effective_transitions_only)
@@ -388,7 +323,7 @@ class Region():
         else:
             lul_data = lul
 
-        for state, land in self.lands.items():
+        for state, land in self.items():
 
             if path_prefix_transition_probabilities is not None:
                 land_path_prefix_transition_probabilities = path_prefix_transition_probabilities + '_' + str(state.value)
@@ -415,3 +350,51 @@ class Region():
                                  copy_geo=copy_geo,
                                  path=path,
                                  palette=lul_origin.palette))
+        
+    # def add_land(self, land):
+    #     """
+    #     Add a land for a given state.
+
+    #     Parameters
+    #     ----------
+    #     state : State
+    #         The initial state.
+        
+    #     land : Land
+    #         The Land object.
+
+    #     Returns
+    #     -------
+    #     self
+    #     """
+    #     land.region = self
+        
+    #     self[land.state] = land
+        
+
+    #     return (self)
+    
+    # def make(self, palette, **params):
+                
+    #     self = {}
+        
+        
+    #     if 'transition_matrix' in params.keys():
+    #         transition_matrix = load_transition_matrix(path=params['transition_matrix'],
+    #                                                    palette=palette)
+                
+    #     for state_u in transition_matrix.palette_u:
+    #         land = Land(state=state_u,
+    #                     verbose=self.verbose,
+    #                     verbose_heading_level=4)
+            
+    #         land_params = params.copy()
+    #         # land_params is appended with specific parameters of the land
+    #         if 'lands' in land_params.keys():
+    #             if str(state_u.value) in land_params['states'].keys():
+    #                 for key in land_params['states'][str(state_u.value)]:
+    #                     land_params[key] = land_params['states'][str(state_u.value)][key]
+                                
+    #         land.make(palette, **land_params)
+            
+    #         self.add_land(land=land)
