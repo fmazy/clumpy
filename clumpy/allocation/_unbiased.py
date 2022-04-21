@@ -28,6 +28,7 @@ class Unbiased(Allocator):
     """
 
     def __init__(self,
+                 calibrator=None,
                  update_P_Y=True,
                  n_allocation_try=10 ** 3,
                  verbose=0,
@@ -36,7 +37,8 @@ class Unbiased(Allocator):
         self.update_P_Y = update_P_Y
         self.n_allocation_try = n_allocation_try
 
-        super().__init__(verbose=verbose,
+        super().__init__(calibrator=calibrator,
+                         verbose=verbose,
                          verbose_heading_level=verbose_heading_level)
 
     def _allocate(self,
@@ -44,7 +46,6 @@ class Unbiased(Allocator):
                   land,
                   lul_data,
                   lul_origin_data,
-                  mask=None,
                   distances_to_states={},
                   path_prefix_transition_probabilities=None,
                   copy_geo=None):

@@ -41,7 +41,7 @@ class Region(dict):
         self.transition_matrix = None
         
     def add_land(self, land):
-        self[land.state] = land
+        self[int(land.state)] = land
         land.region = self
         return(self)
     
@@ -137,10 +137,11 @@ class Region(dict):
 
         return (self)
 
-    def transition_matrix(self,
-                          lul_initial,
-                          lul_final,
-                          mask=None):
+    def compute_transition_matrix(self,
+                                  lul_initial=None,
+                                  lul_final=None,
+                                  mask=None,
+                                  final_states_only=True):
         """
         Compute transition matrix
 
@@ -160,11 +161,29 @@ class Region(dict):
         tm : TransitionMatrix
             The computed transition matrix.
         """
+        
+        if lul_initial is None:
+            lul_initial = 'initial'
+        if isinstance(lul_initial, str):
+            lul_initial = self.get_lul(lul_initial)
+        
+        if lul_final is None:
+            lul_final = 'final'
+        if isinstance(lul_final, str):
+            lul_final = self.get_lul(lul_final)
+            
+        if mask is None:
+            mask = 'calibration'
+        if isinstance(mask, str):
+            mask = self.get_mask(mask)
+        
         tm = None
+        
         for state, land in self.items():
-            tm_to_merge = land.transition_matrix(lul_initial=lul_initial,
-                                                 lul_final=lul_final,
-                                                 mask=mask)
+            tm_to_merge = land.compute_transition_matrix(lul_initial=lul_initial,
+                                                         lul_final=lul_final,
+                                                         mask=mask,
+                                                         final_states_only=final_states_only)
             if tm is None:
                 tm = tm_to_merge
             else:
@@ -174,6 +193,7 @@ class Region(dict):
 
     def transition_probabilities(self,
                                  lul='start',
+                                 mask=None,
                                  effective_transitions_only=True,
                                  territory_format=False):
         """
@@ -211,12 +231,17 @@ class Region(dict):
         if isinstance(lul, str):
             lul = self.get_lul(lul)
         
+        if mask is None:
+            mask = self.get_mask('allocation')
+        
         p = {}
         
         for state, land in self.items():
             p[int(state)] = land.transition_probabilities(
                 lul=lul,
-                effective_transitions_only=effective_transitions_only)
+                mask=mask,
+                effective_transitions_only=effective_transitions_only,
+                territory_format=False)
         
         if not territory_format:
             return(p)
@@ -244,14 +269,10 @@ class Region(dict):
         
 
     def allocate(self,
-                 transition_matrix,
+                 p,
                  lul,
                  lul_origin=None,
-                 mask=None,
-                 distances_to_states={},
-                 path=None,
-                 path_prefix_transition_probabilities=None,
-                 copy_geo=None):
+                 distances_to_states={}):
         """
         allocation.
 
@@ -286,50 +307,48 @@ class Region(dict):
             Only returned if ``path`` is not ``None``. The allocated map as a land use layer.
         """
 
-        if self.verbose > 0:
-            print(title_heading(self.verbose_heading_level) + 'Region ' + str(self.label) + ' allocate\n')
-
-        if lul_origin is None:
-            lul_origin = lul
-
-        if isinstance(lul_origin, LandUseLayer):
-            lul_origin_data = lul_origin.get_data()
-            copy_geo = lul_origin
-        else:
-            lul_origin_data = lul_origin
-
+        if lul is None:
+            lul = 'start'
+        
+        if isinstance(lul, str):
+            lul = self.get_lul(lul)
+        
         if isinstance(lul, LandUseLayer):
-            lul_data = lul.get_data().copy()
+            lul_data = lul.get_data()
         else:
             lul_data = lul
-
-        for state, land in self.items():
-
-            if path_prefix_transition_probabilities is not None:
-                land_path_prefix_transition_probabilities = path_prefix_transition_probabilities + '_' + str(state.value)
-            else:
-                land_path_prefix_transition_probabilities = None
-
-            land.allocate(transition_matrix=transition_matrix.extract(infos=[state]),
-                          lul=lul_data,
-                          lul_origin=lul_origin_data,
-                          mask=mask,
-                          distances_to_states=distances_to_states,
-                          path=None,
-                          path_prefix_transition_probabilities=land_path_prefix_transition_probabilities,
-                          copy_geo=copy_geo)
-            # Note that the path is set to None in the line above in order to allocate through all regions and save in a second time !
-
-        if self.verbose > 0:
-            print('Region ' + str(self.label) + ' allocate done.\n')
-
-        if path is not None:
-            folder_path, file_name, file_ext = path_split(path)
-            return (LandUseLayer(label=file_name,
-                                 data=lul_data,
-                                 copy_geo=copy_geo,
-                                 path=path,
-                                 palette=lul_origin.palette))
+        
+        if lul_origin is None:
+            lul_origin_data = lul_data.copy()
+        else:
+            lul_origin_data = lul_origin
+            
+        for initial_state, [J, P_v__u_Y, final_states] in p.items():
+            self[initial_state].allocate(J=J,
+                                         P_v__u_Y=P_v__u_Y,
+                                         final_states=final_states,
+                                         lul=lul_data,
+                                         lul_origin=lul_origin_data,
+                                         distances_to_states=distances_to_states)
+        
+        return(lul_data)
+    
+    def allocate_layer(self,
+                       path,
+                       p,
+                       lul,
+                       lul_origin=None,
+                       distances_to_states={}):
+        lul_data = self.allocate(p=p,
+                                 lul=lul,
+                                 lul_origin=lul_origin,
+                                 distances_to_states=distances_to_states)
+        
+        alloc_layer = LandUseLayer(path=path,
+                                   data=lul_data,
+                                   copy_geo=lul,
+                                   palette=lul.palette)
+        return(alloc_layer)
         
     # def add_land(self, land):
     #     """

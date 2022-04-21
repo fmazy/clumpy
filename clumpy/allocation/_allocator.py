@@ -21,8 +21,10 @@ class Allocator():
     """
 
     def __init__(self,
+                 calibrator=None,
                  verbose=0,
                  verbose_heading_level=1):
+        self.calibrator = None
         self.verbose = verbose
         self.verbose_heading_level = verbose_heading_level
 
@@ -33,7 +35,11 @@ class Allocator():
 
     def allocate(self,
                  lul, 
-                 p):
+                 J,
+                 P_v__u_Y,
+                 final_states,
+                 lul_origin=None,
+                 distances_to_states={}):
         """
         Allocate
 
@@ -70,22 +76,23 @@ class Allocator():
         lul_allocated : LandUseLayer
             Only returned if ``path`` is not ``None``. The allocated map as a land use layer.
         """
-        # if lul_origin is None:
-        #     lul_origin = lul
-
-        # if isinstance(lul_origin, LandUseLayer):
-        #     lul_origin_data = lul_origin.get_data()
-        #     copy_geo = lul_origin
-        # else:
-        #     lul_origin_data = lul_origin
-
         if isinstance(lul, LandUseLayer):
-            lul_data = lul.get_data().copy()
+            lul_data = lul.get_data()
         else:
             lul_data = lul
         
-        self._allocate(lul_data=lul_data,
-                       p=p)
+        if lul_origin is None:
+            lul_origin_data = lul_data.copy()
+        else:
+            lul_origin_data = lul_origin
+        
+        
+        self._allocate(J,
+                       P_v__u_Y,
+                       final_states,
+                       lul_data=lul_data,
+                       lul_origin_data=lul_origin_data,
+                       distances_to_states=distances_to_states)
         
         return(lul_data)
     

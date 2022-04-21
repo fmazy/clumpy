@@ -241,7 +241,11 @@ class Land():
         
         return(proba_layer)
             
-    def transition_matrix(self):
+    def compute_transition_matrix(self,
+                                  lul_initial=None,
+                                  lul_final=None,
+                                  mask=None,
+                                  final_states_only=True):
         """
         Compute the transition matrix.
 
@@ -264,13 +268,25 @@ class Land():
         tm : TransitionMatrix
             The computed transition matrix.
         """
+        if lul_initial is None:
+            lul_initial = 'initial'
+        if isinstance(lul_initial, str):
+            lul_initial = self.get_lul(lul_initial)
         
-        lul_initial = self.get_lul('initial')
-        lul_final = self.get_lul('final')
-        mask = self.get_mask('calibration')
+        if lul_final is None:
+            lul_final = 'final'
+        if isinstance(lul_final, str):
+            lul_final = self.get_lul(lul_final)
+            
+        if mask is None:
+            mask = 'calibration'
+        if isinstance(mask, str):
+            mask = self.get_mask(mask)
         
-        J, V = self.get_values(kind='calibration',
-                               explanatory_variables=False)
+        J, V = self.calibrator.get_J_V(lul_initial=lul_initial,
+                                       lul_final=lul_final,
+                                       mask=mask,
+                                       final_states_only=final_states_only)
 
         v_unique, n_counts = np.unique(V, return_counts=True)
         P_v = n_counts / n_counts.sum()
@@ -288,14 +304,12 @@ class Land():
     
 
     def allocate(self,
-                 transition_matrix,
+                 J,
+                 P_v__u_Y,
+                 final_states,
                  lul,
                  lul_origin=None,
-                 mask=None,
-                 distances_to_states={},
-                 path=None,
-                 path_prefix_transition_probabilities=None,
-                 copy_geo=None):
+                 distances_to_states={}):
         """
         allocation.
 
@@ -329,29 +343,51 @@ class Land():
         lul_allocated : LandUseLayer
             Only returned if ``path`` is not ``None``. The allocated map as a land use layer.
         """
-        # check if it is really a land transition matrix
-        transition_matrix._check_land_transition_matrix()
-
-        state = transition_matrix.palette_u.states[0]
+        if lul is None:
+            lul = 'start'
         
-        if not isinstance(self.allocator, Allocator):
-            raise (ValueError("Unexpected 'allocator'. A clumpy.allocation.Allocator object is expected ; got instead "+str(type(self.allocator))))
-
-        if self.verbose > 0:
-            print(title_heading(self.verbose_heading_level) + 'Land ' + str(state) + ' allocation\n')
-
-        self.allocator.allocate(transition_matrix=transition_matrix,
-                                land=self,
-                                lul=lul,
-                                lul_origin=lul_origin,
-                                mask=mask,
-                                distances_to_states=distances_to_states,
-                                path=path,
-                                path_prefix_transition_probabilities=path_prefix_transition_probabilities,
-                                copy_geo=copy_geo)
-
-        if self.verbose > 0:
-            print('Land ' + str(state) + ' allocation done.\n')
+        if isinstance(lul, str):
+            lul = self.get_lul(lul)
+        
+        if isinstance(lul, LandUseLayer):
+            lul_data = lul.get_data()
+        else:
+            lul_data = lul
+        
+        if lul_origin is None:
+            lul_origin_data = lul_data.copy()
+        else:
+            lul_origin_data = lul_origin
+                
+        self.allocator.allocate(J=J,
+                                P_v__u_Y=P_v__u_Y,
+                                final_states=final_states,
+                                lul=lul_data,
+                                lul_origin=lul_origin_data,
+                                distances_to_states={})
+        
+        return(lul_data)
+    
+    def allocate_layer(self,
+                       path,
+                       J,
+                       P_v__u_Y,
+                       final_states,
+                       lul,
+                       lul_origin=None,
+                       distances_to_states={}):
+        lul_data = self.allocate(J=J,
+                                 P_v__u_Y=P_v__u_Y,
+                                 final_states=final_states,
+                                 lul=lul,
+                                 lul_origin=lul_origin,
+                                 distances_to_states=distances_to_states)
+        
+        alloc_layer = LandUseLayer(path=path,
+                                   data=lul_data,
+                                   copy_geo=lul,
+                                   palette=lul.palette)
+        return(alloc_layer)
 
     def dinamica_determine_ranges(self,
                                   lul_initial,
