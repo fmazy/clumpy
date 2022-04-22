@@ -96,19 +96,6 @@ class Allocator():
         
         return(lul_data)
     
-    def allocate_layer(self,
-                       lul,
-                       p,
-                       path):
-        lul_data = self.allocate(lul=lul, 
-                                 p=p)
-        
-        land_use_layer = LandUseLayer(path=path,
-                                      data=lul_data,
-                                      copy_geo=lul,
-                                      palette=lul.palette)
-        return(land_use_layer)
-
 def _update_P_v__Y_u(P_v__u_Y, tm, inplace=True):
     if not inplace:
         P_v__u_Y = P_v__u_Y.copy()

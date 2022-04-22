@@ -114,9 +114,9 @@ class Calibrator():
                 
         # TRANSITION PROBABILITY ESTIMATOR
         self.tpe.fit(X=X,
-                      V=V,
-                      v_initial = int(self.state),
-                      bounds = bounds)
+                     V=V,
+                     initial_state = int(self.state),
+                     bounds = bounds)
         
         self._fitted = True
         
@@ -134,8 +134,8 @@ class Calibrator():
                                  mask=None,
                                  distances_to_states={},
                                  effective_transitions_only=True,
-                                 save_P_Y__v=False,
-                                 save_P_Y=False,
+                                 save_P_Y__v=True,
+                                 save_P_Y=True,
                                  return_Y=False):
         """
         Computes transition probabilities.
@@ -202,15 +202,12 @@ class Calibrator():
         
         
         # TRANSITION PROBABILITY ESTIMATION
-        P_v__u_Y = self.tpe.transition_probabilities(
-            transition_matrix=tm,
-            Y=Y,
-            compute_P_Y__v=True,
-            compute_P_Y=True,
-            save_P_Y__v=save_P_Y__v,
-            save_P_Y=save_P_Y)
+        P_v = tm.M[0,:]
         
-        final_states = deepcopy(self.final_states)
+        P_v__u_Y, final_states = self.tpe.transition_probabilities(
+            J=J,
+            Y=Y,
+            P_v=P_v)
         
         if effective_transitions_only:
             bands_to_keep = np.array(self.final_states) != int(self.state)

@@ -1,6 +1,6 @@
 import numpy as np
 
-from .._base._transition_matrix import TransitionMatrix
+from .._base._transition_matrix import TransitionMatrix, compute_transition_matrix
 
 from ._allocator import Allocator, _update_P_v__Y_u
 from ._gart import generalized_allocation_rejection_test
@@ -28,12 +28,14 @@ class Unbiased(Allocator):
     """
 
     def __init__(self,
+                 initial_state,
                  calibrator=None,
                  update_P_Y=True,
                  n_allocation_try=10 ** 3,
                  verbose=0,
                  verbose_heading_level=1):
-
+        
+        self.initial_state = initial_state
         self.update_P_Y = update_P_Y
         self.n_allocation_try = n_allocation_try
 
@@ -42,24 +44,22 @@ class Unbiased(Allocator):
                          verbose_heading_level=verbose_heading_level)
 
     def _allocate(self,
-                  tm,
-                  land,
+                  J,
+                  P_v__u_Y,
+                  final_states,
                   lul_data,
                   lul_origin_data,
-                  distances_to_states={},
-                  path_prefix_transition_probabilities=None,
-                  copy_geo=None):
+                  distances_to_states={}):
         """
         allocation. lul_data and lul_origin_data are ndarrays only.
         """
-
-        # check if it is really a land transition matrix
-        tm._check_land_tm()
-
+        
         # make a copy
         # the transition matrix will be edited after
-        tm = tm.copy()
-
+        tm = compute_transition_matrix(P_v__u_Y,
+                                       initial_state=self.initial_state,
+                                       final_states=final_states)
+        
         state = tm.palette_u.states[0]
         palette_v = tm.palette_v
 
@@ -88,19 +88,19 @@ class Unbiased(Allocator):
             # The new one is then largely smaller.
             # one keep tm to update it after the allocation try.
             tm_patches = tm.patches(patches=self.patches,
-                                                                  inplace=False)
+                                    inplace=False)
 
             # if P_v__u_Y has to be updated
             # or if it is the first loop
             # compute P(v|u,Y)
             if n_try == 1:
-                J, P_v__u_Y, Y = land.transition_probabilities(
-                    tm=tm_patches,
+                J, P_v__u_Y, final_states, Y = self.calibrator.transition_probabilities(
                     lul=lul_data,
-                    mask=mask,
-                    distances_to_states=distances_to_states,
-                    path_prefix=path_prefix_transition_probabilities,
-                    copy_geo=copy_geo,
+                    tm=tm_patches,
+                    features=None,
+                    mask=None,
+                    distances_to_states={},
+                    effective_transitions_only=True,
                     save_P_Y__v=True,
                     save_P_Y=~self.update_P_Y,
                     return_Y=True)
@@ -148,9 +148,9 @@ class Unbiased(Allocator):
 
             # update the transition matrix
             _reduce_tm(tm,
-                                      expected_allocated,
-                                      n_allocated,
-                                      n_idx_J_unused)
+                       expected_allocated,
+                       n_allocated,
+                       n_idx_J_unused)
 
     def _try_allocate(self,
                       state,
@@ -253,9 +253,9 @@ class Unbiased(Allocator):
 
 
 def _reduce_tm(tm,
-                              expected_allocated,
-                              n_allocated,
-                              n_idx_J_unused):
+               expected_allocated,
+               n_allocated,
+               n_idx_J_unused):
     state = tm.palette_u.states[0]
     palette_v = tm.palette_v
     # get the id of the initial state

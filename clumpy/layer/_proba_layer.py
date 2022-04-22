@@ -27,14 +27,32 @@ class ProbaLayer(Layer):
                          band_tags=band_tags,
                          copy_geo=copy_geo)
     
+    def get_band_idx_of_initial_state(self, initial_state):
+        tags = self.get_band_tags()
+        band_idx = []
+        final_states = []
+        
+        for i in range(len(tags)):
+            if int(tags[i]['initial_state']) == int(initial_state):
+                band_idx.append(i + 1)
+                final_states.append(int(tags[i]['final_state']))
+        
+        return(band_idx, final_states)
+    
+    def yield_proba_of_initial_state(self, initial_state):
+        band_idx, final_states = self.get_band_idx_of_initial_state(initial_state=initial_state)
+        
+        for i in range(len(band_idx)):
+            yield final_states[i], self.get_data(band=band_idx[i])
+    
     def get_proba(self, 
-                  u, 
-                  v):
+                  initial_state, 
+                  final_state):
         n_bands = self.get_n_bands()
         
         for i_band in range(1, n_bands+1):
-            if int(self.raster_.tags(i_band)['initial_state']) == int(u) and\
-            int(self.raster_.tags(i_band)['final_state']) == int(v):
+            if int(self.raster_.tags(i_band)['initial_state']) == int(initial_state) and\
+            int(self.raster_.tags(i_band)['final_state']) == int(final_state):
                 return(self.get_data(i_band))
         
         return(None)

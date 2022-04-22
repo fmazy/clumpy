@@ -21,6 +21,9 @@ class UnbiasedMonoPixel(Allocator):
                   final_states,
                   lul_data,
                   **kwargs):
+        """
+        allocation. lul_data is ndarray only.
+        """
         
         # GART
         V = generalized_allocation_rejection_test(P=P_v__u_Y,

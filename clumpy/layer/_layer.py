@@ -97,6 +97,11 @@ class Layer:
     
     def get_n_bands(self):
         return(self.raster_.read().shape[0])
+    
+    def get_band_tags(self):
+        n_bands = self.get_n_bands()
+        
+        return([self.raster_.tags(i_band) for i_band in range(1, n_bands+1)])
 
     def __repr__(self):
         return(self.label)

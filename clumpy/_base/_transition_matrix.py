@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 import numpy as np
-from ._state import Palette
+from ._state import Palette, State
 
 
 class TransitionMatrix():
@@ -375,6 +375,26 @@ class TransitionMatrix():
                 "Unexpected transition matrix. Expected a land transition matrix with only one initial state."))
         return(True)
 
+
+def compute_transition_matrix(P_v__u_Y, 
+                              initial_state, 
+                              final_states):
+    M = P_v__u_Y.mean(axis=0)[None,:]
+    
+    initial_state = State(label='state_'+str(initial_state),
+                          value=int(initial_state),
+                          color='#aaaaaa')
+    
+    final_states = [State(label='state_'+str(final_state),
+                          value=int(final_state),
+                          color='#aaaaaa') for final_state in final_states]
+    
+    tm = TransitionMatrix(M=M,
+                          palette_u = Palette(states=[initial_state]),
+                          palette_v = Palette(states=final_states))
+    
+    return(tm)
+    
 
 def load_transition_matrix(path, palette):
     """
