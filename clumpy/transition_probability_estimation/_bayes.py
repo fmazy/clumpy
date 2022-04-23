@@ -138,6 +138,8 @@ class Bayes(TransitionProbabilityEstimator):
                                  P_v,
                                  P_Y = None,
                                  P_Y__v = None,
+                                 return_P_Y = False,
+                                 return_P_Y__v = False,
                                  **kwargs):
         """
         Estimates transition probability. Non estimated final states transition probabilities are filled to the null value.
@@ -162,14 +164,14 @@ class Bayes(TransitionProbabilityEstimator):
 
         # P(Y) estimation
         if P_Y is None:
-            P_Y = self._compute_P_Y(Y=Y)
+            P_Y = self.compute_P_Y(Y=Y)
 
         # P(Y|v) estimation
         if P_Y__v is None:
-            P_Y__v = self._compute_P_Y__v(Y=Y)
+            P_Y__v = self.compute_P_Y__v(Y=Y)
 
         # BAYES ADJUSTMENT PROCESS
-        P_v__Y = self._bayes_adjustment(P_Y__v=P_Y__v,
+        P_v__Y = self.bayes_adjustment(P_Y__v=P_Y__v,
                                         P_Y=P_Y,
                                         P_v=P_v)
         
@@ -177,10 +179,17 @@ class Bayes(TransitionProbabilityEstimator):
         
         if self.verbose > 0:
             print('TPE computing done.')
+        
+        ret = [P_v__Y, final_states]
+        
+        if return_P_Y:
+            ret.append(P_Y)
+        if return_P_Y__v:
+            ret.append(P_Y__v)
+            
+        return ret
 
-        return (P_v__Y, final_states)
-
-    def _bayes_adjustment(self,
+    def bayes_adjustment(self,
                           P_Y__v,
                           P_Y,
                           P_v):
@@ -275,7 +284,7 @@ class Bayes(TransitionProbabilityEstimator):
 
         return(P_v__Y)
 
-    def _compute_P_Y(self, Y):
+    def compute_P_Y(self, Y):
         # forbid_null_value is forced to True by default for this density estimator
         # self.de.set_params(forbid_null_value=True)
 
@@ -294,7 +303,7 @@ class Bayes(TransitionProbabilityEstimator):
 
         return (P_Y)
 
-    def _compute_P_Y__v(self, Y):
+    def compute_P_Y__v(self, Y):
 
         # first, create a list of estimators according to palette_v order
         # if no estimator is informed, the NullEstimator is invoked.

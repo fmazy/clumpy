@@ -67,6 +67,26 @@ class FeatureSelector():
         self.fit(X, y)
         return(self.transform(X))
     
+    def get_selected_features(self, features):
+        return([features[i] for i in self._cols_support])
+    
+    def get_bounds(self, features):
+        selected_features = self.get_selected_features(features)
+        
+        bounds = []
+        for id_col, item in enumerate(selected_features):
+            if isinstance(item, FeatureLayer):
+                if item.bounded in ['left', 'right', 'both']:
+                    # one takes as parameter the column id of
+                    # bounded features AFTER feature selection !
+                    bounds.append((id_col, item.bounded))
+                    
+            # if it is a state distance, add a low bound set to 0.0
+            if isinstance(item, State) or isinstance(item, int):
+                bounds.append((id_col, 'left'))
+        
+        return(bounds)
+    
     
         
 

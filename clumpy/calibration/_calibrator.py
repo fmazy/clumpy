@@ -110,7 +110,7 @@ class Calibrator():
             print('feature selecting done.')
         
         # BOUNDARIES PARAMETERS
-        bounds = self.get_bounds(features=self.features)
+        bounds = self.feature_selector.get_bounds(features=self.features)
                 
         # TRANSITION PROBABILITY ESTIMATOR
         self.tpe.fit(X=X,
@@ -134,8 +134,6 @@ class Calibrator():
                                  mask=None,
                                  distances_to_states={},
                                  effective_transitions_only=True,
-                                 save_P_Y__v=True,
-                                 save_P_Y=True,
                                  return_Y=False):
         """
         Computes transition probabilities.
@@ -330,26 +328,6 @@ class Calibrator():
             X = X[:, None]
         
         return(X)
-    
-    def get_selected_features(self, features):
-        return([features[i] for i in self.feature_selector._cols_support])
-    
-    def get_bounds(self, features):
-        selected_features = self.get_selected_features(features)
-        
-        bounds = []
-        for id_col, item in enumerate(selected_features):
-            if isinstance(item, FeatureLayer):
-                if item.bounded in ['left', 'right', 'both']:
-                    # one takes as parameter the column id of
-                    # bounded features AFTER feature selection !
-                    bounds.append((id_col, item.bounded))
-                    
-            # if it is a state distance, add a low bound set to 0.0
-            if isinstance(item, State) or isinstance(item, int):
-                bounds.append((id_col, 'left'))
-        
-        return(bounds)
     
     def compute_bootstrap_patches(self,
                                   lul_initial,
