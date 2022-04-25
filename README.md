@@ -20,6 +20,9 @@ François-Rémi Mazy
 
 *The software provided by pip is not up to date !*
 
+Create conda env
+`conda create -n clumpy python=3.8 spyder gdal rasterio`
+
 build the package :
 `python3 setup.py sdist bdist_wheel`
 

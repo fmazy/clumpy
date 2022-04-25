@@ -4,7 +4,7 @@ save_data_on_exit = True
 save_history = True
 save_non_project_files = False
 project_type = empty-project-type
-recent_files = ['../clumpy-cases/simple_case/run_raw.py', 'clumpy/calibration/_calibrator.py', 'clumpy/_base/_land.py', 'clumpy/allocation/_allocator.py', 'clumpy/allocation/_unbiased.py', 'clumpy/allocation/_unbiased_mono_pixel.py', 'clumpy/feature_selection/_mRMR.py']
+recent_files = ['../clumpy-cases/simple_case/run_raw.py', 'clumpy/calibration/_calibrator.py', 'clumpy/layer/_layer.py', 'clumpy/layer/_land_use_layer.py', 'clumpy/map/_land_use_map.py', 'clumpy/map/_map.py', 'clumpy/__init__.py', 'clumpy/map/__init__.py', 'requirements.txt']
 
 [main]
 version = 0.2.0

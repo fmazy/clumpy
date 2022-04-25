@@ -13,20 +13,22 @@ logger = logging.getLogger('clumpy')
 
 from ..tools._console import stop_log
 
-class Layer:
+class Layer(np.ndarray):
     """Layer base element
     """
+    
+    def __new__(cls, input_array):
+        obj = np.asarray(input_array).view(cls)
+        return obj
 
     def __init__(self,
                  label=None,
-                 time=0,
                  path=None,
                  data=None,
                  band_tags=None,
                  copy_geo=None):
         
         self.label = label
-        self.time = time
         self.path = path
         self.copy_geo = copy_geo
 
