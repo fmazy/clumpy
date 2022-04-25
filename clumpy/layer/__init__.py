@@ -6,7 +6,10 @@ from ._mask_layer import MaskLayer
 from ._feature_layer import FeatureLayer
 from ._proba_layer import ProbaLayer, create_proba_layer
 
-layers = {'land_use' : LandUseLayer,
+layers = {'layer': Layer,
+          'land_use' : LandUseLayer,
           'feature' : FeatureLayer,
           'mask' : MaskLayer,
           'proba' : ProbaLayer}
+
+from ._io import open_layer

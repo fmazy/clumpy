@@ -32,18 +32,19 @@ class FeatureLayer(Layer):
         The unbuffered data and metadata reader object, provided by :mod:`rasterio`.
     """
 
-    def __init__(self,
-                 label=None,
-                 time=0,
-                 path=None,
-                 data=None,
-                 bounded = 'none',
-                 copy_geo=None):
+    def __new__(cls, 
+                input_array,
+                label=None,
+                band_tags=None,
+                geo_metadata=None,
+                bounded='none'):
         
-        super().__init__(label=label,
-                         time=time,
-                         path=path,
-                         data=data,
-                         copy_geo=copy_geo)
+        obj = super().__new__(cls, 
+                              input_array,
+                              label=label,
+                              band_tags=band_tags,
+                              geo_metadata=geo_metadata)
         
-        self.bounded = bounded
+        obj.bounded = bounded
+        
+        return obj  

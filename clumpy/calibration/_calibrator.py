@@ -90,6 +90,11 @@ class Calibrator():
         
         self.features = features
         
+        J = lul_initial.get_J(state = self.state,
+                              mask = mask)
+        
+        return(self)
+        
         J, V = self.get_J_V(lul_initial=lul_initial,
                             lul_final=lul_final,
                             final_states_only=True)
@@ -220,114 +225,114 @@ class Calibrator():
         else:
             return J, P_v__u_Y, final_states
     
-    def get_J(self,
-              lul,
-              mask=None):
-        """
-        Get J indices.
+    # def get_J(self,
+    #           lul,
+    #           mask=None):
+    #     """
+    #     Get J indices.
     
-        Parameters
-        ----------
-        lul : {'initial', 'final', 'start'} or LandUseLayer or np.array
-            The land use map.
-        mask : {'calibration', 'allocation'} or MaskLayer or np.array
-            The mask.
+    #     Parameters
+    #     ----------
+    #     lul : {'initial', 'final', 'start'} or LandUseLayer or np.array
+    #         The land use map.
+    #     mask : {'calibration', 'allocation'} or MaskLayer or np.array
+    #         The mask.
     
-        Returns
-        -------
-        None.
+    #     Returns
+    #     -------
+    #     None.
     
-        """
+    #     """
                         
-        # initial data
-        # the region is selected after the distance computation
-        if isinstance(lul, LandUseLayer):
-            data_lul = lul.get_data().copy()
-        else:
-            data_lul = lul.copy()
+    #     # initial data
+    #     # the region is selected after the distance computation
+    #     if isinstance(lul, LandUseLayer):
+    #         data_lul = lul.get_data().copy()
+    #     else:
+    #         data_lul = lul.copy()
     
-        # selection according to the region.
-        # one set -1 to non studied data
-        # -1 is a forbiden state value.
-        if mask is not None:
-            if isinstance(mask, MaskLayer):
-                data_lul[mask.get_data() != 1] = -1
-            else:
-                data_lul[mask != 1] = -1
+    #     # selection according to the region.
+    #     # one set -1 to non studied data
+    #     # -1 is a forbiden state value.
+    #     if mask is not None:
+    #         if isinstance(mask, MaskLayer):
+    #             data_lul[mask.get_data() != 1] = -1
+    #         else:
+    #             data_lul[mask != 1] = -1
     
-        # get pixels indexes whose initial states are u
-        return(np.where(data_lul.flat == int(self.state))[0])
+    #     # get pixels indexes whose initial states are u
+    #     return(np.where(data_lul.flat == int(self.state))[0])
 
-    def get_V(self,
-              lul,
-              J,
-              final_states_only=True):
+    # def get_V(self,
+    #           lul,
+    #           J,
+    #           final_states_only=True):
                 
-        if isinstance(lul, LandUseLayer):
-            data_lul = lul.get_data().copy()
-        else:
-            data_lul = lul.copy()
+    #     if isinstance(lul, LandUseLayer):
+    #         data_lul = lul.get_data().copy()
+    #     else:
+    #         data_lul = lul.copy()
         
-        V = data_lul.flat[J]
+    #     V = data_lul.flat[J]
             
-        if final_states_only:
-            V[~np.isin(V, self.final_states)] = int(self.state)
+    #     if final_states_only:
+    #         V[~np.isin(V, self.final_states)] = int(self.state)
         
-        return(V)
+    #     return(V)
     
-    def get_J_V(self,
-                lul_initial,
-                lul_final,
-                mask=None,
-                final_states_only=True):
-        J = self.get_J(lul=lul_initial,
-                  mask=mask)
-        V = self.get_V(lul=lul_final,
-                  J=J,
-                  final_states_only=final_states_only)
-        return(J, V)
+    # def get_J_V(self,
+    #             lul_initial,
+    #             lul_final,
+    #             mask=None,
+    #             final_states_only=True):
+    #     J = self.get_J(lul=lul_initial,
+    #               mask=mask)
+    #     V = self.get_V(lul=lul_final,
+    #               J=J,
+    #               final_states_only=final_states_only)
+    #     return(J, V)
     
-    def get_X(self, 
-              J,
-              features,
-              lul,
-              distances_to_states={},
-              selected_features=True):
+    # def get_X(self, 
+    #           J,
+    #           features,
+    #           lul,
+    #           distances_to_states={},
+    #           selected_features=True):
         
-        X = None
+    #     X = None
     
-        if selected_features:
-            features = self.get_selected_features(features=features)
+    #     if selected_features:
+    #         features = self.get_selected_features(features=features)
         
-        for info in features:
-            # switch according z_type
-            if isinstance(info, Layer):
-                # just get data
-                x = info.get_data().flat[J]
+    #     for info in features:
+    #         # switch according z_type
+    #         if isinstance(info, Layer):
+    #             # just get data
+    #             x = info.get_data().flat[J]
 
-            elif isinstance(info, int):
-                # get distance data
-                if info not in distances_to_states.keys():
-                    _compute_distance(info, lul.get_data(), distances_to_states)
+    #         elif isinstance(info, int):
+    #             # get distance data
+    #             if info not in distances_to_states.keys():
+    #                 _compute_distance(info, lul.get_data(), distances_to_states)
                     
-                x = distances_to_states[info].flat[J]
+    #             x = distances_to_states[info].flat[J]
                 
-            else:
-                logger.error('Unexpected feature info : ' + type(info) + '. Occured in \'_base/_land.py, Land.get_values()\'.')
-                raise (TypeError('Unexpected feature info : ' + type(info) + '.'))
+    #         else:
+    #             logger.error('Unexpected feature info : ' + type(info) + '. Occured in \'_base/_land.py, Land.get_values()\'.')
+    #             raise (TypeError('Unexpected feature info : ' + type(info) + '.'))
 
-            # if X is not yet defined
-            if X is None:
-                X = x
-            # else column stack
-            else:
-                X = np.column_stack((X, x))
+    #         # if X is not yet defined
+    #         if X is None:
+    #             X = x
+    #         # else column stack
+    #         else:
+    #             X = np.column_stack((X, x))
 
-        # if only one feature, reshape X as a column
-        if len(X.shape) == 1:
-            X = X[:, None]
+    #     # if only one feature, reshape X as a column
+    #     if len(X.shape) == 1:
+    #         X = X[:, None]
         
-        return(X)
+    #     return(X)
     
     def compute_bootstrap_patches(self,
                                   lul_initial,

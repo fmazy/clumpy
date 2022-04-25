@@ -5,27 +5,43 @@ import numpy as np
 from ._layer import Layer
 
 class ProbaLayer(Layer):
-    def __init__(self,
-                 label=None,
-                 time=0,
-                 path=None,
-                 data=None,
-                 initial_states = None,
-                 final_states = None,
-                 copy_geo=None):
+
+    def __new__(cls, 
+                input_array,
+                label=None,
+                band_tags=None,
+                geo_metadata=None,
+                bounded='none'):
         
-        band_tags = None
+        obj = super().__new__(cls, 
+                              input_array,
+                              label=label,
+                              band_tags=band_tags,
+                              geo_metadata=geo_metadata)
         
-        if initial_states is not None and final_states is not None:
-            band_tags = [{'initial_state' : initial_states[i],
-                          'final_state' : final_states[i]} for i in range(len(initial_states))]
+        return obj      
+
+    # def __init__(self,
+    #              label=None,
+    #              time=0,
+    #              path=None,
+    #              data=None,
+    #              initial_states = None,
+    #              final_states = None,
+    #              copy_geo=None):
         
-        super().__init__(label=label,
-                         time=time,
-                         path=path,
-                         data=data,
-                         band_tags=band_tags,
-                         copy_geo=copy_geo)
+    #     band_tags = None
+        
+    #     if initial_states is not None and final_states is not None:
+    #         band_tags = [{'initial_state' : initial_states[i],
+    #                       'final_state' : final_states[i]} for i in range(len(initial_states))]
+        
+    #     super().__init__(label=label,
+    #                      time=time,
+    #                      path=path,
+    #                      data=data,
+    #                      band_tags=band_tags,
+    #                      copy_geo=copy_geo)
     
     def get_band_idx_of_initial_state(self, initial_state):
         tags = self.get_band_tags()

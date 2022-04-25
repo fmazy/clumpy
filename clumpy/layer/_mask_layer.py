@@ -22,18 +22,18 @@ class MaskLayer(Layer):
         The layer from whose geo metadata are copied.
         If ``None``, geo metadata are set to ``None``.
     """
-    def __init__(self,
-                 label=None,
-                 time=0,
-                 path=None,
-                 data=None,
-                 copy_geo=None):
-
-        super().__init__(label=label,
-                         time=time,
-                         path=path,
-                         data=data,
-                         copy_geo=copy_geo)
-
-        # if ~np.all(np.equal(np.unique(self.get_data()), np.array([0,1]))):
-        #     raise(ValueError("Unexpected mask layer. Mask layer should be only composed by '0' and '1' values."))
+    
+    def __new__(cls, 
+                input_array,
+                label=None,
+                band_tags=None,
+                geo_metadata=None):
+        
+        obj = super().__new__(cls, 
+                              input_array,
+                              label=label,
+                              band_tags=band_tags,
+                              geo_metadata=geo_metadata)
+        
+        
+        return obj  

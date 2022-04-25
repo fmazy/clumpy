@@ -1,9 +1,11 @@
 # -*- coding: utf-8 -*-
 
 import numpy as np
+from scipy import ndimage
 
 from ._layer import Layer
-from ..tools._data import ndarray_suitable_integer_type
+from matplotlib import colors as mpl_colors
+from matplotlib import pyplot as plt
 
 class LandUseLayer(Layer):
     """Define a Land Use Cover (LUC) layer.
@@ -36,49 +38,96 @@ class LandUseLayer(Layer):
         The style used for displaying.
     """
     
-    def __init__(self,
-                 palette,
-                 label=None,
-                 time=0,
-                 path=None,
-                 data=None,
-                 copy_geo=None):
-
-        if data is not None:
-            # choose an appropriate dtype.
-            data = ndarray_suitable_integer_type(data)
+    def __new__(cls, 
+                input_array,
+                label=None,
+                band_tags=None,
+                geo_metadata=None):
         
-        super().__init__(label=label,
-                         time=time,
-                         path=path,
-                         data=data,
-                         copy_geo=copy_geo)
+        obj = super().__new__(cls, 
+                              input_array,
+                              label=label,
+                              band_tags=band_tags,
+                              geo_metadata=geo_metadata)
+        
+        obj.distances = {}
+        
+        return obj  
+        
+    def get_J(self,
+              state,
+              mask=None):
+        """
+        """    
+        # get pixels indexes whose initial states are u
+        # within the mask
+        return np.all((np.where(self.flat == int(state))[0],
+                       mask.flat))
     
-        self.palette = palette
-
-    def __repr__(self):
-        return(self.label)
+    def get_V(self,
+              J,
+              final_states=None):
+                
+        V = self.flat[J]
         
-    def set_palette(self, palette):
-        """
-        Set palette
+        if final_states is None:
+            return(V)
+        
+        else:
+            idx = np.isin(V, self.final_states)
+            J = J[idx]
+            V = V[idx]
+            
+            return(V, J)
+    
+    def get_X(self, 
+              J,
+              features):
+        
+        X = None
+        
+        for info in features:
+            # switch according z_type
+            if isinstance(info, Layer):
+                # just get data
+                x = info.flat[J]
 
-        Parameters
-        ----------
-        palette : Palette
-            The palette.
+            elif isinstance(info, int):
+                # get distance data
+                x = self.get_distance(state=info).flat[J]
+                
+            else:
+                raise(TypeError('Unexpected feature info : ' + type(info) + '.'))
 
-        Returns
-        -------
-        self : LandUseLayer
-            The self object.
+            # if X is not yet defined
+            if X is None:
+                X = x
+            # else column stack
+            else:
+                X = np.column_stack((X, x))
 
-        """
-        self.palette = palette
+        # if only one feature, reshape X as a column
+        if len(X.shape) == 1:
+            X = X[:, None]
+        
+        return(X)
+    
+    def get_distance(self, 
+                     state, 
+                     overwrite=False):
+        if state not in self.distances.keys() or overwrite:
+            v_matrix = (self == int(state)).astype(int)
+            self.distances[state] = ndimage.distance_transform_edt(1 - v_matrix)
+        
+        return self.distances[state]
+    
+    def clean_distances(self):
+        self.distances = {}
     
     def display(self,
                 center,
                 window,
+                palette,
                 show=True,
                 colorbar=True):
         """
@@ -101,7 +150,7 @@ class LandUseLayer(Layer):
             Pyplot object
         """
         
-        ordered_palette = self.palette.sort(inplace=False)
+        ordered_palette = palette.sort(inplace=False)
         
         labels, values, colors = ordered_palette.get_list_of_labels_values_colors()
         
