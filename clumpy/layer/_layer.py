@@ -5,6 +5,7 @@ import os
 from matplotlib import pyplot as plt
 # from matplotlib import colors as mpl_colors
 import rasterio
+from copy import deepcopy
 
 from ..tools._path import path_split, create_directories
 
@@ -21,26 +22,27 @@ class Layer(np.ndarray):
     def __new__(cls, 
                 input_array,
                 label=None,
-                band_tags=None,
                 geo_metadata=None):
         obj = np.asarray(input_array).view(cls)
         
         obj.label = label
-        obj.band_tags = band_tags
         obj.geo_metadata = geo_metadata
         
-        return obj       
+        return obj      
+    
+    def copy(self):
+        return Layer(self,
+                     label=self.label,
+                     geo_metadata=deepcopy(self.geo_metadata))
 
     def __str__(self):
         return(self.label)
-
-    def get_band(self, band=0):
-        return(self[band])
-    
-    def get_n_bands(self):
-        return(self.shape[0])
+        
     
     def save(self, path):
+        self._save(path=path)
+
+    def _save(self, path, band_tags=None):
         folder_path, file_name, file_ext = path_split(path)
         create_directories(folder_path)
         
@@ -76,11 +78,11 @@ class Layer(np.ndarray):
             ) as dst:
                 dst.write(data)
                 
-                if self.band_tags is not None:
-                    for band_i, tags in enumerate(self.band_tags):
+                if band_tags is not None:
+                    for band_i, tags in enumerate(band_tags):
                         dst.update_tags(band_i+1, **tags)
 
-    def export(self, path, band=0, plane=False, rdc_only=False):
+    def export(self, path, plane=False, rdc_only=False):
         """Export the layer according to the file extension. See GDAL for available extenstions.
         For floating rst, the data should be np.float32.
         Parameters
@@ -95,7 +97,6 @@ class Layer(np.ndarray):
         if not rdc_only:
             os.system('rio convert '+self.path+' '+path+' --overwrite')
         
-        data = self.get_band(band=band)
         
         if file_ext == 'rst':
             if not plane:
@@ -103,21 +104,21 @@ class Layer(np.ndarray):
                 rdc_file += "file title  : \n"
                 rdc_file += "data type   : byte\n"
                 rdc_file += "file type   : binary\n"
-                rdc_file += "columns     : "+str(data.shape[1])+"\n"
-                rdc_file += "rows        : "+str(data.shape[0])+"\n"
+                rdc_file += "columns     : "+str(self.shape[1])+"\n"
+                rdc_file += "rows        : "+str(self.shape[0])+"\n"
                 rdc_file += "ref.system  : spc83la3\n"
                 rdc_file += "ref.units   : m\n"
                 rdc_file += "unit dist.  : 1\n"
                 rdc_file += "min.X       : "+str(self.geo_metadata['transform'][2])+"\n"
-                rdc_file += "max.X       : "+str(self.geo_metadata['transform'][2] + self.geo_metadata['transform'][0] * self.get_data().shape[1])+"\n"
-                rdc_file += "min.Y       : "+str(self.geo_metadata['transform'][5] + self.geo_metadata['transform'][4] * data.shape[0])+"\n"
+                rdc_file += "max.X       : "+str(self.geo_metadata['transform'][2] + self.geo_metadata['transform'][0] * self.shape[1])+"\n"
+                rdc_file += "min.Y       : "+str(self.geo_metadata['transform'][5] + self.geo_metadata['transform'][4] * self.shape[0])+"\n"
                 rdc_file += "max.Y       : "+str(self.geo_metadata['transform'][5])+"\n"
                 rdc_file += "pos'n error : unspecified\n"
                 rdc_file += "resolution  : "+str(np.abs(self.geo_metadata['transform'][0]))+"\n"
-                rdc_file += "min.value   : "+str(data.min())+"\n"
-                rdc_file += "max.value   : "+str(data.max())+"\n"
-                rdc_file += "display min : "+str(data.min())+"\n"
-                rdc_file += "display max : "+str(data.max())+"\n"
+                rdc_file += "min.value   : "+str(self.min())+"\n"
+                rdc_file += "max.value   : "+str(self.max())+"\n"
+                rdc_file += "display min : "+str(self.min())+"\n"
+                rdc_file += "display max : "+str(self.max())+"\n"
                 rdc_file += "value units : unspecified\n"
                 rdc_file += "value error : unspecified\n"
                 rdc_file += "flag value  : none\n"
@@ -131,21 +132,21 @@ class Layer(np.ndarray):
                 rdc_file += "file title  : \n"
                 rdc_file += "data type   : byte\n"
                 rdc_file += "file type   : binary\n"
-                rdc_file += "columns     : "+str(data.shape[1])+"\n"
-                rdc_file += "rows        : "+str(data.shape[0])+"\n"
+                rdc_file += "columns     : "+str(self.shape[1])+"\n"
+                rdc_file += "rows        : "+str(self.shape[0])+"\n"
                 rdc_file += "ref.system  : plane\n"
                 rdc_file += "ref.units   : m\n"
                 rdc_file += "unit dist.  : 1.0\n"
                 rdc_file += "min.X       : 0.0\n"
-                rdc_file += "max.X       : "+str(data.shape[1])+"\n"
+                rdc_file += "max.X       : "+str(self.shape[1])+"\n"
                 rdc_file += "min.Y       : 0.0\n"
-                rdc_file += "max.Y       : "+str(data.shape[0])+"\n"
+                rdc_file += "max.Y       : "+str(self.shape[0])+"\n"
                 rdc_file += "pos'n error : unknown\n"
                 rdc_file += "resolution  : 1.0\n"
-                rdc_file += "min.value   : "+str(data.min())+"\n"
-                rdc_file += "max.value   : "+str(data.max())+"\n"
-                rdc_file += "display min : "+str(data.min())+"\n"
-                rdc_file += "display max : "+str(data.max())+"\n"
+                rdc_file += "min.value   : "+str(self.min())+"\n"
+                rdc_file += "max.value   : "+str(self.max())+"\n"
+                rdc_file += "display min : "+str(self.min())+"\n"
+                rdc_file += "display max : "+str(self.max())+"\n"
                 rdc_file += "value units : unspecified\n"
                 rdc_file += "value error : unspecified\n"
                 rdc_file += "flag value  : none\n"

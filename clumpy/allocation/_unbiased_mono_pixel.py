@@ -1,9 +1,7 @@
-import numpy as np
-
-from .._base._transition_matrix import TransitionMatrix
-
-from ._allocator import Allocator, _update_P_v__Y_u
+from ._allocator import Allocator
 from ._gart import generalized_allocation_rejection_test
+from ..layer import LandUseLayer, MaskLayer
+from .._base._transition_matrix import TransitionMatrix
 
 class UnbiasedMonoPixel(Allocator):
     def __init__(self,
@@ -14,23 +12,27 @@ class UnbiasedMonoPixel(Allocator):
         super().__init__(calibrator=calibrator,
                          verbose=verbose,
                          verbose_heading_level=verbose_heading_level)
-
-    def _allocate(self,
-                  J,
-                  P_v__u_Y,
-                  final_states,
-                  lul_data,
-                  **kwargs):
+        
+    def allocate(self,
+                 J,
+                 P,
+                 final_states,
+                 lul:LandUseLayer,
+                 lul_origin:LandUseLayer=None,
+                 mask:MaskLayer=None):
         """
         allocation. lul_data is ndarray only.
         """
         
-        # GART
-        V = generalized_allocation_rejection_test(P=P_v__u_Y,
+        P, final_states = self.clean_proba(P=P, 
+                                           final_states=final_states)
+        
+        # # GART
+        V = generalized_allocation_rejection_test(P=P,
                                                   list_v=final_states)
         
-        print((V==2).mean())
+        # # allocation !
+        lul.flat[J] = V
         
-        # allocation !
-        lul_data.flat[J] = V
+        return(lul)
 

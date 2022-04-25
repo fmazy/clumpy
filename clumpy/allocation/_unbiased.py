@@ -1,11 +1,11 @@
 import numpy as np
+from tqdm import tqdm
 
 from .._base._transition_matrix import TransitionMatrix, compute_transition_matrix
-
 from ._allocator import Allocator, _update_P_v__Y_u
 from ._gart import generalized_allocation_rejection_test
 from ._patcher import _weighted_neighbors_patcher
-from tqdm import tqdm
+from ..layer import LandUseLayer, MaskLayer
 
 
 class Unbiased(Allocator):
@@ -43,20 +43,20 @@ class Unbiased(Allocator):
                          verbose=verbose,
                          verbose_heading_level=verbose_heading_level)
 
-    def _allocate(self,
-                  J,
-                  P_v__u_Y,
-                  final_states,
-                  lul_data,
-                  lul_origin_data,
-                  distances_to_states={}):
+    def allocate(self,
+                 J,
+                 P,
+                 final_states,
+                 lul:LandUseLayer,
+                 lul_origin:LandUseLayer=None,
+                 mask:MaskLayer=None):
         """
         allocation. lul_data and lul_origin_data are ndarrays only.
         """
         
         # make a copy
         # the transition matrix will be edited after
-        tm = compute_transition_matrix(P_v__u_Y,
+        tm = compute_transition_matrix(P,
                                        initial_state=self.initial_state,
                                        final_states=final_states)
         

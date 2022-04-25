@@ -2,6 +2,7 @@
 
 import numpy as np
 from scipy import ndimage
+from copy import deepcopy
 
 from ._layer import Layer
 from matplotlib import colors as mpl_colors
@@ -41,19 +42,22 @@ class LandUseLayer(Layer):
     def __new__(cls, 
                 input_array,
                 label=None,
-                band_tags=None,
                 geo_metadata=None):
         
         obj = super().__new__(cls, 
                               input_array,
                               label=label,
-                              band_tags=band_tags,
                               geo_metadata=geo_metadata)
         
         obj.distances = {}
         
         return obj  
-        
+
+    def copy(self):
+        return LandUseLayer(np.array(self),
+                            label=self.label,
+                            geo_metadata=deepcopy(self.geo_metadata))
+            
     def get_J(self,
               state,
               mask=None):
@@ -61,24 +65,23 @@ class LandUseLayer(Layer):
         """    
         # get pixels indexes whose initial states are u
         # within the mask
-        return np.all((np.where(self.flat == int(state))[0],
-                       mask.flat))
+        if mask is None:
+            mask = np.ones_like(self)
+        
+        return np.where((self * mask).flat == int(state))[0]
     
     def get_V(self,
               J,
               final_states=None):
                 
         V = self.flat[J]
-        
-        if final_states is None:
-            return(V)
-        
-        else:
-            idx = np.isin(V, self.final_states)
+                
+        if final_states is not None:
+            idx = np.isin(V, final_states)
             J = J[idx]
             V = V[idx]
             
-            return(V, J)
+        return(J, V)
     
     def get_X(self, 
               J,

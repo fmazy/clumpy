@@ -3,11 +3,12 @@
 
 import numpy as np
 from time import time
-
+from copy import deepcopy
 from scipy import ndimage
 
 # base import
-from ..layer import Layer, FeatureLayer, LandUseLayer, MaskLayer, ProbaLayer, create_proba_layer
+from ..layer import Layer, FeatureLayer, LandUseLayer, MaskLayer, ProbaLayer
+from ..layer._proba_layer import create_proba_layer
 from ._state import State
 from ._transition_matrix import TransitionMatrix, load_transition_matrix
 
@@ -152,8 +153,7 @@ class Land():
         else:
             return(self.features)
 
-    def fit(self,
-            distances_to_states={}):
+    def fit(self):
         """
         Fit the land. Required for any further process.
 
@@ -185,8 +185,7 @@ class Land():
         self.calibrator.fit(lul_initial=self.get_lul('initial'),
                lul_final=self.get_lul('final'),
                features=self.get_features(),
-               mask=self.get_mask('calibration'),
-               distances_to_states=distances_to_states)
+               mask=self.get_mask('calibration'))
                         
         if self.verbose > 0:
             print('Land ' + str(self.state) + ' fitting done.\n')
@@ -194,122 +193,40 @@ class Land():
         return self
     
     def transition_probabilities(self, 
-                                 lul=None,
-                                 mask=None,
-                                 effective_transitions_only=True,
-                                 territory_format=False):
-        if lul is None:
-            lul = 'start'
-        
-        if isinstance(lul, str):
-            lul = self.get_lul(lul)
-        
-        if mask is None:
-            mask = self.get_mask('allocation')
-        
-        tm = self.get_transition_matrix().extract(self.state)
-    
-        p = self.calibrator.transition_probabilities(
-            lul=lul,
-            tm=tm,
+                                 effective_transitions_only=True):        
+            
+        J, P_v__u_Y, final_states = self.calibrator.transition_probabilities(
+            lul=self.get_lul('start'),
+            tm=self.get_transition_matrix().extract(self.state),
             features=self.get_features(),
-            mask = mask,
-            distances_to_states={},
+            mask = self.get_mask('allocation'),
             effective_transitions_only=effective_transitions_only)
         
-        if not territory_format:
-            return(p)
-        else:
-            return({self.region.label : {int(self.state) : p}})
+        return J, P_v__u_Y, final_states
     
     def transition_probabilities_layer(self, 
-                                       path,
-                                       lul='start',
                                        effective_transitions_only=True):
+
         
-        if isinstance(lul, str):
-            lul = self.get_lul(lul)
+        J, P, final_states = self.transition_probabilities(
+            effective_transitions_only=effective_transitions_only)
         
-        p = self.transition_probabilities(
-            lul=lul,
-            effective_transitions_only=effective_transitions_only,
-            territory_format=True)
-        
-        proba_layer = create_proba_layer(path=path,
-                                         lul=lul,
-                                         p=p)
-        
+        lul = self.get_lul('start')
+        proba_layer = create_proba_layer(J=J,
+                                         P=P,
+                                         final_states=final_states,
+                                         shape=lul.shape,
+                                         geo_metadata=lul.geo_metadata)
+                
         return(proba_layer)
-            
-    def compute_transition_matrix(self,
-                                  lul_initial=None,
-                                  lul_final=None,
-                                  mask=None,
-                                  final_states_only=True):
-        """
-        Compute the transition matrix.
-
-        Parameters
-        ----------
-        state : State
-            The initial state of this land.
-
-        lul_initial : LandUseLayer
-            The initial land use.
-
-        lul_final : LandUseLayer
-            The final land use.
-
-        mask : MaskLayer, default = None
-            The region mask layer. If ``None``, the whole area is studied.
-
-        Returns
-        -------
-        tm : TransitionMatrix
-            The computed transition matrix.
-        """
-        if lul_initial is None:
-            lul_initial = 'initial'
-        if isinstance(lul_initial, str):
-            lul_initial = self.get_lul(lul_initial)
-        
-        if lul_final is None:
-            lul_final = 'final'
-        if isinstance(lul_final, str):
-            lul_final = self.get_lul(lul_final)
-            
-        if mask is None:
-            mask = 'calibration'
-        if isinstance(mask, str):
-            mask = self.get_mask(mask)
-        
-        J, V = self.calibrator.get_J_V(lul_initial=lul_initial,
-                                       lul_final=lul_final,
-                                       mask=mask,
-                                       final_states_only=final_states_only)
-
-        v_unique, n_counts = np.unique(V, return_counts=True)
-        P_v = n_counts / n_counts.sum()
-        P_v = P_v[None, :]
-
-        v_unique = v_unique.astype(int)
-
-        palette_u = lul_initial.palette.extract(infos=[self.state])
-        palette_v = lul_final.palette.extract(infos=v_unique)
-
-        return (TransitionMatrix(M=P_v,
-                                 palette_u=palette_u,
-                                 palette_v=palette_v))
-
-    
 
     def allocate(self,
                  J,
-                 P_v__u_Y,
+                 P,
                  final_states,
-                 lul,
+                 lul='start',
                  lul_origin=None,
-                 distances_to_states={}):
+                 mask=None):
         """
         allocation.
 
@@ -343,111 +260,92 @@ class Land():
         lul_allocated : LandUseLayer
             Only returned if ``path`` is not ``None``. The allocated map as a land use layer.
         """
-        if lul is None:
-            lul = 'start'
         
         if isinstance(lul, str):
-            lul = self.get_lul(lul)
-        
-        if isinstance(lul, LandUseLayer):
-            lul_data = lul.get_data()
-        else:
-            lul_data = lul
-        
-        if lul_origin is None:
-            lul_origin_data = lul_data.copy()
-        else:
-            lul_origin_data = lul_origin
+            lul = self.get_lul(lul).copy()
                 
         self.allocator.allocate(J=J,
-                                P_v__u_Y=P_v__u_Y,
+                                P=P,
                                 final_states=final_states,
-                                lul=lul_data,
-                                lul_origin=lul_origin_data,
-                                distances_to_states={})
+                                lul=lul,
+                                mask=mask,
+                                lul_origin=lul_origin)
         
-        return(lul_data)
+        return(lul)
     
-    def allocate_layer(self,
-                       path,
-                       J,
-                       P_v__u_Y,
-                       final_states,
-                       lul,
-                       lul_origin=None,
-                       distances_to_states={}):
-        lul_data = self.allocate(J=J,
-                                 P_v__u_Y=P_v__u_Y,
-                                 final_states=final_states,
-                                 lul=lul,
-                                 lul_origin=lul_origin,
-                                 distances_to_states=distances_to_states)
+    def run(self,
+            lul='start',
+            lul_origin=None):
+        if isinstance(lul, str):
+            lul = self.get_lul(lul).copy()
         
-        alloc_layer = LandUseLayer(path=path,
-                                   data=lul_data,
-                                   copy_geo=lul,
-                                   palette=lul.palette)
-        return(alloc_layer)
+        lul, proba_layer = self.allocator.run(tm=self.get_transition_matrix(),
+                                    lul=self.get_lul('start'),
+                                    features=self.get_features(),
+                                    lul_origin=lul_origin,
+                                    mask=self.get_mask('allocation'))    
+        
+        return lul, proba_layer
+    
+    # def dinamica_determine_ranges(self,
+    #                               lul_initial,
+    #                               params,
+    #                               mask=None):
+    #     J, X = self.get_values(lul_initial=lul_initial,
+    #                            mask=mask,
+    #                            explanatory_variables=True)
 
-    def dinamica_determine_ranges(self,
-                                  lul_initial,
-                                  params,
-                                  mask=None):
-        J, X = self.get_values(lul_initial=lul_initial,
-                               mask=mask,
-                               explanatory_variables=True)
+    #     ranges = {}
+    #     delta = {}
 
-        ranges = {}
-        delta = {}
+    #     for id_feature, feature in enumerate(self.features):
+    #         param = params[feature]
 
-        for id_feature, feature in enumerate(self.features):
-            param = params[feature]
+    #         x = X[:, id_feature].copy()
+    #         n_round = _get_n_decimals(param['increment'])
+    #         x = np.sort(x)
+    #         x = np.round(x, n_round)
 
-            x = X[:, id_feature].copy()
-            n_round = _get_n_decimals(param['increment'])
-            x = np.sort(x)
-            x = np.round(x, n_round)
+    #         ranges[feature] = [np.round(x[0], n_round)]
+    #         delta[feature] = [0, 0]
 
-            ranges[feature] = [np.round(x[0], n_round)]
-            delta[feature] = [0, 0]
+    #         for i, xi in enumerate(x):
+    #             if delta[feature][-1] >= param['maximum_delta']:
+    #                 ranges[feature].append(xi)
+    #                 delta[feature].append(1)
+    #             elif xi - ranges[feature][-1] > param['increment'] and delta[feature][-1] >= param['minimum_delta']:
+    #                 ranges[feature].append(ranges[feature][-1] + param['increment'])
+    #                 delta[feature].append(1)
 
-            for i, xi in enumerate(x):
-                if delta[feature][-1] >= param['maximum_delta']:
-                    ranges[feature].append(xi)
-                    delta[feature].append(1)
-                elif xi - ranges[feature][-1] > param['increment'] and delta[feature][-1] >= param['minimum_delta']:
-                    ranges[feature].append(ranges[feature][-1] + param['increment'])
-                    delta[feature].append(1)
+    #             elif len(ranges[feature]) > 1:
+    #                 v1 = np.array([ranges[feature][-1] - ranges[feature][-2],
+    #                                (delta[feature][-2] - delta[feature][-3])])
+    #                 v2 = np.array([xi - ranges[feature][-1],
+    #                                (delta[feature][-1] + 1 - delta[feature][-2])])
 
-                elif len(ranges[feature]) > 1:
-                    v1 = np.array([ranges[feature][-1] - ranges[feature][-2],
-                                   (delta[feature][-2] - delta[feature][-3])])
-                    v2 = np.array([xi - ranges[feature][-1],
-                                   (delta[feature][-1] + 1 - delta[feature][-2])])
+    #                 norm_v1 = np.linalg.norm(v1)
+    #                 norm_v2 = np.linalg.norm(v2)
+    #                 if norm_v1 > 0 and norm_v2 > 0:
+    #                     v1 /= norm_v1
+    #                     v2 /= norm_v2
 
-                    norm_v1 = np.linalg.norm(v1)
-                    norm_v2 = np.linalg.norm(v2)
-                    if norm_v1 > 0 and norm_v2 > 0:
-                        v1 /= norm_v1
-                        v2 /= norm_v2
+    #                     dot = v1[0] * v2[0] + v1[1] * v2[1]
+    #                     if dot >= 0 and dot <= 1:
+    #                         angle = np.arccos(np.abs(v1[0] * v2[0] + v1[1] * v2[1])) * 180 / np.pi
+    #                     else:
+    #                         angle = 0
+    #                 else:
+    #                     angle = 0
 
-                        dot = v1[0] * v2[0] + v1[1] * v2[1]
-                        if dot >= 0 and dot <= 1:
-                            angle = np.arccos(np.abs(v1[0] * v2[0] + v1[1] * v2[1])) * 180 / np.pi
-                        else:
-                            angle = 0
-                    else:
-                        angle = 0
+    #                 if angle > param['tolerance_angle'] and delta[feature][-1] >= param['minimum_delta']:
+    #                     ranges[feature].append(xi)
+    #                     delta[feature].append(1)
+    #                 else:
+    #                     delta[feature][-1] += 1
+    #             else:
+    #                 delta[feature][-1] += 1
 
-                    if angle > param['tolerance_angle'] and delta[feature][-1] >= param['minimum_delta']:
-                        ranges[feature].append(xi)
-                        delta[feature].append(1)
-                    else:
-                        delta[feature][-1] += 1
-                else:
-                    delta[feature][-1] += 1
-
-        return (ranges, delta)
+    #     return (ranges, delta)
     
 # def make(self, palette, **params):
     #     # features

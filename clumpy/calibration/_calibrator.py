@@ -11,13 +11,13 @@ from ..patch import Patcher, Patchers
 
 class Calibrator():
     def __init__(self,
-                 state,
+                 initial_state,
                  final_states,
                  tpe,
                  feature_selector=None,
                  patchers=None,
                  verbose = 0):
-        self.state = state
+        self.initial_state = initial_state
         self.final_states = final_states
         self.tpe = tpe
         
@@ -32,7 +32,7 @@ class Calibrator():
         if isinstance(patchers, Patcher):
             self.patchers = Patchers()
             for v in final_states:
-                if int(v) != int(self.state):
+                if int(v) != int(self.initial_state):
                     self.patchers[v] = patchers.copy()
         else:
             self.patchers = patchers
@@ -43,7 +43,7 @@ class Calibrator():
         return ('Calibrator(tpe='+str(self.tpe)+')')
     
     def copy(self):
-        return(Calibrator(state=deepcopy(self.state),
+        return(Calibrator(initial_state=deepcopy(self.initial_state),
                           tpe=deepcopy(self.tpe),
                           feature_selector=self.feature_selector.copy(),
                           verbose=self.verbose))
@@ -83,34 +83,27 @@ class Calibrator():
             lul_initial,
             lul_final,
             features,
-            mask=None,
-            distances_to_states={}):
+            mask=None):
         """
         """
         
         self.features = features
         
-        J = lul_initial.get_J(state = self.state,
+        J = lul_initial.get_J(state = self.initial_state,
                               mask = mask)
         
-        return(self)
-        
-        J, V = self.get_J_V(lul_initial=lul_initial,
-                            lul_final=lul_final,
-                            final_states_only=True)
-                                        
+        J, V = lul_final.get_V(J=J,
+                               final_states=self.final_states)
+                                                
         if self.verbose > 0:
             print('feature selecting...')
         
         # get X
-        X = self.get_X(J=J,
-                       features=self.features,
-                       lul=lul_initial,
-                       distances_to_states=distances_to_states,
-                       selected_features=False)
+        X = lul_initial.get_X(J=J,
+                              features=self.features)
         
         X = self.feature_selector.fit_transform(X, V)
-        
+                
         if self.verbose > 0:
             print('feature selecting done.')
         
@@ -120,7 +113,7 @@ class Calibrator():
         # TRANSITION PROBABILITY ESTIMATOR
         self.tpe.fit(X=X,
                      V=V,
-                     initial_state = int(self.state),
+                     initial_state = int(self.initial_state),
                      bounds = bounds)
         
         self._fitted = True
@@ -128,7 +121,7 @@ class Calibrator():
         if self.patchers is not None:
             self.patchers.fit(J=J,
                               V=V,
-                              shape=lul_initial.get_data().shape)
+                              shape=lul_initial.shape)
         
         return(self)
     
@@ -137,7 +130,6 @@ class Calibrator():
                                  tm,
                                  features=None,
                                  mask=None,
-                                 distances_to_states={},
                                  effective_transitions_only=True,
                                  return_Y=False):
         """
@@ -188,21 +180,16 @@ class Calibrator():
         if features is None:
             features = self.features
         
-        tm = tm.extract(self.state)
+        tm = tm.extract(self.initial_state)
         
-        J = self.get_J(lul=lul,
-                       mask=mask)
+        J = lul.get_J(state = self.initial_state,
+                      mask = mask)
                 
-        if self.verbose > 0:
-            print(title_heading(self.verbose_heading_level) + 'Land ' + str(state) + ' TPE\n')
-
         # GET VALUES
-        Y = self.get_X(J=J,
-                       features=features,
-                       lul=lul,
-                       distances_to_states=distances_to_states)
+        Y = lul.get_X(J=J,
+                      features=features)
         
-        
+        Y = self.feature_selector.transform(Y)
         
         # TRANSITION PROBABILITY ESTIMATION
         P_v = tm.M[0,:]
@@ -213,13 +200,10 @@ class Calibrator():
             P_v=P_v)
         
         if effective_transitions_only:
-            bands_to_keep = np.array(self.final_states) != int(self.state)
+            bands_to_keep = np.array(self.final_states) != int(self.initial_state)
             final_states = list(np.array(self.final_states)[bands_to_keep])
             P_v__u_Y = P_v__u_Y[:, bands_to_keep]
         
-        if self.verbose > 0:
-            print('Land ' + str(state) + ' TPE done.\n')
-
         if return_Y:
             return J, P_v__u_Y, final_states, Y
         else:
@@ -261,7 +245,7 @@ class Calibrator():
     #             data_lul[mask != 1] = -1
     
     #     # get pixels indexes whose initial states are u
-    #     return(np.where(data_lul.flat == int(self.state))[0])
+    #     return(np.where(data_lul.flat == int(self.initial_state))[0])
 
     # def get_V(self,
     #           lul,
@@ -276,7 +260,7 @@ class Calibrator():
     #     V = data_lul.flat[J]
             
     #     if final_states_only:
-    #         V[~np.isin(V, self.final_states)] = int(self.state)
+    #         V[~np.isin(V, self.final_states)] = int(self.initial_state)
         
     #     return(V)
     
@@ -333,28 +317,3 @@ class Calibrator():
     #         X = X[:, None]
         
     #     return(X)
-    
-    def compute_bootstrap_patches(self,
-                                  lul_initial,
-                                  lul_final,
-                                  mask=None):
-        """
-        Compute Bootstrap patches
-
-        """
-        J, V = self.get_J_V(lul_initial = lul_initial,
-                            lul_final = lul_final,
-                            mask=mask,
-                            final_states_only=False)
-        
-        self.patches = compute_bootstrap_patches(state=self.state,
-                                            final_states=self.final_states,
-                                            J=J,
-                                            V=V,
-                                            shape=shape,
-                                            mask=mask)       
-        
-
-def _compute_distance(state_value, data, distances_to_states):
-    v_matrix = (data == state_value).astype(int)
-    distances_to_states[state_value] = ndimage.distance_transform_edt(1 - v_matrix)

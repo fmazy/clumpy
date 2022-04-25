@@ -1,5 +1,7 @@
 # -*- coding: utf-8 -*-
 
+from copy import deepcopy
+
 from ._layer import Layer
 
 class FeatureLayer(Layer):
@@ -35,16 +37,20 @@ class FeatureLayer(Layer):
     def __new__(cls, 
                 input_array,
                 label=None,
-                band_tags=None,
                 geo_metadata=None,
                 bounded='none'):
         
         obj = super().__new__(cls, 
                               input_array,
                               label=label,
-                              band_tags=band_tags,
                               geo_metadata=geo_metadata)
         
         obj.bounded = bounded
         
         return obj  
+    
+    def copy(self):
+        return FeatureLayer(np.array(self),
+                            label=self.label,
+                            geo_metadata=deepcopy(self.geo_metadata),
+                            bounded=deepcopy(self.bounded))    

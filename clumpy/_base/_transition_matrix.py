@@ -375,25 +375,72 @@ class TransitionMatrix():
                 "Unexpected transition matrix. Expected a land transition matrix with only one initial state."))
         return(True)
 
+# def compute_transition_matrix(self,
+#                               lul_initial,
+#                               lul_final,
+#                               mask,
+#                               final_states=None):
+#     """
+#     Compute the transition matrix.
 
-def compute_transition_matrix(P_v__u_Y, 
-                              initial_state, 
-                              final_states):
-    M = P_v__u_Y.mean(axis=0)[None,:]
+#     Parameters
+#     ----------
+#     state : State
+#         The initial state of this land.
+
+#     lul_initial : LandUseLayer
+#         The initial land use.
+
+#     lul_final : LandUseLayer
+#         The final land use.
+
+#     mask : MaskLayer, default = None
+#         The region mask layer. If ``None``, the whole area is studied.
+
+#     Returns
+#     -------
+#     tm : TransitionMatrix
+#         The computed transition matrix.
+#     """
     
-    initial_state = State(label='state_'+str(initial_state),
-                          value=int(initial_state),
-                          color='#aaaaaa')
+#     initial_states = 
     
-    final_states = [State(label='state_'+str(final_state),
-                          value=int(final_state),
-                          color='#aaaaaa') for final_state in final_states]
+#     J = lul_initial.get_J(state=self.state,
+#                           mask=mask)
+#     J, V = lul_final.get_V(J=J,
+#                            final_states=final_states)
     
-    tm = TransitionMatrix(M=M,
-                          palette_u = Palette(states=[initial_state]),
-                          palette_v = Palette(states=final_states))
+#     v_unique, n_counts = np.unique(V, return_counts=True)
+#     P_v = n_counts / n_counts.sum()
+#     P_v = P_v[None, :]
+
+#     v_unique = v_unique.astype(int)
+
+#     palette_u = lul_initial.palette.extract(infos=[self.state])
+#     palette_v = lul_final.palette.extract(infos=v_unique)
+
+#     return (TransitionMatrix(M=P_v,
+#                              palette_u=palette_u,
+#                              palette_v=palette_v))
+
+# def compute_transition_matrix(P_v__u_Y, 
+#                               initial_state, 
+#                               final_states):
+#     M = P_v__u_Y.mean(axis=0)[None,:]
     
-    return(tm)
+#     initial_state = State(label='state_'+str(initial_state),
+#                           value=int(initial_state),
+#                           color='#aaaaaa')
+    
+#     final_states = [State(label='state_'+str(final_state),
+#                           value=int(final_state),
+#                           color='#aaaaaa') for final_state in final_states]
+    
+#     tm = TransitionMatrix(M=M,
+#                           palette_u = Palette(states=[initial_state]),
+#                           palette_v = Palette(states=final_states))
+    
+#     return(tm)
     
 
 def load_transition_matrix(path, palette):

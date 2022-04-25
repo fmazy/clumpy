@@ -1,9 +1,12 @@
 """
 Allocators blabla.
 """
+import numpy as np
 
 from .._base import State
-from ..layer import LandUseLayer
+from .._base._transition_matrix import TransitionMatrix
+from ..layer import LandUseLayer, MaskLayer
+from ..layer._proba_layer import create_proba_layer
 from ..tools._path import path_split
 from copy import deepcopy
 
@@ -24,77 +27,61 @@ class Allocator():
                  calibrator=None,
                  verbose=0,
                  verbose_heading_level=1):
-        self.calibrator = None
+        self.calibrator = calibrator
         self.verbose = verbose
         self.verbose_heading_level = verbose_heading_level
-
+    
+    def run(self,
+            tm:TransitionMatrix,
+            lul:LandUseLayer,
+            features=None,
+            lul_origin:LandUseLayer=None,
+            mask:MaskLayer=None):
+        
+        if lul_origin is None:
+            lul_origin = lul.copy()
+    
+        J, P, final_states = self.calibrator.transition_probabilities(
+            lul=lul_origin,
+            tm=tm,
+            features=features,
+            mask = mask,
+            effective_transitions_only=False)
+        
+        P, final_states = self.clean_proba(P=P, 
+                                           final_states=final_states)
+        
+        proba_layer = create_proba_layer(J=J,
+                                         P=P,
+                                         final_states=final_states,
+                                         shape=lul.shape,
+                                         geo_metadata=lul.geo_metadata)
+        
+        self.allocate(J=J,
+                      P=P,
+                      final_states=final_states,
+                      lul=lul,
+                      lul_origin=lul_origin,
+                      mask=mask)
+        
+        return(lul, proba_layer)
+    
+    def clean_proba(self, 
+                    P, 
+                    final_states):
+        
+        final_states = deepcopy(final_states)
+        
+        if self.calibrator.initial_state not in final_states:
+            P = np.hstack((P, 1-P.sum(axis=1)[:,None]))
+            final_states.append(self.calibrator.initial_state)
+        
+        return(P, final_states)
+    
     def set_params(self,
                    **params):
         for key, param in params.items():
             setattr(self, key, param)
-
-    def allocate(self,
-                 lul, 
-                 J,
-                 P_v__u_Y,
-                 final_states,
-                 lul_origin=None,
-                 distances_to_states={}):
-        """
-        Allocate
-
-        Parameters
-        ----------
-        tm : TransitionMatrix
-            Land transition matrix with only one state in ``tm.palette_u``.
-
-        land : Land
-            The studied land object.
-
-        lul : LandUseLayer or ndarray
-            The studied land use layer. If ndarray, the matrix is directly edited (inplace).
-
-        lul_origin : LandUseLayer
-            Original land use layer. Usefull in case of regional allocations. If ``None``, the  ``lul`` layer is copied.
-
-        mask : MaskLayer, default = None
-            The region mask layer. If ``None``, the whole map is studied.
-
-        distances_to_states : dict(State:ndarray), default={}
-            The distances matrix to key state. Used to improve performance.
-
-        path : str, default=None
-            The path to save result as a tif file.
-            If None, the allocation is only saved within `lul`, if `lul` is a ndarray.
-            Note that if ``path`` is not ``None``, ``lul`` must be LandUseLayer.
-
-        path_transition_probabilities : str, default=None
-            The path prefix to save transition probabilities
-
-        Returns
-        -------
-        lul_allocated : LandUseLayer
-            Only returned if ``path`` is not ``None``. The allocated map as a land use layer.
-        """
-        if isinstance(lul, LandUseLayer):
-            lul_data = lul.get_data()
-        else:
-            lul_data = lul
-        
-        if lul_origin is None:
-            lul_origin_data = lul_data.copy()
-        else:
-            lul_origin_data = lul_origin
-        
-        
-        self._allocate(J,
-                       P_v__u_Y,
-                       final_states,
-                       lul_data=lul_data,
-                       lul_origin_data=lul_origin_data,
-                       distances_to_states=distances_to_states)
-        
-        return(lul_data)
     
 def _update_P_v__Y_u(P_v__u_Y, tm, inplace=True):
     if not inplace:

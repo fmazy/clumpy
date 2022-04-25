@@ -16,16 +16,21 @@ def open_layer(path, kind='layer', **kwargs):
     
     data = raster.read()
     
-    band_tags = [raster.tags(i_band) for i_band in range(1, data.shape[0]+1)]
-    
     geo_metadata = {'driver' : raster.driver,
                     'crs' : raster.crs,
                     'transform' : raster.transform}
     
     layer_class = layers[kind]
     
+    if kind != 'proba' and len(data.shape)==3:
+        data = data.reshape(data.shape[1:])
+    
+    if kind == 'proba':
+        final_states = [int(raster.tags(i_band)['final_state']) for i_band in range(1, data.shape[0]+1)]
+        
+        kwargs = dict(final_states=final_states)
+        
     return layer_class(data,
                        label=file_name,
-                       band_tags = band_tags,
                        geo_metadata = geo_metadata,
                        **kwargs)

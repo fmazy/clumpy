@@ -1,5 +1,7 @@
 # -*- coding: utf-8 -*-
 
+from copy import deepcopy
+
 from ._layer import Layer
 
 class MaskLayer(Layer):
@@ -26,14 +28,17 @@ class MaskLayer(Layer):
     def __new__(cls, 
                 input_array,
                 label=None,
-                band_tags=None,
                 geo_metadata=None):
         
         obj = super().__new__(cls, 
                               input_array,
                               label=label,
-                              band_tags=band_tags,
                               geo_metadata=geo_metadata)
         
         
         return obj  
+    
+    def copy(self):
+        return MaskLayer(np.array(self),
+                         label=self.label,
+                         geo_metadata=deepcopy(self.geo_metadata))

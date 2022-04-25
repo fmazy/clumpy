@@ -8,6 +8,9 @@ Created on Thu Aug 26 22:16:44 2021
 import numpy as np
 import pandas as pd
 
+from ..layer import FeatureLayer
+from .._base import State
+
 class FeatureSelector():
     def __init__(self):
         self._fitted = False

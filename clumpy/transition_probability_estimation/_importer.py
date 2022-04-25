@@ -7,7 +7,7 @@ from ..layer import ProbaLayer
 class Importer(TransitionProbabilityEstimator):
     def __init__(self,
                  initial_state,
-                 proba_layer,
+                 proba:ProbaLayer,
                  verbose=0,
                  verbose_heading_level=1,
                  **kwargs):
@@ -16,8 +16,7 @@ class Importer(TransitionProbabilityEstimator):
                          verbose=verbose,
                          verbose_heading_level=verbose_heading_level)
         
-        self.proba_layer = proba_layer
-        self.yielder = self.proba_layer.yield_proba_of_initial_state(initial_state=self.initial_state)
+        self.proba = proba
         
     def fit(self,
             **kwargs):
@@ -31,13 +30,13 @@ class Importer(TransitionProbabilityEstimator):
         
         final_states = []
         
-        for final_state, P in self.yielder:
+        for final_state, P in self.proba.yield_proba():
             P_v__u_Y = np.hstack((P_v__u_Y, P.flat[J][:,None]))
             
             final_states.append(final_state)
         
         if self.initial_state not in final_states:
-            P_v__u_Y = np.hstack((P_v__u_Y, 1-P_v__u_Y.sum(axis=1)))
+            P_v__u_Y = np.hstack((P_v__u_Y, 1-P_v__u_Y.sum(axis=1)[:,None]))
             final_states.append(self.initial_state)
         
         return(P_v__u_Y, final_states)
