@@ -17,8 +17,12 @@ class Calibrator():
                  feature_selector=None,
                  patchers=None,
                  verbose = 0):
+        if initial_state in final_states:
+            final_states.remove(initial_state)
+        
         self.initial_state = initial_state
         self.final_states = final_states
+        
         self.tpe = tpe
         
         if feature_selector is None:
@@ -93,7 +97,7 @@ class Calibrator():
                               mask = mask)
         
         J, V = lul_final.get_V(J=J,
-                               final_states=self.final_states)
+                               final_states=self.final_states + [self.initial_state])
                                                 
         if self.verbose > 0:
             print('feature selecting...')

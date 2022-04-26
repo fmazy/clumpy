@@ -279,8 +279,11 @@ class Land():
         if isinstance(lul, str):
             lul = self.get_lul(lul).copy()
         
+        if lul_origin is None:
+            lul_origin = lul.copy()
+        
         lul, proba_layer = self.allocator.allocate(
-            lul=self.get_lul('start'),
+            lul=lul,
             tm=self.get_transition_matrix(),
             features=self.get_features(),
             lul_origin=lul_origin,

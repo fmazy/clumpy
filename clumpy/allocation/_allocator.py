@@ -72,11 +72,16 @@ class Allocator():
                     P, 
                     final_states):
         
+        
+        P = P.copy()
         final_states = deepcopy(final_states)
         
-        if self.calibrator.initial_state not in final_states:
-            P = np.hstack((P, 1-P.sum(axis=1)[:,None]))
+        if self.calibrator.initial_state in final_states:
+            idx = final_states.index(self.calibrator.initial_state)
+            P[:, idx] = 1-np.delete(P, idx, axis=1).sum(axis=1)
+        else:  
             final_states.append(self.calibrator.initial_state)
+            P = np.hstack((P, 1-P.sum(axis=1)[:,None]))
         
         return(P, final_states)
     
@@ -85,10 +90,12 @@ class Allocator():
                      P,
                      final_states,
                      shuffle=True):
+        
+        P, final_states = self._clean_proba(P=P, 
+                                            final_states=final_states)
+        
         V = generalized_allocation_rejection_test(P, 
                                                   final_states)
-
-        print('V unique ', np.unique(V, return_counts=True))
 
         id_pivot = V != self.calibrator.initial_state
         V_pivot = V[id_pivot]

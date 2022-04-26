@@ -47,6 +47,18 @@ class Patchers(dict):
             patch.fit(J,
                       V,
                       shape)
+    
+    def area_mean(self, 
+                  final_states):
+        
+        a = []
+        for final_state in final_states:
+            if final_state in self.keys():
+                a.append(self[final_state].area_mean)
+            else:
+                a.append(np.nan)
+        
+        return np.array(a)
 
 class Patcher():
     """

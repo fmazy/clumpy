@@ -110,10 +110,7 @@ class Bayes(TransitionProbabilityEstimator):
         self.cde = {}
         
         final_states = list(np.unique(V))
-        
-        if self.initial_state not in final_states:
-            final_states.append(self.initial_states)
-        
+                
         for v in final_states:
             if v != self.initial_state:
                 self.cde[v] = deepcopy(self.de)
@@ -122,9 +119,6 @@ class Bayes(TransitionProbabilityEstimator):
                 idx_v = V == v
                 self.cde[v].fit(X=X[idx_v])
                 
-            else:
-                self.cde[v] = NullEstimator()
-        
         if self.verbose > 0:
             print('TPE fitting done.')
 
@@ -277,10 +271,6 @@ class Bayes(TransitionProbabilityEstimator):
         # avoid nan values
         P_v__Y = np.nan_to_num(P_v__Y)
 
-        # compute the non transited column
-        final_states = self.get_final_states()
-        id_initial_state = final_states.index(self.initial_state)
-        P_v__Y[:, id_initial_state] = 1 - np.delete(P_v__Y, id_initial_state, axis=1).sum(axis=1)
 
         return(P_v__Y)
 

@@ -263,6 +263,9 @@ class Region(dict):
         
         if isinstance(lul, str):
             lul = self.get_lul(lul).copy()
+            
+        if lul_origin is None:
+            lul_origin = lul.copy()
         
         proba_layer = ProbaLayer(np.ndarray(shape=(0,) + lul.shape),
                                  label="",
