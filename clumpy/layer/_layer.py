@@ -14,6 +14,13 @@ logger = logging.getLogger('clumpy')
 
 from ..tools._console import stop_log
 
+structures = {
+    'queen' : np.ones((3, 3)),
+    'rook' : np.array([[0, 1, 0],
+                       [1, 1, 1],
+                       [0, 1, 0]])
+}
+
 class Layer(np.ndarray):
     """
     Layer base element
@@ -37,7 +44,12 @@ class Layer(np.ndarray):
 
     def __str__(self):
         return(self.label)
-        
+    
+    def unravel_index(self, j):
+        return np.unravel_index(j, self.shape)
+    
+    def ravel_index(self, x, y):
+        return np.ravel_multi_index([x, y], self.shape)
     
     def save(self, path):
         self._save(path=path)
@@ -232,9 +244,8 @@ class Layer(np.ndarray):
         """
         
         if type(center) is int or type(center) == np.int64:
-            center = np.unravel_index(center, self.get_data().shape)
+            center = self.unravel_index(center)
             print('c', center)
-        data = self.get_band(band=0)
         
         if type(window) == int:
             window = (window, window)
@@ -247,17 +258,17 @@ class Layer(np.ndarray):
         if x1 < 0:
             x1 = 0
             x2 = window[0]
-        if x2 >= data.shape[0]:
-            x2 = int(data.shape[0])
+        if x2 >= self.shape[0]:
+            x2 = int(self.shape[0])
             x1 = x2 - window[0]
         if y1 < 0:
             y1 = 0
             y2 = window[1]
-        if y2 >= data.shape[1]:
-            y2 = int(data.shape[1])
+        if y2 >= self.shape[1]:
+            y2 = int(self.shape[1])
             y1 = y2 - window[1]
             
-        plt.imshow(data[x1:x2, y1:y2], **kwargs_imshow)
+        plt.imshow(self[x1:x2, y1:y2], **kwargs_imshow)
         plt.yticks([], [])
         plt.xticks([], [])
         
@@ -266,7 +277,58 @@ class Layer(np.ndarray):
         if show:
             plt.show()
         return(plt)
-
+    
+    def get_neighbors_id(self, 
+                         j, 
+                         neighbors_structure='rook'):
+        shape = self.shape
+        
+        if neighbors_structure == 'queen':
+            j_neighbors = j + np.array([- shape[1],     # 0, top
+                                        - shape[1] + 1, # 1, top-right
+                                          1,            # 2, right
+                                          shape[1] + 1, # 3, bottom-right
+                                          shape[1],     # 4, bottom
+                                          shape[1] - 1, # 5, bottom-left
+                                        - 1,            # 6, left
+                                        - shape[1] - 1])# 7, top-left
+            
+            # remove if side pixel
+            id_to_remove = []
+            if (j + 1) % shape[1] == 0: # right side
+                id_to_remove += [1,2,3]
+            if j % shape[1] == 0: # left side
+                id_to_remove += [5,6,7]
+            if j >= shape[0]*shape[1] - shape[1]: # bottom side
+                id_to_remove += [3,4,5]
+            if j < shape[1]: # top side
+                id_to_remove += [0,1,7]
+            
+            j_neighbors = np.delete(j_neighbors, id_to_remove)
+            
+        elif neighbors_structure == 'rook':
+            j_neighbors = j + np.array([- shape[1],     # 0, top
+                                          1,            # 1, right
+                                          shape[1],     # 2, bottom
+                                        - 1])           # 3, left
+            
+            # remove if side pixel
+            id_to_remove = []
+            if (j + 1) % shape[1] == 0: # right side
+                id_to_remove += [1]
+            if j % shape[1] == 0: # left side
+                id_to_remove += [3]
+            if j >= shape[0]*shape[1] - shape[1]: # bottom side
+                id_to_remove += [2]
+            if j < shape[1]: # top side
+                id_to_remove += [0]
+            
+            j_neighbors = np.delete(j_neighbors, id_to_remove)
+            
+        else:
+            print('ERROR, unexpected neighbors_structure')
+        
+        return(j_neighbors)
 
 
 def convert_raster_file(path_in, path_out):

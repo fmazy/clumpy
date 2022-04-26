@@ -220,70 +220,71 @@ class Land():
                 
         return(proba_layer)
 
-    def allocate(self,
-                 J,
-                 P,
-                 final_states,
-                 lul='start',
-                 lul_origin=None,
-                 mask=None):
-        """
-        allocation.
+    # def allocate(self,
+    #              J,
+    #              P,
+    #              final_states,
+    #              lul='start',
+    #              lul_origin=None,
+    #              mask=None):
+    #     """
+    #     allocation.
 
-        Parameters
-        ----------
-        transition_matrix : TransitionMatrix
-            Land transition matrix with only one state in ``tm.palette_u``.
+    #     Parameters
+    #     ----------
+    #     transition_matrix : TransitionMatrix
+    #         Land transition matrix with only one state in ``tm.palette_u``.
 
-        lul : LandUseLayer or ndarray
-            The studied land use layer. If ndarray, the matrix is directly edited (inplace).
+    #     lul : LandUseLayer or ndarray
+    #         The studied land use layer. If ndarray, the matrix is directly edited (inplace).
 
-        lul_origin : LandUseLayer
-            Original land use layer. Usefull in case of regional allocations. If ``None``, the  ``lul`` layer is copied.
+    #     lul_origin : LandUseLayer
+    #         Original land use layer. Usefull in case of regional allocations. If ``None``, the  ``lul`` layer is copied.
 
-        mask : MaskLayer, default = None
-            The region mask layer. If ``None``, the whole map is studied.
+    #     mask : MaskLayer, default = None
+    #         The region mask layer. If ``None``, the whole map is studied.
 
-        distances_to_states : dict(State:ndarray), default={}
-            The distances matrix to key state. Used to improve performance.
+    #     distances_to_states : dict(State:ndarray), default={}
+    #         The distances matrix to key state. Used to improve performance.
 
-        path : str, default=None
-            The path to save result as a tif file.
-            If None, the allocation is only saved within `lul`, if `lul` is a ndarray.
-            Note that if ``path`` is not ``None``, ``lul`` must be LandUseLayer.
+    #     path : str, default=None
+    #         The path to save result as a tif file.
+    #         If None, the allocation is only saved within `lul`, if `lul` is a ndarray.
+    #         Note that if ``path`` is not ``None``, ``lul`` must be LandUseLayer.
 
-        path_prefix_transition_probabilities : str, default=None
-            The path prefix to save transition probabilities.
+    #     path_prefix_transition_probabilities : str, default=None
+    #         The path prefix to save transition probabilities.
 
-        Returns
-        -------
-        lul_allocated : LandUseLayer
-            Only returned if ``path`` is not ``None``. The allocated map as a land use layer.
-        """
+    #     Returns
+    #     -------
+    #     lul_allocated : LandUseLayer
+    #         Only returned if ``path`` is not ``None``. The allocated map as a land use layer.
+    #     """
         
-        if isinstance(lul, str):
-            lul = self.get_lul(lul).copy()
+    #     if isinstance(lul, str):
+    #         lul = self.get_lul(lul).copy()
                 
-        self.allocator.allocate(J=J,
-                                P=P,
-                                final_states=final_states,
-                                lul=lul,
-                                mask=mask,
-                                lul_origin=lul_origin)
+    #     self.allocator.allocate(J=J,
+    #                             P=P,
+    #                             final_states=final_states,
+    #                             lul=lul,
+    #                             mask=mask,
+    #                             lul_origin=lul_origin)
         
-        return(lul)
+    #     return(lul)
     
-    def run(self,
+    def allocate(self,
             lul='start',
             lul_origin=None):
         if isinstance(lul, str):
             lul = self.get_lul(lul).copy()
         
-        lul, proba_layer = self.allocator.run(tm=self.get_transition_matrix(),
-                                    lul=self.get_lul('start'),
-                                    features=self.get_features(),
-                                    lul_origin=lul_origin,
-                                    mask=self.get_mask('allocation'))    
+        lul, proba_layer = self.allocator.allocate(
+            lul=self.get_lul('start'),
+            tm=self.get_transition_matrix(),
+            features=self.get_features(),
+            lul_origin=lul_origin,
+            mask=self.get_mask('allocation'))    
         
         return lul, proba_layer
     

@@ -292,7 +292,9 @@ class TransitionMatrix():
         else:
             return (multisteps_tm)
 
-    def patches(self, patches, inplace=False):
+    def patches(self, 
+                patchers, 
+                inplace=False):
         """
         divide transition matrix by patches mean area. Useful for allocators.
         Only available for land transition matrix.
@@ -313,29 +315,27 @@ class TransitionMatrix():
         # P_v is divided by patch area mean
         # P_v_patches is then largely smaller.
         # one keep P_v to update it after the allocation try.
-
-        self._check_land_transition_matrix()
-
-        # get the unique palette_u state
-        state_u = self.palette_u.states[0]
-        # get the index of state_u in palette_v
-        id_state = self.palette_v.get_id(state_u)
-
-        M_patches = self.M.copy()
-        M_patches[0, id_state] = 1
-        for id_state_v, state_v in enumerate(self.palette_v):
-            if state_v != state_u:
-                if state_v in patches.keys():
-                    M_patches[0, id_state_v] /= patches[state_v].area_mean
-                M_patches[0, id_state] -= M_patches[0, id_state_v]
-
+        
         if inplace:
-            self.M = M_patches
-            return (self)
+            tm = self
         else:
-            return (TransitionMatrix(M=M_patches,
-                                     palette_u=self.palette_u,
-                                     palette_v=self.palette_v))
+            tm = self.copy()
+        
+        for patcher in patchers.values():
+            u = patcher.initial_state
+            v = patcher.final_state
+            
+            if u != v:
+                diff = tm.get(info_u=u, info_v=v) - tm.get(info_u=u, info_v=v) / patcher.area_mean
+                tm.set_value(a=tm.get(info_u=u, info_v=v) - diff,
+                             info_u=u,
+                             info_v=v)
+                # closure condition
+                tm.set_value(a=tm.get(info_u=u, info_v=u) + diff,
+                             info_u=u,
+                             info_v=u)
+        
+        return(tm)
 
     def _full_matrix(self):
         """

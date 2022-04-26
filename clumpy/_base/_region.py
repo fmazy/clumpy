@@ -257,9 +257,9 @@ class Region(dict):
                 
         return(proba_layer)
         
-    def run(self,
-            lul='start',
-            lul_origin=None):
+    def allocate(self,
+                 lul='start',
+                 lul_origin=None):
         
         if isinstance(lul, str):
             lul = self.get_lul(lul).copy()
@@ -270,7 +270,7 @@ class Region(dict):
                                  geo_metadata = deepcopy(lul.geo_metadata))
         
         for land in self.values():
-            lul, proba_layer__land = land.run(lul=lul,
+            lul, proba_layer__land = land.allocate(lul=lul,
                                         lul_origin=lul_origin)
             proba_layer = proba_layer.fusion(proba_layer__land)
         

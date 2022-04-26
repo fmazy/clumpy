@@ -107,7 +107,7 @@ class BootstrapPatcher(Patcher):
             self.areas = self.areas[idx]
             self.eccentricities = self.eccentricities[idx]
         else:
-            return(BootstrapPatch().set(areas=self.areas[idx],
+            return(BootstrapPatcher().set(areas=self.areas[idx],
                                         eccentricities=self.eccentricities[idx]))
         
     def fit(self,
