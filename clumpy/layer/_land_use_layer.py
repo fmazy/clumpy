@@ -74,7 +74,7 @@ class LandUseLayer(Layer):
               J,
               final_states=None):
                 
-        V = self.flat[J]
+        V = np.array(self.flat[J])
                 
         if final_states is not None:
             idx = np.isin(V, final_states)

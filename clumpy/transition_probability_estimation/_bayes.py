@@ -113,14 +113,15 @@ class Bayes(TransitionProbabilityEstimator):
                 
         for v in final_states:
             if v != self.initial_state:
+                if self.verbose > 0:
+                    print(str(self.initial_state)+'->'+str(v))
+                
                 self.cde[v] = deepcopy(self.de)
                 self.cde[v].set_params(bounds = bounds)
                 
                 idx_v = V == v
                 self.cde[v].fit(X=X[idx_v])
                 
-        if self.verbose > 0:
-            print('TPE fitting done.')
 
         return (self)
     
@@ -158,22 +159,25 @@ class Bayes(TransitionProbabilityEstimator):
 
         # P(Y) estimation
         if P_Y is None:
+            if self.verbose > 0:
+                print('P(Z|u) estimation')
             P_Y = self.compute_P_Y(Y=Y)
 
         # P(Y|v) estimation
         if P_Y__v is None:
+            if self.verbose > 0:
+                print('P(Z|u,v) estimation')
             P_Y__v = self.compute_P_Y__v(Y=Y)
 
         # BAYES ADJUSTMENT PROCESS
+        if self.verbose > 0:
+            print('Bayes adjustment')
         P_v__Y = self.bayes_adjustment(P_Y__v=P_Y__v,
                                         P_Y=P_Y,
                                         P_v=P_v)
         
         final_states = self.get_final_states()
-        
-        if self.verbose > 0:
-            print('TPE computing done.')
-        
+                
         ret = [P_v__Y, final_states]
         
         if return_P_Y:
@@ -187,8 +191,7 @@ class Bayes(TransitionProbabilityEstimator):
                           P_Y__v,
                           P_Y,
                           P_v):
-
-
+                
         if self.log_computations == False:
             # if no log computation
             idx_not_null = P_Y[:,0] > 0
@@ -279,17 +282,13 @@ class Bayes(TransitionProbabilityEstimator):
         # self.de.set_params(forbid_null_value=True)
 
         if self.verbose > 0:
-            print('Density estimator fitting...')
+            print('Density estimator fitting')
         self.de.fit(Y)
-        if self.verbose > 0:
-            print('Density estimator fitting done.')
 
         # P(Y) estimation
         if self.verbose > 0:
-            print('Density estimator predict...')
+            print('Density estimator predict')
         P_Y = self.de.predict(Y)[:, None]
-        if self.verbose > 0:
-            print('Density estimator predict done.')
 
         return (P_Y)
 
@@ -303,7 +302,5 @@ class Bayes(TransitionProbabilityEstimator):
         # estimate P(Y|u,v). Columns with no estimators are null columns.
         P_Y__v = np.vstack([cde.predict(Y) for cde in self.cde.values()]).T
 
-        if self.verbose > 0:
-            print('Conditional density estimators predict done.')
 
         return (P_Y__v)

@@ -132,8 +132,6 @@ class Region(dict):
         for state, land in self.items():
             land.fit()
 
-        if self.verbose > 0:
-            print('Region ' + self.label + ' fitting done.\n')
 
         return (self)
 
@@ -243,6 +241,9 @@ class Region(dict):
     def transition_probabilities_layer(self,
                                        effective_transitions_only=True):
         
+        if self.verbose > 0:
+            print(title_heading(self.verbose_heading_level) + 'Region ' + self.label + ' TPE\n')
+        
         lul = self.get_lul('start')
         
         proba_layer = ProbaLayer(np.ndarray(shape=(0,) + lul.shape),
@@ -260,6 +261,9 @@ class Region(dict):
     def allocate(self,
                  lul='start',
                  lul_origin=None):
+        
+        if self.verbose > 0:
+            print(title_heading(self.verbose_heading_level) + 'Region ' + self.label + ' Allocation\n')
         
         if isinstance(lul, str):
             lul = self.get_lul(lul).copy()

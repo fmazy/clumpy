@@ -252,6 +252,7 @@ class TransitionMatrix():
     
     def get_final_palette(self, info_u):
         p = self.get_P_v(info_u)[0]
+        p[self.palette_v.get_list_of_values().index(int(info_u))] = 0
         id_possible_v = np.arange(p.size)[p > 0]
         final_palette = Palette(states=[self.palette_v.states[id_v] for id_v in id_possible_v])
         

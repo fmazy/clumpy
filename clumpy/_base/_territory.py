@@ -108,9 +108,6 @@ class Territory(dict):
         for region in self.values():
             region.fit()
 
-        if self.verbose > 0:
-            print('Territory fitting done.\n')
-
         return self
 
     # def compute_transition_matrix(self,
@@ -186,6 +183,9 @@ class Territory(dict):
     def transition_probabilities_layer(self,
                                        effective_transitions_only=True):
         
+        if self.verbose > 0:
+            print(title_heading(self.verbose_heading_level) + 'Territory TPE\n')
+        
         lul = self.get_lul('start')
         
         proba_layer = ProbaLayer(np.ndarray(shape=(0,) + lul.shape),
@@ -195,7 +195,6 @@ class Territory(dict):
         
         for region_label, region in self.items():
             proba_layer__region = region.transition_probabilities_layer(
-                lul=lul,
                 effective_transitions_only=effective_transitions_only)
             proba_layer = proba_layer.fusion(proba_layer__region)
                 
@@ -204,6 +203,9 @@ class Territory(dict):
     def allocate(self,
                  lul='start',
                  lul_origin=None):
+        
+        if self.verbose > 0:
+            print(title_heading(self.verbose_heading_level) + 'Territory Allocation\n')
         
         if isinstance(lul, str):
             lul = self.get_lul(lul).copy()

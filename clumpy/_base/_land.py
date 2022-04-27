@@ -187,17 +187,18 @@ class Land():
                features=self.get_features(),
                mask=self.get_mask('calibration'))
                         
-        if self.verbose > 0:
-            print('Land ' + str(self.state) + ' fitting done.\n')
 
         return self
     
     def transition_probabilities(self, 
                                  effective_transitions_only=True):        
-            
+        
+        if self.verbose > 0:
+            print(title_heading(self.verbose_heading_level) + 'Land ' + str(self.state) + ' TPE\n')
+        
         J, P_v__u_Y, final_states = self.calibrator.transition_probabilities(
             lul=self.get_lul('start'),
-            tm=self.get_transition_matrix().extract(self.state),
+            tm=self.get_transition_matrix(),
             features=self.get_features(),
             mask = self.get_mask('allocation'),
             effective_transitions_only=effective_transitions_only)
@@ -274,8 +275,12 @@ class Land():
     #     return(lul)
     
     def allocate(self,
-            lul='start',
-            lul_origin=None):
+                 lul='start',
+                 lul_origin=None):
+        
+        if self.verbose > 0:
+            print(title_heading(self.verbose_heading_level) + 'Land ' + str(self.state) + ' Allocation\n')
+        
         if isinstance(lul, str):
             lul = self.get_lul(lul).copy()
         

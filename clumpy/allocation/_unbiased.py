@@ -8,7 +8,7 @@ from ._gart import generalized_allocation_rejection_test
 from ._patcher import _weighted_neighbors_patcher
 from ..layer import LandUseLayer, MaskLayer
 from ..layer._proba_layer import create_proba_layer
-
+from ..tools._console import title_heading
 
 class Unbiased(Allocator):
     """
@@ -52,6 +52,8 @@ class Unbiased(Allocator):
         """
         allocation. lul_data and lul_origin_data are ndarrays only.
         """
+        if self.verbose > 0:
+            print(title_heading(self.verbose_heading_level) + 'Unbiased Allocation')
         
         if lul_origin is None:
             lul_origin = lul.copy()

@@ -90,6 +90,8 @@ class Calibrator():
             mask=None):
         """
         """
+        if len(self.final_states) == 0 or self.final_states == [self.initial_state]:
+            return self
         
         self.features = features
         
@@ -181,11 +183,12 @@ class Calibrator():
             The features values.
         """
         
+        if self.verbose>0:
+            print('Calibrator transition probabilities estimation')
+        
         if features is None:
             features = self.features
-        
-        tm = tm.extract(self.initial_state)
-        
+                
         J = lul.get_J(state = self.initial_state,
                       mask = mask)
                 
@@ -196,7 +199,7 @@ class Calibrator():
         Y = self.feature_selector.transform(Y)
         
         # TRANSITION PROBABILITY ESTIMATION
-        P_v = tm.M[0,:]
+        P_v = np.array([tm.get(self.initial_state, final_state) for final_state in self.final_states])
         
         P_v__u_Y, final_states = self.tpe.transition_probabilities(
             J=J,
