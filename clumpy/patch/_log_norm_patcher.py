@@ -58,6 +58,4 @@ class LogNormPatcher(Patcher):
             
         areas[areas < 1] = 1
         
-        print('!',areas[0])
-
         return (areas, eccentricities)

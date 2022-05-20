@@ -126,7 +126,8 @@ class Unbiased(Allocator):
                 s, J_used_i = self.calibrator.patchers[final_state].allocate(
                     lul=lul,
                     lul_origin=lul_origin,
-                    j=J_pivot[i])
+                    j=J_pivot[i],
+                    proba_layer=proba_layer.get_proba(final_state))
                 
                 if s > 0: # allocation succeed
                     P_v[final_states_id[final_state]] -= s

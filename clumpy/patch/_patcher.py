@@ -182,7 +182,8 @@ class Patcher():
     def allocate(self,
                  lul,
                  lul_origin,
-                 j):
+                 j,
+                 proba_layer):
         
         J_allocated = [j]
         
@@ -266,10 +267,10 @@ class Patcher():
                     continue
             
             # on attribue une probabilité à chaque voisin
-            if self.equi_neighbors_proba or True:
+            if self.equi_neighbors_proba:
                 P = np.ones(j_neighbors.size)
-            # else:
-                # P = map_P_vf__vi_z.flat[j_neighbors]
+            else:
+                P = proba_layer.flat[j_neighbors]
             
             # si les probas sont nulles, on les met à 1            
             if np.isclose(P.sum(), 0):
@@ -296,6 +297,8 @@ class Patcher():
                                                loc=eccentricity, 
                                                scale=eccentricity * 0.1)
             
+            eccentricity_coef[eccentricity_coef<0] = 0.0
+            
             if eccentricity_coef.sum() <= 0:
                 eccentricity_coef.fill(1)
             
@@ -313,7 +316,8 @@ class Patcher():
             # security to avoid unexpectec nan values
             P = np.nan_to_num(P)
             
-            J_allocated.append(np.random.choice(j_neighbors, p=P))
+            # J_allocated.append(np.random.choice(j_neighbors, p=P))
+            J_allocated.append(j_neighbors[np.argmin(e)])
         
         if self.avoid_aggregation:
             # on vérifie que le dernier pixel ajouté n'a pas des voisins qui font échouer la tache
