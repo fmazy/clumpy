@@ -42,11 +42,13 @@ class LandUseLayer(Layer):
     def __new__(cls, 
                 input_array,
                 label=None,
+                dtype=None,
                 geo_metadata=None):
         
         obj = super().__new__(cls, 
                               input_array,
                               label=label,
+                              dtype=dtype,
                               geo_metadata=geo_metadata)
         
         obj.distances = {}

@@ -29,11 +29,18 @@ class Layer(np.ndarray):
     def __new__(cls, 
                 input_array,
                 label=None,
+                dtype=None,
                 geo_metadata=None):
-        obj = np.asarray(input_array).view(cls)
+        
+        obj = np.asarray(input_array, dtype=dtype).view(cls)
         
         obj.label = label
         obj.geo_metadata = geo_metadata
+        
+        if obj.geo_metadata is None:
+            obj.geo_metadata = {'driver': 'GTiff',
+             'crs': None,
+             'transform': rasterio.Affine(1.0, 0.0, 0.0, 0.0, 1.0, 0.0)}
         
         return obj      
     

@@ -129,7 +129,10 @@ class Land():
     
     def get_mask(self, kind):
         if kind not in self.mask.keys():
-            return(self.region.get_mask(kind))
+            if self.region is None:
+                return(None)
+            else:
+                return(self.region.get_mask(kind))
         else:
             return(self.mask[kind])
     

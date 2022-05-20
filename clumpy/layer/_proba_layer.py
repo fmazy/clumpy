@@ -10,11 +10,13 @@ class ProbaLayer(Layer):
                 input_array,
                 final_states,
                 label=None,
+                dtype=None,
                 geo_metadata=None):
         
         obj = super().__new__(cls, 
                               input_array,
                               label=label,
+                              dtype=dtype,
                               geo_metadata=geo_metadata)
         
         obj.final_states = final_states
