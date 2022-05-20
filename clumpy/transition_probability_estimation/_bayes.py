@@ -39,6 +39,7 @@ class Bayes(TransitionProbabilityEstimator):
                  density_estimator=None,
                  n_corrections_max=1000,
                  log_computations=False,
+                 P_Y__v_layer=None,
                  verbose=0,
                  verbose_heading_level=1,
                  **kwargs):
@@ -51,6 +52,7 @@ class Bayes(TransitionProbabilityEstimator):
         self.log_computations = log_computations
         
         self.de = density_estimator
+        self.P_Y__v_layer = P_Y__v_layer
     
     def __repr__(self):
         return ('Bayes')
@@ -101,34 +103,36 @@ class Bayes(TransitionProbabilityEstimator):
         if self.verbose > 0:
             print(title_heading(self.verbose_heading_level) + 'TPE fitting')
             print('Conditional density estimators fitting :')
-
-        self._palette_fitted_states = Palette()
         
         # set de params
         self.de.set_params(bounds = bounds)
         
-        self.cde = {}
-        
-        final_states = list(np.unique(V))
+        if self.P_Y__v_layer is None:
+            self.cde = {}
+            
+            final_states = list(np.unique(V))
+                    
+            for v in final_states:
+                if v != self.initial_state:
+                    if self.verbose > 0:
+                        print(str(self.initial_state)+'->'+str(v))
+                    
+                    self.cde[v] = deepcopy(self.de)
+                    self.cde[v].set_params(bounds = bounds)
+                    
+                    idx_v = V == v
+                    self.cde[v].fit(X=X[idx_v])
                 
-        for v in final_states:
-            if v != self.initial_state:
-                if self.verbose > 0:
-                    print(str(self.initial_state)+'->'+str(v))
-                
-                self.cde[v] = deepcopy(self.de)
-                self.cde[v].set_params(bounds = bounds)
-                
-                idx_v = V == v
-                self.cde[v].fit(X=X[idx_v])
-                
-
         return (self)
     
     def get_final_states(self):
-        return(list(self.cde.keys()))
+        if self.P_Y__v_layer is None:
+            return list(self.cde.keys())
+        else:
+            return self.P_Y__v_layer.final_states
     
     def transition_probabilities(self,
+                                 J,
                                  Y,
                                  P_v,
                                  P_Y = None,
@@ -167,7 +171,7 @@ class Bayes(TransitionProbabilityEstimator):
         if P_Y__v is None:
             if self.verbose > 0:
                 print('P(Z|u,v) estimation')
-            P_Y__v = self.compute_P_Y__v(Y=Y)
+            P_Y__v = self.compute_P_Y__v(J=J, Y=Y)
 
         # BAYES ADJUSTMENT PROCESS
         if self.verbose > 0:
@@ -292,7 +296,7 @@ class Bayes(TransitionProbabilityEstimator):
 
         return (P_Y)
 
-    def compute_P_Y__v(self, Y):
+    def compute_P_Y__v(self, J, Y):
 
         # first, create a list of estimators according to palette_v order
         # if no estimator is informed, the NullEstimator is invoked.
@@ -300,7 +304,10 @@ class Bayes(TransitionProbabilityEstimator):
             print('Conditionnal density estimators predict...')
         
         # estimate P(Y|u,v). Columns with no estimators are null columns.
-        P_Y__v = np.vstack([cde.predict(Y) for cde in self.cde.values()]).T
+        if self.P_Y__v_layer is None:
+            P_Y__v = np.vstack([cde.predict(Y) for cde in self.cde.values()]).T
+        else:
+            P_Y__v = self.P_Y__v_layer.get_flat_proba(J=J)
 
 
         return (P_Y__v)

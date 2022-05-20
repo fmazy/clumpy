@@ -185,15 +185,15 @@ class Patcher():
                  j):
         
         J_allocated = [j]
-        x_allocated, y_allocated = lul.unravel_index(J_allocated)
         
         # if the kernel pixel is already transited or if the surface is negative
         if lul.flat[j] != self.initial_state:
             return 0, J_allocated
         
         area, eccentricity = self.sample(n=1)
-        
         while len(J_allocated) < area:
+            x_allocated, y_allocated = lul.unravel_index(J_allocated)
+            
             # construction de la fenêtre de voisins
             box_shape = [x_allocated.max()-x_allocated.min()+3,
                           y_allocated.max()-y_allocated.min()+3]
@@ -328,6 +328,7 @@ class Patcher():
                 
         # on peut procéder à l'allocation réelle
         lul.flat[J_allocated] = self.final_state
+        
         return(len(J_allocated), J_allocated)
 
 def _convolve(A,B):

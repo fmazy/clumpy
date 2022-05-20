@@ -60,6 +60,9 @@ class ProbaLayer(Layer):
         
         self._save(path=path,
                    band_tags=band_tags)
+    
+    def get_flat_proba(self, J):
+        return np.vstack([P.flat[J] for P in self]).T
 
 def create_proba_layer(J,
                        P,
