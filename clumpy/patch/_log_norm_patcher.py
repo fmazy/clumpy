@@ -14,7 +14,7 @@ class LogNormPatcher(Patcher):
                  eccentricity=0.5,
                  neighbors_structure='rook',
                  avoid_aggregation=True,
-                 nb_of_neighbors_to_fill=3,
+                 nb_of_missing_to_fill=1,
                  proceed_even_if_no_probability=True,
                  n_tries_target_sample=1000,
                  equi_neighbors_proba=False):
@@ -22,7 +22,7 @@ class LogNormPatcher(Patcher):
                          final_state = final_state,
                          neighbors_structure = neighbors_structure,
                          avoid_aggregation = avoid_aggregation,
-                         nb_of_neighbors_to_fill = nb_of_neighbors_to_fill,
+                         nb_of_missing_to_fill = nb_of_missing_to_fill,
                          proceed_even_if_no_probability = proceed_even_if_no_probability,
                          n_tries_target_sample=n_tries_target_sample,
                          equi_neighbors_proba=equi_neighbors_proba)

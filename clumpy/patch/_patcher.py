@@ -90,7 +90,7 @@ class Patcher():
                  final_state,
                  neighbors_structure = 'rook',
                  avoid_aggregation = True,
-                 nb_of_neighbors_to_fill = 3,
+                 nb_of_missing_to_fill = 1,
                  proceed_even_if_no_probability = True,
                  n_tries_target_sample = 10**3,
                  equi_neighbors_proba = False):
@@ -98,7 +98,7 @@ class Patcher():
         self.final_state = final_state
         self.neighbors_structure = neighbors_structure
         self.avoid_aggregation = avoid_aggregation
-        self.nb_of_neighbors_to_fill = nb_of_neighbors_to_fill
+        self.nb_of_missing_to_fill = nb_of_missing_to_fill
         self.proceed_even_if_no_probability = proceed_even_if_no_probability
         self.n_tries_target_sample = n_tries_target_sample
         self.equi_neighbors_proba = equi_neighbors_proba
@@ -185,6 +185,8 @@ class Patcher():
                  j,
                  proba_layer):
         
+        n_neighbors_to_fill = structures[self.neighbors_structure].sum() - 1 - self.nb_of_missing_to_fill
+        
         J_allocated = [j]
         
         # if the kernel pixel is already transited or if the surface is negative
@@ -259,12 +261,11 @@ class Patcher():
             x_neighbors = x_neighbors[id_j_neighbors_to_keep]
             y_neighbors = y_neighbors[id_j_neighbors_to_keep]
             
-            # si on veut remplir les cuvettes
-            if self.nb_of_neighbors_to_fill > 0:
-                j_hollows = j_neighbors[b_neighbors >= self.nb_of_neighbors_to_fill]
-                if j_hollows.size > 0:
-                    J_allocated.append(np.random.choice(j_hollows))
-                    continue
+            # on remplit les cuvettes le cas échéant
+            j_hollows = j_neighbors[b_neighbors >= n_neighbors_to_fill]
+            if j_hollows.size > 0:
+                J_allocated.append(np.random.choice(j_hollows))
+                continue
             
             # on attribue une probabilité à chaque voisin
             if self.equi_neighbors_proba:
@@ -292,32 +293,12 @@ class Patcher():
             
             # e = 1 - minor axis length / major axis length
             e = 1-np.sqrt((mu_20+mu_02 - np.sqrt(delta))/(mu_20+mu_02 + np.sqrt(delta)))
-                        
-            eccentricity_coef = stats.norm.pdf(e, 
-                                               loc=eccentricity, 
-                                               scale=eccentricity * 0.1)
             
-            eccentricity_coef[eccentricity_coef<0] = 0.0
+            de = np.abs(eccentricity - e)
             
-            if eccentricity_coef.sum() <= 0:
-                eccentricity_coef.fill(1)
+            P /= de
             
-            P *= eccentricity_coef
-            
-            if np.isclose(P.sum(), 0):
-                if self.proceed_even_if_no_probability:
-                    P.fill(1)
-                else:
-                    return(0, J_allocated)
-            
-            # sum(P) = 1
-            P /= P.sum()
-            
-            # security to avoid unexpectec nan values
-            P = np.nan_to_num(P)
-            
-            # J_allocated.append(np.random.choice(j_neighbors, p=P))
-            J_allocated.append(j_neighbors[np.argmin(e)])
+            J_allocated.append(j_neighbors[np.argmax(P)])
         
         if self.avoid_aggregation:
             # on vérifie que le dernier pixel ajouté n'a pas des voisins qui font échouer la tache
