@@ -42,7 +42,7 @@ class Unbiased(Allocator):
         super().__init__(calibrator=calibrator,
                          verbose=verbose,
                          verbose_heading_level=verbose_heading_level)
-
+    
     def allocate(self,
                  lul:LandUseLayer,
                  tm:TransitionMatrix,

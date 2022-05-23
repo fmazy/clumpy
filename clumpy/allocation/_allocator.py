@@ -12,6 +12,8 @@ from ..tools._path import path_split
 from ._gart import generalized_allocation_rejection_test
 from copy import deepcopy
 
+from scipy.stats import norm
+
 class Allocator():
     """
     Allocator
@@ -67,7 +69,47 @@ class Allocator():
     #                   mask=mask)
         
     #     return(lul, proba_layer)
+    
+    def nb_monte_carlo(self,
+                       lul:LandUseLayer,
+                       tm:TransitionMatrix,
+                       features=None,
+                       mask:MaskLayer=None,
+                       alpha = 0.05,
+                       epsilon = 0.001):
         
+        if features is None:
+            features = self.calibrator.features
+                
+        initial_state = self.calibrator.initial_state
+        final_states = self.calibrator.tpe.get_final_states()
+        
+        final_states_id = {final_state:final_states.index(final_state) for final_state in final_states}
+        P_v = np.array([tm.get(int(initial_state),
+                               int(final_state)) for final_state in final_states])
+        
+        J = lul_origin.get_J(state=initial_state,
+                      mask=mask)
+        X = lul_origin.get_X(J=J, 
+                             features=features)
+        
+        X = self.calibrator.feature_selector.transform(X)
+        
+        P, final_states, P_Y = self.calibrator.tpe.transition_probabilities(
+            J=J,
+            Y=X,
+            P_v=P_v,
+            return_P_Y=True,
+            return_P_Y__v=False)
+        
+        p_alpha = norm.ppf(1-alpha/2)
+        
+        # remove initial state
+        if initial_state in final_states:
+            P = np.delete(P, list(final_states).index(initial_state), axis=1)
+        
+        return np.max(p_alpha**2/epsilon**2 * P * (1-P) / (P_Y * P.shape[0]))
+    
     def _clean_proba(self, 
                     P, 
                     final_states):
