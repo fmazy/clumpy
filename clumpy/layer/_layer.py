@@ -114,7 +114,10 @@ class Layer(np.ndarray):
         create_directories(folder_path)
         
         if not rdc_only:
-            os.system('rio convert '+self.path+' '+path+' --overwrite')
+            self.save(path='.temp.tif')
+            
+            os.system('rio convert .temp.tif '+path+' --overwrite')
+            os.system('rm .temp.tif')
         
         
         if file_ext == 'rst':
@@ -134,10 +137,10 @@ class Layer(np.ndarray):
                 rdc_file += "max.Y       : "+str(self.geo_metadata['transform'][5])+"\n"
                 rdc_file += "pos'n error : unspecified\n"
                 rdc_file += "resolution  : "+str(np.abs(self.geo_metadata['transform'][0]))+"\n"
-                rdc_file += "min.value   : "+str(self.min())+"\n"
-                rdc_file += "max.value   : "+str(self.max())+"\n"
-                rdc_file += "display min : "+str(self.min())+"\n"
-                rdc_file += "display max : "+str(self.max())+"\n"
+                rdc_file += "min.value   : "+str(float(self.min()))+"\n"
+                rdc_file += "max.value   : "+str(float(self.max()))+"\n"
+                rdc_file += "display min : "+str(float(self.min()))+"\n"
+                rdc_file += "display max : "+str(float(self.max()))+"\n"
                 rdc_file += "value units : unspecified\n"
                 rdc_file += "value error : unspecified\n"
                 rdc_file += "flag value  : none\n"
