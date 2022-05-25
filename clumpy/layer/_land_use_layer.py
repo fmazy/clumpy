@@ -134,7 +134,8 @@ class LandUseLayer(Layer):
                 window,
                 palette,
                 show=True,
-                colorbar=True):
+                colorbar=True,
+                colorbar_shrink=1.0):
         """
         Display the land use cover layer through python console with matplotlib.
 
@@ -174,7 +175,7 @@ class LandUseLayer(Layer):
                         norm=norm)
 
         if colorbar:
-            cb = plt.colorbar()
+            cb = plt.colorbar(shrink=colorbar_shrink)
             cb.set_ticks(values)
             cb.set_ticklabels(labels)
 
