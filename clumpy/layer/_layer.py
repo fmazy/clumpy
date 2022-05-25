@@ -101,7 +101,7 @@ class Layer(np.ndarray):
                     for band_i, tags in enumerate(band_tags):
                         dst.update_tags(band_i+1, **tags)
 
-    def export(self, path, plane=False, rdc_only=False):
+    def export(self, path, plane=False, rdc_only=False, palette=None):
         """Export the layer according to the file extension. See GDAL for available extenstions.
         For floating rst, the data should be np.float32.
         Parameters
@@ -124,28 +124,52 @@ class Layer(np.ndarray):
             if not plane:
                 rdc_file  = "file format : Idrisi Raster A.1\n"
                 rdc_file += "file title  : \n"
-                rdc_file += "data type   : byte\n"
+                if self.dtype in [np.int8, np.int16, np.int32, np.int64]:
+                    rdc_file += "data type   : byte\n"
+                else:
+                    rdc_file += "data type   : real\n"
                 rdc_file += "file type   : binary\n"
                 rdc_file += "columns     : "+str(self.shape[1])+"\n"
                 rdc_file += "rows        : "+str(self.shape[0])+"\n"
-                rdc_file += "ref.system  : spc83la3\n"
+                rdc_file += "ref.system  : plane\n"
                 rdc_file += "ref.units   : m\n"
                 rdc_file += "unit dist.  : 1\n"
                 rdc_file += "min.X       : "+str(self.geo_metadata['transform'][2])+"\n"
                 rdc_file += "max.X       : "+str(self.geo_metadata['transform'][2] + self.geo_metadata['transform'][0] * self.shape[1])+"\n"
-                rdc_file += "min.Y       : "+str(self.geo_metadata['transform'][5] + self.geo_metadata['transform'][4] * self.shape[0])+"\n"
-                rdc_file += "max.Y       : "+str(self.geo_metadata['transform'][5])+"\n"
-                rdc_file += "pos'n error : unspecified\n"
+                rdc_file += "min.Y       : "+str(self.geo_metadata['transform'][5])+"\n"
+                rdc_file += "max.Y       : "+str(self.geo_metadata['transform'][5] + self.geo_metadata['transform'][4] * self.shape[0])+"\n"
+                rdc_file += "pos'n error : unknown\n"
                 rdc_file += "resolution  : "+str(np.abs(self.geo_metadata['transform'][0]))+"\n"
-                rdc_file += "min.value   : "+str(float(self.min()))+"\n"
-                rdc_file += "max.value   : "+str(float(self.max()))+"\n"
-                rdc_file += "display min : "+str(float(self.min()))+"\n"
-                rdc_file += "display max : "+str(float(self.max()))+"\n"
+                if self.dtype in [np.int8, np.int16, np.int32, np.int64]:
+                    rdc_file += "min.value   : "+str(int(self.min()))+"\n"
+                    rdc_file += "max.value   : "+str(int(self.max()))+"\n"
+                    rdc_file += "display min : "+str(int(self.min()))+"\n"
+                    rdc_file += "display max : "+str(int(self.max()))+"\n"
+                else:
+                    rdc_file += "min.value   : "+str(float(self.min()))+"\n"
+                    rdc_file += "max.value   : "+str(float(self.max()))+"\n"
+                    rdc_file += "display min : "+str(float(self.min()))+"\n"
+                    rdc_file += "display max : "+str(float(self.max()))+"\n"
                 rdc_file += "value units : unspecified\n"
-                rdc_file += "value error : unspecified\n"
+                rdc_file += "value error : unkown\n"
                 rdc_file += "flag value  : none\n"
                 rdc_file += "flag def 'n : none\n"
-                rdc_file += "legend cats : 0\n"
+                if self.dtype in [np.int8, np.int16, np.int32, np.int64]:
+                    list_v = list(np.unique(self))
+                    rdc_file += "legend cats : "+str(len(list_v))+"\n"
+                    for v in list_v:
+                        if palette is not None:
+                            label = palette.get(v).label
+                        else:
+                            label = "s"+str(v)
+                        len_str_v = len(str(v))
+                        code_txt = "code"
+                        for i in range(7-len_str_v):
+                            code_txt += " "
+                        code_txt += str(v)
+                        rdc_file += code_txt + " : " + str(label) + "\n"
+                else:
+                    rdc_file += "legend cats : 0\n"
                 rdc_file += "lineage     : \n"
                 rdc_file += "comment     :\n"
             
