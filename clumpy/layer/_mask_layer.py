@@ -2,6 +2,7 @@
 
 from copy import deepcopy
 
+import numpy as np
 from ._layer import Layer
 
 class MaskLayer(Layer):
@@ -28,7 +29,7 @@ class MaskLayer(Layer):
     def __new__(cls, 
                 input_array,
                 label=None,
-                dtype=None,
+                dtype=np.int8,
                 geo_metadata=None):
         
         obj = super().__new__(cls, 

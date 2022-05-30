@@ -42,7 +42,7 @@ class LandUseLayer(Layer):
     def __new__(cls, 
                 input_array,
                 label=None,
-                dtype=None,
+                dtype=np.int8,
                 geo_metadata=None):
         
         obj = super().__new__(cls, 

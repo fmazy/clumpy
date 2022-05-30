@@ -3,6 +3,7 @@
 from copy import deepcopy
 
 from ._layer import Layer
+import numpy as np 
 
 class FeatureLayer(Layer):
     """Define a feature layer.
@@ -53,6 +54,6 @@ class FeatureLayer(Layer):
     
     def copy(self):
         return FeatureLayer(np.array(self),
-                            label=self.label,
+                            label=None,
                             geo_metadata=deepcopy(self.geo_metadata),
                             bounded=deepcopy(self.bounded))    
