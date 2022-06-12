@@ -4,7 +4,7 @@ save_data_on_exit = True
 save_history = True
 save_non_project_files = False
 project_type = empty-project-type
-recent_files = ['../clumpy-cases/esnet/sud_gresivaudan/variable_selection/variable_selection_article.py', '../ekde/ekde/whitening_transformer.py']
+recent_files = ['../clumpy-cases/esnet/sud_gresivaudan/variable_selection/variable_selection_article.py', 'clumpy/feature_selection/_cramer_mrmr.py', 'clumpy/feature_selection/_feature_selector.py', 'clumpy/feature_selection/__init__.py']
 
 [main]
 version = 0.2.0
