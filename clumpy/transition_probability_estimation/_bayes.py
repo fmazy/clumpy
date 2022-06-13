@@ -38,6 +38,7 @@ class Bayes(TransitionProbabilityEstimator):
                  initial_state,
                  density_estimator=None,
                  n_corrections_max=1000,
+                 n_fit_max=10**5,
                  log_computations=False,
                  P_Y__v_layer=None,
                  verbose=0,
@@ -49,6 +50,7 @@ class Bayes(TransitionProbabilityEstimator):
                          verbose_heading_level=verbose_heading_level)
         
         self.n_corrections_max = n_corrections_max
+        self.n_fit_max = n_fit_max
         self.log_computations = log_computations
         
         self.de = density_estimator
@@ -121,7 +123,15 @@ class Bayes(TransitionProbabilityEstimator):
                     self.cde[v].set_params(bounds = bounds)
                     
                     idx_v = V == v
-                    self.cde[v].fit(X=X[idx_v])
+                    
+                    X_fit = X[idx_v]
+                    
+                    if X_fit.shape[0] > self.n_fit_max:
+                        X_fit = X_fit[np.random.choice(a=X_fit.shape[0], 
+                                                       size=self.n_fit_max,
+                                                       replace=False)]
+                                        
+                    self.cde[v].fit(X=X_fit)
                 
         return (self)
     
@@ -287,7 +297,15 @@ class Bayes(TransitionProbabilityEstimator):
 
         if self.verbose > 0:
             print('Density estimator fitting')
-        self.de.fit(Y)
+        
+        Y_fit = Y
+        
+        if Y_fit.shape[0] > self.n_fit_max:
+            Y_fit = Y_fit[np.random.choice(a=Y_fit.shape[0], 
+                                           size=self.n_fit_max,
+                                           replace=False)]
+        
+        self.de.fit(Y_fit)
 
         # P(Y) estimation
         if self.verbose > 0:

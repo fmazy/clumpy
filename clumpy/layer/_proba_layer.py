@@ -70,7 +70,7 @@ def create_proba_layer(J,
                        shape,
                        geo_metadata=None):
     M = np.zeros((len(final_states),) + shape)
-    
+    print(M.shape)
     for i, final_state in enumerate(final_states):
         M[i].flat[J] = P[:, i]
     

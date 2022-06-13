@@ -22,21 +22,22 @@ class Importer(TransitionProbabilityEstimator):
             **kwargs):
         
         return self
-        
+    
     def transition_probabilities(self, 
                                  J, 
                                  **kwargs):
         P_v__u_Y = np.array([]).reshape((J.size, 0))
         
-        final_states = []
-        
-        for final_state, P in self.proba.yield_proba():
+        final_states = list(self.get_final_states())
+        for i, final_state in enumerate(final_states):
+            P = self.proba[i,:,:]
             P_v__u_Y = np.hstack((P_v__u_Y, P.flat[J][:,None]))
             
-            final_states.append(final_state)
-        
         if self.initial_state not in final_states:
             P_v__u_Y = np.hstack((P_v__u_Y, 1-P_v__u_Y.sum(axis=1)[:,None]))
             final_states.append(self.initial_state)
         
         return(P_v__u_Y, final_states)
+    
+    def get_final_states(self):
+        return self.proba.final_states

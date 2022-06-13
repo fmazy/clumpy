@@ -17,7 +17,8 @@ class CramerMRMR(FeatureSelector):
                  epsilon=0.1,
                  alpha=0.9,
                  q=51,
-                 std_step=0.05):
+                 std_step=0.05,
+                 ddx=None):
         
         self.initial_state = initial_state
         self.V_gof_min = V_gof_min
@@ -26,6 +27,7 @@ class CramerMRMR(FeatureSelector):
         self.alpha = alpha
         self.q = q
         self.std_step = std_step
+        self.ddx = ddx
         
         super().__init__()
     
@@ -76,7 +78,6 @@ class CramerMRMR(FeatureSelector):
         
         df_Z = df_Z.merge(df, how='left', on=['g'+str(k) for k in range(d)])
         df_Z['selected'].fillna(False,inplace=True)
-        
         return(df_Z['selected'].values)
     
     def compute_selected(self, Z, id_v):
@@ -91,9 +92,11 @@ class CramerMRMR(FeatureSelector):
             for k2 in range(k1+1):
                 # print('(k1,k2)', (k1,k2))
                 if k1 == k2:
-                    selected[id_v] = np.all((selected[id_v],self.select(Z[:,[k1]][id_v])), axis=0)
+                    selected[id_v] = np.all((selected[id_v], self.select(Z[:,[k1]][id_v])), axis=0)
                 else:
                     selected[id_v] = np.all((selected[id_v],self.select(Z[:,[k1,k2]][id_v])), axis=0)
+                
+                # print(k1,k2,selected[id_v].sum())
         print('% of selected pixels', selected.mean())
         return(selected)
     
@@ -113,6 +116,9 @@ class CramerMRMR(FeatureSelector):
         # print('>', G_df.n.min())
         
         # test1 = G_df.index.size >= 10
+        print(G_df)
+        print('>>', G_df.n.min())
+        # print(G_df.n.min(), n_prime / (1 + n_prime * self.epsilon**2))
         test2 = G_df.n.min() >= 5
         test3 = G_df.n.min() >= n_prime / (1 + n_prime * self.epsilon**2)
         # print((test1, test2, test3))
@@ -134,6 +140,7 @@ class CramerMRMR(FeatureSelector):
         while keep_while:
             sys.stdout.write('\033[2K\033[1G')
             print(ddx, end="\r")
+            # print(ddx)
             
             dx = Z_std*ddx
             bins = [np.arange(z_min[k], z_max[k], dx[k]) for k in range(d)]
@@ -148,6 +155,7 @@ class CramerMRMR(FeatureSelector):
                     keep_while = True
                     break
                 
+                print('!!!', selected[id_v].sum())
                 if ~self.tests(G[:,[k1]][id_v], selected[id_v]):
                     ddx[k1] += self.std_step
                     keep_while = True
@@ -248,7 +256,8 @@ class CramerMRMR(FeatureSelector):
         V_gof = np.array([self.gof(G[:,[k1]], selected, id_v) for k1 in range(d)])
         
         evs = np.arange(d)[V_gof >= self.V_gof_min]
-        print('V_gof', V_gof)
+        print('V_gof', np.round(V_gof,4))
+        print(V_gof.size)
         # for k1 in list(evs):
         
         evs = evs[np.argsort(V_gof[evs])[::-1]]
@@ -281,8 +290,9 @@ class CramerMRMR(FeatureSelector):
             
             id_v = V == v
             selected = self.compute_selected(Z, id_v)
-        
-            ddx = self.compute_ddx(Z, selected, id_v)
+            ddx = self.ddx
+            if ddx is None:
+                ddx = self.compute_ddx(Z, selected, id_v)
         
             z_min = Z.min(axis=0)
             z_max = Z.max(axis=0)+0.0001 * Z.std(axis=0)
@@ -290,7 +300,7 @@ class CramerMRMR(FeatureSelector):
             bins = [np.arange(z_min[k], z_max[k], dx[k]) for k in range(d)]
                     
             G = np.vstack([np.digitize(Z[:,k], bins[k]) for k in range(d)]).T
-            
+            self.G = G
             evs = self.mrmr_cramer(G, selected, id_v)
             
             print('v=',v, 'evs=', evs)
