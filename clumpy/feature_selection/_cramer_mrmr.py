@@ -196,23 +196,28 @@ class CramerMRMR(FeatureSelector):
         
         return(G_df)
 
-    def gof(self, G, selected, id_v):
-        n, d = G.shape
+    def gof(self, g, id_v, k):     
+        N = g.size
+        G_df = pd.DataFrame(g, columns=['g'])
+        df = G_df.groupby('g').size().reset_index(name='E')
+        df_O = G_df.loc[id_v].groupby('g').size().reset_index(name='O')
         
-        if d != 1:
-            raise(ValueError("G is expected to have exactly 1 columns."))
+        df = df.merge(df_O, how='outer')
         
-        G_df = self.df_count(G, selected, columns=['g0'], name='E')
-        G_df__v = self.df_count(G[id_v], selected[id_v], columns=['g0'], name='O')
-        
-        df = G_df.merge(G_df__v, how='outer')
-        df['E'] = df['E'] / df['E'].sum() * df['O'].sum()
+        df['O'] = df['O'] / df['O'].sum() * df['E'].sum()
         
         df.fillna(0, inplace=True)
-        
+        # print(df)
         chi2 = ((df['O'] - df['E'])**2 / df['E']).values.sum()
+        # print(df.index.size, chi2)
         
-        return (chi2 / (df['E'].sum() * (df.index.size - 1)))**0.5
+        df['R'] = (df['O'] - df['E']) / ( df['E']**0.5 )
+        
+        # print(df.loc[df['R']>=2])
+        
+        self.df[k] = df
+        
+        return (chi2 / (N * (df.index.size - 1)/1))**0.5
         
 
     def toi(self, G, selected, id_v, columns_id):
@@ -238,7 +243,7 @@ class CramerMRMR(FeatureSelector):
         
         G_df['E'] = G_df['N'+str(columns_id[0])] * G_df['N'+str(columns_id[1])] / N
         
-        # print(G_df)
+        print(G_df)
         
         chi2 = ((G_df['O'] - G_df['E'])**2 / G_df['E']).values.sum()
         
@@ -251,17 +256,61 @@ class CramerMRMR(FeatureSelector):
         
         return (chi2 / (N * (n_m - 1)))**0.5
     
-    def mrmr_cramer(self, G, selected, id_v, ):
-        n, d = G.shape
-        V_gof = np.array([self.gof(G[:,[k1]], selected, id_v) for k1 in range(d)])
+    def digitize_1d(self, z, id_v, k):
+        n_u = z.shape[0]
+        n_u_v = id_v.sum()
+        
+        z_min = z.min()
+        z_max = z.max()
+        z_std = z.std()
+        dz = z.std() * self.std_step
+                
+        n_crit23_u = np.max((n_u / (1 + n_u * self.epsilon**2),5))
+        # n_crit23_u_v = n_u_v / (1 + n_u_v * self.epsilon**2)
+        
+        # on construit les bins petit à petit
+        # on assemble les deux derniers bins pour être sûr que ça soit bon.        
+        
+        bins = np.arange(z_min, z_max+0.0001*z_std, dz)
+        
+        g = np.digitize(z, bins)
+        
+        g_unique, n_g = np.unique(g, return_counts=True)
+        
+        new_bins = [z_min]
+        
+        b = 0
+        s = 0
+        while b < len(n_g)-1:
+            s += n_g[b]
+            b += 1
+            if s >= n_crit23_u:
+                new_bins.append(bins[g_unique[b]-1])
+                s = 0
+        bins[-1] = z_max + 0.0001 * z_std
+        # print(new_bins) 
+        g = np.digitize(z, new_bins)
+        
+        self.bins[k] = np.array(new_bins)
+        return g
+    
+    def gof_Z(self, z, id_v, k):
+        g = self.digitize_1d(z, id_v, k)
+        
+        return(self.gof(g, id_v, k))
+        
+    
+    def mrmr_cramer(self, Z, id_v):
+        n, d = Z.shape
+        self.bins = {}
+        self.df = {}
+        V_gof = np.array([self.gof_Z(Z[:,k1], id_v, k1) for k1 in range(d)])
         
         evs = np.arange(d)[V_gof >= self.V_gof_min]
         print('V_gof', np.round(V_gof,4))
-        print(V_gof.size)
-        # for k1 in list(evs):
         
         evs = evs[np.argsort(V_gof[evs])[::-1]]
-        
+        return(evs)
         list_k1_k2 = list(combinations(evs, 2))
         
         for k1, k2 in list_k1_k2:
@@ -287,21 +336,22 @@ class CramerMRMR(FeatureSelector):
             print('==============')
             print('v=',v)
             print('==============')
-            
             id_v = V == v
-            selected = self.compute_selected(Z, id_v)
-            ddx = self.ddx
-            if ddx is None:
-                ddx = self.compute_ddx(Z, selected, id_v)
+            evs = self.mrmr_cramer(Z, id_v)
+            # 
+            # selected = self.compute_selected(Z, id_v)
+            # ddx = self.ddx
+            # if ddx is None:
+                # ddx = self.compute_ddx(Z, selected, id_v)
         
-            z_min = Z.min(axis=0)
-            z_max = Z.max(axis=0)+0.0001 * Z.std(axis=0)
-            dx = Z.std(axis=0)*ddx
-            bins = [np.arange(z_min[k], z_max[k], dx[k]) for k in range(d)]
+            # z_min = Z.min(axis=0)
+            # z_max = Z.max(axis=0)+0.0001 * Z.std(axis=0)
+            # dx = Z.std(axis=0)*ddx
+            # bins = [np.arange(z_min[k], z_max[k], dx[k]) for k in range(d)]
                     
-            G = np.vstack([np.digitize(Z[:,k], bins[k]) for k in range(d)]).T
-            self.G = G
-            evs = self.mrmr_cramer(G, selected, id_v)
+            # G = np.vstack([np.digitize(Z[:,k], bins[k]) for k in range(d)]).T
+            # self.G = G
+            # evs = self.mrmr_cramer(G, selected, id_v)
             
             print('v=',v, 'evs=', evs)
             
