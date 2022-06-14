@@ -220,35 +220,44 @@ class CramerMRMR(FeatureSelector):
         return (chi2 / (N * (df.index.size - 1)/1))**0.5
         
 
-    def toi(self, G, selected, id_v, columns_id):
+    def toi(self, G):
         n, d = G.shape
         
         if d != 2:
             raise(ValueError("G is expected to have exactly 2 columns."))
-        G_df = self.df_count(G[id_v], selected[id_v], columns=['g' + str(k) for k in columns_id], name='O')
-        # G_df__k0 = df_count(G[:,[0]][id_v], selected[id_v], columns=['g'+str(columns_id[0])], name='E_k'+str(columns_id[0]))
-        # G_df__k1 = df_count(G[:,[1]][id_v], selected[id_v], columns=['g'+str(columns_id[1])], name='E_k'+str(columns_id[1]))
+        G_df = pd.DataFrame(G, columns=['g' + str(k) for k in range(2)])
+        df = G_df.groupby(['g0', 'g1']).size().reset_index(name='O')
+        # df_O0 = G_df.groupby(['g0']).size().reset_index(name='O0')
+        # df_O1 = G_df.groupby(['g1']).size().reset_index(name='O1')
         
-        # df = G_df.merge(G_df__k0, how='outer')
-        # df = df.merge(G_df__k1, how='outer')
+        # df = df.merge(df_O0, how='outer')
+        # df = df.merge(df_O1, how='outer')
         
-        N = G_df['O'].sum()
+        
+        
+        # return(1)
+        N = df['O'].sum()
         # for k in columns_id:
             # df['E_k'+str(k)] = df['E_k'+str(k)] / df['E_k'+str(k)].sum() * N
         
         # df['E'] = df['E_k'+str(columns_id[0])] * df['E_k'+str(columns_id[1])] / N
+        # return(1)        
+        for k in [0,1]:
+            df['N'+str(k)] = df.groupby(['g'+str(k)])['O'].transform('sum')
         
-        for k in columns_id:
-            G_df['N'+str(k)] = G_df.groupby(['g'+str(k)])['O'].transform('sum')
+        # print(df)
+        # return(1)
         
-        G_df['E'] = G_df['N'+str(columns_id[0])] * G_df['N'+str(columns_id[1])] / N
+        df['E'] = df['N0'] * df['N1'] / N
         
-        print(G_df)
+        # print(df)
+        # print(df.min())
+        # return(1)
         
-        chi2 = ((G_df['O'] - G_df['E'])**2 / G_df['E']).values.sum()
+        chi2 = ((df['O'] - df['E'])**2 / df['O']).values.sum()
         
-        n_m = np.min([len(np.unique(G_df['g'+str(columns_id[0])].values)),
-                       len(np.unique(G_df['g'+str(columns_id[1])].values))])
+        n_m = np.min([len(np.unique(df['g0'].values)),
+                       len(np.unique(df['g1'].values))])
         
         if n_m - 1 <= 0:
             print('warning, this transition does not occur enough to be well calibrated.')
@@ -298,7 +307,43 @@ class CramerMRMR(FeatureSelector):
         g = self.digitize_1d(z, id_v, k)
         
         return(self.gof(g, id_v, k))
+    
+    def digitize_2d(self, Z):
+        n, d = Z.shape
+        # bins = [np.arange(Z[:,k].min(), Z[:,k].max(), Z[:,k].std()*0.1) for k in range(d)]
         
+        # G = np.vstack([np.digitize(Z[:,k], bins[k]) for k in range(d)]).T
+        
+        # df = pd.DataFrame(G, columns=['g0','g1'])
+        # df = df.groupby(['g0', 'g1']).size().reset_index(name='O')
+        
+        # new_bins = [[Z[:,0].min()], 
+        #             [Z[:,1].min()]]
+        
+        n_crit23_u = int(np.max((n / (1 + n * self.epsilon**2),5)))
+        # print(n_crit23_u)
+        from sklearn.preprocessing import KBinsDiscretizer
+        n_bins = int(np.sqrt(n/n_crit23_u))
+        print('NCRIT', n_crit23_u, 'n_bins', n_bins)
+        # n_bins = 5
+        kbd = KBinsDiscretizer(n_bins=n_bins, 
+                               strategy="quantile",
+                               encode="ordinal")
+        G = kbd.fit_transform(Z)
+        # print(G)
+        # labels = opt.fit_predict(Z)
+        # print(np.unique(G, return_counts=True))        
+        
+        # df = pd.DataFrame(G, columns=['g0','g1'])
+        # df = df.groupby(['g0', 'g1']).size().reset_index(name='O')
+        # print(df)
+        
+        return(G)
+    
+    def toi_Z(self, Z):
+        G = self.digitize_2d(Z)
+        
+        return(self.toi(G))
     
     def mrmr_cramer(self, Z, id_v):
         n, d = Z.shape
@@ -310,12 +355,14 @@ class CramerMRMR(FeatureSelector):
         print('V_gof', np.round(V_gof,4))
         
         evs = evs[np.argsort(V_gof[evs])[::-1]]
-        return(evs)
+        # return(evs)
         list_k1_k2 = list(combinations(evs, 2))
         
+        print(list_k1_k2)
+        # return(evs)
         for k1, k2 in list_k1_k2:
             if k1 in evs and k2 in evs:
-                V_toi = self.toi(G[:, [k1, k2]], selected, id_v, columns_id=[k1,k2])
+                V_toi = self.toi_Z(Z[:,[k1,k2]][id_v])
                 print(k1, k2, V_toi)
                 if V_toi >= self.V_toi_max:
                     k_to_remove = np.array([k1,k2])[np.argmin(V_gof[[k1,k2]])]
