@@ -248,9 +248,9 @@ class CramerMRMR(FeatureSelector):
         # print(df)
         # return(1)
         
-        df['E'] = df['N0'] * df['N1'] / N
+        n_crit23_u = np.max((n / (1 + n * self.epsilon**2),5))
         
-        # print(df)
+        df['E'] = df['N0'] * df['N1'] / N
         # print(df.min())
         # return(1)
         
