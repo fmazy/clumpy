@@ -4,7 +4,7 @@ save_data_on_exit = True
 save_history = True
 save_non_project_files = False
 project_type = empty-project-type
-recent_files = ['../clumpy-cases/esnet/sud_gresivaudan/variable_selection/variable_selection_article_with_reference.py', '../clumpy-cases/esnet/sud_gresivaudan/variable_selection/variable_selection_article.py', '../clumpy-cases/selection_paper/evs_case_study.py', 'clumpy/feature_selection/_cramer_mrmr.py', 'clumpy/transition_probability_estimation/_importer.py', 'clumpy/_base/_land.py', 'clumpy/layer/_proba_layer.py', 'clumpy/allocation/_unbiased_mono_pixel.py', '../../../anaconda3/envs/clumpy2/lib/python3.8/site-packages/pandas/core/indexes/base.py', '../../../anaconda3/envs/clumpy2/lib/python3.8/site-packages/pandas/core/frame.py']
+recent_files = ['../clumpy-cases/calibration_paper_6/comparison_d_n.py', '../clumpy-cases/calibration_paper_6/estimation_d_n.py', '../clumpy-cases/calibration_paper_6/generate_case_d_n.py']
 
 [main]
 version = 0.2.0
