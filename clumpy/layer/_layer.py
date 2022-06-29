@@ -61,7 +61,7 @@ class Layer(np.ndarray):
     def save(self, path):
         self._save(path=path)
 
-    def _save(self, path, band_tags=None):
+    def _save(self, path, band_tags=None, descriptions=None):
         folder_path, file_name, file_ext = path_split(path)
         create_directories(folder_path)
         
@@ -84,6 +84,7 @@ class Layer(np.ndarray):
         create_directories(folder_path)
 
         # create file
+        # print(descriptions)
         with rasterio.open(
             path,
             mode='w',
@@ -96,7 +97,7 @@ class Layer(np.ndarray):
             transform=self.geo_metadata['transform']
             ) as dst:
                 dst.write(data)
-                
+                dst.descriptions = descriptions
                 if band_tags is not None:
                     for band_i, tags in enumerate(band_tags):
                         dst.update_tags(band_i+1, **tags)
