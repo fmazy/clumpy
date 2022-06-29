@@ -74,7 +74,7 @@ def determine_WoE_ranges(X,
                 delta[-1] += 1
             #     # break
         
-        r.append(np.round(xi, n_round)+10**-n_round)
+        # r.append(np.round(xi, n_round)+10**-n_round)
         ranges.append(r)
             
 
