@@ -97,7 +97,8 @@ class Layer(np.ndarray):
             transform=self.geo_metadata['transform']
             ) as dst:
                 dst.write(data)
-                dst.descriptions = descriptions
+                if descriptions is not None:
+                    dst.descriptions = descriptions
                 if band_tags is not None:
                     for band_i, tags in enumerate(band_tags):
                         dst.update_tags(band_i+1, **tags)
