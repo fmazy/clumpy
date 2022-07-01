@@ -242,13 +242,22 @@ class CramerMRMR(FeatureSelector):
         
         # df['E'] = df['E_k'+str(columns_id[0])] * df['E_k'+str(columns_id[1])] / N
         # return(1)        
+        
+        n_crit23_u = np.max((n / (1 + n * self.epsilon**2),5))
+        
+        print('>>>', df.loc[df['O']<n_crit23_u]['O'].sum() / N)
+        df = df.loc[df['O']>=n_crit23_u]
+        N = df['O'].sum()
+        print('>>>', df.loc[df['O']<n_crit23_u]['O'].sum() / N)
+        
         for k in [0,1]:
             df['N'+str(k)] = df.groupby(['g'+str(k)])['O'].transform('sum')
         
         # print(df)
         # return(1)
         
-        n_crit23_u = np.max((n / (1 + n * self.epsilon**2),5))
+        
+        
         
         df['E'] = df['N0'] * df['N1'] / N
         # print(df.min())
@@ -324,12 +333,15 @@ class CramerMRMR(FeatureSelector):
         # print(n_crit23_u)
         from sklearn.preprocessing import KBinsDiscretizer
         n_bins = int(np.sqrt(n/n_crit23_u))
-        print('NCRIT', n_crit23_u, 'n_bins', n_bins)
+        
         # n_bins = 5
+        import warnings
+        warnings.filterwarnings('ignore') 
         kbd = KBinsDiscretizer(n_bins=n_bins, 
                                strategy="quantile",
                                encode="ordinal")
         G = kbd.fit_transform(Z)
+        warnings.filterwarnings('default') 
         # print(G)
         # labels = opt.fit_predict(Z)
         # print(np.unique(G, return_counts=True))        
@@ -343,6 +355,7 @@ class CramerMRMR(FeatureSelector):
     def toi_Z(self, Z):
         G = self.digitize_2d(Z)
         
+        # return(1)
         return(self.toi(G))
     
     def mrmr_cramer(self, Z, id_v):
@@ -358,7 +371,7 @@ class CramerMRMR(FeatureSelector):
         # return(evs)
         list_k1_k2 = list(combinations(evs, 2))
         
-        print(list_k1_k2)
+        # print(list_k1_k2)
         # return(evs)
         for k1, k2 in list_k1_k2:
             if k1 in evs and k2 in evs:
