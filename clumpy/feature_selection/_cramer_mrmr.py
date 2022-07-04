@@ -282,38 +282,57 @@ class CramerMRMR(FeatureSelector):
         z_max = z.max()
         z_std = z.std()
         dz = z.std() * self.std_step
-                
-        n_crit23_u = np.max((n_u / (1 + n_u * self.epsilon**2),5))
+        
+        n_crit23_u = np.max((n_u_v / (1 + n_u_v * self.epsilon**2),5))
         # n_crit23_u_v = n_u_v / (1 + n_u_v * self.epsilon**2)
         
         # on construit les bins petit à petit
         # on assemble les deux derniers bins pour être sûr que ça soit bon.        
         
-        bins = np.arange(z_min, z_max+0.0001*z_std, dz)
+        from sklearn.preprocessing import KBinsDiscretizer
         
-        g = np.digitize(z, bins)
+        n_bins = int(n_u_v/n_crit23_u)
+        # n_bins = 1000
+        print('>>>', n_u_v / (1 + n_u_v * self.epsilon**2), n_u / (1 + n_u * self.epsilon**2))
         
-        g_unique, n_g = np.unique(g, return_counts=True)
+        # n_bins = 5
+        import warnings
+        warnings.filterwarnings('ignore') 
+        kbd = KBinsDiscretizer(n_bins=n_bins, 
+                               strategy="quantile",
+                               encode="ordinal")
+        g = kbd.fit_transform(z[:,None])[:,0]
+        warnings.filterwarnings('default') 
         
-        new_bins = [z_min]
+        # bins = np.arange(z_min, z_max+0.0001*z_std, dz)
         
-        b = 0
-        s = 0
-        while b < len(n_g)-1:
-            s += n_g[b]
-            b += 1
-            if s >= n_crit23_u:
-                new_bins.append(bins[g_unique[b]-1])
-                s = 0
-        bins[-1] = z_max + 0.0001 * z_std
-        # print(new_bins) 
-        g = np.digitize(z, new_bins)
+        # g = np.digitize(z, bins)
         
-        self.bins[k] = np.array(new_bins)
+        # g_unique, n_g = np.unique(g, return_counts=True)
+        
+        # new_bins = [z_min]
+        
+        # b = 0
+        # s = 0
+        # while b < len(n_g)-1:
+        #     s += n_g[b]
+        #     b += 1
+        #     if s >= n_crit23_u:
+        #         new_bins.append(bins[g_unique[b]-1])
+        #         s = 0
+        # bins[-1] = z_max + 0.0001 * z_std
+        # # print(new_bins) 
+        # g = np.digitize(z, new_bins)
+        
+        # self.bins[k] = np.array(new_bins)
         return g
     
     def gof_Z(self, z, id_v, k):
         g = self.digitize_1d(z, id_v, k)
+        
+        id_v_ref = np.zeros(id_v.size).astype(bool)
+        id_v_ref[np.random.choice(g.size, id_v.sum())] = True
+        print('ref', self.gof(g, id_v_ref, k))
         
         return(self.gof(g, id_v, k))
     
