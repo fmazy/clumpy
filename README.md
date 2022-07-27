@@ -23,9 +23,8 @@ CLUMPY is in Beta version for now. The first stable and fully working version is
 * François-Rémi Mazy $`^1`$ (dev)
 * Pierre-Yves Longaretti $`^{1,2}`$
 
-1: Université Grenoble Alpes, CNRS, Inria, Grenoble INP, LJK, 38000 Grenoble, France
-
-2 : Université Grenoble Alpes, CNRS-INSU, IPAG, CS 40700, 38052 Grenoble, France
+1. Université Grenoble Alpes, CNRS, Inria, Grenoble INP, LJK, 38000 Grenoble, France
+2. Université Grenoble Alpes, CNRS-INSU, IPAG, CS 40700, 38052 Grenoble, France
 
 **Contact :**
 François-Rémi Mazy, francois-remi.mazy@inria.fr
