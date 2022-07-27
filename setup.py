@@ -21,11 +21,13 @@ setuptools.setup(
     python_requires='>=3.6',
     install_requires=[
             'numpy>=1.19.2',
-            'fastash>=0.1.5',
             'matplotlib',
             'scipy',
             'tqdm',
             'scikit-learn',
-            'rasterio',
+            'scikit-image',
+            'pandas',
+            'rasterio==1.1.8',
+            'ekde',
         ],
 )

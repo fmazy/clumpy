@@ -1,0 +1,9 @@
+dist/
+.idea/
+.spyproject/
+.temp_joblib_memmap/
+build/
+clumpy.egg-info/
+dist/
+.readthedocs.yml
+

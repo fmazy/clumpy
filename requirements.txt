@@ -1,8 +1,0 @@
-numpy
-matplotlib
-scipy
-tqdm
-scikit-learn
-rasterio==1.1.8
-ekde
-scikit-image
