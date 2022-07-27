@@ -39,3 +39,5 @@ Create conda env including gdal and rasterio
 build the package (see 'setup.py' for requirements information) :
 `python3 setup.py sdist bdist_wheel`
 
+## Documentation
+The documentation is *in work in progress* and is partially out-of-date. This will be updated when the stable version is released in October 2022.
