@@ -20,8 +20,11 @@ CLUMPY is in Beta version for now. The first stable and fully working version is
     * A maximum relevance / minimum redundancy selection procedure of explanatory variables, Mazy, F.-R. and Longaretti, P.-Y., 2022, Planed to be submitted to Environmental Software and Modeling
 
 **Participants :**
-François-Rémi Mazy (dev),
-Pierre-Yves Longaretti
+* François-Rémi Mazy \(^1\) (dev)
+* Pierre-Yves Longaretti \(^{1,2}\)
+
+1: Université Grenoble Alpes, CNRS, Inria, Grenoble INP, LJK, 38000 Grenoble, France
+2 : Université Grenoble Alpes, CNRS-INSU, IPAG, CS 40700, 38052 Grenoble, France
 
 **Contact :**
 François-Rémi Mazy, francois-remi.mazy@inria.fr
