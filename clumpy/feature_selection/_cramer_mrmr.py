@@ -13,7 +13,7 @@ from ..tools._data import generate_grid
 
 class CramerMRMR(FeatureSelector):
     """
-    univariate_approx in  {'mean', 'median', 'std'}
+    approx in  {'mean', 'median', 'std'}
     """
     def __init__(self, 
                  initial_state,
@@ -21,14 +21,14 @@ class CramerMRMR(FeatureSelector):
                  V_toi_max = 0.2,
                  epsilon=0.1,
                  alpha=0.9,
-                 univariate_approx='mean'):
+                 approx='mean'):
         
         self.initial_state = initial_state
         self.V_gof_min = V_gof_min
         self.V_toi_max = V_toi_max
         self.epsilon = epsilon
         self.alpha = alpha
-        self.univariate_approx = univariate_approx   
+        self.approx = approx   
         
         super().__init__()
     
@@ -75,6 +75,10 @@ class CramerMRMR(FeatureSelector):
         
         n_crit23_u = np.max((n / (1 + n * self.epsilon**2),5))
         
+        R_mean = df['O'].sum() / len(np.unique(df['g0'].values)) / len(np.unique(df['g1'].values)) / n_crit23_u
+        R_max = df['O'].max() / n_crit23_u
+        print('R_mean=', R_mean, 'R_max=', R_max)
+        
         print('% of pixels excluded : '+str(np.round(df.loc[df['O']<n_crit23_u]['O'].sum() / N,4)*100)+'%')
         df = df.loc[df['O']>=n_crit23_u]
         N = df['O'].sum()
@@ -91,6 +95,8 @@ class CramerMRMR(FeatureSelector):
         n_m = np.min([len(np.unique(df['g0'].values)),
                        len(np.unique(df['g1'].values))])
         
+        
+        
         if n_m - 1 <= 0:
             print('warning, this transition does not occur enough to be well calibrated.')
             return(1)
@@ -104,17 +110,26 @@ class CramerMRMR(FeatureSelector):
         
         delta = np.max(z) - np.min(z)
         
-        if self.univariate_approx == 'median':
+        if self.approx == 'mean':
             n_bins = int(n/n_m)
-        elif self.univariate_approx == 'mean':
+            
+        elif self.approx == 'median':
             kde = KDE().fit(z[:,None])
             y = np.linspace(np.min(z), np.max(z), int(delta / (kde._h / kde.q)))
             rho = kde.predict(y[:,None])
             n_bins = int(n * np.max(rho) * delta / 2 / n_m)
-        elif self.univariate_approx == 'std':
-            n_bins = int(n * delta / n_m / np.std(z))
+            
+        elif self.approx == 'std':
+            n_bins = int(n * delta / n_m / 2 / np.std(z))
+            
         else:
-            raise(ValueError("Unexpected 'self.univariate_approx' attribute value. It should be 'median' (default), 'mean', or 'std'"))
+            raise(ValueError("Unexpected 'self.approx' attribute value. It should be 'median' (default), 'mean', or 'std'"))
+        
+        R_mean = n / n_bins / n_m
+        n_gamma = n / n_bins
+        R_max = n_gamma / n_m
+        
+        print('k=',k, 'R_mean=', R_mean, 'R_max=', R_max)
         
         # print('n_bins=', n_bins)
         # n_bins = int(n/n_m)
@@ -137,9 +152,30 @@ class CramerMRMR(FeatureSelector):
     def digitize_2d(self, Z):
         n, d = Z.shape
         
-        n_crit23_u = int(np.max((n / (1 + n * self.epsilon**2),5)))
+        n_m = int(np.max((n / (1 + n * self.epsilon**2),5)))
         
-        n_bins = int(np.sqrt(n/n_crit23_u))
+        if self.approx == 'mean':
+            n_bins = int(np.sqrt(n/n_m))
+            
+        elif self.approx == 'median':
+            n_bins = n / n_m / 4
+            for z in Z.T:
+                delta = z.max() - z.min()
+                kde = KDE().fit(z[:,None])
+                y = np.linspace(np.min(z), np.max(z), int(delta / (kde._h / kde.q)))
+                rho = kde.predict(y[:,None])
+                n_bins *= np.max(rho) * delta
+            n_bins = int(n_bins)
+                
+        elif self.approx == 'std':
+            n_bins = n / n_m / 4
+            for z in Z.T:
+                delta = z.max() - z.min()
+                n_bins *= delta / np.std(z)
+            n_bins = int(n_bins)
+        
+        else:
+            raise(ValueError("Unexpected 'self.approx' attribute value. It should be 'median' (default), 'mean', or 'std'"))
         
         warnings.filterwarnings('ignore')
         kbd = KBinsDiscretizer(n_bins=n_bins, 
