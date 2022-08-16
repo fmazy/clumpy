@@ -12,18 +12,23 @@ from os import sys
 from ..tools._data import generate_grid
 
 class CramerMRMR(FeatureSelector):
+    """
+    univariate_approx in  {'mean', 'median', 'std'}
+    """
     def __init__(self, 
                  initial_state,
                  V_gof_min = 0.2, 
                  V_toi_max = 0.2,
                  epsilon=0.1,
-                 alpha=0.9):
+                 alpha=0.9,
+                 univariate_approx='mean'):
         
         self.initial_state = initial_state
         self.V_gof_min = V_gof_min
         self.V_toi_max = V_toi_max
         self.epsilon = epsilon
         self.alpha = alpha
+        self.univariate_approx = univariate_approx   
         
         super().__init__()
     
@@ -93,10 +98,26 @@ class CramerMRMR(FeatureSelector):
         return (chi2 / (N * (n_m - 1)))**0.5
     
     def digitize_1d(self, z, id_v, k):
-        n_u_v = id_v.sum()
+        n = id_v.sum()
         
-        n_crit23_u = np.max((n_u_v / (1 + n_u_v * self.epsilon**2),5))
-        n_bins = int(n_u_v/n_crit23_u)
+        n_m = np.max((n / (1 + n * self.epsilon**2),5))
+        
+        delta = np.max(z) - np.min(z)
+        
+        if self.univariate_approx == 'median':
+            n_bins = int(n/n_m)
+        elif self.univariate_approx == 'mean':
+            kde = KDE().fit(z[:,None])
+            y = np.linspace(np.min(z), np.max(z), int(delta / (kde._h / kde.q)))
+            rho = kde.predict(y[:,None])
+            n_bins = int(n * np.max(rho) * delta / 2 / n_m)
+        elif self.univariate_approx == 'std':
+            n_bins = int(n * delta / n_m / np.std(z))
+        else:
+            raise(ValueError("Unexpected 'self.univariate_approx' attribute value. It should be 'median' (default), 'mean', or 'std'"))
+        
+        # print('n_bins=', n_bins)
+        # n_bins = int(n/n_m)
         
         warnings.filterwarnings('ignore') 
         kbd = KBinsDiscretizer(n_bins=n_bins, 
