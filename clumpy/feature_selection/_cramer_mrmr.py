@@ -72,18 +72,22 @@ class CramerMRMR(FeatureSelector):
         
         if d != 2:
             raise(ValueError("G is expected to have exactly 2 columns."))
-        G_df = pd.DataFrame(G, columns=['g' + str(k) for k in range(2)])
+        G_df = pd.DataFrame(G.astype(int), columns=['g' + str(k) for k in range(2)])
         df = G_df.groupby(['g0', 'g1']).size().reset_index(name='O')
         
         N = df['O'].sum()
         
-        n_crit23_u = np.max((n / (1 + n * self.epsilon**2),5))
+        n_crit23_u = int(np.max((n / (1 + n * self.epsilon**2),5)))
         
         R_mean = df['O'].sum() / len(np.unique(df['g0'].values)) / len(np.unique(df['g1'].values)) / n_crit23_u
         R_max = df['O'].max() / n_crit23_u
         print('R_mean=', R_mean, 'R_max=', R_max)
-        
+        print('n_crit23_u', n_crit23_u)
         print('% of pixels excluded : '+str(np.round(df.loc[df['O']<n_crit23_u]['O'].sum() / N,4)*100)+'%')
+        df['keep'] = 0
+        df.loc[df['O']>=n_crit23_u, 'keep'] = 1
+        self._2d[-1].append(df)
+        
         df = df.loc[df['O']>=n_crit23_u]
         N = df['O'].sum()
         # print('>>>', df.loc[df['O']<n_crit23_u]['O'].sum() / N)
@@ -98,8 +102,6 @@ class CramerMRMR(FeatureSelector):
         
         n_m = np.min([len(np.unique(df['g0'].values)),
                        len(np.unique(df['g1'].values))])
-        
-        
         
         if n_m - 1 <= 0:
             print('warning, this transition does not occur enough to be well calibrated.')
@@ -188,6 +190,8 @@ class CramerMRMR(FeatureSelector):
         G = kbd.fit_transform(Z)
         warnings.filterwarnings('default')
         
+        self._2d_kbd[-1].append(kbd)
+        
         return(G)
     
     def toi_Z(self, Z):
@@ -234,6 +238,9 @@ class CramerMRMR(FeatureSelector):
         self._1d = []
         self._1d_kbd = []
         
+        self._2d = []
+        self._2d_kbd = []
+        
         for v in list_v:
             if v == initial_state:
                 continue
@@ -245,6 +252,9 @@ class CramerMRMR(FeatureSelector):
             
             self._1d.append([])
             self._1d_kbd.append([])
+            
+            self._2d.append([])
+            self._2d_kbd.append([])
             
             evs = self.mrmr_cramer(Z, id_v, v)
             # 
