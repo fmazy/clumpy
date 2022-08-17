@@ -43,7 +43,7 @@ class CramerMRMR(FeatureSelector):
         
         return(self)
 
-    def gof(self, g, id_v, k):     
+    def gof(self, g, id_v, k, v):     
         N = g.size
         G_df = pd.DataFrame(g, columns=['g'])
         df = G_df.groupby('g').size().reset_index(name='E')
@@ -58,7 +58,11 @@ class CramerMRMR(FeatureSelector):
         
         df['R'] = (df['O'] - df['E']) / ( df['E']**0.5 )
         
-        self.df[k] = df
+        self._1d[-1].append(df)        
+        # if k == 2 and v ==211:
+        #     from matplotlib import pyplot as plt
+        #     plt.step(df['g'].values, df['E']/N, where='post')
+        #     plt.step(df['g'].values, df['O']/N, alpha=0.6, where='post')
         
         return (chi2 / (N * (df.index.size - 1)/1))**0.5
         
@@ -131,7 +135,7 @@ class CramerMRMR(FeatureSelector):
         
         print('k=',k, 'R_mean=', R_mean, 'R_max=', R_max)
         
-        # print('n_bins=', n_bins)
+        print('n_bins=', n_bins)
         # n_bins = int(n/n_m)
         
         warnings.filterwarnings('ignore') 
@@ -142,12 +146,14 @@ class CramerMRMR(FeatureSelector):
         g = kbd.transform(z[:,None])
         warnings.filterwarnings('default') 
         
+        self._1d_kbd[-1].append(kbd)
+        
         return g
     
-    def gof_Z(self, z, id_v, k):
+    def gof_Z(self, z, id_v, k, v):
         g = self.digitize_1d(z, id_v, k)
         
-        return(self.gof(g, id_v, k))
+        return(self.gof(g, id_v, k, v))
     
     def digitize_2d(self, Z):
         n, d = Z.shape
@@ -155,24 +161,22 @@ class CramerMRMR(FeatureSelector):
         n_m = int(np.max((n / (1 + n * self.epsilon**2),5)))
         
         if self.approx == 'mean':
-            n_bins = int(np.sqrt(n/n_m))
+            n_bins = int((n/n_m)**0.5)
             
         elif self.approx == 'median':
-            n_bins = n / n_m / 4
+            n_bins = []
             for z in Z.T:
                 delta = z.max() - z.min()
                 kde = KDE().fit(z[:,None])
                 y = np.linspace(np.min(z), np.max(z), int(delta / (kde._h / kde.q)))
                 rho = kde.predict(y[:,None])
-                n_bins *= np.max(rho) * delta
-            n_bins = int(n_bins)
+                n_bins.append(int((n / n_m)**0.5 / 2 * np.max(rho) * delta))
                 
         elif self.approx == 'std':
-            n_bins = n / n_m / 4
+            n_bins = []
             for z in Z.T:
                 delta = z.max() - z.min()
-                n_bins *= delta / np.std(z)
-            n_bins = int(n_bins)
+                n_bins.append(int((n / n_m)**0.5 * delta / np.std(z) / 2))
         
         else:
             raise(ValueError("Unexpected 'self.approx' attribute value. It should be 'median' (default), 'mean', or 'std'"))
@@ -182,7 +186,7 @@ class CramerMRMR(FeatureSelector):
                                strategy="quantile",
                                encode="ordinal")
         G = kbd.fit_transform(Z)
-        warnings.filterwarnings('default') 
+        warnings.filterwarnings('default')
         
         return(G)
     
@@ -191,15 +195,15 @@ class CramerMRMR(FeatureSelector):
         
         return(self.toi(G))
     
-    def mrmr_cramer(self, Z, id_v):
+    def mrmr_cramer(self, Z, id_v, v):
         n, d = Z.shape
         self.bins = {}
-        self.df = {}
-        V_gof = np.array([self.gof_Z(Z[:,k1], id_v, k1) for k1 in range(d)])
+        
+        V_gof = np.array([self.gof_Z(Z[:,k1], id_v, k1, v) for k1 in range(d)])
         
         id_v_ref = np.zeros(id_v.size).astype(bool)
         id_v_ref[np.random.choice(n, id_v.sum())] = True
-        print('averaged random variable GoF ', round(np.mean([self.gof_Z(Z[:,k1], id_v_ref, k1) for k1 in range(d)]),4))
+        # print('averaged random variable GoF ', round(np.mean([self.gof_Z(Z[:,k1], id_v_ref, k1, v) for k1 in range(d)]),4))
         
         evs = np.arange(d)[V_gof >= self.V_gof_min]
         print('V_gof', np.round(V_gof,4))
@@ -226,6 +230,10 @@ class CramerMRMR(FeatureSelector):
         
         list_v = np.unique(V)
         id_evs = np.zeros(d).astype(bool)
+        
+        self._1d = []
+        self._1d_kbd = []
+        
         for v in list_v:
             if v == initial_state:
                 continue
@@ -234,7 +242,11 @@ class CramerMRMR(FeatureSelector):
             print('v=',v)
             print('==============')
             id_v = V == v
-            evs = self.mrmr_cramer(Z, id_v)
+            
+            self._1d.append([])
+            self._1d_kbd.append([])
+            
+            evs = self.mrmr_cramer(Z, id_v, v)
             # 
             # selected = self.compute_selected(Z, id_v)
             # ddx = self.ddx
