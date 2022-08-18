@@ -137,7 +137,7 @@ class CramerMRMR(FeatureSelector):
         
         print('k=',k, 'R_mean=', R_mean, 'R_max=', R_max)
         
-        print('n_bins=', n_bins)
+        print('>>>n_bins=', n_bins)
         # n_bins = int(n/n_m)
         
         warnings.filterwarnings('ignore') 
