@@ -48,13 +48,13 @@ class CramerMRMR(FeatureSelector):
         
         n_m = int(np.max((n / (1 + n * self.epsilon**2),5)))
         
-        Delta = np.max(z) - np.min(z)
+        Delta = np.max(z[id_v]) - np.min(z[id_v])
         
         if self.approx == 'mean':
             Gamma = int(n/n_m)
             
         elif self.approx == 'median':
-            kde = KDE().fit(z[:,None])
+            kde = KDE().fit(z[:,None][id_v])
             y = np.linspace(np.min(z), np.max(z), int(Delta / (kde._h / kde.q)))
             rho = kde.predict(y[:,None])
             Gamma = int(n * np.max(rho) * Delta / 2 / n_m)
@@ -67,15 +67,17 @@ class CramerMRMR(FeatureSelector):
         
         if Gamma < 10:
             raise(ValueError("The number of bins (Gamma) is too low. Increase the epsilon parameter."))
-        print('Gamma=',Gamma)
-        kbd = KBinsDiscretizer(n_bins=Gamma, 
-                               strategy="uniform",
-                               encode="ordinal")
-        kbd.fit(z[id_v,None])
-        g = kbd.transform(z[:,None])
+
+        delta = Delta / Gamma
+        self._1d_bins[-1].append(np.linspace(np.min(z[id_v]), np.max(z[id_v])+10**-5*delta, Gamma))
         
-        self._1d_kbd[-1].append(kbd)
-        
+        g = np.digitize(z, self._1d_bins[-1][-1])
+        # kbd = KBinsDiscretizer(n_bins=Gamma, 
+                               # strategy="uniform",
+                               # encode="ordinal")
+        # kbd.fit(z[id_v,None])
+        # g = kbd.transform(z[:,None])
+               
         return g
 
     def gof(self, g, id_v): 
@@ -87,43 +89,45 @@ class CramerMRMR(FeatureSelector):
         # print('new Gamma', Gamma)
         n = df_O['O'].sum()
         
-        n_m = np.max((n / (1 + n * self.epsilon**2),5))
+        n_m = int(np.max((n / (1 + n * self.epsilon**2),5)))
         
         # restrict to enough populated bins:
         df_O['keep'] = df_O['O'] >= n_m
-        excluded = df_O['keep'].mean()
-        
+        excluded = df_O.loc[~df_O['keep'], 'O'].sum() / n
         # df_O = df_O.loc[df_O['keep']]
         
         # recompute
         Gamma = df_O.loc[df_O['keep']].index.size
-        print('new Gamma', Gamma)
         n = df_O.loc[df_O['keep'], 'O'].sum()
         
         # merge
         df = df_O.merge(right=df, how='left')
         df.fillna(0, inplace=True) # just in case but not necessary
         
-        df.loc[~df['keep'], 'E'] = np.nan
+        # df.loc[~df['keep'], 'E'] = np.nan
         
         # R
         R_mean = n / Gamma / n_m
         R_max = df.loc[df['keep'], 'O'].max() / n_m
         
         # scale
-        df['E'] = df['E'] / df['E'].sum() * n
+        df['E'] = df['E'] / df.loc[df['keep'], 'E'].sum() * n
         
         # chi2
-        chi2 = ((df['O'] - df['E'])**2 / df['E']).sum()
+        chi2 = ((df.loc[df['keep'], 'O'] - df.loc[df['keep'], 'E'])**2 / df.loc[df['keep'], 'E']).sum()
         
         # Normality ratio
         df['R'] = (df['O'] - df['E']) / ( df['E']**0.5 )
         
-        self._1d[-1].append(df)        
+        self._1d[-1].append(df)  
+        
+        if Gamma - 1 <= 0:
+            print('Warning, the bins are too small for this transition.\nEventually increase the epsilon parameter.')
+            return np.nan, n_m, R_mean, R_max, excluded
         
         V_gof = (chi2 / n / (Gamma - 1))**0.5
         
-        return V_gof, R_mean, R_max, excluded
+        return V_gof, n_m, R_mean, R_max, excluded
     
     def gof_Z(self, z, id_v):
         g = self.digitize_1d(z, id_v)
@@ -132,36 +136,37 @@ class CramerMRMR(FeatureSelector):
     
     def digitize_2d(self, Z):
         n, d = Z.shape
+        Delta = Z.max(axis=0) - Z.min(axis=0)
         
         n_m = int(np.max((n / (1 + n * self.epsilon**2),5)))
         
         if self.approx == 'mean':
-            Gamma = int((n/n_m)**0.5)
+            Gamma = [int((n/n_m)**0.5) for k in range(2)]
             
         elif self.approx == 'median':
             Gamma = []
-            for z in Z.T:
-                delta = z.max() - z.min()
+            for k, z in enumerate(Z.T):
                 kde = KDE().fit(z[:,None])
-                y = np.linspace(np.min(z), np.max(z), int(delta / (kde._h / kde.q)))
+                y = np.linspace(np.min(z), np.max(z), int(Delta[k] / (kde._h / kde.q)))
                 rho = kde.predict(y[:,None])
-                Gamma.append(int((n / n_m)**0.5 / 2 * np.max(rho) * delta))
+                Gamma.append(int((n / n_m)**0.5 / 2 * np.max(rho) * Delta[k]))
                 
         elif self.approx == 'std':
             Gamma = []
-            for z in Z.T:
-                delta = z.max() - z.min()
-                Gamma.append(int((n / n_m)**0.5 * delta / np.std(z) / 2))
+            for k, z in enumerate(Z.T):
+                Gamma.append(int((n / n_m)**0.5 * Delta[k] / np.std(z) / 2))
         
         else:
             raise(ValueError("Unexpected 'self.approx' attribute value. It should be 'median' (default), 'mean', or 'std'"))
         
-        kbd = KBinsDiscretizer(n_bins=Gamma, 
-                               strategy="uniform",
-                               encode="ordinal")
-        G = kbd.fit_transform(Z)
+        bins = []
+        for k, z in enumerate(Z.T):
+            delta = Delta[k] / Gamma[k]
+            bins.append(np.linspace(np.min(z), np.max(z)+10**-5*delta, Gamma[k]))
         
-        self._2d_kbd[-1].append(kbd)
+        self._2d_bins[-1].append(bins)
+        
+        G = np.vstack([np.digitize(z, bins=bins[k]) for k, z in enumerate(Z.T)]).T
         
         return(G)
     
@@ -171,42 +176,54 @@ class CramerMRMR(FeatureSelector):
         if d != 2:
             raise(ValueError("G is expected to have exactly 2 columns."))
         
+        # populate multivariate bins
         G_df = pd.DataFrame(G.astype(int), columns=['g' + str(k) for k in range(2)])
         df = G_df.groupby(['g0', 'g1']).size().reset_index(name='O')
         
+        # compute condition
         n = df['O'].sum()
-        
         n_m = int(np.max((n / (1 + n * self.epsilon**2),5)))
         
-        R_mean = df['O'].sum() / len(np.unique(df['g0'].values)) / len(np.unique(df['g1'].values)) / n_m
-        R_max = df['O'].max() / n_m
         
-        df['keep'] = 0
-        df.loc[df['O']>=n_m, 'keep'] = 1
-        excluded = df['keep'].mean()
-        self._2d[-1].append(df)
+        # exclude pixels
+        df['keep'] = df['O']>=n_m
+        excluded = df.loc[~df['keep'], 'O'].sum() / n
+        df = df.loc[df['keep']]
         
-        df = df.loc[df['keep']==1]
+        
+        
+        # recompute
         n = df['O'].sum()
         
+        # merging with product bins
         df_N = [G_df.groupby(['g'+str(k)]).size().reset_index(name='N'+str(k)) for k in [0,1]]
         for k in [0,1]:
             df = df.merge(right=df_N[k], how='left')
-        
+            
+        # compute E
         df['E'] = df['N0'] * df['N1'] / n
+        
+        # R
+        df['R'] = (df['O'] - df['E']) / df['E']**0.5
+        R_mean = df['O'].sum() / len(np.unique(df['g0'].values)) / len(np.unique(df['g1'].values)) / n_m
+        R_max = df['O'].max() / n_m
                 
+        # chi2
         chi2 = ((df['O'] - df['E'])**2 / df['O']).values.sum()
         
+        # gamma
         Gamma_min = np.min([len(np.unique(df['g0'].values)),
                        len(np.unique(df['g1'].values))])
         
+        self._2d[-1].append(df)
+        
         if Gamma_min - 1 <= 0:
-            print('warning, this transition does not occur enough to be well calibrated.')
-            return(1)
+            print('Warning, the bins are too small for this transition.\nEventually increase the epsilon parameter.')
+            return np.nan, n_m, R_mean, R_max, excluded
         
         V_toi = (chi2 / n / (Gamma_min - 1))**0.5
         
-        return V_toi, R_mean, R_max, excluded
+        return V_toi, n_m, R_mean, R_max, excluded
     
     def toi_Z(self, Z):
         G = self.digitize_2d(Z)
@@ -217,13 +234,14 @@ class CramerMRMR(FeatureSelector):
         n, d = Z.shape
         self.bins = {}
         
+        n_m_gof = {}
         R_mean_gof = {}
         R_max_gof = {}
         excluded_gof = {}
         
         V_gof = []
         for k1 in range(d):
-            V_gof_k1, R_mean_gof[k1], R_max_gof[k1], excluded_gof[k1] = self.gof_Z(Z[:,k1], id_v)
+            V_gof_k1, n_m_gof[k1], R_mean_gof[k1], R_max_gof[k1], excluded_gof[k1] = self.gof_Z(Z[:,k1], id_v)
             V_gof.append(V_gof_k1)
         
         V_gof = np.array(V_gof)
@@ -242,13 +260,20 @@ class CramerMRMR(FeatureSelector):
         # return(evs)
         
         V_toi = {}
+        n_m_toi = {}
         R_mean_toi = {}
         R_max_toi = {}
         excluded_toi = {}
         
         for k1, k2 in list_k1_k2:
             if k1 in evs and k2 in evs:
-                V_toi[(k1,k2)], R_mean_toi[(k1,k2)], R_max_toi[(k1,k2)], excluded_toi[(k1,k2)] = self.toi_Z(Z[:,[k1,k2]][id_v])
+                rep = self.toi_Z(Z[:,[k1,k2]][id_v])
+                
+                V_toi[(k1,k2)] = rep[0]
+                n_m_toi[(k1,k2)] = rep[1]
+                R_mean_toi[(k1,k2)] = rep[2]
+                R_max_toi[(k1,k2)] = rep[3]
+                excluded_toi[(k1,k2)] = rep[4]
                 
                 print('V_toi('+str(k1)+','+str(k2)+')='+str(np.round(V_toi[(k1,k2)],4)))
                 if V_toi[(k1,k2)] >= self.V_toi_max:
@@ -259,10 +284,12 @@ class CramerMRMR(FeatureSelector):
         V_gof = {k1:V_gof[k1] for k1 in range(d)}
         
         extra = {'V_gof':V_gof,
-                 'R_mean':R_mean_gof,
-                 'R_max':R_max_gof,
+                 'n_m_gof':n_m_gof,
+                 'R_mean_gof':R_mean_gof,
+                 'R_max_gof':R_max_gof,
                  'excluded_gof':excluded_gof,
                  'V_toi':V_toi,
+                 'n_m_toi':n_m_toi,
                  'R_mean_toi':R_mean_toi,
                  'R_max_toi':R_max_toi,
                  'excluded_toi':excluded_toi}
@@ -278,21 +305,22 @@ class CramerMRMR(FeatureSelector):
         
         
         self._1d = []
-        self._1d_kbd = []
+        self._1d_bins = []
         
         self._2d = []
-        self._2d_kbd = []
+        self._2d_bins = []
         
         self._V_gof = {}
+        self._n_m_gof = {}
         self._R_mean_gof = {}
         self._R_max_gof = {}
         self._excluded_gof = {}
         
         self._V_toi = {}
+        self._n_m_toi = {}
         self._R_mean_toi = {}
         self._R_max_toi = {}
         self._excluded_toi = {}
-        
                 
         for v in list_v:
             if v == initial_state:
@@ -304,13 +332,19 @@ class CramerMRMR(FeatureSelector):
             id_v = V == v
             
             for obj in [self._1d, 
-                        self._1d_kbd,
+                        self._1d_bins,
                         self._2d,
-                        self._2d_kbd]:
+                        self._2d_bins]:
                 obj.append([])
             
             evs, extra  = self.mrmr_cramer(Z, id_v)
+            self._V_gof[v] = extra['V_gof']
+            self._n_m_gof[v] = extra['n_m_gof']
+            self._R_mean_gof[v] = extra['R_mean_gof']
+            self._R_max_gof[v] = extra['R_max_gof']
+            self._excluded_gof[v] = extra['excluded_gof']
             self._V_toi[v] = extra['V_toi']
+            self._n_m_toi[v] = extra['n_m_toi']
             self._R_mean_toi[v] = extra['R_mean_toi']
             self._R_max_toi[v] = extra['R_max_toi']
             self._excluded_toi[v] = extra['excluded_toi']
