@@ -21,7 +21,8 @@ class CramerMRMR(FeatureSelector):
                  V_toi_max = 0.2,
                  epsilon=0.1,
                  alpha=0.9,
-                 approx='mean'):
+                 approx='mean',
+                 Gamma_max=100):
         
         self.initial_state = initial_state
         self.V_gof_min = V_gof_min
@@ -29,6 +30,7 @@ class CramerMRMR(FeatureSelector):
         self.epsilon = epsilon
         self.alpha = alpha
         self.approx = approx   
+        self.Gamma_max = Gamma_max
         
         super().__init__()
     
@@ -65,7 +67,7 @@ class CramerMRMR(FeatureSelector):
         else:
             raise(ValueError("Unexpected 'self.approx' attribute value. It should be 'median' (default), 'mean', or 'std'"))
         
-        Gamma = np.min((Gamma, 100))
+        Gamma = np.min((Gamma, self.Gamma_max))
         
         if Gamma < 10:
             raise(ValueError("The number of bins (Gamma) is too low. Increase the epsilon parameter."))
