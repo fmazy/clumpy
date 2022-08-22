@@ -80,33 +80,51 @@ class CramerMRMR(FeatureSelector):
                            Gamma)
         
         g = np.digitize(z, self._1d_bins[v][k])
+        # kde = KDE().fit(z[:,None][id_v])
                
         return g
 
-    def gof(self, g, id_v, v, k): 
-        G_df = pd.DataFrame(g, columns=['g'])
-        df = G_df.groupby('g').size().reset_index(name='E')
-        df_O = G_df.loc[id_v].groupby('g').size().reset_index(name='O')
+    def gof(self, g, id_v, v, k, z): 
+        # G_df = pd.DataFrame(g, columns=['g'])
+        # df = G_df.groupby('g').size().reset_index(name='E')
+        # df_O = G_df.loc[id_v].groupby('g').size().reset_index(name='O')
         
+        # # print('new Gamma', Gamma)
+        # n = df_O['O'].sum()
         
-        # print('new Gamma', Gamma)
-        n = df_O['O'].sum()
+        # n_m = int(np.max((n / (1 + n * self.epsilon**2),5)))
         
+        # # restrict to enough populated bins:
+        # df_O['keep'] = df_O['O'] >= n_m
+        # excluded = df_O.loc[~df_O['keep'], 'O'].sum() / n
+        # # df_O = df_O.loc[df_O['keep']]
+        
+        # # recompute
+        # Gamma = df_O.loc[df_O['keep']].index.size
+        # n = df_O.loc[df_O['keep'], 'O'].sum()
+        # print('recompute Gamma=',Gamma, ' excluded=',round(excluded,4)*100,'%')
+        
+        # # merge
+        # df = df_O.merge(right=df, how='left')
+        # df.fillna(0, inplace=True) # just in case but not necessary
+        
+        #===
+        df = pd.DataFrame(self._1d_bins[v][k], columns=['z'])
+        kde_O = KDE().fit(z[id_v][:,None])
+        df['O'] = kde_O.predict(df['z'].values[:,None]) * id_v.sum()
+        
+        kde_E = KDE().fit(z[:,None])
+        df['E'] = kde_E.predict(df['z'].values[:,None]) * id_v.sum()
+        
+        n = df['O'].sum()
         n_m = int(np.max((n / (1 + n * self.epsilon**2),5)))
         
-        # restrict to enough populated bins:
-        df_O['keep'] = df_O['O'] >= n_m
-        excluded = df_O.loc[~df_O['keep'], 'O'].sum() / n
-        # df_O = df_O.loc[df_O['keep']]
+        df['keep'] = df['O'] >= n_m
+        excluded = df.loc[~df['keep'], 'O'].sum() / n
         
-        # recompute
-        Gamma = df_O.loc[df_O['keep']].index.size
-        n = df_O.loc[df_O['keep'], 'O'].sum()
-        print('recompute Gamma=',Gamma, ' excluded=',round(excluded,4)*100,'%')
-        
-        # merge
-        df = df_O.merge(right=df, how='left')
-        df.fillna(0, inplace=True) # just in case but not necessary
+        Gamma = df.loc[df['keep']].index.size
+        n = df.loc[df['keep'], 'O'].sum()
+        #===
         
         # R
         R_mean = n / Gamma / n_m
@@ -140,7 +158,7 @@ class CramerMRMR(FeatureSelector):
     def gof_Z(self, z, id_v, v, k):
         g = self.digitize_1d(z, id_v, v, k)
         
-        return(self.gof(g, id_v, v, k))
+        return(self.gof(g, id_v, v, k, z))
     
     def digitize_2d(self, Z, v, k0, k1):
         n, d = Z.shape
