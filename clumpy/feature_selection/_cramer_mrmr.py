@@ -50,7 +50,7 @@ class CramerMRMR(FeatureSelector):
     def gof_Z(self, z, id_v, v, k):
         self.compute_bins_1d(z, id_v, v, k)
         if self.kde_method:
-            df = self.get_df_gof_kde(z, id_v, v, k)
+            df = self.get_gof_df_kde(z, id_v, v, k)
             
         else:
             df = self.get_gof_df(z, id_v, v, k)
@@ -114,7 +114,7 @@ class CramerMRMR(FeatureSelector):
         
         return(df)
     
-    def get_df_gof_kde(self, z, id_v, v, k):
+    def get_gof_df_kde(self, z, id_v, v, k):
         
         n = id_v.sum()
         
@@ -179,7 +179,21 @@ class CramerMRMR(FeatureSelector):
         
         return V_gof
     
-    def digitize_2d(self, Z, v, k0, k1):
+    def toi_Z(self, Z, v, k0, k1):
+        
+        self.compute_bins_2d(Z, k0, k1)
+        
+        
+        if self.kde_method:
+            df = self.get_toi_df_kde(Z, k0, k1)
+            
+        else:
+            df = self.get_toi_df(Z, k0, k1)
+            
+        return(self.toi(df, k0, k1))
+        
+    
+    def compute_bins_2d(self, Z, k0, k1):
         n, d = Z.shape
         Delta = Z.max(axis=0) - Z.min(axis=0)
         
@@ -211,26 +225,76 @@ class CramerMRMR(FeatureSelector):
         
         self._2d_bins[(k0,k1)] = bins
         
-        G = np.vstack([np.digitize(z, bins=bins[k]) for k, z in enumerate(Z.T)]).T
-        
         print('digitizing, n_m=',n_m,' Gamma=',Gamma)
-        
-        return(G)
     
-    def toi(self, G, v, k0, k1):
+    def get_toi_df(self, Z, k0, k1):
+        G = np.vstack([np.digitize(z, bins=self._2d_bins[(k0,k1)][k]) for k, z in enumerate(Z.T)]).T
+        
         n, d = G.shape
         
         if d != 2:
             raise(ValueError("G is expected to have exactly 2 columns."))
         
         # populate multivariate bins
-        G_df = pd.DataFrame(G.astype(int), columns=['g' + str(k) for k in range(2)])
-        df = G_df.groupby(['g0', 'g1']).size().reset_index(name='O')
+        G_df = pd.DataFrame(G.astype(int), columns=['g' + str(k) for k in [k0,k1]])
+        df = G_df.groupby(['g'+str(k) for k in [k0,k1]]).size().reset_index(name='O')
+                
+        # merging with product bins
+        df_N = [G_df.groupby('g'+str(k)).size().reset_index(name='N'+str(k)) for k in [k0,k1]]
+        for df_Nk in df_N:
+            df = df.merge(right=df_Nk, how='left')
+            
+        # compute E
+        df['E'] = df['N'+str(k0)] * df['N'+str(k1)] / n
         
+        return df
+    
+    def get_toi_df_kde(self, Z, k0, k1):
+        bins = self._2d_bins[(k0,k1)]
+        
+        widths = [np.diff(binsk) for binsk in bins]
+        
+        bins_centers = [bins[k][:-1] + widths[k] / 2 for k in range(2)]
+        grid = generate_grid(*bins_centers)
+        
+        n, d = Z.shape
+        
+        kde_O = KDE(kernel='box').fit(Z)
+        O = kde_O.predict(grid)
+        O = O / np.sum(O) * n
+        
+        kde_N0 = KDE(kernel='box').fit(Z[:,[0]])
+        N0 = kde_N0.predict(grid[:,[0]])
+        
+        print(N0)
+        N0 = N0 / N0.sum() 
+        # N0 = N0 / N0.sum() * n
+        
+        kde_N1 = KDE(kernel='box').fit(Z[:,[1]])
+        N1 = kde_N1.predict(grid[:,[1]])
+        N1 = N1 / N1.sum()
+        # N1 = N1 / N1.sum() * n
+        
+        E = N0 * N1 / n
+        print('>>',E.sum(),n, N0.sum())
+        # E = E / E.sum() * n
+        print('!!',E.sum(),n)
+        
+        df = pd.DataFrame(grid, columns=['z'+str(k0), 'z'+str(k1)])
+        df['g'+str(k0)] = np.digitize(df['z'+str(k0)], bins[0])
+        df['g'+str(k1)] = np.digitize(df['z'+str(k1)], bins[1])
+        
+        df['O'] = O
+        df['N'+str(k0)] = N0
+        df['N'+str(k1)] = N1
+        df['E'] = E
+        
+        return df
+    
+    def toi(self, df, k0, k1):
         # compute condition
         n = df['O'].sum()
         n_m = int(np.max((n / (1 + n * self.epsilon**2),5)))
-        
         
         # exclude pixels
         df['keep'] = df['O']>=n_m
@@ -239,7 +303,7 @@ class CramerMRMR(FeatureSelector):
         
         # recompute
         n = df.loc[df['keep'], 'O'].sum()
-        Gamma = [len(np.unique(df.loc[df['keep'], 'g'+str(k)].values)) for k in range(2)]
+        Gamma = [len(np.unique(df.loc[df['keep'], 'g'+str(k)].values)) for k in [k0,k1]]
         Gamma01 = df.loc[df['keep']].index.size
         
         print('recompute Gamma=', Gamma, ' unique :', Gamma01)
@@ -247,14 +311,9 @@ class CramerMRMR(FeatureSelector):
         if Gamma01 < 10:
             print('Warning, Gamma01 too low:', Gamma01)
         
-        # merging with product bins
-        df_N = [G_df.groupby(['g'+str(k)]).size().reset_index(name='N'+str(k)) for k in [0,1]]
-        for k in [0,1]:
-            df = df.merge(right=df_N[k], how='left')
+        if self.rescale_E:
+            df['E'] = df['E'] / df.loc[df['keep'], 'E'].sum() * n
             
-        # compute E
-        df['E'] = df['N0'] * df['N1'] / n
-        
         # R
         df['R'] = (df['O'] - df['E']) / df['E']**0.5
         R_mean = df.loc[df['keep'], 'O'].sum() / Gamma[0] / Gamma[1] / n_m
@@ -281,11 +340,6 @@ class CramerMRMR(FeatureSelector):
         self._excluded_toi[(k0,k1)] = excluded
         
         return V_toi
-    
-    def toi_Z(self, Z, v, k0, k1):
-        G = self.digitize_2d(Z, v, k0, k1)
-        
-        return(self.toi(G, v, k0, k1))
     
     def mrmr_cramer(self, Z, V, v):
         id_v = V == v
