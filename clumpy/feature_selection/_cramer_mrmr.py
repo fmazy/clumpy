@@ -265,20 +265,14 @@ class CramerMRMR(FeatureSelector):
         
         kde_N0 = KDE(kernel='box').fit(Z[:,[0]])
         N0 = kde_N0.predict(grid[:,[0]])
-        
-        print(N0)
-        N0 = N0 / N0.sum() 
-        # N0 = N0 / N0.sum() * n
+        N0 = N0 / N0.sum() * n
         
         kde_N1 = KDE(kernel='box').fit(Z[:,[1]])
         N1 = kde_N1.predict(grid[:,[1]])
-        N1 = N1 / N1.sum()
-        # N1 = N1 / N1.sum() * n
+        N1 = N1 / N1.sum() * n
         
-        E = N0 * N1 / n
-        print('>>',E.sum(),n, N0.sum())
-        # E = E / E.sum() * n
-        print('!!',E.sum(),n)
+        E = N0 * N1
+        E = E / E.sum() * n
         
         df = pd.DataFrame(grid, columns=['z'+str(k0), 'z'+str(k1)])
         df['g'+str(k0)] = np.digitize(df['z'+str(k0)], bins[0])
