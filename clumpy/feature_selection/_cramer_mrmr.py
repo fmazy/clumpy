@@ -11,7 +11,7 @@ from itertools import combinations
 from os import sys
 from ..tools._data import generate_grid
 
-class CramerMRMR(FeatureSelector):
+class CramerMRMR():
     """
     approx in  {'mean', 'median', 'std'}
     """
@@ -41,34 +41,36 @@ class CramerMRMR(FeatureSelector):
     def __repr__(self):
         return 'CramerMRMR()'
     
-    def fit(self, Z, V, v):
-                
-        self._cols_support = self.mrmr_cramer(Z, V, v)
+    def fit(self, Z, transited_pixels, bounds=None):
+        self._cols_support = self.mrmr_cramer(Z, transited_pixels, bounds)
                 
         return(self)
     
-    def gof_Z(self, z, id_v, v, k):
-        self.compute_bins_1d(z, id_v, v, k)
+    def gof_Z(self, z, transited_pixels, k, bound='none'):
+        self.compute_bins_1d(z, transited_pixels, k)
         if self.kde_method:
-            df = self.get_gof_df_kde(z, id_v, v, k)
+            df = self.get_gof_df_kde(z=z, 
+                                     transited_pixels=transited_pixels,
+                                     k=k, 
+                                     bound=bound)
             
         else:
-            df = self.get_gof_df(z, id_v, v, k)
+            df = self.get_gof_df(z, transited_pixels, k)
             
-        return(self.gof(df, v, k))
+        return(self.gof(df, k))
 
-    def compute_bins_1d(self, z, id_v, v, k):
-        n = id_v.sum()
+    def compute_bins_1d(self, z, transited_pixels, k):
+        n = transited_pixels.sum()
         
         n_m = int(np.max((n / (1 + n * self.epsilon**2),5)))
         
-        Delta = np.max(z[id_v]) - np.min(z[id_v])
+        Delta = np.max(z[transited_pixels]) - np.min(z[transited_pixels])
         
         if self.approx == 'mean':
             Gamma = np.max((10, int(n/n_m)))
             
         elif self.approx == 'median':
-            kde = KDE().fit(z[:,None][id_v])
+            kde = KDE().fit(z[:,None][transited_pixels])
             y = np.linspace(np.min(z), np.max(z), int(Delta / (kde._h / kde.q)))
             rho = kde.predict(y[:,None])
             Gamma = np.max((10, int(n * np.max(rho) * Delta / 2 / n_m)))
@@ -87,11 +89,11 @@ class CramerMRMR(FeatureSelector):
         print('digitizing, n_m=',n_m, ' Gamma=',Gamma)
         
         delta = Delta / Gamma
-        self._1d_bins[k] = np.linspace(np.min(z[id_v]), 
-                           np.max(z[id_v])+10**-5*delta, 
+        self._1d_bins[k] = np.linspace(np.min(z[transited_pixels]), 
+                           np.max(z[transited_pixels])+10**-5*delta, 
                            Gamma)
 
-    def get_gof_df(self, z, id_v, v, k):
+    def get_gof_df(self, z, transited_pixels, k):
         bins = self._1d_bins[k]
         g = np.digitize(z, bins)
         
@@ -103,7 +105,7 @@ class CramerMRMR(FeatureSelector):
         df['width'] = width
         
         G = pd.DataFrame(g, columns=['g'])
-        df_O = G.loc[id_v].groupby('g').size().reset_index(name='O')
+        df_O = G.loc[transited_pixels].groupby('g').size().reset_index(name='O')
         df_E = G.groupby('g').size().reset_index(name='E')
         
         df = df.merge(df_O, how='left')
@@ -114,18 +116,28 @@ class CramerMRMR(FeatureSelector):
         
         return(df)
     
-    def get_gof_df_kde(self, z, id_v, v, k):
+    def get_gof_df_kde(self, z, transited_pixels, k, bound='none'):
         
-        n = id_v.sum()
+        n = transited_pixels.sum()
         
         bins = self._1d_bins[k]
         bins_centers = bins[:-1] + np.diff(bins) / 2
         
-        kde_O = KDE(kernel='gaussian').fit(z[id_v][:,None])
+        if bound is None:
+            bound = 'none'
+        
+        if bound == 'none':
+            bounds = []
+        else:
+            bounds = [(0, bound)]
+            
+        kde_O = KDE(kernel='gaussian',
+                    bounds=bounds).fit(z[transited_pixels][:,None])
         O = kde_O.predict(bins_centers[:,None])
         O = O / np.sum(O) * n
         
-        kde_E = KDE(kernel='gaussian').fit(z[:,None])
+        kde_E = KDE(kernel='gaussian',
+                    bounds=bounds).fit(z[:,None])
         E = kde_E.predict(bins_centers[:,None]) * n
         E = E / np.sum(E) * n
         
@@ -136,7 +148,7 @@ class CramerMRMR(FeatureSelector):
         
         return(df)
 
-    def gof(self, df, v, k): 
+    def gof(self, df, k): 
         
         n = df['O'].sum()
         n_m = int(np.max((n / (1 + n * self.epsilon**2),5)))
@@ -179,13 +191,16 @@ class CramerMRMR(FeatureSelector):
         
         return V_gof
     
-    def toi_Z(self, Z, v, k0, k1):
+    def toi_Z(self, Z, k0, k1, bounds):
         
         self.compute_bins_2d(Z, k0, k1)
         
         
         if self.kde_method:
-            df = self.get_toi_df_kde(Z, k0, k1)
+            df = self.get_toi_df_kde(Z=Z, 
+                                     k0=k0, 
+                                     k1=k1,
+                                     bounds=bounds)
             
         else:
             df = self.get_toi_df(Z, k0, k1)
@@ -249,7 +264,7 @@ class CramerMRMR(FeatureSelector):
         
         return df
     
-    def get_toi_df_kde(self, Z, k0, k1):
+    def get_toi_df_kde(self, Z, k0, k1, bounds=['none','none']):
         bins = self._2d_bins[(k0,k1)]
         
         widths = [np.diff(binsk) for binsk in bins]
@@ -259,15 +274,34 @@ class CramerMRMR(FeatureSelector):
         
         n, d = Z.shape
         
-        kde_O = KDE(kernel='box').fit(Z)
+        if bounds is None:
+            bounds = []
+        
+        new_bounds = []
+        bounds_N0 = []
+        bounds_N1 = []
+        for i, bound in enumerate(bounds):
+            if bound in ['left', 'right', 'both']:
+                new_bounds.append((i, bound))
+                if i == 0:
+                    bounds_N0 = [(0, bound)]
+                elif i == 1:
+                    bounds_N1 = [(0, bound)]
+                    
+        bounds = new_bounds
+        
+        kde_O = KDE(kernel='gaussian',
+                    bounds=bounds).fit(Z)
         O = kde_O.predict(grid)
         O = O / np.sum(O) * n
         
-        kde_N0 = KDE(kernel='box').fit(Z[:,[0]])
+        kde_N0 = KDE(kernel='gaussian',
+                     bounds=bounds_N0).fit(Z[:,[0]])
         N0 = kde_N0.predict(grid[:,[0]])
         N0 = N0 / N0.sum() * n
         
-        kde_N1 = KDE(kernel='box').fit(Z[:,[1]])
+        kde_N1 = KDE(kernel='box',
+                     bounds=bounds_N1).fit(Z[:,[1]])
         N1 = kde_N1.predict(grid[:,[1]])
         N1 = N1 / N1.sum() * n
         
@@ -335,11 +369,15 @@ class CramerMRMR(FeatureSelector):
         
         return V_toi
     
-    def mrmr_cramer(self, Z, V, v):
-        id_v = V == v
+    def mrmr_cramer(self, Z, transited_pixels, bounds=None):
         
         n, d = Z.shape
-        self.bins = {}
+        
+        if bounds is None:
+            bounds = ['none' for k in range(d)]
+        
+        if len(bounds) != d:
+            raise(ValueError("Unexpected 'bounds' parameter. It should be a list of bounds for each explanatory variable or 'None'. A bound can be {'none', 'left', 'right', 'both'}."))
         
         self._1d = {}
         self._1d_bins = {}
@@ -353,16 +391,19 @@ class CramerMRMR(FeatureSelector):
         print('Computing GoF')
         print('-------------')
         
-        V_gof = np.array([self.gof_Z(Z[:,k1], id_v, v, k1) for k1 in range(d)])
+        V_gof = np.array([self.gof_Z(z=Z[:,k], 
+                                     transited_pixels=transited_pixels,
+                                     k=k, 
+                                     bound=bounds[k]) for k in range(d)])
         
         evs = np.arange(d)[V_gof >= self.V_gof_min]
         print('V_gof', np.round(V_gof,4))
         print('keep', evs)
         evs = evs[np.argsort(V_gof[evs])[::-1]]
         # return(evs)
-        list_k1_k2 = list(combinations(evs, 2))
+        list_k0_k1 = list(combinations(evs, 2))
         
-        # print(list_k1_k2)
+        # print(list_k0_k1)
         # return(evs)
         
         print('\nComputing ToI')
@@ -377,10 +418,13 @@ class CramerMRMR(FeatureSelector):
         self._R_max_toi = {}
         self._excluded_toi = {}
         
-        for k0, k1 in list_k1_k2:
+        for k0, k1 in list_k0_k1:
             if k0 in evs and k1 in evs:
                 print('toi, (k0,k1)=', (k0,k1))
-                V_toi = self.toi_Z(Z[:,[k0,k1]][id_v], v, k0, k1)
+                V_toi = self.toi_Z(Z=Z[:,[k0,k1]][transited_pixels],
+                                   k0=k0, 
+                                   k1=k1, 
+                                   bounds=[bounds[k0], bounds[k1]])
                                 
                 print('V_toi('+str(k0)+','+str(k1)+')='+str(np.round(V_toi,4)))
                 if V_toi >= self.V_toi_max:

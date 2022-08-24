@@ -11,15 +11,30 @@ import pandas as pd
 from ..layer import FeatureLayer
 from .._base import State
 
-class FeatureSelector():
+class FeatureSelectors():
     def __init__(self):
         self._fitted = False
+        self.selectors = {}
     
-    def fit(self, X, y=None):
-        self._fit(X, y)
+    def add_selector(self, v, selector):
+        self.selectors[v] = selector
+    
+    def fit(self, Z, V, bounds):
+        n, d = Z.shape
+        list_v = np.unique(V)
+        id_evs = np.zeros(d).astype(bool)
+        
+        for v in list_v:
+            if v in self.selectors.keys():
+                transited_pixels = V == v
+                self.selectors[v].fit(Z=Z,
+                                      transited_pixels=transited_pixels,
+                                      bounds=bounds)
+                
+        self._fit(Z, transited_pixels, bounds)
         
         self._fitted = True
-        self._n_cols = X.shape[1]
+        self._n_cols = Z.shape[1]
         
         return(self)
     
