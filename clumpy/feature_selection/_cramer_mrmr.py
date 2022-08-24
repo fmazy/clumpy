@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 
 import numpy as np
-from ._feature_selector import FeatureSelector
 from ekde import KDE
 import pandas as pd
 from sklearn.preprocessing import KBinsDiscretizer
@@ -24,7 +23,7 @@ class CramerMRMR():
                  approx='mean',
                  Gamma_max=100,
                  kde_method=False,
-                 rescale_E=False):
+                 kde_params={}):
         
         self.initial_state = initial_state
         self.V_gof_min = V_gof_min
@@ -34,7 +33,7 @@ class CramerMRMR():
         self.approx = approx   
         self.Gamma_max = Gamma_max
         self.kde_method = kde_method
-        self.rescale_E = rescale_E 
+        self.kde_params = kde_params
         
         super().__init__()
     
@@ -70,7 +69,9 @@ class CramerMRMR():
             Gamma = np.max((10, int(n/n_m)))
             
         elif self.approx == 'median':
-            kde = KDE().fit(z[:,None][transited_pixels])
+            kde = KDE()
+            kde.set_params(**self.kde_params)
+            kde.fit(z[:,None][transited_pixels])
             y = np.linspace(np.min(z), np.max(z), int(Delta / (kde._h / kde.q)))
             rho = kde.predict(y[:,None])
             Gamma = np.max((10, int(n * np.max(rho) * Delta / 2 / n_m)))
@@ -131,13 +132,15 @@ class CramerMRMR():
         else:
             bounds = [(0, bound)]
             
-        kde_O = KDE(kernel='gaussian',
-                    bounds=bounds).fit(z[transited_pixels][:,None])
+        kde_O = KDE(bounds=bounds)
+        kde_O.set_params(**self.kde_params)
+        kde_O.fit(z[transited_pixels][:,None])
         O = kde_O.predict(bins_centers[:,None])
         O = O / np.sum(O) * n
         
-        kde_E = KDE(kernel='gaussian',
-                    bounds=bounds).fit(z[:,None])
+        kde_E = KDE(bounds=bounds)
+        kde_E.set_params(**self.kde_params)
+        kde_E.fit(z[:,None])
         E = kde_E.predict(bins_centers[:,None]) * n
         E = E / np.sum(E) * n
         
@@ -153,7 +156,8 @@ class CramerMRMR():
         n = df['O'].sum()
         n_m = int(np.max((n / (1 + n * self.epsilon**2),5)))
         
-        df['keep'] = df['O'] >= n_m
+        # df['keep'] = df['O'] >= n_m
+        df['keep'] = df['E']>=5
         excluded = df.loc[~df['keep'], 'O'].sum() / n
         
         # recompute
@@ -165,15 +169,16 @@ class CramerMRMR():
         R_mean = n / Gamma / n_m
         R_max = df.loc[df['keep'], 'O'].max() / n_m
         
-        # scale
-        if self.rescale_E:
-            df['E'] = df['E'] / df.loc[df['keep'], 'E'].sum() * n
+        # rescale
+        df['E'] = df['E'] / df.loc[df['keep'], 'E'].sum() * n
         
         # chi2
         chi2 = ((df.loc[df['keep'], 'O'] - df.loc[df['keep'], 'E'])**2 / df.loc[df['keep'], 'E']).sum()
         
         # Normality ratio
         df['R'] = (df['O'] - df['E']) / ( df['E']**0.5 )
+        R_mean = df.loc[df['keep'], 'R'].abs().mean()
+        R_max = df.loc[df['keep'], 'R'].abs().max()
         
         if Gamma - 1 <= 0:
             print('Warning, the bins are too small for this transition.\nEventually increase the epsilon parameter.')
@@ -220,7 +225,9 @@ class CramerMRMR():
         elif self.approx == 'median':
             Gamma = []
             for k, z in enumerate(Z.T):
-                kde = KDE().fit(z[:,None])
+                kde = KDE()
+                kde.set_params(**self.kde_params)
+                kde.fit(z[:,None])
                 y = np.linspace(np.min(z), np.max(z), int(Delta[k] / (kde._h / kde.q)))
                 rho = kde.predict(y[:,None])
                 Gamma.append(np.max((10,int((n / n_m)**0.5 / 2 * np.max(rho) * Delta[k]))))
@@ -290,18 +297,21 @@ class CramerMRMR():
                     
         bounds = new_bounds
         
-        kde_O = KDE(kernel='gaussian',
-                    bounds=bounds).fit(Z)
+        kde_O = KDE(bounds=bounds)
+        kde_O.set_params(**self.kde_params)
+        kde_O.fit(Z)
         O = kde_O.predict(grid)
         O = O / np.sum(O) * n
         
-        kde_N0 = KDE(kernel='gaussian',
-                     bounds=bounds_N0).fit(Z[:,[0]])
+        kde_N0 = KDE(bounds=bounds_N0)
+        kde_N0.set_params(**self.kde_params)
+        kde_N0.fit(Z[:,[0]])
         N0 = kde_N0.predict(grid[:,[0]])
         N0 = N0 / N0.sum() * n
         
-        kde_N1 = KDE(kernel='box',
-                     bounds=bounds_N1).fit(Z[:,[1]])
+        kde_N1 = KDE(bounds=bounds_N1)
+        kde_N1.set_params(**self.kde_params)
+        kde_N1.fit(Z[:,[1]])
         N1 = kde_N1.predict(grid[:,[1]])
         N1 = N1 / N1.sum() * n
         
@@ -325,7 +335,8 @@ class CramerMRMR():
         n_m = int(np.max((n / (1 + n * self.epsilon**2),5)))
         
         # exclude pixels
-        df['keep'] = df['O']>=n_m
+        # df['keep'] = df['O']>=n_m
+        df['keep'] = df['E']>=5
         excluded = df.loc[~df['keep'], 'O'].sum() / n
         # df = df.loc[df['keep']]
         
@@ -339,8 +350,8 @@ class CramerMRMR():
         if Gamma01 < 10:
             print('Warning, Gamma01 too low:', Gamma01)
         
-        if self.rescale_E:
-            df['E'] = df['E'] / df.loc[df['keep'], 'E'].sum() * n
+        # rescale
+        df['E'] = df['E'] / df.loc[df['keep'], 'E'].sum() * n
             
         # R
         df['R'] = (df['O'] - df['E']) / df['E']**0.5
@@ -348,7 +359,7 @@ class CramerMRMR():
         R_max = df.loc[df['keep'], 'O'].max() / n_m
                 
         # chi2
-        chi2 = ((df.loc[df['keep'], 'O'] - df.loc[df['keep'], 'E'])**2 / df.loc[df['keep'], 'O']).values.sum()
+        chi2 = ((df.loc[df['keep'], 'O'] - df.loc[df['keep'], 'E'])**2 / df.loc[df['keep'], 'E']).values.sum()
         
         # gamma
         Gamma_min = np.min(Gamma)

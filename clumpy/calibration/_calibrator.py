@@ -6,7 +6,7 @@ from scipy import ndimage
 
 from ..layer import Layer, FeatureLayer, LandUseLayer, MaskLayer
 from .._base import State
-from ..feature_selection import Pipeline
+from ..feature_selection import FeatureSelectors
 from ..patch import Patcher, Patchers
 
 class Calibrator():
@@ -26,7 +26,7 @@ class Calibrator():
         self.tpe = tpe
         
         if feature_selector is None:
-            self.feature_selector = Pipeline(fs_list=[])
+            self.feature_selector = FeatureSelectors()
         else:
             self.feature_selector = feature_selector
         

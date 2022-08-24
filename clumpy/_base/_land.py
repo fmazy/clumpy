@@ -17,9 +17,6 @@ from ..density_estimation import _methods as _density_estimation_methods
 from ..transition_probability_estimation._tpe import TransitionProbabilityEstimator
 from ..transition_probability_estimation import Bayes
 
-# features
-from ..feature_selection import MRMR
-
 # Tools
 from ..tools._path import path_split
 from ..tools._console import title_heading

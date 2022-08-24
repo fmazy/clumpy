@@ -12,9 +12,10 @@ from ..layer import FeatureLayer
 from .._base import State
 
 class FeatureSelectors():
-    def __init__(self):
+    def __init__(self, selectors={}):
         self._fitted = False
-        self.selectors = {}
+        
+        self.selectors = selectors
     
     def add_selector(self, v, selector):
         self.selectors[v] = selector
@@ -31,7 +32,9 @@ class FeatureSelectors():
                                       transited_pixels=transited_pixels,
                                       bounds=bounds)
                 
-        self._fit(Z, transited_pixels, bounds)
+                id_evs[self.selectors[v]._cols_support] = True
+        
+        self._cols_support = np.arange(d)[id_evs]
         
         self._fitted = True
         self._n_cols = Z.shape[1]
@@ -44,28 +47,40 @@ class FeatureSelectors():
         """
         return(self._cols_support)
     
-    def transform(self, X):
+    def transform(self, Z):
         """
-        Reduce X to the selected features.
+        Reduce Z to the selected features.
 
         Parameters
         ----------
 
-        X : array-like of shape (n_samples, n_features)
+        Z : array-like of shape (n_samples, n_features)
             The input samples.
 
         Returns
         -------
-        X_r : array-like of shape (n_samples, n_features)
+        Z_r : array-like of shape (n_samples, n_features)
             The input samples with only the selected features.
         """
         if not self._fitted:
             raise(TypeError("The FeatureSelector object has to be fitted before calling transform()."))
+            
         
-        if X.shape[1] != self._n_cols:
-            raise(ValueError("X's number of columns is incorrect. Expected "+str(self._n_cols)+", got "+str(X.shape[1])))
+        if type(Z) is list:    
+            Z = np.array(Z)
+            
+        inline = False
+        if len(Z.shape) == 1:
+            Z = Z[None,:]
+            inline=True
         
-        return(X[:, self._cols_support])
+        if Z.shape[1] != self._n_cols:
+            raise(ValueError("Z's number of columns is incorrect. EZpected "+str(self._n_cols)+", got "+str(Z.shape[1])))
+        
+        if inline:
+            return(Z[:, self._cols_support][0])
+        else:
+            return(Z[:, self._cols_support])
 
     def fit_transform(self, X, y):
         """
