@@ -445,6 +445,81 @@ class CramerMRMR():
                 
         return evs
     
+    def tex_table(self, feature_names, k_shift=0):
+        
+        tab = "\\begin{tabular}{Sl|Sc|Sc|Sc|Sc}\n"
+        tab += "\\multicolumn{5}{Sc}{\\textsc{Test of Relevance}}\\\ \n"
+        tab += "EV & $V_{GoF}$ & $R_{mean}$ & $R_{max}$ & excl. pix. \\\ \n\\hline\n"
+    	# 1 - Elevation & & & & \\
+    	# 1 - Elevation & & & & \\
+    	# 1 - Elevation & & & & \\
+    	# \hline
+    	# \hline
+    	# couple & $V_{ToI}$ & $R_{mean}$ & $R_{max}$ & excl. pix. \\
+    	# (1,2) & & & & \\
+    # 
+        for k in range(len(self._V_gof.values())):
+            key = list(self._V_gof.keys())[k]
+            V = np.round(self._V_gof[key],4)
+            R_mean = np.round(self._R_mean_gof[key],4)
+            R_max = np.round(self._R_max_gof[key],4)
+            excl = np.round(self._excluded_gof[key]*100,2)
+            
+            if V < self.V_gof_min:
+                tab += feature_names[k] + " & "
+                tab += "$" + str(V) + "$ &"
+                tab += "$" + str(R_mean) + "$ &"
+                tab += "$" + str(R_max) + "$ &"
+                tab += "$" + str(excl) + "\\%$ \\\ \n"
+            else:
+                tab += "\\textbf{"+feature_names[k] + "} & "
+                tab += "$\\textbf{" + str(V) + "}$ &"
+                tab += "$\\textbf{" + str(R_mean) + "}$ &"
+                tab += "$\\textbf{" + str(R_max) + "}$ &"
+                tab += "$\\textbf{" + str(excl) + "}\\%$ \\\ \n"
+        tab += "\hline\n"
+        
+        if len(self._V_toi.keys()) > 0:
+            tab += "\\multicolumn{5}{Sc}{\\textsc{Test of Redundancy}}\\\ \n"
+            tab += "EV couple & $V_{ToI}$ & $R_{mean}$ & $R_{max}$ & excl. pix.\\\ \n"
+            tab += "\\hline \n"
+            for key in self._V_toi.keys():
+                k0, k1 = key
+                V = np.round(self._V_toi[key],4)
+                R_mean = np.round(self._R_mean_toi[key],4)
+                R_max = np.round(self._R_max_toi[key],4)
+                excl = np.round(self._excluded_toi[key]*100,2)
+                
+                if V >= self.V_toi_max:
+                    tab += "("+str(k0+k_shift)+","+str(k1+k_shift)+")"
+                    if self._V_gof[k0] < self._V_gof[k1]: 
+                        k_reject = k0
+                    else:
+                        k_reject = k1
+                    tab += ", reject "+str(k_reject+k_shift)
+                    tab += " & "
+                    tab += "$" + str(V) + "$ &"
+                    tab += "$" + str(R_mean) + "$ &"
+                    tab += "$" + str(R_max) + "$ &"
+                    tab += "$" + str(excl) + "\\%$ \\\ \n"
+                    
+                else:
+                    tab += "\\textbf{("+str(k0+k_shift)+","+str(k1+k_shift)+")} & "
+                    tab += "$\\textbf{" + str(V) + "}$ &"
+                    tab += "$\\textbf{" + str(R_mean) + "}$ &"
+                    tab += "$\\textbf{" + str(R_max) + "}$ &"
+                    tab += "$\\textbf{" + str(excl) + "\\%}$ \\\ \n"
+                
+        tab += "\\hline \n"
+        tab += "\\multicolumn{5}{Sc}{\\textsc{Selected EV : "
+        for k in self._cols_support:
+            tab += str(k+k_shift)
+            if k != self._cols_support[-1]:
+                tab += ", "
+        tab += "}}\\\ \n"
+        tab += "\\end{tabular}"
+        return tab
+    
     # def global_mrmr_cramer(self, Z, V, initial_state):
     #     n, d = Z.shape
         
