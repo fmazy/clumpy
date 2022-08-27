@@ -21,7 +21,6 @@ class CramerMRMR():
                  epsilon=0.1,
                  alpha=0.9,
                  approx='mean',
-                 Gamma_max=100,
                  kde_method=False,
                  kde_params={}):
         
@@ -31,7 +30,6 @@ class CramerMRMR():
         self.epsilon = epsilon
         self.alpha = alpha
         self.approx = approx   
-        self.Gamma_max = Gamma_max
         self.kde_method = kde_method
         self.kde_params = kde_params
         
@@ -82,7 +80,6 @@ class CramerMRMR():
         else:
             raise(ValueError("Unexpected 'self.approx' attribute value. It should be 'median' (default), 'mean', or 'std'"))
         
-        Gamma = np.min((Gamma, self.Gamma_max))
         
         if Gamma < 10:
             raise(ValueError("The number of bins (Gamma) is too low. Increase the epsilon parameter."))
@@ -448,7 +445,7 @@ class CramerMRMR():
     def tex_table(self, feature_names, k_shift=0):
         
         tab = "\\begin{tabular}{Sl|Sc|Sc|Sc|Sc}\n"
-        tab += "\\multicolumn{5}{Sc}{\\textsc{Test of Relevance}}\\\ \n"
+        tab += "\\multicolumn{5}{Sc}{\\textsc{Test of Relevance}, $V_{GoF}^m="+str(self.V_gof_min)+"$}\\\ \n"
         tab += "EV & $V_{GoF}$ & $R_{mean}$ & $R_{max}$ & excl. pix. \\\ \n\\hline\n"
     	# 1 - Elevation & & & & \\
     	# 1 - Elevation & & & & \\
@@ -480,7 +477,7 @@ class CramerMRMR():
         tab += "\hline\n"
         
         if len(self._V_toi.keys()) > 0:
-            tab += "\\multicolumn{5}{Sc}{\\textsc{Test of Redundancy}}\\\ \n"
+            tab += "\\multicolumn{5}{Sc}{\\textsc{Test of Redundancy}, $V_{ToI}^M="+str(self.V_toi_max)+"$}\\\ \n"
             tab += "EV couple & $V_{ToI}$ & $R_{mean}$ & $R_{max}$ & excl. pix.\\\ \n"
             tab += "\\hline \n"
             for key in self._V_toi.keys():
