@@ -174,8 +174,10 @@ class CramerMRMR():
         
         # Normality ratio
         df['R'] = (df['O'] - df['E']) / ( df['E']**0.5 )
-        R_mean = df.loc[df['keep'], 'R'].abs().mean()
-        R_max = df.loc[df['keep'], 'R'].abs().max()
+        R_mean = df.loc[df['keep'], 'O'].sum() / Gamma / n_m
+        R_max = df.loc[df['keep'], 'O'].max() / n_m
+        # R_mean = df.loc[df['keep'], 'R'].abs().mean()
+        # R_max = df.loc[df['keep'], 'R'].abs().max()
         
         if Gamma - 1 <= 0:
             print('Warning, the bins are too small for this transition.\nEventually increase the epsilon parameter.')
