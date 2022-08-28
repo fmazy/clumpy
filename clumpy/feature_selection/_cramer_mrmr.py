@@ -5,6 +5,7 @@ from ekde import KDE
 import pandas as pd
 from sklearn.preprocessing import KBinsDiscretizer
 import warnings
+from matplotlib import pyplot as plt
 
 from itertools import combinations
 from os import sys
@@ -22,7 +23,9 @@ class CramerMRMR():
                  alpha=0.9,
                  approx='mean',
                  kde_method=False,
-                 kde_params={}):
+                 kde_params={},
+                 features_names=None,
+                 k_shift=0):
         
         self.initial_state = initial_state
         self.V_gof_min = V_gof_min
@@ -32,6 +35,8 @@ class CramerMRMR():
         self.approx = approx   
         self.kde_method = kde_method
         self.kde_params = kde_params
+        self.features_names = features_names
+        self.k_shift = k_shift
         
         super().__init__()
     
@@ -444,8 +449,8 @@ class CramerMRMR():
                 
         return evs
     
-    def tex_table(self, feature_names, k_shift=0):
-        
+    def tex_table(self, feature_names):
+        k_shift = self.k_shift
         tab = "\\begin{tabular}{Sl|Sc|Sc|Sc|Sc}\n"
         tab += "\\multicolumn{5}{Sc}{\\textsc{Test of Relevance}, $V_{GoF}^m="+str(self.V_gof_min)+"$}\\\ \n"
         tab += "EV & $V_{GoF}$ & $R_{mean}$ & $R_{max}$ & excl. pix. \\\ \n\\hline\n"
@@ -563,3 +568,231 @@ class CramerMRMR():
     #     print('==========')
     #     print('EVS : ', evs)
     #     return evs
+    
+    def subplot_gof(self, k):
+        df = self._1d[k].copy()    
+        
+        # plt.bar(df['z'].values[:-1], 
+        #         df['E'].values[:-1], 
+        #         df['width'].values[1:], 
+        #         align='center',
+        #         color='tab:blue', 
+        #         alpha=0.3,
+        #         label='excluded $E_{\gamma_k}$')
+        # plt.bar(df['z'].values[:-1], 
+        #         df['O'].values[:-1], 
+        #         df['width'].values[1:], 
+        #         align='center',
+        #         color='tab:orange', 
+        #         alpha=0.3,
+        #         label='excluded $O_{\gamma_k}$')
+        
+        plt.bar(df.loc[df['keep'], 'z'], 
+                df.loc[df['keep'], 'E'], 
+                df.loc[df['keep'], 'width'], 
+                align='center',
+                color='darkviolet', 
+                alpha=0.7,
+                label='$E_{\gamma_k}$')
+        plt.bar(df.loc[df['keep'], 'z'], 
+                df.loc[df['keep'], 'O'], 
+                df.loc[df['keep'], 'width'],
+                align='center',
+                color='orange', 
+                alpha=0.7,
+                label='$O_{\gamma_k}$')
+        
+        # xlim = plt.xlim()
+        
+        # plt.plot(plt.xlim(),
+        #          [cramer_mrmr._n_m_gof[k] for i in range(2)],
+        #          ls='--',
+        #          color='black',
+        #          alpha=0.7,
+        #          label='$n_m$',
+        #          lw=2)
+        
+        # plt.xlim(xlim)
+        
+        xa, xb = plt.xlim()
+        ya, yb = plt.ylim()
+        
+        plt.text(xa+(xb-xa)*0.5, ya+(yb-ya)*0.5, '$V_{GoF}='+
+                  str(round(self._V_gof[k], 3))+
+                  '$\n$R_{mean}='+str(round(self._R_mean_gof[k], 3))+'$\n$R_{max}='+str(round(self._R_max_gof[k], 3))+'$\nexluded pixels: '+str(round(self._excluded_gof[k]*100, 2))+'%')
+        # plt.title('$V_{gof}='+
+                  # str(round(cramer_mrmr._V_gof[v][k], 4))+
+                  # '$')
+        
+        plt.legend()
+        plt.grid()
+        plt.xlabel(self.features_names[k])
+        plt.ylabel('Number of Pixels')
+        
+    def plot_gof(self, path=None):
+        plt.figure(figsize=(10,10))
+        n_k = len(self._V_gof.keys())
+        
+        n_rows = int(n_k/2)
+        if n_k%2>0:
+            n_rows += 1
+        
+        for k in range(n_k):
+            plt.subplot(n_rows,2,k+1)
+            self.subplot_gof(k)
+        
+        if path is not None:
+            plt.savefig(path, bbox_inches='tight')
+    
+    
+    def plot_toi(self, 
+                 k0, k1, 
+                 xlim=None, 
+                 ylim=None, 
+                 reorder=False, 
+                 path=None,
+                 cmap='plasma'):
+        import matplotlib as mpl
+        cmap = mpl.cm.get_cmap(cmap).copy()
+        cmap.set_bad(color='#999')
+        
+        df = self._2d[(k0,k1)].copy()
+        
+        if reorder:
+            df.sort_values(by='O', inplace=True, ascending=False)
+            s = int(df.index.size**0.5)
+            if s**2 == df.index.size:
+                shape = (s, s)
+            elif s * (s + 1) < df.index.size:
+                shape = (s+1, s+1)
+            else:
+                shape = (s, s+1)
+            grid = generate_grid(*[np.arange(s)+1 for s in shape])
+            df[['g'+str(k0), 'g'+str(k1)]] = grid[:df.index.size]
+            shape = (shape[0]+1, shape[0]+1)
+        else:
+            shape = (df['g'+str(k0)].values.max()+1, df['g'+str(k1)].values.max()+1)
+            
+        O = np.zeros(shape)
+        O.fill(np.nan)
+        E = np.zeros(shape)
+        E.fill(np.nan)
+        R = np.zeros(shape)
+        R.fill(np.nan)
+        
+        for d in df.loc[df['keep']].iterrows():
+            O[int(d[1]['g'+str(k0)]), int(d[1]['g'+str(k1)])] = d[1]['O']
+            E[int(d[1]['g'+str(k0)]), int(d[1]['g'+str(k1)])] = d[1]['E']
+            R[int(d[1]['g'+str(k0)]), int(d[1]['g'+str(k1)])] = d[1]['R']
+        
+        # df_out = df.loc[~df['keep']]
+        
+        plt.figure(figsize=(10,10))
+        plt.subplot(2,2,1)
+        im = plt.imshow(O.T, cmap=cmap)
+        plt.colorbar(im,fraction=0.046, pad=0.04)
+        # plt.scatter(df_out['g'+str(k0)], df_out['g'+str(k1)], marker='x', c='#ffffff')
+        plt.title('$O_{\gamma_k}$')
+        if xlim is None:
+            plt.xlim([0.5,O.shape[0]-0.5])
+        else:
+            plt.xlim(xlim)
+        if xlim is None:
+            plt.ylim([0.5, O.shape[1]-0.5])
+        else:
+            plt.ylim(ylim)
+        plt.tick_params(left = False, right = False , labelleft = False ,
+                    labelbottom = False, bottom = False)
+        plt.xlabel(self.features_names[k0])
+        plt.ylabel(self.features_names[k1])
+        
+        plt.subplot(2,2,2)
+        im = plt.imshow(E.T, cmap=cmap)
+        cb = plt.colorbar(im,fraction=0.046, pad=0.04)
+        cb.set_label('Number of Pixels', labelpad=3)
+        # plt.scatter(df_out['g'+str(k0)], df_out['g'+str(k1)], marker='x', c='#ffffff')
+        plt.title('$E_{\gamma_k}$')
+        if xlim is None:
+            plt.xlim([0.5,O.shape[0]-0.5])
+        else:
+            plt.xlim(xlim)
+        if xlim is None:
+            plt.ylim([0.5, O.shape[1]-0.5])
+        else:
+            plt.ylim(ylim)
+        plt.tick_params(left = False, right = False , labelleft = False ,
+                    labelbottom = False, bottom = False)    
+        plt.xlabel(self.features_names[k0])
+        plt.ylabel(self.features_names[k1])
+        
+        plt.subplot(2,2,3)
+        im = plt.imshow(np.abs(R.T), cmap=cmap)
+        plt.colorbar(im,fraction=0.046, pad=0.04)
+        
+        # plt.scatter(df_out['g'+str(k0)], df_out['g'+str(k1)], marker='x', c='#ffffff')
+        plt.title('$|R_{\gamma_k}|$')
+        if xlim is None:
+            plt.xlim([0.5,O.shape[0]-0.5])
+        else:
+            plt.xlim(xlim)
+        if xlim is None:
+            plt.ylim([0.5, O.shape[1]-0.5])
+        else:
+            plt.ylim(ylim)
+        
+        plt.tick_params(left = False, right = False , labelleft = False ,
+                    labelbottom = False, bottom = False)
+        plt.xlabel(self.features_names[k0])
+        plt.ylabel(self.features_names[k1])
+        
+        plt.subplot(2,2,4)
+        df_sorted = df.sort_values(by='O', ascending=False)
+        df_sorted.reset_index(inplace=True)
+        # plt.bar(df_sorted.index, df_sorted['E'], align='edge', width=1, alpha=0.3, color='tab:blue', label='excluded $E_{\gamma_k}$')
+        # plt.bar(df_sorted.index, df_sorted['O'], align='edge', width=1, alpha=0.3, color='tab:orange', label='excluded $O_{\gamma_k}$')
+        plt.bar(df_sorted.loc[df_sorted['keep']].index, df_sorted.loc[df_sorted['keep'], 'E'], align='edge', width=1, alpha=0.8, color='darkviolet', label='$E_{\gamma_k}$')
+        plt.bar(df_sorted.loc[df_sorted['keep']].index, df_sorted.loc[df_sorted['keep'], 'O'], align='edge', width=1, alpha=0.8, color='orange', label='$O_{\gamma_k}$')
+        plt.grid()
+        plt.xlabel('ordered 2d-bins')
+        # plt.ylabel('Number of Pixels')
+        
+        xlim = plt.xlim()
+        
+        # plt.plot(plt.xlim(),
+        #          [cramer_mrmr._n_m_toi[(k0,k1)] for i in range(2)],
+        #          ls='--',
+        #          color='black',
+        #          alpha=0.7,
+        #          label='$n_m$',
+        #          lw=2)
+        
+        plt.xlim(xlim)
+        
+        xa, xb = plt.xlim()
+        ya, yb = plt.ylim()
+        
+        plt.text(xa+(xb-xa)*0.5, ya+(yb-ya)*0.5, '$V_{ToI}='+
+                  str(round(self._V_toi[(k0,k1)], 3))+
+                  '$\n$R_{mean}='+str(round(self._R_mean_toi[(k0,k1)], 3))+'$\n$R_{max}='+str(round(self._R_max_toi[(k0,k1)], 3))+'$\nexluded pixels: '+str(round(self._excluded_toi[(k0,k1)]*100, 2))+'%')
+        
+        plt.legend()
+        
+        if path is not None:
+            plt.savefig(path, bbox_inches='tight')
+        
+    def plot(self, path_prefix=None, extension='pdf'):
+        
+        if path_prefix is not None:
+            path = path_prefix + '_gof.' + extension
+        else:
+            path = None
+        
+        self.plot_gof(path=path)
+        
+        for k0, k1 in self._V_toi.keys():
+            if path_prefix is not None:
+                path = path_prefix + '_toi_' + str(k0+self.k_shift) + '_' + str(k1+self.k_shift) + '.' + extension
+            else:
+                path = None
+            
+            self.plot_toi(k0=k0, k1=k1, path=path)
