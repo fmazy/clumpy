@@ -1,0 +1,34 @@
+{
+    "regions" : [
+        {
+            "name" : "region_1",
+            "value" : 1,
+            "lands": [
+                {
+                    "initial_state" : 1,
+                    "final_states" : [1,2,3],
+                    "estimator" : "bayes_ekde",
+                    "allocator" : "uPAM"
+                },
+                {
+                    "initial_state" : 2,
+                    "final_states" : [1,2,3],
+                    "estimator" : "bayes_ekde",
+                    "allocator" : "uPAM"
+                },
+            ],
+        }, 
+        {
+            "name" : "region_2",
+            "value" : 2,
+            "lands": [
+                {
+                    "initial_state" : 3,
+                    "final_states" : [1,2,3],
+                    "estimator" : "bayes_ekde",
+                    "allocator" : "uPAM"
+                },
+            ],
+        }, 
+    ]
+}
