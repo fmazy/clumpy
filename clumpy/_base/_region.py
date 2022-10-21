@@ -28,112 +28,71 @@ class Region(dict):
 
     def __init__(self,
                  label,
+                 value,
                  verbose=0,
                  verbose_heading_level=1):
         self.label = label
+        self.value = value
         self.verbose = verbose
         self.verbose_heading_level = verbose_heading_level
         
-        self.territory = None
-        self.features = None
-        self.calibrator = None
-        self.lul = {}
-        self.mask = {}
-        self.transition_matrix = None
-        
+    def __repr__(self):
+        return 'Region('+self.label+')'
+    
     def add_land(self, land):
         self[int(land.state)] = land
         land.region = self
         return(self)
     
-    def set_lul(self, lul, kind):
-        self.lul[kind] = lul
-        return(self)
     
-    def get_lul(self, kind):
-        if kind not in self.lul.keys():
-            return(self.territory.get_lul(kind))
-        else:
-            return(self.lul[kind])
-    
-    def set_mask(self, mask, kind):
-        self.mask[kind] = mask
-        return(self)
-    
-    def get_mask(self, kind):
-        if kind not in self.mask.keys():
-            return(self.territory.get_mask(kind))
-        else:
-            return(self.mask[kind])
-    
-    def set_transition_matrix(self, tm):
-        self.transition_matrix = tm
-        return(self)
-    
-    def get_transition_matrix(self):
-        if self.transition_matrix is None:
-            return(self.territory.get_transition_matrix())
-        else:
-            return(self.transition_matrix)
-        
-    def set_features(self, features):
-        self.features = features
-        return(self)
-    
-    def get_features(self):
-        if self.features is None:
-            return(self.territory.get_features())
-        else:
-            return(self.features)
-    
-    def check(self, objects=None):
-        """
-        Check the unicity of objects.
-        Notably, estimators uniqueness are checked to avoid malfunctioning during transition probabilities estimation.
-        """
-        if objects is None:
-            objects = []
+    # def check(self, objects=None):
+    #     """
+    #     Check the unicity of objects.
+    #     Notably, estimators uniqueness are checked to avoid malfunctioning during transition probabilities estimation.
+    #     """
+    #     if objects is None:
+    #         objects = []
         
         
-        for land in self.values():
-            if land in objects:
-                raise(ValueError("Land objects must be different."))
-            else:
-                objects.append(land)
+    #     for land in self.values():
+    #         if land in objects:
+    #             raise(ValueError("Land objects must be different."))
+    #         else:
+    #             objects.append(land)
                 
-            land.check(objects=objects)
+    #         land.check(objects=objects)
         
 
-    def fit(self):
-        """
-        Fit the region.
+    # def fit(self):
+    #     """
+    #     Fit the region.
 
-        Parameters
-        ----------
-        lul_initial : LandUseLayer
-            The initial land use.
+    #     Parameters
+    #     ----------
+    #     lul_initial : LandUseLayer
+    #         The initial land use.
 
-        lul_final : LandUseLayer
-            The final land use.
+    #     lul_final : LandUseLayer
+    #         The final land use.
 
-        mask : MaskLayer, default = None
-            The region mask layer. If ``None``, the whole area is studied.
+    #     mask : MaskLayer, default = None
+    #         The region mask layer. If ``None``, the whole area is studied.
 
-        distances_to_states : dict(State:ndarray), default={}
-            The distances matrix to key state. Used to improve performance.
+    #     distances_to_states : dict(State:ndarray), default={}
+    #         The distances matrix to key state. Used to improve performance.
 
-        Returns
-        -------
-        self
-        """
-        if self.verbose > 0:
-            print(title_heading(self.verbose_heading_level) + 'Region ' + self.label + ' fitting\n')
+    #     Returns
+    #     -------
+    #     self
+    #     """
+    #     if self.verbose > 0:
+    #         print(title_heading(self.verbose_heading_level) + 'Region ' + self.label + ' fitting\n')
 
-        for state, land in self.items():
-            land.fit()
+    #     for state, land in self.items():
+    #         land.fit()
 
 
-        return (self)
+        # return (self)
 
     # def compute_transition_matrix(self,
     #                               lul_initial='initial',
@@ -238,50 +197,50 @@ class Region(dict):
     #     else:
     #         return({self.label : p})
     
-    def transition_probabilities_layer(self,
-                                       effective_transitions_only=True):
+    # def transition_probabilities_layer(self,
+    #                                    effective_transitions_only=True):
         
-        if self.verbose > 0:
-            print(title_heading(self.verbose_heading_level) + 'Region ' + self.label + ' TPE\n')
+    #     if self.verbose > 0:
+    #         print(title_heading(self.verbose_heading_level) + 'Region ' + self.label + ' TPE\n')
         
-        lul = self.get_lul('start')
+    #     lul = self.get_lul('start')
         
-        proba_layer = ProbaLayer(np.ndarray(shape=(0,) + lul.shape),
-                                 label="",
-                                 final_states=[],
-                                 geo_metadata = deepcopy(lul.geo_metadata))
+    #     proba_layer = ProbaLayer(np.ndarray(shape=(0,) + lul.shape),
+    #                              label="",
+    #                              final_states=[],
+    #                              geo_metadata = deepcopy(lul.geo_metadata))
                 
-        for state, land in self.items():
-            proba_layer__land = land.transition_probabilities_layer(
-                effective_transitions_only=effective_transitions_only)
-            proba_layer = proba_layer.fusion(proba_layer__land)
+    #     for state, land in self.items():
+    #         proba_layer__land = land.transition_probabilities_layer(
+    #             effective_transitions_only=effective_transitions_only)
+    #         proba_layer = proba_layer.fusion(proba_layer__land)
                 
-        return(proba_layer)
+    #     return(proba_layer)
         
-    def allocate(self,
-                 lul='start',
-                 lul_origin=None):
+    # def allocate(self,
+    #              lul='start',
+    #              lul_origin=None):
         
-        if self.verbose > 0:
-            print(title_heading(self.verbose_heading_level) + 'Region ' + self.label + ' Allocation\n')
+    #     if self.verbose > 0:
+    #         print(title_heading(self.verbose_heading_level) + 'Region ' + self.label + ' Allocation\n')
         
-        if isinstance(lul, str):
-            lul = self.get_lul(lul).copy()
+    #     if isinstance(lul, str):
+    #         lul = self.get_lul(lul).copy()
             
-        if lul_origin is None:
-            lul_origin = lul.copy()
+    #     if lul_origin is None:
+    #         lul_origin = lul.copy()
         
-        proba_layer = ProbaLayer(np.ndarray(shape=(0,) + lul.shape),
-                                 label="",
-                                 final_states=[],
-                                 geo_metadata = deepcopy(lul.geo_metadata))
+    #     proba_layer = ProbaLayer(np.ndarray(shape=(0,) + lul.shape),
+    #                              label="",
+    #                              final_states=[],
+    #                              geo_metadata = deepcopy(lul.geo_metadata))
         
-        for land in self.values():
-            lul, proba_layer__land = land.allocate(lul=lul,
-                                        lul_origin=lul_origin)
-            proba_layer = proba_layer.fusion(proba_layer__land)
+    #     for land in self.values():
+    #         lul, proba_layer__land = land.allocate(lul=lul,
+    #                                     lul_origin=lul_origin)
+    #         proba_layer = proba_layer.fusion(proba_layer__land)
         
-        return(lul, proba_layer)
+    #     return(lul, proba_layer)
             
     
     # def allocate(self,

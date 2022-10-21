@@ -135,7 +135,8 @@ class LandUseLayer(Layer):
                 palette,
                 show=True,
                 colorbar=True,
-                colorbar_shrink=1.0):
+                colorbar_shrink=1.0,
+                display_map=True):
         """
         Display the land use cover layer through python console with matplotlib.
 
@@ -160,19 +161,20 @@ class LandUseLayer(Layer):
         
         labels, values, colors = ordered_palette.get_list_of_labels_values_colors()
         
-        colors = colors[:-1] + [colors[-2]] + [colors[-1]]
+        # colors = colors[:-1] + [colors[-2]] + [colors[-1]]
         bounds = np.array(values+[values[-1]+1])-0.5
         
         cmap = mpl_colors.ListedColormap(colors)
         norm = mpl_colors.BoundaryNorm(bounds, cmap.N)
         
-        super().display(center=center,
-                        window=window,
-                        show=False,
-                        colorbar=False,
-                        interpolation='none',
-                        cmap=cmap,
-                        norm=norm)
+        if display_map:
+            super().display(center=center,
+                            window=window,
+                            show=False,
+                            colorbar=False,
+                            interpolation='none',
+                            cmap=cmap,
+                            norm=norm)
 
         if colorbar:
             cb = plt.colorbar(shrink=colorbar_shrink)
