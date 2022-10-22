@@ -13,8 +13,8 @@ class Calibrator():
     def __init__(self,
                  initial_state,
                  final_states,
-                 tpe,
-                 feature_selector=None,
+                 transition_probability_estimator,
+                 ev_selector=None,
                  patchers=None,
                  verbose = 0):
         if initial_state in final_states:
@@ -23,12 +23,12 @@ class Calibrator():
         self.initial_state = initial_state
         self.final_states = final_states
         
-        self.tpe = tpe
+        self.transition_probability_estimator = transition_probability_estimator
         
-        if feature_selector is None:
-            self.feature_selector = FeatureSelectors()
+        if ev_selector is None:
+            self.ev_selector = FeatureSelectors()
         else:
-            self.feature_selector = feature_selector
+            self.ev_selector = ev_selector
         
         self._fitted = False
         

@@ -10,7 +10,7 @@ from ..tools._path import path_split
 from ..tools._console import title_heading
 from . import Land
 
-class Region(dict):
+class Region():
     """
     Define a region.
 
@@ -33,17 +33,31 @@ class Region(dict):
                  verbose_heading_level=1):
         self.label = label
         self.value = value
+        self.lands = []
         self.verbose = verbose
         self.verbose_heading_level = verbose_heading_level
         
     def __repr__(self):
         return 'Region('+self.label+')'
+            
+    def get_lands_state_values(self):
+        
+        return [l.value for l in self.lands]
     
     def add_land(self, land):
-        self[int(land.state)] = land
-        land.region = self
+        if land not in self.lands:
+            if land.value in self.get_lands_state_values():
+                self.lands.append(land)
+            else:
+                Warning('The land value is already in.')
+        else:
+            Warning('The land is already in.')
+        
         return(self)
     
+    def add_lands(self, lands):
+        self.lands = lands
+        return self
     
     # def check(self, objects=None):
     #     """

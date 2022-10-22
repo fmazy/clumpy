@@ -4,7 +4,8 @@ from ._tpe import TransitionProbabilityEstimator
 
 import numpy as np
 # from ..density_estimation.density_estimatornsity_estimator import DensityEstimator, NullEstimator
-from ..density_estimation import _methods, NullEstimator
+from ..density_estimation import _methods as density_estimation_methods
+from ..density_estimation import NullEstimator
 from ..tools._console import title_heading
 
 from .._base import Palette
@@ -36,7 +37,7 @@ class Bayes(TransitionProbabilityEstimator):
 
     def __init__(self,
                  initial_state,
-                 density_estimator=None,
+                 density_estimator='ekde',
                  n_corrections_max=1000,
                  n_fit_max=10**5,
                  log_computations=False,
@@ -53,7 +54,10 @@ class Bayes(TransitionProbabilityEstimator):
         self.n_fit_max = n_fit_max
         self.log_computations = log_computations
         
-        self.de = density_estimator
+        if type(density_estimator) is str:
+            self.de = density_estimation_methods[density_estimator]
+        else:
+            self.de = density_estimator
         self.P_Y__v_layer = P_Y__v_layer
     
     def __repr__(self):

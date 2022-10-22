@@ -4,7 +4,7 @@ import numpy as np
 
 from ekde import KDE
 
-_methods = {'kde':KDE,}
+_methods = {'ekde':KDE,}
 
 class NullEstimator():
     def __init__(self):

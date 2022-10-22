@@ -5,7 +5,7 @@ from .. import start_log, stop_log
 from .. import Palette, load_palette
 from .. import load_transition_matrix
 
-from .. import Territory
+# from .. import Territory
 
 from datetime import datetime
 import json
@@ -38,7 +38,7 @@ class Case():
         """
         
         return [r.label for r in self.regions]
-    
+        
     def get_regions_values(self):
         
         return [r.value for r in self.regions]
@@ -57,10 +57,13 @@ class Case():
 
         """
         if region not in self.regions:
-            if region.label in self.get_regions_labels():
-                self.regions.append(region)
+            if region.value in self.get_regions_values():
+                if region.label in self.get_regions_labels():
+                    self.regions.append(region)
+                else:
+                    Warning('The region label is already in.')
             else:
-                Warning('The region is already in.')
+                Warning('The region value is already in.')
         else:
             Warning('The region is already in.')
             
@@ -99,7 +102,8 @@ class Case():
         
         if type(info) is int:
             return self.get_region_by_value(info)
-        
+    
+    
     
     # def open(self, info):
     #     """
