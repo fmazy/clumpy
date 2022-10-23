@@ -16,7 +16,6 @@ class CramerMRMR():
     approx in  {'mean', 'median', 'std'}
     """
     def __init__(self, 
-                 initial_state,
                  V_gof_min = 0.2, 
                  V_toi_max = 0.2,
                  epsilon=0.1,
@@ -27,7 +26,6 @@ class CramerMRMR():
                  features_names=None,
                  k_shift=0):
         
-        self.initial_state = initial_state
         self.V_gof_min = V_gof_min
         self.V_toi_max = V_toi_max
         self.epsilon = epsilon

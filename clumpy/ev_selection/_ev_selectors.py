@@ -8,10 +8,10 @@ Created on Thu Aug 26 22:16:44 2021
 import numpy as np
 import pandas as pd
 
-from ..layer import FeatureLayer
+from ..layer import EVLayer
 from .._base import State
 
-class FeatureSelectors():
+class EVSelectors():
     def __init__(self, selectors={}):
         self._fitted = False
         

@@ -4,9 +4,9 @@ from copy import deepcopy
 import numpy as np
 from scipy import ndimage
 
-from ..layer import Layer, FeatureLayer, LandUseLayer, MaskLayer
+from ..layer import Layer, EVLayer, LandUseLayer, RegionsLayer
 from .._base import State
-from ..feature_selection import FeatureSelectors
+from ..ev_selection import EVSelectors
 from ..patch import Patcher, Patchers
 
 class Calibrator():

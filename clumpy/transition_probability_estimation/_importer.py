@@ -6,14 +6,12 @@ from ..layer import ProbaLayer
 
 class Importer(TransitionProbabilityEstimator):
     def __init__(self,
-                 initial_state,
                  proba:ProbaLayer,
                  verbose=0,
                  verbose_heading_level=1,
                  **kwargs):
 
-        super().__init__(initial_state,
-                         verbose=verbose,
+        super().__init__(verbose=verbose,
                          verbose_heading_level=verbose_heading_level)
         
         self.proba = proba

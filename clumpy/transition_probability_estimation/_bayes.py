@@ -36,7 +36,6 @@ class Bayes(TransitionProbabilityEstimator):
     """
 
     def __init__(self,
-                 initial_state,
                  density_estimator='ekde',
                  n_corrections_max=1000,
                  n_fit_max=10**5,
@@ -46,8 +45,7 @@ class Bayes(TransitionProbabilityEstimator):
                  verbose_heading_level=1,
                  **kwargs):
 
-        super().__init__(initial_state=initial_state,
-                         verbose=verbose,
+        super().__init__(verbose=verbose,
                          verbose_heading_level=verbose_heading_level)
         
         self.n_corrections_max = n_corrections_max

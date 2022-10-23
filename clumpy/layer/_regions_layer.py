@@ -5,7 +5,7 @@ from copy import deepcopy
 import numpy as np
 from ._layer import Layer
 
-class MaskLayer(Layer):
+class RegionsLayer(Layer):
     """
     Mask layer.
 
@@ -42,6 +42,6 @@ class MaskLayer(Layer):
         return obj  
     
     def copy(self):
-        return MaskLayer(np.array(self),
-                         label=self.label,
-                         geo_metadata=deepcopy(self.geo_metadata))
+        return RegionsLayer(np.array(self),
+                           label=self.label,
+                           geo_metadata=deepcopy(self.geo_metadata))

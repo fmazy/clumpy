@@ -62,15 +62,16 @@ class LandUseLayer(Layer):
             
     def get_J(self,
               state,
-              mask=None):
+              regions_layer=None,
+              region_value=1):
         """
         """    
         # get pixels indexes whose initial states are u
         # within the mask
-        if mask is None:
-            mask = np.ones_like(self)
+        if regions_layer is None:
+            regions_layer = np.ones_like(self)
         
-        return np.where((self * mask).flat == int(state))[0]
+        return np.where((self * (regions_layer == region_value)).flat == int(state))[0]
     
     def get_V(self,
               J,

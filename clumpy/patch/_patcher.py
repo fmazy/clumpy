@@ -86,16 +86,13 @@ class Patcher():
         If ``True``, all neighbors have the equiprobability to transit.
     """
     def __init__(self,
-                 initial_state,
-                 final_state,
                  neighbors_structure = 'rook',
                  avoid_aggregation = True,
                  nb_of_missing_to_fill = 1,
                  proceed_even_if_no_probability = True,
                  n_tries_target_sample = 10**3,
                  equi_neighbors_proba = False):
-        self.initial_state = initial_state
-        self.final_state = final_state
+        
         self.neighbors_structure = neighbors_structure
         self.avoid_aggregation = avoid_aggregation
         self.nb_of_missing_to_fill = nb_of_missing_to_fill

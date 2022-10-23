@@ -1,9 +1,11 @@
 # -*- coding: utf-8 -*-
 
-from .. import LandUseLayer, MaskLayer
+from .. import LandUseLayer, RegionsLayer
 from .. import start_log, stop_log
 from .. import Palette, load_palette
 from .. import load_transition_matrix
+
+from .. import open_layer
 
 # from .. import Territory
 
@@ -16,13 +18,19 @@ class Case():
     """
     Case object. It is the base object for configuring and running a LULC change modeling case with CLUMPY. It can also be used to set a simple case which can then be complexified through the API. No parameters are required for initializing the object. See 'load' function.
     """
-    def __init__(self, regions=None):
+    def __init__(self,
+                 regions=None,
+                 palette=None,
+                 verbose=1):
         
         if regions is not None:
             self.regions = regions
         else:
             self.regions = []
         
+        self.palette = palette
+        
+        self.verbose = verbose
     
     def __repr__(self):
         return 'Case('+str(self.get_regions_labels())+')'
@@ -57,8 +65,8 @@ class Case():
 
         """
         if region not in self.regions:
-            if region.value in self.get_regions_values():
-                if region.label in self.get_regions_labels():
+            if region.value not in self.get_regions_values():
+                if region.label not in self.get_regions_labels():
                     self.regions.append(region)
                 else:
                     Warning('The region label is already in.')
@@ -103,8 +111,73 @@ class Case():
         if type(info) is int:
             return self.get_region_by_value(info)
     
+    def set_palette(self, palette):
+        self.palette = palette
     
-    
+    def calibrate(self,
+                  initial_luc_layer,
+                  final_luc_layer,
+                  evs,
+                  regions_layer=None):
+        if type(initial_luc_layer) is str:
+            initial_luc_layer = open_layer(path=initial_luc_layer, kind='layer')
+        
+        if type(final_luc_layer) is str:
+            final_luc_layer = open_layer(path=final_luc_layer, kind='layer')
+        
+        for k, ev in enumerate(evs):
+            if type(ev) is str:
+                evs[k] = open_layer(path=ev, kind='ev')
+        
+        if type(regions_layer) is str:
+            regions_layer = open_layer(path=regions_layer, kind='layer')
+        
+        if self.verbose > 0:
+            print("Calibrate()")
+            print("===========\n")
+        
+        for region in self.regions:
+            
+            if self.verbose > 0:
+                print("Region : "+region.label)
+                s = ''
+                for i in range(len(region.label)):
+                    s += '-'
+                print('---------'+s)
+                
+            for land in region.lands:
+                
+                if self.verbose > 0:
+                    print('land : '+str(land.value)+' - '+ self.palette.get(land.value).label)
+            
+                # data
+                J = initial_luc_layer.get_J(state=land.value,
+                                            regions_layer=regions_layer,
+                                            region_value=region.value)
+                if self.verbose > 0:
+                    print('n pixels : '+str("{:.2e}".format(J.size)))
+                
+                V = initial_luc_layer.get_V(J,
+                                            final_states=land.final_values)
+                
+                # Explanatory Variable Selection
+                # ev_selectors = land.ev_selectors()
+                
+                # X = la
+            
+                # TPE
+                # tpe = land.transition_probability_estimator
+                
+                
+                
+                # tpe.fit()
+            
+            if self.verbose > 0:
+                print()
+            
+            
+                
+        
     # def open(self, info):
     #     """
     #     Loading function 

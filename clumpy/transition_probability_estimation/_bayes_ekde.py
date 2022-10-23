@@ -4,7 +4,6 @@ from . import Bayes
 
 class BayesEKDE(Bayes):
     def __init__(self,
-                 initial_state,
                  n_corrections_max=1000,
                  n_fit_max=10**5,
                  log_computations=False,
@@ -13,8 +12,7 @@ class BayesEKDE(Bayes):
                  verbose_heading_level=1,
                  **kwargs):
 
-        super().__init__(initial_state=initial_state,
-                         density_estimator='ekde',
+        super().__init__(density_estimator='ekde',
                          n_corrections_max=n_corrections_max,
                          n_fit_max=n_fit_max,
                          log_computations=log_computations,

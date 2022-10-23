@@ -40,13 +40,13 @@ class Region():
     def __repr__(self):
         return 'Region('+self.label+')'
             
-    def get_lands_state_values(self):
+    def get_lands_values(self):
         
         return [l.value for l in self.lands]
     
     def add_land(self, land):
         if land not in self.lands:
-            if land.value in self.get_lands_state_values():
+            if land.value not in self.get_lands_values():
                 self.lands.append(land)
             else:
                 Warning('The land value is already in.')
@@ -58,6 +58,10 @@ class Region():
     def add_lands(self, lands):
         self.lands = lands
         return self
+    
+    def get_land_by_value(self, value):
+        values = self.get_lands_state_values()
+        return(self.lands[values.index(value)])
     
     # def check(self, objects=None):
     #     """

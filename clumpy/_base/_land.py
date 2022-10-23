@@ -7,7 +7,7 @@ from copy import deepcopy
 from scipy import ndimage
 
 # base import
-from ..layer import Layer, FeatureLayer, LandUseLayer, MaskLayer, ProbaLayer
+# from ..layer import Layer, FeatureLayer, LandUseLayer, MaskLayer, ProbaLayer
 from ..layer._proba_layer import create_proba_layer
 from ._state import State
 from ._transition_matrix import TransitionMatrix, load_transition_matrix
@@ -25,6 +25,12 @@ from ..tools._funcs import extract_parameters
 # Allocation
 from ..allocation._allocator import Allocator
 from ..allocation import _methods as _allocation_methods
+
+from ..transition_probability_estimation import _methods as transition_probability_estimation_methods
+from ..ev_selection import _methods as ev_selection_methods
+from ..ev_selection import EVSelectors
+from ..allocation import _methods as allocation_methods
+from ..patch import _methods as patch_methods
 
 import logging
 logger = logging.getLogger('clumpy')
@@ -59,27 +65,46 @@ class Land():
 
     def __init__(self,
                  value,
+                 final_values,
+                 transition_probability_estimator=None,
+                 ev_selectors=None,
+                 allocator=None,
+                 patcher=None,
                  verbose=0,
                  verbose_heading_level=1):
         
         # state
         self.value = value
+        self.final_values = final_values
         
-        self.engines = []
+        if type(transition_probability_estimator) is str:
+            self.transition_probability_estimator = transition_probability_estimation_methods[transition_probability_estimator]()
+        else:
+            self.transition_probability_estimator = transition_probability_estimator
+        
+        if type(ev_selectors) is str:
+            self.ev_selectors = EVSelectors(selectors={v:ev_selection_methods[ev_selectors]() for v in final_values})
+            
+        else:
+            self.ev_selectors = ev_selectors
+        
+        if type(allocator) is str:
+            self.allocator = allocation_methods[allocator]()
+        else:
+            self.allocator = allocator 
+        
+        if type(patcher) is str:
+            self.patcher = [patch_methods[patcher]() for v in final_values]
+        else:
+            self.patcher = patcher
         
         self.verbose = verbose
         self.verbose_heading_level = verbose_heading_level
         
     def __repr__(self):
         return 'Land()'
-        
-    def add_engine(self, engine):
-        self.engine.append(engine)
-        return self
-
-    def add_engines(self, engines):
-        self.engines = engines
-        return self
+    
+    
     
     # def set_params(self,
     #                **params):

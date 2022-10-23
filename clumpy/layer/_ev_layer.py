@@ -5,7 +5,7 @@ from copy import deepcopy
 from ._layer import Layer
 import numpy as np 
 
-class FeatureLayer(Layer):
+class EVLayer(Layer):
     """Define a feature layer.
     This layer can then used for the calibration stage or the allocation stage.
     
@@ -53,7 +53,7 @@ class FeatureLayer(Layer):
         return obj  
     
     def copy(self):
-        return FeatureLayer(np.array(self),
-                            label=None,
-                            geo_metadata=deepcopy(self.geo_metadata),
-                            bounded=deepcopy(self.bounded))    
+        return EVLayer(np.array(self),
+                       label=None,
+                       geo_metadata=deepcopy(self.geo_metadata),
+                       bounded=deepcopy(self.bounded))    

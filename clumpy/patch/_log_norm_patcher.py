@@ -7,8 +7,6 @@ from ._patcher import Patcher
 
 class LogNormPatcher(Patcher):
     def __init__(self,
-                 initial_state,
-                 final_state,
                  area_mean=10.0,
                  area_var=5.0,
                  eccentricity=0.5,
@@ -18,9 +16,7 @@ class LogNormPatcher(Patcher):
                  proceed_even_if_no_probability=True,
                  n_tries_target_sample=1000,
                  equi_neighbors_proba=False):
-        super().__init__(initial_state = initial_state,
-                         final_state = final_state,
-                         neighbors_structure = neighbors_structure,
+        super().__init__(neighbors_structure = neighbors_structure,
                          avoid_aggregation = avoid_aggregation,
                          nb_of_missing_to_fill = nb_of_missing_to_fill,
                          proceed_even_if_no_probability = proceed_even_if_no_probability,

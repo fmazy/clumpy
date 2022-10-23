@@ -6,7 +6,7 @@ from .._base._transition_matrix import TransitionMatrix
 from ._allocator import Allocator, _update_P_v__Y_u
 from ._gart import generalized_allocation_rejection_test
 from ._patcher import _weighted_neighbors_patcher
-from ..layer import LandUseLayer, MaskLayer
+from ..layer import LandUseLayer, RegionsLayer
 from ..layer._proba_layer import create_proba_layer
 from ..tools._console import title_heading
 
@@ -48,7 +48,7 @@ class Unbiased(Allocator):
                  tm:TransitionMatrix,
                  features=None,
                  lul_origin:LandUseLayer=None,
-                 mask:MaskLayer=None):
+                 mask:RegionsLayer=None):
         """
         allocation. lul_data and lul_origin_data are ndarrays only.
         """

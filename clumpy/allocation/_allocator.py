@@ -5,7 +5,7 @@ import numpy as np
 
 from .._base import State
 from .._base._transition_matrix import TransitionMatrix
-from ..layer import LandUseLayer, MaskLayer
+from ..layer import LandUseLayer, RegionsLayer
 from ..calibration import Calibrator
 from ..layer._proba_layer import create_proba_layer
 from ..tools._path import path_split
@@ -74,7 +74,7 @@ class Allocator():
                        lul:LandUseLayer,
                        tm:TransitionMatrix,
                        features=None,
-                       mask:MaskLayer=None,
+                       mask:RegionsLayer=None,
                        alpha = 0.05,
                        epsilon = 0.001):
         
