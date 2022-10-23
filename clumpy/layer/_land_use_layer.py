@@ -86,37 +86,37 @@ class LandUseLayer(Layer):
             
         return(J, V)
     
-    def get_X(self, 
+    def get_Z(self, 
               J,
-              features):
+              evs):
         
-        X = None
+        Z = None
         
-        for info in features:
+        for info in evs:
             # switch according z_type
             if isinstance(info, Layer):
                 # just get data
-                x = info.flat[J]
+                z = info.flat[J]
 
             elif isinstance(info, int):
                 # get distance data
-                x = self.get_distance(state=info).flat[J]
+                z = self.get_distance(state=info).flat[J]
                 
             else:
                 raise(TypeError('Unexpected feature info : ' + type(info) + '.'))
 
             # if X is not yet defined
-            if X is None:
-                X = x
+            if Z is None:
+                Z = z
             # else column stack
             else:
-                X = np.column_stack((X, x))
+                Z = np.column_stack((Z, z))
 
         # if only one feature, reshape X as a column
-        if len(X.shape) == 1:
-            X = X[:, None]
+        if len(Z.shape) == 1:
+            Z = Z[:, None]
         
-        return(X)
+        return(Z)
     
     def get_distance(self, 
                      state, 

@@ -1,9 +1,10 @@
 # -*- coding: utf-8 -*-
 
-from .. import LandUseLayer, RegionsLayer
+from .. import LandUseLayer, RegionsLayer, EVLayer
 from .. import start_log, stop_log
 from .. import Palette, load_palette
 from .. import load_transition_matrix
+
 
 from .. import open_layer
 
@@ -13,6 +14,7 @@ from datetime import datetime
 import json
 import logging
 
+import numpy as np
 
 class Case():
     """
@@ -148,20 +150,40 @@ class Case():
             for land in region.lands:
                 
                 if self.verbose > 0:
-                    print('land : '+str(land.value)+' - '+ self.palette.get(land.value).label)
+                    print('land : '+str(land.state)+' - '+ self.palette.get(land.state).label)
             
                 # data
-                J = initial_luc_layer.get_J(state=land.value,
+                J = initial_luc_layer.get_J(state=land.state,
                                             regions_layer=regions_layer,
                                             region_value=region.value)
                 if self.verbose > 0:
                     print('n pixels : '+str("{:.2e}".format(J.size)))
                 
-                V = initial_luc_layer.get_V(J,
-                                            final_states=land.final_values)
+                # adding initial state if not in final states list. 
+                # usefull for LandUseLayer().get_V() function.
+                fs = [s for s in land.final_states]
+                if land.state not in fs:
+                    fs.append(land.state)
+                    
+                J, V = final_luc_layer.get_V(J=J,
+                                               final_states=fs)
+                
+                Z = initial_luc_layer.get_Z(J=J, evs=evs)
                 
                 # Explanatory Variable Selection
-                # ev_selectors = land.ev_selectors()
+                ev_selectors = land.ev_selectors
+                bounds = []
+                for ev in evs:
+                    if isinstance(ev, EVLayer):
+                        bounds.append(ev.bounded)
+                    elif type(ev) is int:
+                        bounds.append('left')
+                # print(bounds)
+                # bounds = ev_selectors.get_bounds(evs, selected=False)
+                # print(bounds)
+                ev_selectors.fit(Z=Z, 
+                                 V=V, 
+                                 bounds=bounds)
                 
                 # X = la
             

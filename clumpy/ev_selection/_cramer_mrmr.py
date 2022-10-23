@@ -87,7 +87,7 @@ class CramerMRMR():
         if Gamma < 10:
             raise(ValueError("The number of bins (Gamma) is too low. Increase the epsilon parameter."))
         
-        print('digitizing, n_m=',n_m, ' Gamma=',Gamma)
+        # print('digitizing, n_m=',n_m, ' Gamma=',Gamma)
         
         delta = Delta / Gamma
         self._1d_bins[k] = np.linspace(np.min(z[transited_pixels]), 
@@ -163,7 +163,7 @@ class CramerMRMR():
         # recompute
         Gamma = df.loc[df['keep']].index.size
         n = df.loc[df['keep'], 'O'].sum()
-        print('recompute Gamma=',Gamma, ' excluded=',round(excluded,4)*100,'%')
+        # print('recompute Gamma=',Gamma, ' excluded=',round(excluded,4)*100,'%')
                         
         # R
         R_mean = n / Gamma / n_m

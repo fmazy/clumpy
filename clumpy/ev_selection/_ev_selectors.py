@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+ #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
 Created on Thu Aug 26 22:16:44 2021
@@ -21,8 +21,10 @@ class EVSelectors():
         self.selectors[v] = selector
     
     def fit(self, Z, V, bounds):
+        print('EV selectors fit...')
         n, d = Z.shape
         list_v = np.unique(V)
+        print('observed final states : ', list_v)
         id_evs = np.zeros(d).astype(bool)
         
         for v in list_v:
@@ -35,6 +37,8 @@ class EVSelectors():
                 id_evs[self.selectors[v]._cols_support] = True
         
         self._cols_support = np.arange(d)[id_evs]
+        
+        print('keep', self._cols_support)
         
         self._fitted = True
         self._n_cols = Z.shape[1]
@@ -100,15 +104,16 @@ class EVSelectors():
         self.fit(X, y)
         return(self.transform(X))
     
-    def get_selected_features(self, features):
+    def get_selected_evs(self, features):
         return([features[i] for i in self._cols_support])
     
-    def get_bounds(self, features):
-        selected_features = self.get_selected_features(features)
+    def get_bounds(self, evs, selected=False):
+        if selected:
+            evs = self.get_selected_evs(evs)
         
         bounds = []
-        for id_col, item in enumerate(selected_features):
-            if isinstance(item, FeatureLayer):
+        for id_col, item in enumerate(evs):
+            if isinstance(item, EVLayer):
                 if item.bounded in ['left', 'right', 'both']:
                     # one takes as parameter the column id of
                     # bounded features AFTER feature selection !

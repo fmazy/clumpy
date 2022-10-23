@@ -64,8 +64,8 @@ class Land():
     """
 
     def __init__(self,
-                 value,
-                 final_values,
+                 state,
+                 final_states,
                  transition_probability_estimator=None,
                  ev_selectors=None,
                  allocator=None,
@@ -74,8 +74,8 @@ class Land():
                  verbose_heading_level=1):
         
         # state
-        self.value = value
-        self.final_values = final_values
+        self.state = state
+        self.final_states = final_states
         
         if type(transition_probability_estimator) is str:
             self.transition_probability_estimator = transition_probability_estimation_methods[transition_probability_estimator]()
@@ -83,7 +83,7 @@ class Land():
             self.transition_probability_estimator = transition_probability_estimator
         
         if type(ev_selectors) is str:
-            self.ev_selectors = EVSelectors(selectors={v:ev_selection_methods[ev_selectors]() for v in final_values})
+            self.ev_selectors = EVSelectors(selectors={v:ev_selection_methods[ev_selectors]() for v in final_states})
             
         else:
             self.ev_selectors = ev_selectors
@@ -94,7 +94,7 @@ class Land():
             self.allocator = allocator 
         
         if type(patcher) is str:
-            self.patcher = [patch_methods[patcher]() for v in final_values]
+            self.patcher = [patch_methods[patcher]() for v in final_states]
         else:
             self.patcher = patcher
         
