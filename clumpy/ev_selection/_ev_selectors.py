@@ -29,6 +29,7 @@ class EVSelectors():
         
         for v in list_v:
             if v in self.selectors.keys():
+                print('final state : ', v)
                 transited_pixels = V == v
                 self.selectors[v].fit(Z=Z,
                                       transited_pixels=transited_pixels,

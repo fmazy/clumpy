@@ -8,6 +8,10 @@ from ._layer import Layer
 from matplotlib import colors as mpl_colors
 from matplotlib import pyplot as plt
 
+from ..tools._data import determine_suitable_integer_type
+
+from ..layer import EVLayer
+
 class LandUseLayer(Layer):
     """Define a Land Use Cover (LUC) layer.
     This layer can then used for the calibration stage or the allocation stage.
@@ -42,9 +46,15 @@ class LandUseLayer(Layer):
     def __new__(cls, 
                 input_array,
                 label=None,
-                dtype=np.int8,
+                dtype=None,
                 geo_metadata=None):
         
+        if label is None:
+            label = 'LandUseLayer'
+        
+        if dtype is None:
+            dtype = determine_suitable_integer_type(input_array)
+            
         obj = super().__new__(cls, 
                               input_array,
                               label=label,
@@ -70,6 +80,7 @@ class LandUseLayer(Layer):
         # within the mask
         if regions_layer is None:
             regions_layer = np.ones_like(self)
+            region_value = 1
         
         return np.where((self * (regions_layer == region_value)).flat == int(state))[0]
     
@@ -94,7 +105,7 @@ class LandUseLayer(Layer):
         
         for info in evs:
             # switch according z_type
-            if isinstance(info, Layer):
+            if isinstance(info, EVLayer):
                 # just get data
                 z = info.flat[J]
 
@@ -103,7 +114,7 @@ class LandUseLayer(Layer):
                 z = self.get_distance(state=info).flat[J]
                 
             else:
-                raise(TypeError('Unexpected feature info : ' + type(info) + '.'))
+                raise(TypeError('Unexpected feature info : ' + str(type(info)) + '.'))
 
             # if X is not yet defined
             if Z is None:
@@ -161,7 +172,6 @@ class LandUseLayer(Layer):
         ordered_palette = palette.sort(inplace=False)
         
         labels, values, colors = ordered_palette.get_list_of_labels_values_colors()
-        
         # colors = colors[:-1] + [colors[-2]] + [colors[-1]]
         bounds = np.array(values+[values[-1]+1])-0.5
         

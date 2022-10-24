@@ -21,7 +21,7 @@ class CramerMRMR():
                  epsilon=0.1,
                  alpha=0.9,
                  approx='mean',
-                 kde_method=False,
+                 kde_method=True,
                  kde_params={},
                  features_names=None,
                  k_shift=0):
@@ -154,6 +154,10 @@ class CramerMRMR():
     def gof(self, df, k): 
         
         n = df['O'].sum()
+        
+        if n == 0:
+            return(np.nan)
+        
         n_m = int(np.max((n / (1 + n * self.epsilon**2),5)))
         
         # df['keep'] = df['O'] >= n_m
@@ -382,6 +386,10 @@ class CramerMRMR():
         
         return V_toi
     
+    def display_gof_results(self):
+        print('EV | V_GoF | R_mean | R_max | excl. pix.')
+        print(self._R_mean_gof)
+    
     def mrmr_cramer(self, Z, transited_pixels, bounds=None):
         
         n, d = Z.shape
@@ -401,8 +409,7 @@ class CramerMRMR():
         self._R_max_gof = {}
         self._excluded_gof = {}
         
-        print('Computing GoF')
-        print('-------------')
+        # Computing GoF
         
         V_gof = np.array([self.gof_Z(z=Z[:,k], 
                                      transited_pixels=transited_pixels,
@@ -410,7 +417,9 @@ class CramerMRMR():
                                      bound=bounds[k]) for k in range(d)])
         
         evs = np.arange(d)[V_gof >= self.V_gof_min]
-        print('V_gof', np.round(V_gof,4))
+        # print('V_gof', np.round(V_gof,4))
+        self.display_gof_results()
+        
         print('keep', evs)
         evs = evs[np.argsort(V_gof[evs])[::-1]]
         # return(evs)
@@ -419,8 +428,7 @@ class CramerMRMR():
         # print(list_k0_k1)
         # return(evs)
         
-        print('\nComputing ToI')
-        print('-------------')
+        # Computing ToI
         
         self._2d = {}
         self._2d_bins = {}

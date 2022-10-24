@@ -116,59 +116,113 @@ class Case():
     def set_palette(self, palette):
         self.palette = palette
     
+    def _layers_pretreatment(self, 
+                             initial_luc_layer=None,
+                             final_luc_layer=None,
+                             evs=None,
+                             regions_layer=None):
+        r = []
+        
+        if initial_luc_layer is not None:
+            if type(initial_luc_layer) is str:
+                initial_luc_layer = open_layer(path=initial_luc_layer, kind='layer')
+            r.append(initial_luc_layer)
+        
+        if final_luc_layer is not None:
+            if type(final_luc_layer) is str:
+                final_luc_layer = open_layer(path=final_luc_layer, kind='layer')
+            r.append(final_luc_layer)
+        
+        if evs is not None:
+            for k, ev in enumerate(evs):
+                if type(ev) is str:
+                    evs[k] = open_layer(path=ev, kind='ev')
+            r.append(evs)
+        
+        if regions_layer is not None:
+            if type(regions_layer) is str:
+                regions_layer = open_layer(path=regions_layer, kind='regions')
+            r.append(regions_layer)
+        
+        return r
+    
+    def _get_data(self,
+                  initial_luc_layer,
+                  final_luc_layer,
+                  evs,
+                  regions_layer,
+                  region,
+                  land):
+        J = initial_luc_layer.get_J(state=land.state,
+                                    regions_layer=regions_layer,
+                                    region_value=region.value)
+        if self.verbose > 0:
+            print('n pixels : '+str("{:.2e}".format(J.size)))
+        
+        # adding initial state if not in final states list. 
+        # usefull for LandUseLayer().get_V() function.
+        fs = [s for s in land.final_states]
+        if land.state not in fs:
+            fs.append(land.state)
+        
+        J, V = final_luc_layer.get_V(J=J,
+                                     final_states=fs)
+        Z = initial_luc_layer.get_Z(J=J, evs=evs)
+        
+        return(J, V, Z)
+    
     def calibrate(self,
                   initial_luc_layer,
                   final_luc_layer,
                   evs,
-                  regions_layer=None):
-        if type(initial_luc_layer) is str:
-            initial_luc_layer = open_layer(path=initial_luc_layer, kind='layer')
+                  regions_layer=None,
+                  region_only=None,
+                  land_only=None):
         
-        if type(final_luc_layer) is str:
-            final_luc_layer = open_layer(path=final_luc_layer, kind='layer')
+        initial_luc_layer, final_luc_layer, evs, regions_layer = \
+            self._layers_pretreatment(initial_luc_layer=initial_luc_layer,
+                                      final_luc_layer=final_luc_layer,
+                                      evs=evs,
+                                      regions_layer=regions_layer)
         
-        for k, ev in enumerate(evs):
-            if type(ev) is str:
-                evs[k] = open_layer(path=ev, kind='ev')
         
-        if type(regions_layer) is str:
-            regions_layer = open_layer(path=regions_layer, kind='layer')
         
         if self.verbose > 0:
-            print("Calibrate()")
-            print("===========\n")
+            print("=================")
+            print("|| Calibrate() ||")
+            print("=================\n")
         
-        for region in self.regions:
+        regions_list = self.regions
+        if region_only is not None:
+            regions_list = [self.get_region(region_only)]
+        
+        for region in regions_list:
             
             if self.verbose > 0:
                 print("Region : "+region.label)
                 s = ''
                 for i in range(len(region.label)):
-                    s += '-'
-                print('---------'+s)
-                
-            for land in region.lands:
+                    s += '='
+                print('========='+s+'\n')
+            
+            
+            lands_list = region.lands
+            if land_only is not None:
+                lands_list = [region.get_land(land_only)]
+            
+            for land in lands_list:
                 
                 if self.verbose > 0:
                     print('land : '+str(land.state)+' - '+ self.palette.get(land.state).label)
+                    print('---------\n')
             
                 # data
-                J = initial_luc_layer.get_J(state=land.state,
-                                            regions_layer=regions_layer,
-                                            region_value=region.value)
-                if self.verbose > 0:
-                    print('n pixels : '+str("{:.2e}".format(J.size)))
-                
-                # adding initial state if not in final states list. 
-                # usefull for LandUseLayer().get_V() function.
-                fs = [s for s in land.final_states]
-                if land.state not in fs:
-                    fs.append(land.state)
-                    
-                J, V = final_luc_layer.get_V(J=J,
-                                               final_states=fs)
-                
-                Z = initial_luc_layer.get_Z(J=J, evs=evs)
+                J, V, Z = self._get_data(initial_luc_layer=initial_luc_layer,
+                                         final_luc_layer=final_luc_layer,
+                                         evs=evs,
+                                         regions_layer=regions_layer,
+                                         region=region,
+                                         land=land)
                 
                 # Explanatory Variable Selection
                 ev_selectors = land.ev_selectors

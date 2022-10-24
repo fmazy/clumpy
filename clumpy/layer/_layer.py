@@ -34,7 +34,10 @@ class Layer(np.ndarray):
         
         obj = np.asarray(input_array, dtype=dtype).view(cls)
         
-        obj.label = label
+        if label is None:
+            obj.label = 'Layer'
+        else:
+            obj.label = label
         obj.geo_metadata = geo_metadata
         
         if obj.geo_metadata is None:
@@ -303,7 +306,8 @@ class Layer(np.ndarray):
         if y2 >= self.shape[1]:
             y2 = int(self.shape[1])
             y1 = y2 - window[1]
-            
+        
+        print(np.array(self[x1:x2, y1:y2]))
         plt.imshow(self[x1:x2, y1:y2], **kwargs_imshow)
         plt.yticks([], [])
         plt.xticks([], [])
