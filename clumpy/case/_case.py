@@ -171,6 +171,85 @@ class Case():
         
         return(J, V, Z)
     
+    def get_bounds(self,
+                   evs):
+        bounds = []
+        for ev in evs:
+            if isinstance(ev, EVLayer):
+                bounds.append(ev.bounded)
+            elif type(ev) is int:
+                bounds.append('left')
+                
+        return bounds
+    
+    def get_ev_labels(self, evs):
+        ev_labels = []
+        for ev in evs:
+            if isinstance(ev, EVLayer):
+                ev_labels.append(ev.label)
+            elif type(ev) is int:
+                state_label = self.palette.get(ev).label
+                ev_labels.append('dist. to '+state_label)
+        return ev_labels
+    
+    def init_ev_selectors(self, evs):
+        ev_labels = self.get_ev_labels(evs=evs)
+        for region in self.regions:
+            for land in region.lands:
+                for i, v in enumerate(land.final_states):
+                    ev_selector = land.ev_selectors[i]
+                    ev_selector.region_label = region.label
+                    ev_selector.initial_state = land.state
+                    ev_selector.final_state = v
+                    ev_selector.ev_labels = ev_labels
+    
+    def get_ev_selector(self,
+                        region_info,
+                        land_state,
+                        final_state):
+        region = self.get_region(region_info)
+        land = region.get_land(land_state)
+        
+        return land.ev_selectors[land.final_states.index(final_state)]
+        
+    
+    def get_ev_selectors_fit_arguments(self,
+                                       initial_luc_layer,
+                                       final_luc_layer,
+                                       evs,
+                                       regions_layer=None,
+                                       unfitted_only=False):
+        
+        initial_luc_layer, final_luc_layer, evs, regions_layer = \
+            self._layers_pretreatment(initial_luc_layer=initial_luc_layer,
+                                      final_luc_layer=final_luc_layer,
+                                      evs=evs,
+                                      regions_layer=regions_layer)
+        
+        self.init_ev_selectors(evs=evs)
+        
+        bounds = self.get_bounds(evs=evs)
+        
+        R = []
+        
+        for region in self.regions:
+            for land in region.lands:
+                J, V, Z = self._get_data(initial_luc_layer=initial_luc_layer,
+                                         final_luc_layer=final_luc_layer,
+                                         evs=evs,
+                                         regions_layer=regions_layer,
+                                         region=region,
+                                         land=land)
+                
+                for i, v in enumerate(land.final_states):
+                    transited_pixels = V == v
+                    ev_selector = land.ev_selectors[i]
+                    
+                    R.append([ev_selector, Z, transited_pixels, bounds])
+                    
+        
+        return R
+    
     def calibrate(self,
                   initial_luc_layer,
                   final_luc_layer,
@@ -225,19 +304,19 @@ class Case():
                                          land=land)
                 
                 # Explanatory Variable Selection
-                ev_selectors = land.ev_selectors
-                bounds = []
-                for ev in evs:
-                    if isinstance(ev, EVLayer):
-                        bounds.append(ev.bounded)
-                    elif type(ev) is int:
-                        bounds.append('left')
-                # print(bounds)
-                # bounds = ev_selectors.get_bounds(evs, selected=False)
-                # print(bounds)
-                ev_selectors.fit(Z=Z, 
-                                 V=V, 
-                                 bounds=bounds)
+                # ev_selectors = land.ev_selectors
+                # bounds = []
+                # for ev in evs:
+                #     if isinstance(ev, EVLayer):
+                #         bounds.append(ev.bounded)
+                #     elif type(ev) is int:
+                #         bounds.append('left')
+                # # print(bounds)
+                # # bounds = ev_selectors.get_bounds(evs, selected=False)
+                # # print(bounds)
+                # ev_selectors.fit(Z=Z, 
+                #                  V=V, 
+                #                  bounds=bounds)
                 
                 # X = la
             

@@ -16,15 +16,18 @@ class CramerMRMR():
     approx in  {'mean', 'median', 'std'}
     """
     def __init__(self, 
-                 V_gof_min = 0.2, 
+                 V_gof_min = 0.1, 
                  V_toi_max = 0.2,
                  epsilon=0.1,
                  alpha=0.9,
                  approx='mean',
                  kde_method=True,
                  kde_params={},
-                 features_names=None,
-                 k_shift=0):
+                 ev_labels=None,
+                 k_shift=0,
+                 region_label=None,
+                 initial_state=None,
+                 final_state=None):
         
         self.V_gof_min = V_gof_min
         self.V_toi_max = V_toi_max
@@ -33,17 +36,38 @@ class CramerMRMR():
         self.approx = approx   
         self.kde_method = kde_method
         self.kde_params = kde_params
-        self.features_names = features_names
+        self.ev_labels = ev_labels
         self.k_shift = k_shift
+        self.region_label=region_label,
+        self.initial_state=initial_state,
+        self.final_state=final_state
         
         super().__init__()
     
     def __repr__(self):
         return 'CramerMRMR()'
     
+    def set_params(self, **params):
+        """
+        Set parameters.
+
+        Parameters
+        ----------
+        **params : kwargs
+            Parameters et values to set.
+
+        Returns
+        -------
+        self : CramerMRMR
+            The self object.
+
+        """
+        for param, value in params.items():
+            setattr(self, param, value)
+    
     def fit(self, Z, transited_pixels, bounds=None):
         self._cols_support = self.mrmr_cramer(Z, transited_pixels, bounds)
-                
+        
         return(self)
     
     def gof_Z(self, z, transited_pixels, k, bound='none'):
@@ -253,7 +277,7 @@ class CramerMRMR():
         
         self._2d_bins[(k0,k1)] = bins
         
-        print('digitizing, n_m=',n_m,' Gamma=',Gamma)
+        # print('digitizing, n_m=',n_m,' Gamma=',Gamma)
     
     def get_toi_df(self, Z, k0, k1):
         G = np.vstack([np.digitize(z, bins=self._2d_bins[(k0,k1)][k]) for k, z in enumerate(Z.T)]).T
@@ -351,7 +375,7 @@ class CramerMRMR():
         Gamma = [len(np.unique(df.loc[df['keep'], 'g'+str(k)].values)) for k in [k0,k1]]
         Gamma01 = df.loc[df['keep']].index.size
         
-        print('recompute Gamma=', Gamma, ' unique :', Gamma01)
+        # print('recompute Gamma=', Gamma, ' unique :', Gamma01)
         
         if Gamma01 < 10:
             print('Warning, Gamma01 too low:', Gamma01)
@@ -386,10 +410,6 @@ class CramerMRMR():
         
         return V_toi
     
-    def display_gof_results(self):
-        print('EV | V_GoF | R_mean | R_max | excl. pix.')
-        print(self._R_mean_gof)
-    
     def mrmr_cramer(self, Z, transited_pixels, bounds=None):
         
         n, d = Z.shape
@@ -400,6 +420,7 @@ class CramerMRMR():
         if len(bounds) != d:
             raise(ValueError("Unexpected 'bounds' parameter. It should be a list of bounds for each explanatory variable or 'None'. A bound can be {'none', 'left', 'right', 'both'}."))
         
+        self._n = n
         self._1d = {}
         self._1d_bins = {}
         self._V_gof = {}
@@ -410,17 +431,32 @@ class CramerMRMR():
         self._excluded_gof = {}
         
         # Computing GoF
+        # print('GoF')
+        V_gof = []
+        for k in range(d):
+            # print('k', k)
+            
+            # exclusion of flat EV
+            if Z[:,k].std() == 0:
+                V = -1
+            else:
+                V = self.gof_Z(z=Z[:,k], 
+                               transited_pixels=transited_pixels,
+                               k=k, 
+                               bound=bounds[k])
+            V_gof.append(V)
+        V_gof = np.array(V_gof)
         
-        V_gof = np.array([self.gof_Z(z=Z[:,k], 
-                                     transited_pixels=transited_pixels,
-                                     k=k, 
-                                     bound=bounds[k]) for k in range(d)])
+        # V_gof = np.array([self.gof_Z(z=Z[:,k], 
+        #                              transited_pixels=transited_pixels,
+        #                              k=k, 
+        #                              bound=bounds[k]) for k in range(d)])
         
         evs = np.arange(d)[V_gof >= self.V_gof_min]
         # print('V_gof', np.round(V_gof,4))
-        self.display_gof_results()
+        # self.display_gof_results()
         
-        print('keep', evs)
+        # print('keep', evs)
         evs = evs[np.argsort(V_gof[evs])[::-1]]
         # return(evs)
         list_k0_k1 = list(combinations(evs, 2))
@@ -429,6 +465,7 @@ class CramerMRMR():
         # return(evs)
         
         # Computing ToI
+        # print('ToI')
         
         self._2d = {}
         self._2d_bins = {}
@@ -441,19 +478,62 @@ class CramerMRMR():
         
         for k0, k1 in list_k0_k1:
             if k0 in evs and k1 in evs:
-                print('toi, (k0,k1)=', (k0,k1))
+                # print('toi, (k0,k1)=', (k0,k1))
                 V_toi = self.toi_Z(Z=Z[:,[k0,k1]][transited_pixels],
                                    k0=k0, 
                                    k1=k1, 
                                    bounds=[bounds[k0], bounds[k1]])
                                 
-                print('V_toi('+str(k0)+','+str(k1)+')='+str(np.round(V_toi,4)))
+                # print('V_toi('+str(k0)+','+str(k1)+')='+str(np.round(V_toi,4)))
                 if V_toi >= self.V_toi_max:
                     k_to_remove = np.array([k0,k1])[np.argmin(V_gof[[k0,k1]])]
-                    print('rm', k_to_remove)
+                    # print('rm', k_to_remove)
                     evs = np.delete(evs, list(evs).index(k_to_remove))
                 
         return evs
+    
+    def results_table(self):
+        print('Cramer MRMR Results')
+        print('===================')
+        print('Region : '+self.region_label)
+        print('initial_state : '+str(self.initial_state))
+        print('final_state : '+str(self.final_state))
+        print('n : '+str())
+        print()
+        print('Test of Relevance, V_GoF_min='+str(self.V_gof_min))
+        print('EV | V_GoF | R_mean | R_max | excl. pix. | kept')
+        for k in self._V_gof.keys():
+            kept = 'n'
+            if self._V_gof[k] >= self.V_gof_min:
+                kept = 'Y'
+            
+            print(str(k)+' - '+self.ev_labels[k]+' | '
+                  +str(round(self._V_gof[k],4))+' | '
+                  +str(round(self._R_mean_gof[k],4))+' | '
+                  +str(round(self._R_max_gof[k],4))+' | '
+                  +str(round(self._excluded_gof[k]*100,2))+'% | '
+                  +kept)
+        print('---------\n')
+        
+        print('Test of Redundancy, V_ToI_max='+str(self.V_toi_max))
+        print('EV couple | V_ToI | R_mean | R_max | excl. pix. | EV removed')
+        for (k1,k2) in self._V_toi.keys():
+            removed = '/'
+            if self._V_toi[(k1, k2)] >= self.V_toi_max:
+                if self._V_gof[k1] >= self._V_gof[k2]:
+                    removed = str(k2)
+                else:
+                    removed = str(k1)
+            
+            print('('+str(k1)+','+str(k2)+') | '
+                  +str(round(self._V_toi[(k1,k2)],4))+' | '
+                  +str(round(self._R_mean_toi[(k1,k2)],4))+' | '
+                  +str(round(self._R_max_toi[(k1,k2)],4))+' | '
+                  +str(round(self._excluded_toi[(k1,k2)]*100,2))+'% | '
+                  +removed)
+        
+        print('---------\n')
+        print('selected EVs :'+str(self._cols_support))
     
     def tex_table(self, feature_names):
         k_shift = self.k_shift
@@ -632,19 +712,21 @@ class CramerMRMR():
         
         plt.legend()
         plt.grid()
-        plt.xlabel(self.features_names[k])
+        plt.xlabel(self.ev_labels[k])
         plt.ylabel('Number of Pixels')
         
     def plot_gof(self, path=None):
         plt.figure(figsize=(10,10))
-        n_k = len(self._V_gof.keys())
+        
+        list_k = list(self._V_gof.keys())
+        n_k = len(list_k)
         
         n_rows = int(n_k/2)
         if n_k%2>0:
             n_rows += 1
         
-        for k in range(n_k):
-            plt.subplot(n_rows,2,k+1)
+        for i, k in enumerate(list_k):
+            plt.subplot(n_rows,2,i+1)
             self.subplot_gof(k)
         
         if path is not None:
@@ -709,8 +791,8 @@ class CramerMRMR():
             plt.ylim(ylim)
         plt.tick_params(left = False, right = False , labelleft = False ,
                     labelbottom = False, bottom = False)
-        plt.xlabel(self.features_names[k0])
-        plt.ylabel(self.features_names[k1])
+        plt.xlabel(self.ev_labels[k0])
+        plt.ylabel(self.ev_labels[k1])
         
         plt.subplot(2,2,2)
         im = plt.imshow(E.T, cmap=cmap)
@@ -728,8 +810,8 @@ class CramerMRMR():
             plt.ylim(ylim)
         plt.tick_params(left = False, right = False , labelleft = False ,
                     labelbottom = False, bottom = False)    
-        plt.xlabel(self.features_names[k0])
-        plt.ylabel(self.features_names[k1])
+        plt.xlabel(self.ev_labels[k0])
+        plt.ylabel(self.ev_labels[k1])
         
         plt.subplot(2,2,3)
         im = plt.imshow(np.abs(R.T), cmap=cmap)
@@ -748,8 +830,8 @@ class CramerMRMR():
         
         plt.tick_params(left = False, right = False , labelleft = False ,
                     labelbottom = False, bottom = False)
-        plt.xlabel(self.features_names[k0])
-        plt.ylabel(self.features_names[k1])
+        plt.xlabel(self.ev_labels[k0])
+        plt.ylabel(self.ev_labels[k1])
         
         plt.subplot(2,2,4)
         df_sorted = df.sort_values(by='O', ascending=False)

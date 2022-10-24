@@ -307,7 +307,7 @@ class Layer(np.ndarray):
             y2 = int(self.shape[1])
             y1 = y2 - window[1]
         
-        print(np.array(self[x1:x2, y1:y2]))
+        # print(np.array(self[x1:x2, y1:y2]))
         plt.imshow(self[x1:x2, y1:y2], **kwargs_imshow)
         plt.yticks([], [])
         plt.xticks([], [])

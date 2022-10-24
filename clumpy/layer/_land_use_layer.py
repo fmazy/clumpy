@@ -5,12 +5,11 @@ from scipy import ndimage
 from copy import deepcopy
 
 from ._layer import Layer
+from ._ev_layer import EVLayer
 from matplotlib import colors as mpl_colors
 from matplotlib import pyplot as plt
 
 from ..tools._data import determine_suitable_integer_type
-
-from ..layer import EVLayer
 
 class LandUseLayer(Layer):
     """Define a Land Use Cover (LUC) layer.
