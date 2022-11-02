@@ -11,6 +11,8 @@ from matplotlib import pyplot as plt
 
 from ..tools._data import determine_suitable_integer_type
 
+from sklearn.preprocessing import OneHotEncoder
+
 class LandUseLayer(Layer):
     """Define a Land Use Cover (LUC) layer.
     This layer can then used for the calibration stage or the allocation stage.
@@ -95,6 +97,20 @@ class LandUseLayer(Layer):
             V = V[idx]
             
         return(J, V)
+    
+    def get_W(self,
+              J,
+              state=None,
+              final_states=None):
+        J, V = self.get_V(J=J, 
+                          final_states=[state] + final_states)
+        ohe = OneHotEncoder(categories=[final_states], 
+                            handle_unknown='ignore',
+                            sparse=False,
+                            dtype=bool)
+        W = ohe.fit_transform(V[:,None])
+        
+        return(J, W)
     
     def get_Z(self, 
               J,

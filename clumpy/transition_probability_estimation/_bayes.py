@@ -51,9 +51,10 @@ class Bayes(TransitionProbabilityEstimator):
         self.n_corrections_max = n_corrections_max
         self.n_fit_max = n_fit_max
         self.log_computations = log_computations
+        self.density_estimator = density_estimator
         
         if type(density_estimator) is str:
-            self.de = density_estimation_methods[density_estimator]
+            self.de = density_estimation_methods[density_estimator]()
         else:
             self.de = density_estimator
         self.P_Y__v_layer = P_Y__v_layer
@@ -61,28 +62,28 @@ class Bayes(TransitionProbabilityEstimator):
     def __repr__(self):
         return ('Bayes')
     
-    def check(self, objects=None):
-        """
-        Check the unicity of objects.
-        Notably, estimators uniqueness are checked to avoid malfunctioning during transition probabilities estimation.
-        """
-        if objects is None:
-            objects = []
+    # def check(self, objects=None):
+    #     """
+    #     Check the unicity of objects.
+    #     Notably, estimators uniqueness are checked to avoid malfunctioning during transition probabilities estimation.
+    #     """
+    #     if objects is None:
+    #         objects = []
             
-        if self.de in objects:
-            raise(ValueError("DensityEstimator objects must be different."))
-        else:
-            objects.append(self.de)
+    #     if self.de in objects:
+    #         raise(ValueError("DensityEstimator objects must be different."))
+    #     else:
+    #         objects.append(self.de)
         
-        for cde in self.cde.values():
-            if cde in objects:
-                raise(ValueError("DensityEstimator objects must be different."))
-            else:
-                objects.append(cde)
+    #     for cde in self.cde.values():
+    #         if cde in objects:
+    #             raise(ValueError("DensityEstimator objects must be different."))
+    #         else:
+    #             objects.append(cde)
     
     def fit(self,
-            X,
-            V,
+            Z,
+            W,
             bounds=None,
             **kwargs):
         """
@@ -91,12 +92,12 @@ class Bayes(TransitionProbabilityEstimator):
 
         Parameters
         ----------
-        X : array-like of shape (n_samples, n_features)
+        Z : array-like of shape (n_samples, n_features)
             Observed features data.
-        V : array-like of shape (n_samples,) of int type
-            The final land use state values. Only studied final v should appear.
-        u : int
-            The initial land use state.
+        W : array-like of shape (n_samples, n_final_states) of bool type
+            One Hot Encoder of final states only
+        bounds : list of string
+            List of bounds info among {'left', 'right', 'both', 'none'}
 
         Returns
         -------
@@ -109,39 +110,36 @@ class Bayes(TransitionProbabilityEstimator):
             print('Conditional density estimators fitting :')
         
         # set de params
-        self.de.set_params(bounds = bounds)
+        self.de.bounds = bounds
         
+        # initialize and fit cde
         if self.P_Y__v_layer is None:
-            self.cde = {}
+            self.cde = []
             
-            final_states = list(np.unique(V))
+            for w in W.T:
+                if w.sum() > 0:
+                    cde  = deepcopy(self.de)
+                    cde.set_params(bounds = bounds)
                     
-            for v in final_states:
-                if v != self.initial_state:
-                    if self.verbose > 0:
-                        print(str(self.initial_state)+'->'+str(v))
+                    Z_fit = Z[w]
                     
-                    self.cde[v] = deepcopy(self.de)
-                    self.cde[v].set_params(bounds = bounds)
-                    
-                    idx_v = V == v
-                    
-                    X_fit = X[idx_v]
-                    
-                    if X_fit.shape[0] > self.n_fit_max:
-                        X_fit = X_fit[np.random.choice(a=X_fit.shape[0], 
+                    if Z_fit.shape[0] > self.n_fit_max:
+                        Z_fit = Z_fit[np.random.choice(a=Z_fit.shape[0], 
                                                        size=self.n_fit_max,
                                                        replace=False)]
-                                        
-                    self.cde[v].fit(X=X_fit)
-                
+                                    
+                    cde.fit(X=Z_fit)
+                else:
+                    cde = NullEstimator()
+                self.cde.append(cde)
+        
         return (self)
     
-    def get_final_states(self):
-        if self.P_Y__v_layer is None:
-            return list(self.cde.keys())
-        else:
-            return self.P_Y__v_layer.final_states
+    # def get_final_states(self):
+    #     if self.P_Y__v_layer is None:
+    #         return list(self.cde.keys())
+    #     else:
+    #         return self.P_Y__v_layer.final_states
     
     def transition_probabilities(self,
                                  J,
@@ -192,9 +190,9 @@ class Bayes(TransitionProbabilityEstimator):
                                         P_Y=P_Y,
                                         P_v=P_v)
         
-        final_states = self.get_final_states()
+        # final_states = self.get_final_states()
                 
-        ret = [P_v__Y, final_states]
+        ret = [P_v__Y]
         
         if return_P_Y:
             ret.append(P_Y)

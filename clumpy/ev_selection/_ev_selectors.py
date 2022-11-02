@@ -12,30 +12,30 @@ from ..layer import EVLayer
 from .._base import State
 
 class EVSelectors():
-    def __init__(self, selectors={}):
+    def __init__(self, selectors=[]):
         self._fitted = False
         
         self.selectors = selectors
     
-    def add_selector(self, v, selector):
-        self.selectors[v] = selector
+    def add_selector(self, selector):
+        if selector not in self.selectors:
+            self.selectors.append(selector)
+        
+        return self
     
-    def fit(self, Z, V, bounds):
+    def fit(self, W, Z, bounds):
         print('EV selectors fit...')
         n, d = Z.shape
-        list_v = np.unique(V)
-        print('observed final states : ', list_v)
+        # print('observed final states : ', list_v)
         id_evs = np.zeros(d).astype(bool)
         
-        for v in list_v:
-            if v in self.selectors.keys():
-                print('final state : ', v)
-                transited_pixels = V == v
-                self.selectors[v].fit(Z=Z,
-                                      transited_pixels=transited_pixels,
-                                      bounds=bounds)
+        for i, selector in enumerate(self.selectors):
+            if W[:,i].sum() > 0:
+                selector.fit(Z=Z,
+                             w=W[:,i],
+                             bounds=bounds)
                 
-                id_evs[self.selectors[v]._cols_support] = True
+                id_evs[selector._cols_support] = True
         
         self._cols_support = np.arange(d)[id_evs]
         
@@ -105,27 +105,6 @@ class EVSelectors():
         self.fit(X, y)
         return(self.transform(X))
     
-    def get_selected_evs(self, features):
-        return([features[i] for i in self._cols_support])
-    
-    def get_bounds(self, evs, selected=False):
-        if selected:
-            evs = self.get_selected_evs(evs)
-        
-        bounds = []
-        for id_col, item in enumerate(evs):
-            if isinstance(item, EVLayer):
-                if item.bounded in ['left', 'right', 'both']:
-                    # one takes as parameter the column id of
-                    # bounded features AFTER feature selection !
-                    bounds.append((id_col, item.bounded))
-                    
-            # if it is a state distance, add a low bound set to 0.0
-            if isinstance(item, State) or isinstance(item, int):
-                bounds.append((id_col, 'left'))
-        
-        return(bounds)
-    
-    
-        
+    def get_selected_evs(self, evs):
+        return([evs[i] for i in self._cols_support])
 

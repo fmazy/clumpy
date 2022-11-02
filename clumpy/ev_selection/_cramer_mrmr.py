@@ -65,30 +65,30 @@ class CramerMRMR():
         for param, value in params.items():
             setattr(self, param, value)
     
-    def fit(self, Z, transited_pixels, bounds=None):
-        self._cols_support = self.mrmr_cramer(Z, transited_pixels, bounds)
+    def fit(self, Z, w, bounds=None):
+        self._cols_support = self.mrmr_cramer(Z, w, bounds)
         
         return(self)
     
-    def gof_Z(self, z, transited_pixels, k, bound='none'):
-        self.compute_bins_1d(z, transited_pixels, k)
+    def gof_Z(self, z, w, k, bound='none'):
+        self.compute_bins_1d(z, w, k)
         if self.kde_method:
             df = self.get_gof_df_kde(z=z, 
-                                     transited_pixels=transited_pixels,
+                                     w=w,
                                      k=k, 
                                      bound=bound)
             
         else:
-            df = self.get_gof_df(z, transited_pixels, k)
+            df = self.get_gof_df(z, w, k)
             
         return(self.gof(df, k))
 
-    def compute_bins_1d(self, z, transited_pixels, k):
-        n = transited_pixels.sum()
+    def compute_bins_1d(self, z, w, k):
+        n = w.sum()
         
         n_m = int(np.max((n / (1 + n * self.epsilon**2),5)))
         
-        Delta = np.max(z[transited_pixels]) - np.min(z[transited_pixels])
+        Delta = np.max(z[w]) - np.min(z[w])
         
         if self.approx == 'mean':
             Gamma = np.max((10, int(n/n_m)))
@@ -96,7 +96,7 @@ class CramerMRMR():
         elif self.approx == 'median':
             kde = KDE()
             kde.set_params(**self.kde_params)
-            kde.fit(z[:,None][transited_pixels])
+            kde.fit(z[:,None][w])
             y = np.linspace(np.min(z), np.max(z), int(Delta / (kde._h / kde.q)))
             rho = kde.predict(y[:,None])
             Gamma = np.max((10, int(n * np.max(rho) * Delta / 2 / n_m)))
@@ -114,11 +114,11 @@ class CramerMRMR():
         # print('digitizing, n_m=',n_m, ' Gamma=',Gamma)
         
         delta = Delta / Gamma
-        self._1d_bins[k] = np.linspace(np.min(z[transited_pixels]), 
-                           np.max(z[transited_pixels])+10**-5*delta, 
+        self._1d_bins[k] = np.linspace(np.min(z[w]), 
+                           np.max(z[w])+10**-5*delta, 
                            Gamma)
 
-    def get_gof_df(self, z, transited_pixels, k):
+    def get_gof_df(self, z, w, k):
         bins = self._1d_bins[k]
         g = np.digitize(z, bins)
         
@@ -130,7 +130,7 @@ class CramerMRMR():
         df['width'] = width
         
         G = pd.DataFrame(g, columns=['g'])
-        df_O = G.loc[transited_pixels].groupby('g').size().reset_index(name='O')
+        df_O = G.loc[w].groupby('g').size().reset_index(name='O')
         df_E = G.groupby('g').size().reset_index(name='E')
         
         df = df.merge(df_O, how='left')
@@ -141,24 +141,25 @@ class CramerMRMR():
         
         return(df)
     
-    def get_gof_df_kde(self, z, transited_pixels, k, bound='none'):
+    def get_gof_df_kde(self, z, w, k, bound='none'):
         
-        n = transited_pixels.sum()
+        n = w.sum()
         
         bins = self._1d_bins[k]
         bins_centers = bins[:-1] + np.diff(bins) / 2
         
-        if bound is None:
-            bound = 'none'
+        bounds = [bound]
+        # if bound is None:
+        #     bound = 'none'
         
-        if bound == 'none':
-            bounds = []
-        else:
-            bounds = [(0, bound)]
+        # if bound == 'none':
+        #     bounds = []
+        # else:
+        #     bounds = [(0, bound)]
             
         kde_O = KDE(bounds=bounds)
         kde_O.set_params(**self.kde_params)
-        kde_O.fit(z[transited_pixels][:,None])
+        kde_O.fit(z[w][:,None])
         O = kde_O.predict(bins_centers[:,None])
         O = O / np.sum(O) * n
         
@@ -311,21 +312,21 @@ class CramerMRMR():
         
         n, d = Z.shape
         
-        if bounds is None:
-            bounds = []
+        # if bounds is None:
+        #     bounds = []
         
-        new_bounds = []
-        bounds_N0 = []
-        bounds_N1 = []
-        for i, bound in enumerate(bounds):
-            if bound in ['left', 'right', 'both']:
-                new_bounds.append((i, bound))
-                if i == 0:
-                    bounds_N0 = [(0, bound)]
-                elif i == 1:
-                    bounds_N1 = [(0, bound)]
+        # new_bounds = []
+        # bounds_N0 = []
+        # bounds_N1 = []
+        # for i, bound in enumerate(bounds):
+        #     if bound in ['left', 'right', 'both']:
+        #         new_bounds.append((i, bound))
+        #         if i == 0:
+        #             bounds_N0 = [(0, bound)]
+        #         elif i == 1:
+        #             bounds_N1 = [(0, bound)]
                     
-        bounds = new_bounds
+        # bounds = new_bounds
         
         kde_O = KDE(bounds=bounds)
         kde_O.set_params(**self.kde_params)
@@ -333,13 +334,13 @@ class CramerMRMR():
         O = kde_O.predict(grid)
         O = O / np.sum(O) * n
         
-        kde_N0 = KDE(bounds=bounds_N0)
+        kde_N0 = KDE(bounds=[bounds[0]])
         kde_N0.set_params(**self.kde_params)
         kde_N0.fit(Z[:,[0]])
         N0 = kde_N0.predict(grid[:,[0]])
         N0 = N0 / N0.sum() * n
         
-        kde_N1 = KDE(bounds=bounds_N1)
+        kde_N1 = KDE(bounds=[bounds[1]])
         kde_N1.set_params(**self.kde_params)
         kde_N1.fit(Z[:,[1]])
         N1 = kde_N1.predict(grid[:,[1]])
@@ -410,7 +411,7 @@ class CramerMRMR():
         
         return V_toi
     
-    def mrmr_cramer(self, Z, transited_pixels, bounds=None):
+    def mrmr_cramer(self, Z, w, bounds=None):
         
         n, d = Z.shape
         
@@ -441,14 +442,14 @@ class CramerMRMR():
                 V = -1
             else:
                 V = self.gof_Z(z=Z[:,k], 
-                               transited_pixels=transited_pixels,
+                               w=w,
                                k=k, 
                                bound=bounds[k])
             V_gof.append(V)
         V_gof = np.array(V_gof)
         
         # V_gof = np.array([self.gof_Z(z=Z[:,k], 
-        #                              transited_pixels=transited_pixels,
+        #                              w=w,
         #                              k=k, 
         #                              bound=bounds[k]) for k in range(d)])
         
@@ -479,7 +480,7 @@ class CramerMRMR():
         for k0, k1 in list_k0_k1:
             if k0 in evs and k1 in evs:
                 # print('toi, (k0,k1)=', (k0,k1))
-                V_toi = self.toi_Z(Z=Z[:,[k0,k1]][transited_pixels],
+                V_toi = self.toi_Z(Z=Z[:,[k0,k1]][w],
                                    k0=k0, 
                                    k1=k1, 
                                    bounds=[bounds[k0], bounds[k1]])

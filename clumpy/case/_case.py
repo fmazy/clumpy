@@ -5,8 +5,10 @@ from .. import start_log, stop_log
 from .. import Palette, load_palette
 from .. import load_transition_matrix
 
+from ..ev_selection import EVSelectors
 
 from .. import open_layer
+from ..layer import get_bounds
 
 # from .. import Territory
 
@@ -159,17 +161,12 @@ class Case():
         if self.verbose > 0:
             print('n pixels : '+str("{:.2e}".format(J.size)))
         
-        # adding initial state if not in final states list. 
-        # usefull for LandUseLayer().get_V() function.
-        fs = [s for s in land.final_states]
-        if land.state not in fs:
-            fs.append(land.state)
-        
-        J, V = final_luc_layer.get_V(J=J,
-                                     final_states=fs)
+        J, W = final_luc_layer.get_W(J=J,
+                                     state=land.state,
+                                     final_states=land.final_states)
         Z = initial_luc_layer.get_Z(J=J, evs=evs)
         
-        return(J, V, Z)
+        return(J, W, Z)
     
     def get_bounds(self,
                    evs):
@@ -213,42 +210,44 @@ class Case():
         return land.ev_selectors[land.final_states.index(final_state)]
         
     
-    def get_ev_selectors_fit_arguments(self,
-                                       initial_luc_layer,
-                                       final_luc_layer,
-                                       evs,
-                                       regions_layer=None,
-                                       unfitted_only=False):
+    # def get_ev_selectors_fit_arguments(self,
+    #                                    initial_luc_layer,
+    #                                    final_luc_layer,
+    #                                    evs,
+    #                                    regions_layer=None,
+    #                                    unfitted_only=False):
         
-        initial_luc_layer, final_luc_layer, evs, regions_layer = \
-            self._layers_pretreatment(initial_luc_layer=initial_luc_layer,
-                                      final_luc_layer=final_luc_layer,
-                                      evs=evs,
-                                      regions_layer=regions_layer)
+    #     initial_luc_layer, final_luc_layer, evs, regions_layer = \
+    #         self._layers_pretreatment(initial_luc_layer=initial_luc_layer,
+    #                                   final_luc_layer=final_luc_layer,
+    #                                   evs=evs,
+    #                                   regions_layer=regions_layer)
         
-        self.init_ev_selectors(evs=evs)
+    #     self.init_ev_selectors(evs=evs)
         
-        bounds = self.get_bounds(evs=evs)
+    #     bounds = self.get_bounds(evs=evs)
         
-        R = []
+    #     R = []
         
-        for region in self.regions:
-            for land in region.lands:
-                J, V, Z = self._get_data(initial_luc_layer=initial_luc_layer,
-                                         final_luc_layer=final_luc_layer,
-                                         evs=evs,
-                                         regions_layer=regions_layer,
-                                         region=region,
-                                         land=land)
+    #     for region in self.regions:
+    #         for land in region.lands:
+    #             J, W, Z = self._get_data(initial_luc_layer=initial_luc_layer,
+    #                                      final_luc_layer=final_luc_layer,
+    #                                      evs=evs,
+    #                                      regions_layer=regions_layer,
+    #                                      region=region,
+    #                                      land=land)
                 
-                for i, v in enumerate(land.final_states):
-                    transited_pixels = V == v
-                    ev_selector = land.ev_selectors[i]
+    #             for i, v in enumerate(land.final_states):
+    #                 transited_pixels = V == v
+    #                 ev_selector = land.ev_selectors[i]
                     
-                    R.append([ev_selector, Z, transited_pixels, bounds])
+    #                 R.append([ev_selector, Z, transited_pixels, bounds])
                     
         
-        return R
+    #     return R
+    
+    
     
     def calibrate(self,
                   initial_luc_layer,
@@ -264,8 +263,6 @@ class Case():
                                       evs=evs,
                                       regions_layer=regions_layer)
         
-        
-        
         if self.verbose > 0:
             print("=================")
             print("|| Calibrate() ||")
@@ -275,6 +272,8 @@ class Case():
         if region_only is not None:
             regions_list = [self.get_region(region_only)]
         
+        bounds = get_bounds(evs=evs)
+                
         for region in regions_list:
             
             if self.verbose > 0:
@@ -296,7 +295,7 @@ class Case():
                     print('---------\n')
             
                 # data
-                J, V, Z = self._get_data(initial_luc_layer=initial_luc_layer,
+                J, W, Z = self._get_data(initial_luc_layer=initial_luc_layer,
                                          final_luc_layer=final_luc_layer,
                                          evs=evs,
                                          regions_layer=regions_layer,
@@ -304,33 +303,34 @@ class Case():
                                          land=land)
                 
                 # Explanatory Variable Selection
-                # ev_selectors = land.ev_selectors
-                # bounds = []
-                # for ev in evs:
-                #     if isinstance(ev, EVLayer):
-                #         bounds.append(ev.bounded)
-                #     elif type(ev) is int:
-                #         bounds.append('left')
-                # # print(bounds)
-                # # bounds = ev_selectors.get_bounds(evs, selected=False)
-                # # print(bounds)
-                # ev_selectors.fit(Z=Z, 
-                #                  V=V, 
-                #                  bounds=bounds)
+                land._ev_selectors = EVSelectors(selectors=land.ev_selectors)
+                land._ev_selectors.fit(W, Z, bounds)
+                Z = land._ev_selectors.transform(Z)
                 
-                # X = la
-            
                 # TPE
-                # tpe = land.transition_probability_estimator
-                
-                
-                
-                # tpe.fit()
-            
+                tpe = land.transition_probability_estimator
+                selected_evs = land._ev_selectors.get_selected_evs(evs)
+                selected_bounds = get_bounds(selected_evs)
+                tpe.fit(Z, W, bounds=selected_bounds)
+                            
             if self.verbose > 0:
                 print()
-            
-            
+    def transition_probabilities(self,
+                                 luc_layer,
+                                 evs,
+                                 regions_layer=None,
+                                 region_only=None,
+                                 land_only=None):
+        """
+        Compute the transition probabilities of the case.
+        """
+        return 1
+        # self.territory.transition_probabilities(\
+                # regions_transition_matrices = self.get_regions_transition_matrices(),
+                # lul = self.get_lul('start'),
+                # masks = self.get_regions_masks('allocation'),
+                # path_prefix = self.get_output_folder() + "proba")
+    
                 
         
     # def open(self, info):
@@ -439,16 +439,7 @@ class Case():
     #                        lul_final = self.get_lul('final'),
     #                        masks = self.get_regions_masks('calibration'))
         
-    # def transition_probabilities(self):
-    #     """
-    #     Compute the transition probabilities of the case.
-    #     """
-        
-    #     self.territory.transition_probabilities(\
-    #             regions_transition_matrices = self.get_regions_transition_matrices(),
-    #             lul = self.get_lul('start'),
-    #             masks = self.get_regions_masks('allocation'),
-    #             path_prefix = self.get_output_folder() + "proba")
+    # 
         
     # def allocate(self):
     #     """

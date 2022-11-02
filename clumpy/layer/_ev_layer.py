@@ -57,3 +57,29 @@ class EVLayer(Layer):
                        label=None,
                        geo_metadata=deepcopy(self.geo_metadata),
                        bounded=deepcopy(self.bounded))    
+    
+def get_bounds(evs):
+    """
+    Returns bounds list of given EV.
+
+    Parameters
+    ----------
+    evs : list of EVLayer
+        Explanatory variables given as a list.
+
+    Returns
+    -------
+    bounds : list of string
+        Bounds list in the same order as evs.
+
+    """
+    bounds = []
+    
+    bounds = []
+    for ev in evs:
+        if isinstance(ev, EVLayer):
+            bounds.append(ev.bounded)
+        elif type(ev) is int:
+            bounds.append('left')
+    
+    return bounds
