@@ -78,7 +78,7 @@ class Land():
         self.final_states = final_states
         
         if type(transition_probability_estimator) is str:
-            self.transition_probability_estimator = transition_probability_estimation_methods[transition_probability_estimator]()
+            self.transition_probability_estimator = transition_probability_estimation_methods[transition_probability_estimator](verbose=verbose-1)
         else:
             self.transition_probability_estimator = transition_probability_estimator
         

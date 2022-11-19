@@ -26,6 +26,7 @@ class ProbaLayer(Layer):
     def copy(self):
         return ProbaLayer(np.array(self),
                           label=self.label,
+                          final_states=deepcopy(self.final_states),
                           geo_metadata=deepcopy(self.geo_metadata))
     
     def get_proba(self, final_state):
@@ -70,7 +71,9 @@ def create_proba_layer(J,
                        shape,
                        geo_metadata=None):
     M = np.zeros((len(final_states),) + shape)
-    print(M.shape)
+    M.fill(np.nan)
+    
+    # print(M.shape)
     for i, final_state in enumerate(final_states):
         M[i].flat[J] = P[:, i]
     

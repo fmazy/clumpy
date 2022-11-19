@@ -208,7 +208,7 @@ class Palette():
             return (self.states[values.index(value)])
         except:
             logger.error(str(value) +" is not in the palette. Occured in '_base/_state.py, Palette._get_by_value()'.")
-            stop_log()
+            # stop_log()
             raise
 
     def _get_id_by_value(self, value):

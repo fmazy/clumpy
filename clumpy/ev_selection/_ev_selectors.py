@@ -29,13 +29,16 @@ class EVSelectors():
         # print('observed final states : ', list_v)
         id_evs = np.zeros(d).astype(bool)
         
-        for i, selector in enumerate(self.selectors):
-            if W[:,i].sum() > 0:
-                selector.fit(Z=Z,
-                             w=W[:,i],
-                             bounds=bounds)
-                
-                id_evs[selector._cols_support] = True
+        if self.selectors is not None:
+            for i, selector in enumerate(self.selectors):
+                if W[:,i].sum() > 0:
+                    selector.fit(Z=Z,
+                                 w=W[:,i],
+                                 bounds=bounds)
+                    
+                    id_evs[selector._cols_support] = True
+        else:
+            id_evs.fill(True)
         
         self._cols_support = np.arange(d)[id_evs]
         

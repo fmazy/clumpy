@@ -44,19 +44,19 @@ class Unbiased(Allocator):
                          verbose_heading_level=verbose_heading_level)
     
     def allocate(self,
-                 lul:LandUseLayer,
-                 tm:TransitionMatrix,
-                 features=None,
-                 lul_origin:LandUseLayer=None,
-                 mask:RegionsLayer=None):
+                 luc_layer:LandUseLayer,
+                 Z,
+                 tpe_func,
+                 regions_layer:RegionsLayer=None,
+                 luc_layer_origin:LandUseLayer=None):
         """
-        allocation. lul_data and lul_origin_data are ndarrays only.
+        allocation. luc_layer_data and luc_layer_origin_data are ndarrays only.
         """
         if self.verbose > 0:
             print(title_heading(self.verbose_heading_level) + 'Unbiased Allocation')
         
-        if lul_origin is None:
-            lul_origin = lul.copy()
+        if luc_layer_origin is None:
+            luc_layer_origin = luc_layer.copy()
         
         if features is None:
             features = self.calibrator.features
@@ -67,13 +67,13 @@ class Unbiased(Allocator):
         final_states_id = {final_state:final_states.index(final_state) for final_state in final_states}
         P_v = np.array([tm.get(int(initial_state),
                                int(final_state)) for final_state in final_states])
-                
+        
         n_try = 0
         
-        J = lul_origin.get_J(state=initial_state,
-                      mask=mask)
-        X = lul_origin.get_X(J=J, 
-                             features=features)
+        J = luc_layer_origin.get_J(state=initial_state,
+                                   mask=mask)
+        X = luc_layer_origin.get_X(J=J, 
+                                   features=features)
         
         X = self.calibrator.feature_selector.transform(X)
         
@@ -109,8 +109,8 @@ class Unbiased(Allocator):
                 proba_layer = create_proba_layer(J=J,
                                                  P=P,
                                                  final_states=final_states,
-                                                 shape=lul.shape,
-                                                 geo_metadata=lul.geo_metadata)
+                                                 shape=luc_layer.shape,
+                                                 geo_metadata=luc_layer.geo_metadata)
             
             # pivot
             J_pivot, V_pivot = self._sample_pivot(J=J, 
@@ -124,8 +124,8 @@ class Unbiased(Allocator):
             for i in range(J_pivot.size):
                 final_state = V_pivot[i]
                 s, J_used_i = self.calibrator.patchers[final_state].allocate(
-                    lul=lul,
-                    lul_origin=lul_origin,
+                    luc_layer=luc_layer,
+                    luc_layer_origin=luc_layer_origin,
                     j=J_pivot[i],
                     proba_layer=proba_layer.get_proba(final_state))
                 
@@ -166,4 +166,4 @@ class Unbiased(Allocator):
             X = X[idx]
             J = J[idx]
             
-        return(lul, proba_layer)
+        return(luc_layer, proba_layer)

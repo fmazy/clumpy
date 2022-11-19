@@ -74,8 +74,6 @@ def get_bounds(evs):
 
     """
     bounds = []
-    
-    bounds = []
     for ev in evs:
         if isinstance(ev, EVLayer):
             bounds.append(ev.bounded)

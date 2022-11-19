@@ -42,8 +42,6 @@ class CramerMRMR():
         self.initial_state=initial_state,
         self.final_state=final_state
         
-        super().__init__()
-    
     def __repr__(self):
         return 'CramerMRMR()'
     

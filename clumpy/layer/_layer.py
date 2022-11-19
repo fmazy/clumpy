@@ -255,7 +255,7 @@ class Layer(np.ndarray):
     def display(self,
                 center,
                 window,
-                band=0,
+                band=None,
                 show=True,
                 colorbar = True,
                 **kwargs_imshow):
@@ -308,7 +308,14 @@ class Layer(np.ndarray):
             y1 = y2 - window[1]
         
         # print(np.array(self[x1:x2, y1:y2]))
-        plt.imshow(self[x1:x2, y1:y2], **kwargs_imshow)
+        if band is None:
+            data = self
+        else:
+            data = self[band]
+        
+        print(np.array(data))
+        
+        plt.imshow(data[x1:x2, y1:y2], **kwargs_imshow)
         plt.yticks([], [])
         plt.xticks([], [])
         
@@ -374,4 +381,35 @@ class Layer(np.ndarray):
 def convert_raster_file(path_in, path_out):
     os.system('rio convert '+path_in+' '+path_out+' --overwrite')
 
+def get_J_W_Z(initial_luc_layer,
+              final_luc_layer,
+              evs,
+              regions_layer,
+              region_value,
+              initial_state,
+              final_states):
+    J = initial_luc_layer.get_J(state=initial_state,
+                                regions_layer=regions_layer,
+                                region_value=region_value)
+    
+    J, W = final_luc_layer.get_W(J=J,
+                                 state=initial_state,
+                                 final_states=final_states)
+    
+    Z = initial_luc_layer.get_Z(J=J, evs=evs)
+    
+    return(J, W, Z)
 
+def get_J_Z(luc_layer,
+            evs,
+            regions_layer,
+            region_value,
+            state):
+    J = luc_layer.get_J(state=state,
+                        regions_layer=regions_layer,
+                        region_value=region_value)
+    
+    Z = luc_layer.get_Z(J=J, 
+                        evs=evs)
+    
+    return(J, Z)

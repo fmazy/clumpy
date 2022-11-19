@@ -6,6 +6,9 @@ from ..tools._path import path_split
 from . import layers
 
 def open_layer(path, kind='layer', keep_raster_obj=False, **kwargs):
+    if type(path) is not str:
+        return path
+    
     folder_path, file_name, file_ext = path_split(path)
     
     # read file

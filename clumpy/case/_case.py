@@ -5,10 +5,12 @@ from .. import start_log, stop_log
 from .. import Palette, load_palette
 from .. import load_transition_matrix
 
+from ..layer._proba_layer import create_proba_layer
+
 from ..ev_selection import EVSelectors
 
 from .. import open_layer
-from ..layer import get_bounds
+from ..layer import get_bounds, get_J_W_Z, get_J_Z
 
 # from .. import Territory
 
@@ -118,67 +120,6 @@ class Case():
     def set_palette(self, palette):
         self.palette = palette
     
-    def _layers_pretreatment(self, 
-                             initial_luc_layer=None,
-                             final_luc_layer=None,
-                             evs=None,
-                             regions_layer=None):
-        r = []
-        
-        if initial_luc_layer is not None:
-            if type(initial_luc_layer) is str:
-                initial_luc_layer = open_layer(path=initial_luc_layer, kind='layer')
-            r.append(initial_luc_layer)
-        
-        if final_luc_layer is not None:
-            if type(final_luc_layer) is str:
-                final_luc_layer = open_layer(path=final_luc_layer, kind='layer')
-            r.append(final_luc_layer)
-        
-        if evs is not None:
-            for k, ev in enumerate(evs):
-                if type(ev) is str:
-                    evs[k] = open_layer(path=ev, kind='ev')
-            r.append(evs)
-        
-        if regions_layer is not None:
-            if type(regions_layer) is str:
-                regions_layer = open_layer(path=regions_layer, kind='regions')
-            r.append(regions_layer)
-        
-        return r
-    
-    def _get_data(self,
-                  initial_luc_layer,
-                  final_luc_layer,
-                  evs,
-                  regions_layer,
-                  region,
-                  land):
-        J = initial_luc_layer.get_J(state=land.state,
-                                    regions_layer=regions_layer,
-                                    region_value=region.value)
-        if self.verbose > 0:
-            print('n pixels : '+str("{:.2e}".format(J.size)))
-        
-        J, W = final_luc_layer.get_W(J=J,
-                                     state=land.state,
-                                     final_states=land.final_states)
-        Z = initial_luc_layer.get_Z(J=J, evs=evs)
-        
-        return(J, W, Z)
-    
-    def get_bounds(self,
-                   evs):
-        bounds = []
-        for ev in evs:
-            if isinstance(ev, EVLayer):
-                bounds.append(ev.bounded)
-            elif type(ev) is int:
-                bounds.append('left')
-                
-        return bounds
-    
     def get_ev_labels(self, evs):
         ev_labels = []
         for ev in evs:
@@ -194,11 +135,12 @@ class Case():
         for region in self.regions:
             for land in region.lands:
                 for i, v in enumerate(land.final_states):
-                    ev_selector = land.ev_selectors[i]
-                    ev_selector.region_label = region.label
-                    ev_selector.initial_state = land.state
-                    ev_selector.final_state = v
-                    ev_selector.ev_labels = ev_labels
+                    if land.ev_selectors is not None:
+                        ev_selector = land.ev_selectors[i]
+                        ev_selector.region_label = region.label
+                        ev_selector.initial_state = land.state
+                        ev_selector.final_state = v
+                        ev_selector.ev_labels = ev_labels
     
     def get_ev_selector(self,
                         region_info,
@@ -225,13 +167,13 @@ class Case():
         
     #     self.init_ev_selectors(evs=evs)
         
-    #     bounds = self.get_bounds(evs=evs)
+    #     bounds = get_bounds(evs=evs)
         
     #     R = []
         
     #     for region in self.regions:
     #         for land in region.lands:
-    #             J, W, Z = self._get_data(initial_luc_layer=initial_luc_layer,
+    #             J, W, Z = self._get_J_W_Z(initial_luc_layer=initial_luc_layer,
     #                                      final_luc_layer=final_luc_layer,
     #                                      evs=evs,
     #                                      regions_layer=regions_layer,
@@ -257,15 +199,17 @@ class Case():
                   region_only=None,
                   land_only=None):
         
-        initial_luc_layer, final_luc_layer, evs, regions_layer = \
-            self._layers_pretreatment(initial_luc_layer=initial_luc_layer,
-                                      final_luc_layer=final_luc_layer,
-                                      evs=evs,
-                                      regions_layer=regions_layer)
+        # Layers IO
+        initial_luc_layer = open_layer(path=initial_luc_layer, kind='land_use')
+        final_luc_layer = open_layer(path=final_luc_layer, kind='land_use')
+        regions_layer = open_layer(path=regions_layer, kind='regions')
+        for k, ev in enumerate(evs):
+            if type(ev) is str:
+                evs[k] = open_layer(path=ev, kind='ev')
         
         if self.verbose > 0:
             print("=================")
-            print("|| Calibrate() ||")
+            print("|| CALIBRATION ||")
             print("=================\n")
         
         regions_list = self.regions
@@ -273,7 +217,9 @@ class Case():
             regions_list = [self.get_region(region_only)]
         
         bounds = get_bounds(evs=evs)
-                
+        
+        self.init_ev_selectors(evs=evs)
+        
         for region in regions_list:
             
             if self.verbose > 0:
@@ -293,14 +239,20 @@ class Case():
                 if self.verbose > 0:
                     print('land : '+str(land.state)+' - '+ self.palette.get(land.state).label)
                     print('---------\n')
+                    
             
                 # data
-                J, W, Z = self._get_data(initial_luc_layer=initial_luc_layer,
-                                         final_luc_layer=final_luc_layer,
-                                         evs=evs,
-                                         regions_layer=regions_layer,
-                                         region=region,
-                                         land=land)
+                J, W, Z = get_J_W_Z(initial_luc_layer=initial_luc_layer,
+                                    final_luc_layer=final_luc_layer,
+                                    evs=evs,
+                                    regions_layer=regions_layer,
+                                    region_value=region.value,
+                                    initial_state=land.state,
+                                    final_states=land.final_states)
+                
+                if self.verbose > 0:
+                    print('n pixels : '+str("{:.2e}".format(J.size)))
+                    print('final states : ', land.final_states)
                 
                 # Explanatory Variable Selection
                 land._ev_selectors = EVSelectors(selectors=land.ev_selectors)
@@ -311,26 +263,220 @@ class Case():
                 tpe = land.transition_probability_estimator
                 selected_evs = land._ev_selectors.get_selected_evs(evs)
                 selected_bounds = get_bounds(selected_evs)
+                if self.verbose > 0:
+                    print()
                 tpe.fit(Z, W, bounds=selected_bounds)
                             
             if self.verbose > 0:
                 print()
+        
+    def _get_P_v_region(self, P_v, region):
+        if type(P_v) is not dict:
+            return P_v
+        
+        if region.label in P_v.keys():
+            return P_v[region.label]
+        
+        if region.value in P_v.keys():
+            return P_v[region.value]
+                
+    def _get_P_v_land(self, P_v_region, land):
+        list_u = list(P_v_region[:,0])
+        list_v = list(P_v_region[0,:])
+        
+        P_v_land = np.zeros(len(land.final_states))
+        
+        u = land.state
+        for i, v in enumerate(land.final_states):
+            P_v_land[i] = P_v_region[list_u.index(u), list_v.index(v)]
+        
+        return P_v_land
+        
     def transition_probabilities(self,
                                  luc_layer,
                                  evs,
+                                 P_v,
                                  regions_layer=None,
                                  region_only=None,
-                                 land_only=None):
+                                 land_only=None,
+                                 return_initial_state=False):
         """
         Compute the transition probabilities of the case.
         """
-        return 1
-        # self.territory.transition_probabilities(\
-                # regions_transition_matrices = self.get_regions_transition_matrices(),
-                # lul = self.get_lul('start'),
-                # masks = self.get_regions_masks('allocation'),
-                # path_prefix = self.get_output_folder() + "proba")
+        
+        # Layers IO
+        luc_layer = open_layer(path=luc_layer, kind='land_use')
+        regions_layer = open_layer(path=regions_layer, kind='regions')
+        for k, ev in enumerate(evs):
+            if type(ev) is str:
+                evs[k] = open_layer(path=ev, kind='ev')
+        
+        if self.verbose > 0:
+            print("=========================================")
+            print("|| TRANSITION PROBABILITIES ESTIMATION ||")
+            print("=========================================\n")
+        
+        regions_list = self.regions
+        if region_only is not None:
+            regions_list = [self.get_region(region_only)]
+        
+        P_v__u_Z_layer = None
+        
+        for region in regions_list:
+            
+            if self.verbose > 0:
+                print("Region : "+region.label)
+                s = ''
+                for i in range(len(region.label)):
+                    s += '='
+                print('========='+s+'\n')
+            
+            
+            P_v_region = self._get_P_v_region(P_v, region)
+            
+            lands_list = region.lands
+            if land_only is not None:
+                lands_list = [region.get_land(land_only)]
+            
+            for land in lands_list:
+                
+                if self.verbose > 0:
+                    print('land : '+str(land.state)+' - '+ self.palette.get(land.state).label)
+                    print('---------\n')
+                
+                # data
+                J, Z = get_J_Z(luc_layer=luc_layer,
+                               evs=evs,
+                               regions_layer=regions_layer,
+                               region_value=region.value,
+                               state=land.state)
+                
+                # Explanatory Variable Selection
+                Z = land._ev_selectors.transform(Z)
+                
+                # P_v land
+                P_v_land = self._get_P_v_land(P_v_region, land)
+                
+                if self.verbose > 0:
+                    print('n pixels : '+str("{:.2e}".format(J.size)))
+                    print('final states : ', land.final_states)
+                    print('P_v : ', P_v_land)
+                    
+                # TPE COMPUTING
+                tpe = land.transition_probability_estimator
+                P_v__u_Z = tpe.compute(Y=Z,
+                                       P_v=P_v_land)        
+                
+                all_states = land.final_states
+                if return_initial_state:
+                    # adding initial state to probabilities
+                    P_v__u_Z = np.hstack(((1-P_v__u_Z.sum(axis=1))[:,None], P_v__u_Z))
+                    all_states = [land.state] + land.final_states
+                
+                
+                # create Proba layer object
+                P_v__u_Z_layer_land = create_proba_layer(J=J,
+                                                         P=P_v__u_Z,
+                                                         final_states=all_states,
+                                                         shape=luc_layer.shape,
+                                                         geo_metadata=luc_layer.geo_metadata)
+                
+                # fusion
+                if P_v__u_Z_layer is None:
+                    P_v__u_Z_layer = P_v__u_Z_layer_land
+                else:
+                    P_v__u_Z_layer = P_v__u_Z_layer.fusion(P_v__u_Z_layer_land)
+                
+                if self.verbose > 0:
+                    print('')
+        
+        return P_v__u_Z_layer
     
+    def allocate(self,
+                 luc_layer,
+                 evs,
+                 P_v,
+                 regions_layer=None,
+                 region_only=None,
+                 land_only=None):
+        
+        # Layers IO
+        luc_layer = open_layer(path=luc_layer, kind='land_use')
+        regions_layer = open_layer(path=regions_layer, kind='regions')
+        for k, ev in enumerate(evs):
+            if type(ev) is str:
+                evs[k] = open_layer(path=ev, kind='ev')
+        
+        if self.verbose > 0:
+            print("==============")
+            print("|| ALLOCATE ||")
+            print("==============\n")
+        
+        # initialize luc_layer
+        luc_layer = luc_layer.copy()
+        luc_layer_origin = luc_layer.copy()
+        
+        regions_list = self.regions
+        if region_only is not None:
+            regions_list = [self.get_region(region_only)]
+                
+        for region in regions_list:
+            
+            if self.verbose > 0:
+                print("Region : "+region.label)
+                s = ''
+                for i in range(len(region.label)):
+                    s += '='
+                print('========='+s+'\n')
+            
+            
+            P_v_region = self._get_P_v_region(P_v, region)
+            
+            lands_list = region.lands
+            if land_only is not None:
+                lands_list = [region.get_land(land_only)]
+            
+            for land in lands_list:
+                
+                if self.verbose > 0:
+                    print('land : '+str(land.state)+' - '+ self.palette.get(land.state).label)
+                    print('---------\n')
+                
+                # data
+                J, Z = get_J_Z(luc_layer=luc_layer,
+                               evs=evs,
+                               regions_layer=regions_layer,
+                               region_value=region.value,
+                               state=land.state)
+                
+                # Explanatory Variable Selection
+                Z = land._ev_selectors.transform(Z)
+                
+                # P_v land
+                P_v_land = self._get_P_v_land(P_v_region, land)
+                
+                if self.verbose > 0:
+                    print('n pixels : '+str("{:.2e}".format(J.size)))
+                    print('final states : ', land.final_states)
+                    print('P_v : ', P_v_land)
+                    
+                # ALLOCATION
+                allocator = land.allocator
+                tpe = land.transition_probability_estimator
+                luc_layer = allocator.allocate(luc_layer=luc_layer,
+                                               Z=Z,
+                                               tpe_func=tpe.compute,
+                                               regions_layer=regions_layer,
+                                               luc_layer_origin=luc_layer_origin)
+                # P_v__u_Z = tpe.compute(J=J,
+                                       # Y=Z,
+                                       # P_v=P_v_land)           
+                
+                
+                if self.verbose > 0:
+                    print('')
+        
+                return land.allocator
                 
         
     # def open(self, info):
