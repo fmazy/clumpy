@@ -312,9 +312,7 @@ class Layer(np.ndarray):
             data = self
         else:
             data = self[band]
-        
-        print(np.array(data))
-        
+                
         plt.imshow(data[x1:x2, y1:y2], **kwargs_imshow)
         plt.yticks([], [])
         plt.xticks([], [])
