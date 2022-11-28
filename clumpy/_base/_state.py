@@ -78,6 +78,13 @@ class Palette():
     def copy(self):
         palette = Palette(states = [state for state in self.states])
         return(palette)
+    
+    def print_table(self, colors=False):
+        for state in self.states:
+            if colors:
+                print(state.value, state.label, state.color)
+            else:
+                print(state.value, state.label)
 
     def add(self, state):
         """
