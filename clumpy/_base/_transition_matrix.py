@@ -252,6 +252,7 @@ class TransitionMatrix():
     
     def get_final_palette(self, info_u):
         p = self.get_P_v(info_u)[0]
+        p[self.palette_v.get_list_of_values().index(int(info_u))] = 0
         id_possible_v = np.arange(p.size)[p > 0]
         final_palette = Palette(states=[self.palette_v.states[id_v] for id_v in id_possible_v])
         
@@ -292,7 +293,9 @@ class TransitionMatrix():
         else:
             return (multisteps_tm)
 
-    def patches(self, patches, inplace=False):
+    def patches(self, 
+                patchers, 
+                inplace=False):
         """
         divide transition matrix by patches mean area. Useful for allocators.
         Only available for land transition matrix.
@@ -313,29 +316,27 @@ class TransitionMatrix():
         # P_v is divided by patch area mean
         # P_v_patches is then largely smaller.
         # one keep P_v to update it after the allocation try.
-
-        self._check_land_transition_matrix()
-
-        # get the unique palette_u state
-        state_u = self.palette_u.states[0]
-        # get the index of state_u in palette_v
-        id_state = self.palette_v.get_id(state_u)
-
-        M_patches = self.M.copy()
-        M_patches[0, id_state] = 1
-        for id_state_v, state_v in enumerate(self.palette_v):
-            if state_v != state_u:
-                if state_v in patches.keys():
-                    M_patches[0, id_state_v] /= patches[state_v].area_mean
-                M_patches[0, id_state] -= M_patches[0, id_state_v]
-
+        
         if inplace:
-            self.M = M_patches
-            return (self)
+            tm = self
         else:
-            return (TransitionMatrix(M=M_patches,
-                                     palette_u=self.palette_u,
-                                     palette_v=self.palette_v))
+            tm = self.copy()
+        
+        for patcher in patchers.values():
+            u = patcher.initial_state
+            v = patcher.final_state
+            
+            if u != v:
+                diff = tm.get(info_u=u, info_v=v) - tm.get(info_u=u, info_v=v) / patcher.area_mean
+                tm.set_value(a=tm.get(info_u=u, info_v=v) - diff,
+                             info_u=u,
+                             info_v=v)
+                # closure condition
+                tm.set_value(a=tm.get(info_u=u, info_v=u) + diff,
+                             info_u=u,
+                             info_v=u)
+        
+        return(tm)
 
     def _full_matrix(self):
         """
@@ -375,25 +376,72 @@ class TransitionMatrix():
                 "Unexpected transition matrix. Expected a land transition matrix with only one initial state."))
         return(True)
 
+# def compute_transition_matrix(self,
+#                               lul_initial,
+#                               lul_final,
+#                               mask,
+#                               final_states=None):
+#     """
+#     Compute the transition matrix.
 
-def compute_transition_matrix(P_v__u_Y, 
-                              initial_state, 
-                              final_states):
-    M = P_v__u_Y.mean(axis=0)[None,:]
+#     Parameters
+#     ----------
+#     state : State
+#         The initial state of this land.
+
+#     lul_initial : LandUseLayer
+#         The initial land use.
+
+#     lul_final : LandUseLayer
+#         The final land use.
+
+#     mask : MaskLayer, default = None
+#         The region mask layer. If ``None``, the whole area is studied.
+
+#     Returns
+#     -------
+#     tm : TransitionMatrix
+#         The computed transition matrix.
+#     """
     
-    initial_state = State(label='state_'+str(initial_state),
-                          value=int(initial_state),
-                          color='#aaaaaa')
+#     initial_states = 
     
-    final_states = [State(label='state_'+str(final_state),
-                          value=int(final_state),
-                          color='#aaaaaa') for final_state in final_states]
+#     J = lul_initial.get_J(state=self.state,
+#                           mask=mask)
+#     J, V = lul_final.get_V(J=J,
+#                            final_states=final_states)
     
-    tm = TransitionMatrix(M=M,
-                          palette_u = Palette(states=[initial_state]),
-                          palette_v = Palette(states=final_states))
+#     v_unique, n_counts = np.unique(V, return_counts=True)
+#     P_v = n_counts / n_counts.sum()
+#     P_v = P_v[None, :]
+
+#     v_unique = v_unique.astype(int)
+
+#     palette_u = lul_initial.palette.extract(infos=[self.state])
+#     palette_v = lul_final.palette.extract(infos=v_unique)
+
+#     return (TransitionMatrix(M=P_v,
+#                              palette_u=palette_u,
+#                              palette_v=palette_v))
+
+# def compute_transition_matrix(P_v__u_Y, 
+#                               initial_state, 
+#                               final_states):
+#     M = P_v__u_Y.mean(axis=0)[None,:]
     
-    return(tm)
+#     initial_state = State(label='state_'+str(initial_state),
+#                           value=int(initial_state),
+#                           color='#aaaaaa')
+    
+#     final_states = [State(label='state_'+str(final_state),
+#                           value=int(final_state),
+#                           color='#aaaaaa') for final_state in final_states]
+    
+#     tm = TransitionMatrix(M=M,
+#                           palette_u = Palette(states=[initial_state]),
+#                           palette_v = Palette(states=final_states))
+    
+#     return(tm)
     
 
 def load_transition_matrix(path, palette):

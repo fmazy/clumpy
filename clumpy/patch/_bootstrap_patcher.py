@@ -33,20 +33,16 @@ class BootstrapPatcher(Patcher):
         If ``True``, all neighbors have the equiprobability to transit.
     """
     def __init__(self,
-                 initial_state,
-                 final_state,
                  neighbors_structure = 'rook',
                  avoid_aggregation = True,
-                 nb_of_neighbors_to_fill = 3,
+                 nb_of_missing_to_fill = 1,
                  proceed_even_if_no_probability = True,
                  n_tries_target_sample = 1000,
                  equi_neighbors_proba=False):
         
-        super().__init__(initial_state = initial_state,
-                         final_state = final_state,
-                         neighbors_structure = neighbors_structure,
+        super().__init__(neighbors_structure = neighbors_structure,
                          avoid_aggregation = avoid_aggregation,
-                         nb_of_neighbors_to_fill = nb_of_neighbors_to_fill,
+                         nb_of_missing_to_fill = nb_of_missing_to_fill,
                          proceed_even_if_no_probability = proceed_even_if_no_probability,
                          n_tries_target_sample=n_tries_target_sample,
                          equi_neighbors_proba=equi_neighbors_proba)
@@ -107,12 +103,12 @@ class BootstrapPatcher(Patcher):
             self.areas = self.areas[idx]
             self.eccentricities = self.eccentricities[idx]
         else:
-            return(BootstrapPatch().set(areas=self.areas[idx],
+            return(BootstrapPatcher().set(areas=self.areas[idx],
                                         eccentricities=self.eccentricities[idx]))
         
     def fit(self,
             J,
-            V,
+            V_transited,
             shape):
         """Compute bootstrap patches
     
@@ -151,13 +147,12 @@ class BootstrapPatcher(Patcher):
         except:
             raise (ValueError('ERROR : unexpected neighbors_structure value'))
     
-    
         M = np.zeros(shape)
-        M.flat[J[V == int(self.final_state)]] = 1
+        M.flat[J[V_transited]] = 1
 
         lw, _ = ndimage.measurements.label(M, structure=structure)
         patch_id = lw.flat[J]
-
+                
         # unique pixel for a patch
         one_pixel_from_patch = np.column_stack((J, patch_id))
         one_pixel_from_patch = np_drop_duplicates_from_column(one_pixel_from_patch, 1)
@@ -169,8 +164,7 @@ class BootstrapPatcher(Patcher):
                                                         'inertia_tensor_eigvals'])
 
         self.areas = np.array(rpt['area'])
-
-        # return(patches, rpt)
+        
         l1_patch = np.array(rpt['inertia_tensor_eigvals-0'])
         l2_patch = np.array(rpt['inertia_tensor_eigvals-1'])
 

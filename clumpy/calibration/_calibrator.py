@@ -4,27 +4,31 @@ from copy import deepcopy
 import numpy as np
 from scipy import ndimage
 
-from ..layer import Layer, FeatureLayer, LandUseLayer, MaskLayer
+from ..layer import Layer, EVLayer, LandUseLayer, RegionsLayer
 from .._base import State
-from ..feature_selection import Pipeline
+from ..ev_selection import EVSelectors
 from ..patch import Patcher, Patchers
 
 class Calibrator():
     def __init__(self,
-                 state,
+                 initial_state,
                  final_states,
-                 tpe,
-                 feature_selector=None,
+                 transition_probability_estimator,
+                 ev_selector=None,
                  patchers=None,
                  verbose = 0):
-        self.state = state
-        self.final_states = final_states
-        self.tpe = tpe
+        if initial_state in final_states:
+            final_states.remove(initial_state)
         
-        if feature_selector is None:
-            self.feature_selector = Pipeline(fs_list=[])
+        self.initial_state = initial_state
+        self.final_states = final_states
+        
+        self.transition_probability_estimator = transition_probability_estimator
+        
+        if ev_selector is None:
+            self.ev_selector = FeatureSelectors()
         else:
-            self.feature_selector = feature_selector
+            self.ev_selector = ev_selector
         
         self._fitted = False
         
@@ -32,7 +36,7 @@ class Calibrator():
         if isinstance(patchers, Patcher):
             self.patchers = Patchers()
             for v in final_states:
-                if int(v) != int(self.state):
+                if int(v) != int(self.initial_state):
                     self.patchers[v] = patchers.copy()
         else:
             self.patchers = patchers
@@ -43,7 +47,7 @@ class Calibrator():
         return ('Calibrator(tpe='+str(self.tpe)+')')
     
     def copy(self):
-        return(Calibrator(state=deepcopy(self.state),
+        return(Calibrator(initial_state=deepcopy(self.initial_state),
                           tpe=deepcopy(self.tpe),
                           feature_selector=self.feature_selector.copy(),
                           verbose=self.verbose))
@@ -83,29 +87,29 @@ class Calibrator():
             lul_initial,
             lul_final,
             features,
-            mask=None,
-            distances_to_states={}):
+            mask=None):
         """
         """
+        if len(self.final_states) == 0 or self.final_states == [self.initial_state]:
+            return self
         
         self.features = features
         
-        J, V = self.get_J_V(lul_initial=lul_initial,
-                            lul_final=lul_final,
-                            final_states_only=True)
-                                        
+        J = lul_initial.get_J(state = self.initial_state,
+                              mask = mask)
+        
+        J, V = lul_final.get_V(J=J,
+                               final_states=self.final_states + [self.initial_state])
+                                                
         if self.verbose > 0:
             print('feature selecting...')
         
         # get X
-        X = self.get_X(J=J,
-                       features=self.features,
-                       lul=lul_initial,
-                       distances_to_states=distances_to_states,
-                       selected_features=False)
+        X = lul_initial.get_X(J=J,
+                              features=self.features)
         
         X = self.feature_selector.fit_transform(X, V)
-        
+                
         if self.verbose > 0:
             print('feature selecting done.')
         
@@ -115,7 +119,7 @@ class Calibrator():
         # TRANSITION PROBABILITY ESTIMATOR
         self.tpe.fit(X=X,
                      V=V,
-                     initial_state = int(self.state),
+                     initial_state = int(self.initial_state),
                      bounds = bounds)
         
         self._fitted = True
@@ -123,7 +127,7 @@ class Calibrator():
         if self.patchers is not None:
             self.patchers.fit(J=J,
                               V=V,
-                              shape=lul_initial.get_data().shape)
+                              shape=lul_initial.shape)
         
         return(self)
     
@@ -132,7 +136,6 @@ class Calibrator():
                                  tm,
                                  features=None,
                                  mask=None,
-                                 distances_to_states={},
                                  effective_transitions_only=True,
                                  return_Y=False):
         """
@@ -180,27 +183,23 @@ class Calibrator():
             The features values.
         """
         
+        if self.verbose>0:
+            print('Calibrator transition probabilities estimation')
+        
         if features is None:
             features = self.features
-        
-        tm = tm.extract(self.state)
-        
-        J = self.get_J(lul=lul,
-                       mask=mask)
                 
-        if self.verbose > 0:
-            print(title_heading(self.verbose_heading_level) + 'Land ' + str(state) + ' TPE\n')
-
+        J = lul.get_J(state = self.initial_state,
+                      mask = mask)
+                
         # GET VALUES
-        Y = self.get_X(J=J,
-                       features=features,
-                       lul=lul,
-                       distances_to_states=distances_to_states)
+        Y = lul.get_X(J=J,
+                      features=features)
         
-        
+        Y = self.feature_selector.transform(Y)
         
         # TRANSITION PROBABILITY ESTIMATION
-        P_v = tm.M[0,:]
+        P_v = np.array([tm.get(self.initial_state, final_state) for final_state in self.final_states])
         
         P_v__u_Y, final_states = self.tpe.transition_probabilities(
             J=J,
@@ -208,148 +207,120 @@ class Calibrator():
             P_v=P_v)
         
         if effective_transitions_only:
-            bands_to_keep = np.array(self.final_states) != int(self.state)
+            bands_to_keep = np.array(self.final_states) != int(self.initial_state)
             final_states = list(np.array(self.final_states)[bands_to_keep])
             P_v__u_Y = P_v__u_Y[:, bands_to_keep]
         
-        if self.verbose > 0:
-            print('Land ' + str(state) + ' TPE done.\n')
-
         if return_Y:
             return J, P_v__u_Y, final_states, Y
         else:
             return J, P_v__u_Y, final_states
     
-    def get_J(self,
-              lul,
-              mask=None):
-        """
-        Get J indices.
+    # def get_J(self,
+    #           lul,
+    #           mask=None):
+    #     """
+    #     Get J indices.
     
-        Parameters
-        ----------
-        lul : {'initial', 'final', 'start'} or LandUseLayer or np.array
-            The land use map.
-        mask : {'calibration', 'allocation'} or MaskLayer or np.array
-            The mask.
+    #     Parameters
+    #     ----------
+    #     lul : {'initial', 'final', 'start'} or LandUseLayer or np.array
+    #         The land use map.
+    #     mask : {'calibration', 'allocation'} or MaskLayer or np.array
+    #         The mask.
     
-        Returns
-        -------
-        None.
+    #     Returns
+    #     -------
+    #     None.
     
-        """
+    #     """
                         
-        # initial data
-        # the region is selected after the distance computation
-        if isinstance(lul, LandUseLayer):
-            data_lul = lul.get_data().copy()
-        else:
-            data_lul = lul.copy()
+    #     # initial data
+    #     # the region is selected after the distance computation
+    #     if isinstance(lul, LandUseLayer):
+    #         data_lul = lul.get_data().copy()
+    #     else:
+    #         data_lul = lul.copy()
     
-        # selection according to the region.
-        # one set -1 to non studied data
-        # -1 is a forbiden state value.
-        if mask is not None:
-            if isinstance(mask, MaskLayer):
-                data_lul[mask.get_data() != 1] = -1
-            else:
-                data_lul[mask != 1] = -1
+    #     # selection according to the region.
+    #     # one set -1 to non studied data
+    #     # -1 is a forbiden state value.
+    #     if mask is not None:
+    #         if isinstance(mask, MaskLayer):
+    #             data_lul[mask.get_data() != 1] = -1
+    #         else:
+    #             data_lul[mask != 1] = -1
     
-        # get pixels indexes whose initial states are u
-        return(np.where(data_lul.flat == int(self.state))[0])
+    #     # get pixels indexes whose initial states are u
+    #     return(np.where(data_lul.flat == int(self.initial_state))[0])
 
-    def get_V(self,
-              lul,
-              J,
-              final_states_only=True):
+    # def get_V(self,
+    #           lul,
+    #           J,
+    #           final_states_only=True):
                 
-        if isinstance(lul, LandUseLayer):
-            data_lul = lul.get_data().copy()
-        else:
-            data_lul = lul.copy()
+    #     if isinstance(lul, LandUseLayer):
+    #         data_lul = lul.get_data().copy()
+    #     else:
+    #         data_lul = lul.copy()
         
-        V = data_lul.flat[J]
+    #     V = data_lul.flat[J]
             
-        if final_states_only:
-            V[~np.isin(V, self.final_states)] = int(self.state)
+    #     if final_states_only:
+    #         V[~np.isin(V, self.final_states)] = int(self.initial_state)
         
-        return(V)
+    #     return(V)
     
-    def get_J_V(self,
-                lul_initial,
-                lul_final,
-                mask=None,
-                final_states_only=True):
-        J = self.get_J(lul=lul_initial,
-                  mask=mask)
-        V = self.get_V(lul=lul_final,
-                  J=J,
-                  final_states_only=final_states_only)
-        return(J, V)
+    # def get_J_V(self,
+    #             lul_initial,
+    #             lul_final,
+    #             mask=None,
+    #             final_states_only=True):
+    #     J = self.get_J(lul=lul_initial,
+    #               mask=mask)
+    #     V = self.get_V(lul=lul_final,
+    #               J=J,
+    #               final_states_only=final_states_only)
+    #     return(J, V)
     
-    def get_X(self, 
-              J,
-              features,
-              lul,
-              distances_to_states={},
-              selected_features=True):
+    # def get_X(self, 
+    #           J,
+    #           features,
+    #           lul,
+    #           distances_to_states={},
+    #           selected_features=True):
         
-        X = None
+    #     X = None
     
-        if selected_features:
-            features = self.get_selected_features(features=features)
+    #     if selected_features:
+    #         features = self.get_selected_features(features=features)
         
-        for info in features:
-            # switch according z_type
-            if isinstance(info, Layer):
-                # just get data
-                x = info.get_data().flat[J]
+    #     for info in features:
+    #         # switch according z_type
+    #         if isinstance(info, Layer):
+    #             # just get data
+    #             x = info.get_data().flat[J]
 
-            elif isinstance(info, int):
-                # get distance data
-                if info not in distances_to_states.keys():
-                    _compute_distance(info, lul.get_data(), distances_to_states)
+    #         elif isinstance(info, int):
+    #             # get distance data
+    #             if info not in distances_to_states.keys():
+    #                 _compute_distance(info, lul.get_data(), distances_to_states)
                     
-                x = distances_to_states[info].flat[J]
+    #             x = distances_to_states[info].flat[J]
                 
-            else:
-                logger.error('Unexpected feature info : ' + type(info) + '. Occured in \'_base/_land.py, Land.get_values()\'.')
-                raise (TypeError('Unexpected feature info : ' + type(info) + '.'))
+    #         else:
+    #             logger.error('Unexpected feature info : ' + type(info) + '. Occured in \'_base/_land.py, Land.get_values()\'.')
+    #             raise (TypeError('Unexpected feature info : ' + type(info) + '.'))
 
-            # if X is not yet defined
-            if X is None:
-                X = x
-            # else column stack
-            else:
-                X = np.column_stack((X, x))
+    #         # if X is not yet defined
+    #         if X is None:
+    #             X = x
+    #         # else column stack
+    #         else:
+    #             X = np.column_stack((X, x))
 
-        # if only one feature, reshape X as a column
-        if len(X.shape) == 1:
-            X = X[:, None]
+    #     # if only one feature, reshape X as a column
+    #     if len(X.shape) == 1:
+    #         X = X[:, None]
         
-        return(X)
-    
-    def compute_bootstrap_patches(self,
-                                  lul_initial,
-                                  lul_final,
-                                  mask=None):
-        """
-        Compute Bootstrap patches
-
-        """
-        J, V = self.get_J_V(lul_initial = lul_initial,
-                            lul_final = lul_final,
-                            mask=mask,
-                            final_states_only=False)
-        
-        self.patches = compute_bootstrap_patches(state=self.state,
-                                            final_states=self.final_states,
-                                            J=J,
-                                            V=V,
-                                            shape=shape,
-                                            mask=mask)       
-        
-
-def _compute_distance(state_value, data, distances_to_states):
-    v_matrix = (data == state_value).astype(int)
-    distances_to_states[state_value] = ndimage.distance_transform_edt(1 - v_matrix)
+    #     return(X)

@@ -45,5 +45,6 @@ def path_split(path, prefix=False):
     return(folder_path, file_name, file_ext)
 
 def create_directories(folder_path):
-    if os.path.exists(folder_path) == False:
-        os.system('mkdir -p ' + folder_path)
+    if len(folder_path) > 0:
+        if os.path.exists(folder_path) == False:
+            os.system('mkdir -p ' + folder_path)

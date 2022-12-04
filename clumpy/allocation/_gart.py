@@ -8,7 +8,7 @@ Created on Sat Jan 23 12:25:38 2021
 
 import numpy as np
 
-def generalized_allocation_rejection_test(P, list_v, seed=None):
+def generalized_allocation_rejection_test(P, list_v=None, seed=None):
     """
     Generalized allocation rejection process.
 
@@ -26,11 +26,18 @@ def generalized_allocation_rejection_test(P, list_v, seed=None):
 
     """
     
+    if len(P.shape) == 1:
+        P = P[:,None]
+    
     P = np.nan_to_num(P)
     
     P[P<0] = 0
     
+    if list_v is None:
+        list_v = list(range(P.shape[1]))
+    
     y = np.zeros(P.shape[0])
+    y.fill(-1)
     # cum sum along axis
     cs = np.cumsum(P, axis=1)
     
@@ -38,6 +45,7 @@ def generalized_allocation_rejection_test(P, list_v, seed=None):
     np.random.seed(seed)
     x = np.random.random(P.shape[0])
     np.random.seed(None)
+    
                             
     for id_vf in range(P.shape[1]):
         inv_id_vf = P.shape[1] - 1 - id_vf

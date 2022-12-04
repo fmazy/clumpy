@@ -39,25 +39,30 @@ def ndarray_suitable_integer_type(a):
         The numpy array converted (it's a copy)
 
     """
+    dtype = determine_suitable_integer_type(a)
+    return(a.astype(dtype))
+
+def determine_suitable_integer_type(a):
     if a.min() >= 0: # if unsigned
-        t = np.uint64
+        dtype = np.uint64
         m = a.max()
         if m <= 4294967295:
-            t = np.uint32
+            dtype = np.uint32
             if m <= 65535:
-                t = np.uint16
+                dtype = np.uint16
                 if m<= 255:
-                    t = np.uint8
+                    dtype = np.uint8
     else:
-        t = np.int64
+        dtype = np.int64
         m = np.abs(a).max()
         if m <= 2147483647:
-            t = np.uint32
+            dtype = np.uint32
             if m <= 32767:
-                t = np.uint16
+                dtype = np.uint16
                 if m<= 127:
-                    t = np.uint8
-    return(a.astype(t))
+                    dtype = np.uint8
+    
+    return dtype
 
 def np_drop_duplicates_from_column(a, column_id):
     return(a[np.unique(a[:, column_id], return_index=True)[1]])

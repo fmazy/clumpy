@@ -78,6 +78,13 @@ class Palette():
     def copy(self):
         palette = Palette(states = [state for state in self.states])
         return(palette)
+    
+    def print_table(self, colors=False):
+        for state in self.states:
+            if colors:
+                print(state.value, state.label, state.color)
+            else:
+                print(state.value, state.label)
 
     def add(self, state):
         """
@@ -208,7 +215,7 @@ class Palette():
             return (self.states[values.index(value)])
         except:
             logger.error(str(value) +" is not in the palette. Occured in '_base/_state.py, Palette._get_by_value()'.")
-            stop_log()
+            # stop_log()
             raise
 
     def _get_id_by_value(self, value):
